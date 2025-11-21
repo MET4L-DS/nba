@@ -8,8 +8,6 @@ import type { AttainmentThreshold } from "./types";
 
 interface AttainmentSettingsPanelProps {
 	showSettings: boolean;
-	zeroLevelThreshold: number;
-	setZeroLevelThreshold: (value: number) => void;
 	coThreshold: number;
 	setCoThreshold: (value: number) => void;
 	passingThreshold: number;
@@ -23,8 +21,6 @@ interface AttainmentSettingsPanelProps {
 
 export function AttainmentSettingsPanel({
 	showSettings,
-	zeroLevelThreshold,
-	setZeroLevelThreshold,
 	coThreshold,
 	setCoThreshold,
 	passingThreshold,
@@ -54,25 +50,7 @@ export function AttainmentSettingsPanel({
 			</CardHeader>
 			<CardContent className="pt-6 space-y-6">
 				{/* Passing Thresholds */}
-				<div className="grid grid-cols-3 gap-4">
-					<div className="space-y-2">
-						<Label htmlFor="zeroLevelThreshold">
-							Level 0 Threshold (%)
-						</Label>
-						<Input
-							id="zeroLevelThreshold"
-							type="number"
-							min="0"
-							max="100"
-							value={zeroLevelThreshold}
-							onChange={(e) =>
-								setZeroLevelThreshold(Number(e.target.value))
-							}
-						/>
-						<p className="text-xs text-gray-500 dark:text-gray-400">
-							Below this % = Level 0
-						</p>
-					</div>
+				<div className="grid grid-cols-2 gap-4">
 					<div className="space-y-2">
 						<Label htmlFor="coThreshold">
 							CO Attainment Threshold (%)
@@ -146,47 +124,48 @@ export function AttainmentSettingsPanel({
 									"bg-red-600 dark:bg-red-700",
 								];
 
-								const sections = [];
+								const sections: Array<{
+									id: number | string;
+									width: number;
+									level: number;
+									color: string;
+								}> = [];
 
-								// Filter thresholds that are above zeroLevelThreshold
-								const validThresholds = sorted.filter(
-									(t) => t.percentage >= zeroLevelThreshold
-								);
-
-								// Highest levels first (reversed order)
-								validThresholds.forEach((threshold, idx) => {
-									const nextPct =
-										idx < validThresholds.length - 1
-											? validThresholds[idx + 1]
-													.percentage
-											: zeroLevelThreshold;
-									const width =
-										idx === 0
-											? 100 - threshold.percentage
-											: threshold.percentage - nextPct;
-									const level = validThresholds.length - idx; // Highest level first
-									const colorIdx = Math.min(
-										idx,
-										colors.length - 1
-									);
-
-									sections.push({
-										id: threshold.id,
-										width: width,
-										level: level,
-										color: colors[colorIdx],
-									});
+								// Build sections from 100% to 0%
+								// First section: 100% to highest threshold
+								const highestThreshold = sorted[0].percentage;
+								sections.push({
+									id: `top-${sorted[0].id}`,
+									width: 100 - highestThreshold,
+									level: sorted.length,
+									color: colors[0],
 								});
 
-								// Level 0: zeroLevelThreshold to 0 (red) - on the right
-								if (zeroLevelThreshold > 0) {
+								// Middle sections: between thresholds
+								for (let i = 0; i < sorted.length - 1; i++) {
+									const currentThreshold =
+										sorted[i].percentage;
+									const nextThreshold =
+										sorted[i + 1].percentage;
 									sections.push({
-										id: "level-0",
-										width: zeroLevelThreshold,
-										level: 0,
-										color: "bg-red-600 dark:bg-red-700",
+										id: sorted[i].id,
+										width: currentThreshold - nextThreshold,
+										level: sorted.length - i - 1,
+										color: colors[
+											Math.min(i + 1, colors.length - 1)
+										],
 									});
 								}
+
+								// Last section: lowest threshold to 0% (Level 0)
+								const lowestThreshold =
+									sorted[sorted.length - 1].percentage;
+								sections.push({
+									id: `level-0`,
+									width: lowestThreshold,
+									level: 0,
+									color: "bg-red-600 dark:bg-red-700",
+								});
 
 								return sections.map((section) => (
 									<div
@@ -201,27 +180,29 @@ export function AttainmentSettingsPanel({
 								));
 							})()}
 						</div>
-						<div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 px-1">
-							<span>100%</span>
+						<div className="relative h-6">
+							{/* 100% label at the start */}
+							<span className="absolute left-0 text-xs text-gray-600 dark:text-gray-400 font-medium">
+								100%
+							</span>
+							{/* Threshold labels at their positions */}
 							{[...attainmentThresholds]
 								.sort((a, b) => b.percentage - a.percentage)
-								.filter(
-									(t) => t.percentage >= zeroLevelThreshold
-								)
 								.map((t) => (
 									<span
 										key={t.id}
-										className="font-medium text-green-600 dark:text-green-400"
+										className="absolute text-xs font-medium text-green-600 dark:text-green-400 -translate-x-1/2"
+										style={{
+											left: `${100 - t.percentage}%`,
+										}}
 									>
 										{t.percentage}%
 									</span>
 								))}
-							{zeroLevelThreshold > 0 && (
-								<span className="font-medium text-red-600 dark:text-red-400">
-									{zeroLevelThreshold}%
-								</span>
-							)}
-							<span>0%</span>
+							{/* 0% label at the end */}
+							<span className="absolute right-0 text-xs text-gray-600 dark:text-gray-400 font-medium">
+								0%
+							</span>
 						</div>
 					</div>
 

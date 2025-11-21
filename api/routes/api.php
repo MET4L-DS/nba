@@ -25,6 +25,8 @@ require_once __DIR__ . '/../models/Marks.php';
 require_once __DIR__ . '/../models/MarksRepository.php';
 require_once __DIR__ . '/../models/Enrollment.php';
 require_once __DIR__ . '/../models/EnrollmentRepository.php';
+require_once __DIR__ . '/../models/AttainmentScale.php';
+require_once __DIR__ . '/../models/AttainmentScaleRepository.php';
 require_once __DIR__ . '/../utils/JWTService.php';
 require_once __DIR__ . '/../utils/AuthService.php';
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
@@ -34,6 +36,7 @@ require_once __DIR__ . '/../controllers/UserController.php';
 require_once __DIR__ . '/../controllers/AssessmentController.php';
 require_once __DIR__ . '/../controllers/MarksController.php';
 require_once __DIR__ . '/../controllers/EnrollmentController.php';
+require_once __DIR__ . '/../controllers/AttainmentController.php';
 
 /**
  * Router Class
@@ -47,6 +50,7 @@ class Router
     private $assessmentController;
     private $marksController;
     private $enrollmentController;
+    private $attainmentController;
 
     public function __construct()
     {
@@ -63,6 +67,7 @@ class Router
         $studentRepository = new StudentRepository($db);
         $rawMarksRepository = new RawMarksRepository($db);
         $marksRepository = new MarksRepository($db);
+        $attainmentScaleRepository = new AttainmentScaleRepository($db);
         $jwtService = new JWTService();
         $authService = new AuthService($userRepository, $jwtService, $departmentRepository);
 
@@ -78,6 +83,7 @@ class Router
         $this->assessmentController = new AssessmentController($courseRepository, $testRepository, $questionRepository, $validationMiddleware);
         $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository);
         $this->enrollmentController = new EnrollmentController($db);
+        $this->attainmentController = new AttainmentController($courseRepository, $attainmentScaleRepository);
     }
 
     /**
@@ -254,6 +260,17 @@ class Router
                     } else {
                         $this->sendMethodNotAllowed();
                     }
+                } elseif (preg_match('#^courses/(\d+)/attainment-config$#', $path, $matches)) {
+                    $courseId = (int)$matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $this->attainmentController->getConfig($courseId);
+                    } elseif ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $this->attainmentController->saveConfig($courseId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
                 } elseif (preg_match('#^courses/(\d+)/enroll/([A-Za-z0-9]+)$#', $path, $matches)) {
                     $courseId = $matches[1];
                     $rollno = $matches[2];
@@ -349,6 +366,10 @@ class Router
                     'POST /courses/{courseId}/enroll',
                     'GET /courses/{courseId}/enrollments',
                     'DELETE /courses/{courseId}/enroll/{rollno}'
+                ],
+                'attainment' => [
+                    'GET /courses/{courseId}/attainment-config',
+                    'POST /courses/{courseId}/attainment-config'
                 ]
             ]
         ]);

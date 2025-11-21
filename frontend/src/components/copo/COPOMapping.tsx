@@ -68,7 +68,6 @@ export function COPOMapping({
 	]);
 	const [coThreshold, setCoThreshold] = useState(40);
 	const [passingThreshold, setPassingThreshold] = useState(60);
-	const [zeroLevelThreshold, setZeroLevelThreshold] = useState(40);
 
 	// CO-PO-PSO Mapping Matrix State
 	const [copoMatrix, setCopoMatrix] = useState<COPOMatrixState>({
@@ -179,8 +178,36 @@ export function COPOMapping({
 	// Load COPO data
 	useEffect(() => {
 		loadCOPOData();
+		loadAttainmentConfig();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [courseId]);
+
+	const loadAttainmentConfig = async () => {
+		try {
+			const config = await apiService.getAttainmentConfig(courseId);
+
+			// Update thresholds
+			setCoThreshold(config.co_threshold);
+			setPassingThreshold(config.passing_threshold);
+
+			// Update attainment thresholds if they exist
+			if (
+				config.attainment_thresholds &&
+				config.attainment_thresholds.length > 0
+			) {
+				setAttainmentThresholds(
+					config.attainment_thresholds.map((t) => ({
+						id: t.id,
+						percentage: t.percentage,
+					}))
+				);
+			}
+		} catch (error) {
+			console.error("Failed to load attainment configuration:", error);
+			// Keep default values if loading fails
+			toast.info("Using default attainment configuration");
+		}
+	};
 
 	const loadCOPOData = async () => {
 		try {
@@ -393,7 +420,7 @@ export function COPOMapping({
 		);
 	};
 
-	const saveSettings = () => {
+	const saveSettings = async () => {
 		const percentages = attainmentThresholds.map((t) => t.percentage);
 		const hasDuplicates = new Set(percentages).size !== percentages.length;
 		if (hasDuplicates) {
@@ -405,7 +432,26 @@ export function COPOMapping({
 			toast.error("All percentages must be between 0 and 100");
 			return;
 		}
-		toast.success("Settings saved successfully");
+
+		try {
+			await apiService.saveAttainmentConfig({
+				course_id: courseId,
+				co_threshold: coThreshold,
+				passing_threshold: passingThreshold,
+				attainment_thresholds: attainmentThresholds.map((t) => ({
+					id: t.id,
+					percentage: t.percentage,
+				})),
+			});
+			toast.success("Settings saved successfully");
+		} catch (error) {
+			console.error("Failed to save settings:", error);
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to save settings"
+			);
+		}
 	};
 
 	// Update CO-PO-PSO mapping value
@@ -461,6 +507,11 @@ export function COPOMapping({
 		studentsData.length > 0 ? calculateCOAttainment() : null;
 
 	// Helper function wrappers
+	// Calculate zero level threshold as lowest attainment threshold
+	const zeroLevelThreshold = Math.min(
+		...attainmentThresholds.map((t) => t.percentage)
+	);
+
 	const getLevel = (percentage: number) =>
 		getAttainmentLevel(
 			percentage,
@@ -536,8 +587,6 @@ export function COPOMapping({
 			{/* Settings Panel */}
 			<AttainmentSettingsPanel
 				showSettings={showSettings}
-				zeroLevelThreshold={zeroLevelThreshold}
-				setZeroLevelThreshold={setZeroLevelThreshold}
 				coThreshold={coThreshold}
 				setCoThreshold={setCoThreshold}
 				passingThreshold={passingThreshold}

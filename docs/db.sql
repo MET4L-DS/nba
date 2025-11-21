@@ -44,11 +44,24 @@ CREATE TABLE `course` (
         `year` BETWEEN 1000 AND 9999
     ),
     `semester` INT NOT NULL,
+    `co_threshold` DECIMAL(5, 2) DEFAULT 40.00 CHECK (`co_threshold` >= 0 AND `co_threshold` <= 100),
+    `passing_threshold` DECIMAL(5, 2) DEFAULT 60.00 CHECK (`passing_threshold` >= 0 AND `passing_threshold` <= 100),
     PRIMARY KEY (`id`),
     UNIQUE KEY (`course_code`),
     INDEX (`faculty_id`),
     INDEX (`year`, `semester`),
     FOREIGN KEY (`faculty_id`) REFERENCES `users`(`employee_id`) ON DELETE RESTRICT
+);
+-- Attainment Scale (configurable thresholds per course)
+CREATE TABLE `attainment_scale` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `course_id` BIGINT NOT NULL,
+    `level` SMALLINT NOT NULL CHECK (`level` >= 0 AND `level` <= 10),
+    `min_percentage` DECIMAL(5, 2) NOT NULL CHECK (`min_percentage` >= 0 AND `min_percentage` <= 100),
+    PRIMARY KEY (`id`),
+    UNIQUE KEY (`course_id`, `level`),
+    INDEX (`course_id`),
+    FOREIGN KEY (`course_id`) REFERENCES `course`(`id`) ON DELETE CASCADE
 );
 -- Tests
 CREATE TABLE `test` (

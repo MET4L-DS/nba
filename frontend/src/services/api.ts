@@ -514,6 +514,68 @@ class ApiService {
 
 		return data.data;
 	}
+
+	async getAttainmentConfig(courseId: number): Promise<{
+		course_id: number;
+		co_threshold: number;
+		passing_threshold: number;
+		attainment_thresholds: Array<{
+			id: number;
+			level: number;
+			percentage: number;
+		}>;
+	}> {
+		const response = await fetch(
+			`${API_BASE_URL}/courses/${courseId}/attainment-config`,
+			{
+				headers: {
+					Authorization: `Bearer ${this.token}`,
+				},
+			}
+		);
+
+		const data = await response.json();
+
+		if (!response.ok) {
+			throw new Error(
+				data.message || "Failed to fetch attainment configuration"
+			);
+		}
+
+		return data.data;
+	}
+
+	async saveAttainmentConfig(config: {
+		course_id: number;
+		co_threshold: number;
+		passing_threshold: number;
+		attainment_thresholds: Array<{
+			id: number;
+			percentage: number;
+		}>;
+	}): Promise<{ success: boolean; message: string }> {
+		const response = await fetch(
+			`${API_BASE_URL}/courses/${config.course_id}/attainment-config`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${this.token}`,
+				},
+				body: JSON.stringify(config),
+			}
+		);
+
+		const data = await response.json();
+
+		if (!response.ok) {
+			throw new Error(
+				data.message || "Failed to save attainment configuration"
+			);
+		}
+
+		return data;
+	}
 }
 
 export const apiService = new ApiService();

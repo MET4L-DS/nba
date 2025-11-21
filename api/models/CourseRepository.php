@@ -32,7 +32,9 @@ class CourseRepository
                     $data['faculty_id'],
                     $data['year'],
                     $data['semester'],
-                    $data['syllabus_pdf']
+                    $data['syllabus_pdf'],
+                    $data['co_threshold'] ?? 40.00,
+                    $data['passing_threshold'] ?? 60.00
                 );
             }
             return null;
@@ -60,7 +62,9 @@ class CourseRepository
                     $data['faculty_id'],
                     $data['year'],
                     $data['semester'],
-                    $data['syllabus_pdf']
+                    $data['syllabus_pdf'],
+                    $data['co_threshold'] ?? 40.00,
+                    $data['passing_threshold'] ?? 60.00
                 );
             }
 
@@ -89,7 +93,9 @@ class CourseRepository
                     $data['faculty_id'],
                     $data['year'],
                     $data['semester'],
-                    $data['syllabus_pdf']
+                    $data['syllabus_pdf'],
+                    $data['co_threshold'] ?? 40.00,
+                    $data['passing_threshold'] ?? 60.00
                 );
             }
 
@@ -121,7 +127,7 @@ class CourseRepository
         try {
             if ($course->getId()) {
                 // Update existing course
-                $stmt = $this->db->prepare("UPDATE course SET course_code = ?, name = ?, credit = ?, syllabus_pdf = ?, faculty_id = ?, year = ?, semester = ? WHERE id = ?");
+                $stmt = $this->db->prepare("UPDATE course SET course_code = ?, name = ?, credit = ?, syllabus_pdf = ?, faculty_id = ?, year = ?, semester = ?, co_threshold = ?, passing_threshold = ? WHERE id = ?");
                 return $stmt->execute([
                     $course->getCourseCode(),
                     $course->getName(),
@@ -130,11 +136,13 @@ class CourseRepository
                     $course->getFacultyId(),
                     $course->getYear(),
                     $course->getSemester(),
+                    $course->getCoThreshold(),
+                    $course->getPassingThreshold(),
                     $course->getId()
                 ]);
             } else {
                 // Insert new course
-                $stmt = $this->db->prepare("INSERT INTO course (course_code, name, credit, syllabus_pdf, faculty_id, year, semester) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO course (course_code, name, credit, syllabus_pdf, faculty_id, year, semester, co_threshold, passing_threshold) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $result = $stmt->execute([
                     $course->getCourseCode(),
                     $course->getName(),
@@ -142,7 +150,9 @@ class CourseRepository
                     $course->getSyllabusPdf(),
                     $course->getFacultyId(),
                     $course->getYear(),
-                    $course->getSemester()
+                    $course->getSemester(),
+                    $course->getCoThreshold(),
+                    $course->getPassingThreshold()
                 ]);
 
                 if ($result) {
@@ -164,6 +174,19 @@ class CourseRepository
         try {
             $stmt = $this->db->prepare("DELETE FROM course WHERE id = ?");
             return $stmt->execute([$id]);
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update course thresholds
+     */
+    public function updateThresholds($courseId, $coThreshold, $passingThreshold)
+    {
+        try {
+            $stmt = $this->db->prepare("UPDATE course SET co_threshold = ?, passing_threshold = ? WHERE id = ?");
+            return $stmt->execute([$coThreshold, $passingThreshold, $courseId]);
         } catch (PDOException $e) {
             throw new Exception("Database error: " . $e->getMessage());
         }

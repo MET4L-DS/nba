@@ -14,8 +14,10 @@ class Course
     private $facultyId;
     private $year;
     private $semester;
+    private $coThreshold;
+    private $passingThreshold;
 
-    public function __construct($id, $courseCode, $name, $credit, $facultyId, $year, $semester, $syllabusPdf = null)
+    public function __construct($id, $courseCode, $name, $credit, $facultyId, $year, $semester, $syllabusPdf = null, $coThreshold = 40.00, $passingThreshold = 60.00)
     {
         $this->id = $id;
         $this->setCourseCode($courseCode);
@@ -25,6 +27,8 @@ class Course
         $this->setYear($year);
         $this->setSemester($semester);
         $this->syllabusPdf = $syllabusPdf;
+        $this->setCoThreshold($coThreshold);
+        $this->setPassingThreshold($passingThreshold);
     }
 
     // Getters
@@ -59,6 +63,14 @@ class Course
     public function getSemester()
     {
         return $this->semester;
+    }
+    public function getCoThreshold()
+    {
+        return $this->coThreshold;
+    }
+    public function getPassingThreshold()
+    {
+        return $this->passingThreshold;
     }
 
     // Setters with validation
@@ -120,6 +132,22 @@ class Course
         $this->semester = (int)$semester;
     }
 
+    public function setCoThreshold($coThreshold)
+    {
+        if (!is_numeric($coThreshold) || $coThreshold < 0 || $coThreshold > 100) {
+            throw new Exception("CO threshold must be between 0 and 100");
+        }
+        $this->coThreshold = (float)$coThreshold;
+    }
+
+    public function setPassingThreshold($passingThreshold)
+    {
+        if (!is_numeric($passingThreshold) || $passingThreshold < 0 || $passingThreshold > 100) {
+            throw new Exception("Passing threshold must be between 0 and 100");
+        }
+        $this->passingThreshold = (float)$passingThreshold;
+    }
+
     /**
      * Convert to array
      */
@@ -140,7 +168,9 @@ class Course
             'has_syllabus_pdf' => !is_null($this->syllabusPdf),
             'faculty_id' => $this->facultyId,
             'year' => $this->year,
-            'semester' => $this->semester
+            'semester' => $this->semester,
+            'co_threshold' => $this->coThreshold,
+            'passing_threshold' => $this->passingThreshold
         ];
     }
 }

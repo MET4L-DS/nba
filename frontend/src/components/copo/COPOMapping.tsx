@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { apiService } from "@/services/api";
 import { toast } from "sonner";
-import { Settings } from "lucide-react";
+import { Settings, Download } from "lucide-react";
 import { AttainmentSettingsPanel } from "./AttainmentSettingsPanel";
 import { AttainmentCriteriaCard } from "./AttainmentCriteriaCard";
 import { PassingMarksCard } from "./PassingMarksCard";
+import { exportToExcel } from "@/utils/excelExport";
 import type {
 	StudentMarks,
 	AttainmentThreshold,
@@ -561,6 +562,37 @@ export function COPOMapping({
 		return mappedCount > 0 ? sum / mappedCount : 0;
 	};
 
+	// Export to Excel handler
+	const handleExportToExcel = async () => {
+		if (!attainmentData) {
+			toast.error("No data available to export");
+			return;
+		}
+
+		try {
+			await exportToExcel({
+				studentsData,
+				maxMarks,
+				attainmentData,
+				attainmentThresholds,
+				courseInfo: {
+					courseCode,
+					courseName,
+					facultyName,
+					departmentName,
+					year,
+					semester,
+				},
+				coThreshold,
+				passingThreshold,
+			});
+			toast.success("Excel file downloaded successfully");
+		} catch (error) {
+			console.error("Failed to export Excel:", error);
+			toast.error("Failed to export Excel file");
+		}
+	};
+
 	return (
 		<div className="space-y-6 pb-8">
 			{/* Header Section */}
@@ -573,15 +605,27 @@ export function COPOMapping({
 						Course: {courseCode} - {courseName}
 					</p>
 				</div>
-				<Button
-					onClick={() => setShowSettings(!showSettings)}
-					variant="outline"
-					size="sm"
-					className="flex items-center gap-2"
-				>
-					<Settings className="h-4 w-4" />
-					Attainment Settings
-				</Button>
+				<div className="flex gap-2">
+					<Button
+						onClick={handleExportToExcel}
+						variant="default"
+						size="sm"
+						className="flex items-center gap-2"
+						disabled={!attainmentData || studentsData.length === 0}
+					>
+						<Download className="h-4 w-4" />
+						Export to Excel
+					</Button>
+					<Button
+						onClick={() => setShowSettings(!showSettings)}
+						variant="outline"
+						size="sm"
+						className="flex items-center gap-2"
+					>
+						<Settings className="h-4 w-4" />
+						Attainment Settings
+					</Button>
+				</div>
 			</div>
 
 			{/* Settings Panel */}

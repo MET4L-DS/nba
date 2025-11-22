@@ -6,6 +6,7 @@ import { Settings } from "lucide-react";
 import { AttainmentSettingsPanel } from "./AttainmentSettingsPanel";
 import { AttainmentCriteriaCard } from "./AttainmentCriteriaCard";
 import { PassingMarksCard } from "./PassingMarksCard";
+import { exportAttainmentExcel } from "@/lib/excel/attainmentExcel";
 import type {
 	StudentMarks,
 	AttainmentThreshold,
@@ -530,6 +531,33 @@ export function COPOMapping({
 		zeroLevelThreshold
 	);
 
+	// Export handler for attainment Excel
+	const handleExportAttainment = async () => {
+		try {
+			await exportAttainmentExcel({
+				attainmentThresholds,
+				coThreshold,
+				passingThreshold,
+				courseCode,
+				facultyName,
+				branch: departmentName,
+				programme: "B. Tech",
+				year: year.toString(),
+				semester: semester.toString(),
+				courseName,
+				session: `${new Date().getFullYear()}-${(
+					new Date().getFullYear() + 1
+				)
+					.toString()
+					.slice(-2)}`,
+			});
+			toast.success("Attainment Excel downloaded");
+		} catch (error) {
+			console.error("Export failed:", error);
+			toast.error("Failed to export Excel");
+		}
+	};
+
 	// Calculate PO/PSO attainment
 	const calculatePOAttainment = (po: string): number => {
 		if (!attainmentData) return 0;
@@ -573,15 +601,25 @@ export function COPOMapping({
 						Course: {courseCode} - {courseName}
 					</p>
 				</div>
-				<Button
-					onClick={() => setShowSettings(!showSettings)}
-					variant="outline"
-					size="sm"
-					className="flex items-center gap-2"
-				>
-					<Settings className="h-4 w-4" />
-					Attainment Settings
-				</Button>
+				<div className="flex items-center gap-2">
+					<Button
+						onClick={() => setShowSettings(!showSettings)}
+						variant="outline"
+						size="sm"
+						className="flex items-center gap-2"
+					>
+						<Settings className="h-4 w-4" />
+						Attainment Settings
+					</Button>
+					<Button
+						onClick={handleExportAttainment}
+						variant="ghost"
+						size="sm"
+						className="flex items-center gap-2"
+					>
+						Export Attainment Excel
+					</Button>
+				</div>
 			</div>
 
 			{/* Settings Panel */}

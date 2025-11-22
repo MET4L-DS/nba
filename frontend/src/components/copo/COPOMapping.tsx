@@ -534,6 +534,64 @@ export function COPOMapping({
 	// Export handler for attainment Excel
 	const handleExportAttainment = async () => {
 		try {
+			// Transform studentsData to match export format
+			const exportStudentsData = studentsData.map((student, index) => {
+				// Convert test marks to proper COMarks format
+				const assessmentMarks: {
+					[key: string]: {
+						CO1: number;
+						CO2: number;
+						CO3: number;
+						CO4: number;
+						CO5: number;
+						CO6: number;
+					};
+				} = {};
+				Object.entries(student.tests).forEach(([testName, marks]) => {
+					assessmentMarks[testName] = {
+						CO1: marks.CO1 || 0,
+						CO2: marks.CO2 || 0,
+						CO3: marks.CO3 || 0,
+						CO4: marks.CO4 || 0,
+						CO5: marks.CO5 || 0,
+						CO6: marks.CO6 || 0,
+					};
+				});
+
+				return {
+					sNo: index + 1,
+					rollNo: student.rollNo,
+					name: student.name,
+					absentee: student.absentee,
+					assessmentMarks,
+					coTotals: {
+						CO1: student.coTotals.CO1,
+						CO2: student.coTotals.CO2,
+						CO3: student.coTotals.CO3,
+						CO4: student.coTotals.CO4,
+						CO5: student.coTotals.CO5,
+						CO6: student.coTotals.CO6,
+						total: student.total,
+					},
+				};
+			});
+
+			// Transform maxMarks to assessment format
+			const exportAssessments = Object.entries(maxMarks).map(
+				([name, marks]) => ({
+					name,
+					maxMarks: marks.total,
+					coMaxMarks: {
+						CO1: marks.CO1,
+						CO2: marks.CO2,
+						CO3: marks.CO3,
+						CO4: marks.CO4,
+						CO5: marks.CO5,
+						CO6: marks.CO6,
+					},
+				})
+			);
+
 			await exportAttainmentExcel({
 				attainmentThresholds,
 				coThreshold,
@@ -550,6 +608,8 @@ export function COPOMapping({
 				)
 					.toString()
 					.slice(-2)}`,
+				studentsData: exportStudentsData,
+				assessments: exportAssessments,
 			});
 			toast.success("Attainment Excel downloaded");
 		} catch (error) {

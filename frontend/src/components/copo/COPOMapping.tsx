@@ -610,6 +610,7 @@ export function COPOMapping({
 					.slice(-2)}`,
 				studentsData: exportStudentsData,
 				assessments: exportAssessments,
+				copoMatrix: copoMatrix,
 			});
 			toast.success("Attainment Excel downloaded");
 		} catch (error) {

@@ -14,6 +14,7 @@ import {
 	createCOAttainmentPointScaleTable,
 	createCOAttainmentAbsoluteScaleTable,
 } from "./coAttainmentTables";
+import { createCOPOMappingTable } from "./copoMappingTable";
 
 // Re-export types for backward compatibility
 export type {
@@ -21,6 +22,7 @@ export type {
 	StudentMarksData,
 	COMarks,
 	AssessmentInfo,
+	COPOMatrix,
 } from "./types";
 
 export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
@@ -38,6 +40,7 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		session = "2021-22",
 		studentsData = [],
 		assessments = [],
+		copoMatrix = {},
 	} = opts;
 
 	const wb = new ExcelJS.Workbook();
@@ -125,6 +128,26 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		coThreshold,
 		attainmentThresholds
 	);
+
+	// Create CO-PO Mapping table on a separate sheet (only if copoMatrix is provided)
+	if (copoMatrix && Object.keys(copoMatrix).length > 0) {
+		const copoWs = wb.addWorksheet("CO-PO Mapping");
+
+		// Set column widths for CO-PO sheet
+		copoWs.getColumn(1).width = 10; // CO labels
+		for (let col = 2; col <= 16; col++) {
+			copoWs.getColumn(col).width = 8; // PO/PSO columns
+		}
+
+		createCOPOMappingTable(
+			copoWs,
+			1, // Start from row 1 on the new sheet
+			studentsData,
+			passingThreshold,
+			attainmentThresholds,
+			copoMatrix
+		);
+	}
 
 	// Finalize and save
 	const buffer = await wb.xlsx.writeBuffer();

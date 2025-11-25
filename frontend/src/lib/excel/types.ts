@@ -12,6 +12,13 @@ export interface AttainmentExportOptions {
 	session?: string;
 	studentsData?: StudentMarksData[];
 	assessments?: AssessmentInfo[];
+	copoMatrix?: COPOMatrix;
+}
+
+export interface COPOMatrix {
+	[co: string]: {
+		[po: string]: number;
+	};
 }
 
 export interface StudentMarksData {

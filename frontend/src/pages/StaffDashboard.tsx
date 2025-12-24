@@ -6,14 +6,21 @@ import { toast } from "sonner";
 import { apiService, staffApi } from "@/services/api";
 import type { User, StaffStats, StaffCourse } from "@/services/api";
 import {
-	StaffSidebar,
-	StaffHeader,
 	StaffStatsCards,
 	StaffQuickAccess,
 	CourseManagement,
 	StaffEnrollmentView,
 	type StaffPage,
 } from "@/components/staff";
+import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { LayoutDashboard, BookOpen, UserPlus, RefreshCw } from "lucide-react";
+
+const staffNavItems: NavItem[] = [
+	{ id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ id: "courses", label: "Courses", icon: BookOpen },
+	{ id: "enrollments", label: "Student Enrollment", icon: UserPlus },
+];
 
 export function StaffDashboard() {
 	const [user, setUser] = useState<User | null>(null);
@@ -127,24 +134,41 @@ export function StaffDashboard() {
 			<Toaster />
 			<div className="flex h-screen bg-gray-50 dark:bg-gray-950">
 				{/* Sidebar */}
-				<StaffSidebar
+				<AppSidebar
 					user={user}
 					sidebarOpen={sidebarOpen}
-					currentPage={currentPage}
-					onNavigate={handleNavigate}
+					items={staffNavItems}
+					activeId={currentPage}
+					onNavigate={(id) => handleNavigate(id as StaffPage)}
 					onLogout={handleLogout}
+					title="Tezpur University"
+					subtitle={user.department_name || "Department Staff"}
 				/>
 
 				{/* Main Content */}
 				<div className="flex-1 flex flex-col overflow-hidden">
 					{/* Header */}
-					<StaffHeader
+					<AppHeader
 						sidebarOpen={sidebarOpen}
 						onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-						currentPage={currentPage}
-						onRefresh={loadDashboardData}
-						isLoading={isLoading}
-					/>
+						title={currentPage}
+						description={`Welcome back, ${
+							user.username.split(" ")[0]
+						}!`}
+					>
+						<Button
+							variant="outline"
+							size="icon"
+							onClick={loadDashboardData}
+							disabled={isLoading}
+						>
+							<RefreshCw
+								className={`w-4 h-4 ${
+									isLoading ? "animate-spin" : ""
+								}`}
+							/>
+						</Button>
+					</AppHeader>
 
 					{/* Content */}
 					<main className="flex-1 overflow-auto">

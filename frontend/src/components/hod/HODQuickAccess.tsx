@@ -6,7 +6,15 @@ import {
 	Network,
 	Users,
 } from "lucide-react";
-import type { HODPage } from "./HODSidebar";
+
+type HODPage =
+	| "dashboard"
+	| "courses"
+	| "faculty"
+	| "students"
+	| "assessments"
+	| "marks"
+	| "copo";
 
 interface HODQuickAccessProps {
 	onNavigate: (page: HODPage) => void;

@@ -12,18 +12,42 @@ import type {
 	Course,
 } from "@/services/api";
 import {
-	HODSidebar,
-	HODHeader,
 	HODStatsCards,
 	HODQuickAccess,
 	CoursesManagement,
 	FacultyManagement,
 	type HODPage,
 } from "@/components/hod";
-import { FacultyHeader } from "@/components/faculty/FacultyHeader";
 import { FacultyAssessments } from "@/components/faculty/FacultyAssessments";
 import { FacultyMarks } from "@/components/faculty/FacultyMarks";
 import { FacultyCOPO } from "@/components/faculty/FacultyCOPO";
+import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import {
+	LayoutDashboard,
+	BookOpen,
+	ClipboardList,
+	FileCheck,
+	Network,
+	Users,
+	RefreshCw,
+	ChevronDown,
+} from "lucide-react";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const hodNavItems: NavItem[] = [
+	{ id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ id: "courses", label: "Manage Courses", icon: BookOpen },
+	{ id: "faculty", label: "Faculty & Staff", icon: Users },
+	{ id: "assessments", label: "Assessments", icon: ClipboardList },
+	{ id: "marks", label: "Marks Entry", icon: FileCheck },
+	{ id: "copo", label: "CO-PO Mapping", icon: Network },
+];
 
 export function HODDashboard() {
 	const [user, setUser] = useState<User | null>(null);
@@ -165,37 +189,98 @@ export function HODDashboard() {
 			<Toaster />
 			<div className="flex h-screen bg-gray-50 dark:bg-gray-950">
 				{/* Sidebar */}
-				<HODSidebar
+				<AppSidebar
 					user={user}
 					sidebarOpen={sidebarOpen}
-					currentPage={currentPage}
-					onNavigate={handleNavigate}
+					items={hodNavItems}
+					activeId={currentPage}
+					onNavigate={(id) => handleNavigate(id as HODPage)}
 					onLogout={handleLogout}
+					title="Tezpur University"
+					subtitle={user.department_name || "Department"}
 				/>
 
 				{/* Main Content */}
 				<div className="flex-1 flex flex-col overflow-hidden">
 					{/* Header */}
-					{["assessments", "marks", "copo"].includes(currentPage) ? (
-						<FacultyHeader
-							sidebarOpen={sidebarOpen}
-							onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-							courses={facultyCourses}
-							selectedCourse={selectedCourse}
-							onCourseChange={setSelectedCourse}
-							activeView={
-								currentPage as "assessments" | "marks" | "copo"
-							}
-						/>
-					) : (
-						<HODHeader
-							sidebarOpen={sidebarOpen}
-							onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-							currentPage={currentPage}
-							onRefresh={loadDashboardData}
-							isLoading={isLoading}
-						/>
-					)}
+					<AppHeader
+						sidebarOpen={sidebarOpen}
+						onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+						title={
+							currentPage === "dashboard"
+								? "HOD Dashboard"
+								: currentPage
+						}
+						description={
+							["assessments", "marks", "copo"].includes(
+								currentPage
+							)
+								? "Manage your academic activities"
+								: undefined
+						}
+					>
+						{["assessments", "marks", "copo"].includes(
+							currentPage
+						) ? (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										variant="outline"
+										className="min-w-[200px] justify-between"
+									>
+										<span className="truncate">
+											{selectedCourse
+												? `${selectedCourse.course_code} - ${selectedCourse.name}`
+												: "All Courses"}
+										</span>
+										<ChevronDown className="w-4 h-4 ml-2" />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									align="end"
+									className="w-[300px]"
+								>
+									<DropdownMenuItem
+										onClick={() => setSelectedCourse(null)}
+									>
+										All Courses
+									</DropdownMenuItem>
+									{facultyCourses.map((course) => (
+										<DropdownMenuItem
+											key={course.id}
+											onClick={() =>
+												setSelectedCourse(course)
+											}
+										>
+											<div className="flex flex-col">
+												<span className="font-medium">
+													{course.course_code} -{" "}
+													{course.name}
+												</span>
+												<span className="text-xs text-gray-500">
+													{course.semester} Semester,
+													Year {course.year}
+												</span>
+											</div>
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						) : (
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={loadDashboardData}
+								disabled={isLoading}
+							>
+								<RefreshCw
+									className={`w-4 h-4 ${
+										isLoading ? "animate-spin" : ""
+									}`}
+								/>
+							</Button>
+						)}
+					</AppHeader>
 
 					{/* Content */}
 					<main className="flex-1 overflow-auto">

@@ -1,13 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import { FacultySidebar } from "@/components/faculty/FacultySidebar";
-import { FacultyHeader } from "@/components/faculty/FacultyHeader";
 import { FacultyAssessments } from "@/components/faculty/FacultyAssessments";
 import { FacultyMarks } from "@/components/faculty/FacultyMarks";
 import { FacultyCOPO } from "@/components/faculty/FacultyCOPO";
+import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
 import { apiService } from "@/services/api";
 import type { User, Course } from "@/services/api";
+import { ClipboardList, FileCheck, Network, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const facultyNavItems: NavItem[] = [
+	{ id: "assessments", label: "Assessments", icon: ClipboardList },
+	{ id: "marks", label: "Marks Entry", icon: FileCheck },
+	{ id: "copo", label: "CO-PO Mapping", icon: Network },
+];
 
 export function FacultyDashboard() {
 	const [user, setUser] = useState<User | null>(null);
@@ -75,28 +88,51 @@ export function FacultyDashboard() {
 		<>
 			<Toaster />
 			<div className="flex h-screen bg-gray-50 dark:bg-gray-950">
-				{/* Sidebar */}
-				<FacultySidebar
+				<AppSidebar
+					items={facultyNavItems}
 					user={user}
-					sidebarOpen={sidebarOpen}
+					activeId={activeView}
+					onNavigate={(id) =>
+						setActiveView(id as "assessments" | "marks" | "copo")
+					}
 					onLogout={handleLogout}
-					activeView={activeView}
-					onNavigate={setActiveView}
+					sidebarOpen={sidebarOpen}
 				/>
 
-				{/* Main Content */}
 				<div className="flex-1 flex flex-col overflow-hidden">
-					{/* Header */}
-					<FacultyHeader
+					<AppHeader
 						sidebarOpen={sidebarOpen}
 						onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-						courses={courses}
-						selectedCourse={selectedCourse}
-						onCourseChange={setSelectedCourse}
-						activeView={activeView}
-					/>
+						title="Faculty Dashboard"
+						description="Manage assessments, marks, and CO-PO mapping."
+					>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="outline"
+									className="w-[250px] justify-between"
+								>
+									{selectedCourse
+										? `${selectedCourse.course_code} - ${selectedCourse.name}`
+										: "Select Course"}
+									<ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className="w-[250px]">
+								{courses.map((course) => (
+									<DropdownMenuItem
+										key={course.id}
+										onSelect={() =>
+											setSelectedCourse(course)
+										}
+									>
+										{course.course_code} - {course.name}
+									</DropdownMenuItem>
+								))}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</AppHeader>
 
-					{/* Dashboard Content */}
 					<main className="flex-1 overflow-hidden">
 						{activeView === "assessments" && (
 							<FacultyAssessments

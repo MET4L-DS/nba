@@ -1,5 +1,12 @@
-export { DeanSidebar, type DeanPage } from "./DeanSidebar";
-export { DeanHeader } from "./DeanHeader";
+export type DeanPage =
+	| "dashboard"
+	| "departments"
+	| "users"
+	| "courses"
+	| "students"
+	| "assessments"
+	| "analytics";
+
 export { DeanStatsCards } from "./DeanStatsCards";
 export { DepartmentsView } from "./DepartmentsView";
 export { UsersView } from "./UsersView";

@@ -15,8 +15,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import {
-	DeanSidebar,
-	DeanHeader,
 	DeanStatsCards,
 	DepartmentsView,
 	UsersView,
@@ -26,15 +24,28 @@ import {
 	AnalyticsView,
 	type DeanPage,
 } from "@/components/dean";
+import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
 	Building2,
-	Users,
+	Users as UsersIcon,
 	BookOpen,
 	GraduationCap,
 	ClipboardList,
 	BarChart3,
+	LayoutDashboard,
 } from "lucide-react";
+
+const deanNavItems: NavItem[] = [
+	{ id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ id: "departments", label: "Departments", icon: Building2 },
+	{ id: "users", label: "Users", icon: UsersIcon },
+	{ id: "courses", label: "Courses", icon: BookOpen },
+	{ id: "students", label: "Students", icon: GraduationCap },
+	{ id: "assessments", label: "Assessments", icon: ClipboardList },
+	{ id: "analytics", label: "Analytics", icon: BarChart3 },
+];
 
 export function DeanDashboard() {
 	const [currentPage, setCurrentPage] = useState<DeanPage>("dashboard");
@@ -208,7 +219,7 @@ export function DeanDashboard() {
 								<QuickAccessCard
 									title="Users"
 									description="View all users across departments"
-									icon={Users}
+									icon={UsersIcon}
 									onClick={() => handlePageChange("users")}
 								/>
 								<QuickAccessCard
@@ -290,24 +301,40 @@ export function DeanDashboard() {
 
 	return (
 		<div className="flex h-screen bg-gray-50 dark:bg-gray-950">
-			<DeanSidebar
+			<AppSidebar
+				user={currentUser}
 				sidebarOpen={sidebarOpen}
-				currentPage={currentPage}
-				currentUser={currentUser}
-				onPageChange={handlePageChange}
+				items={deanNavItems}
+				activeId={currentPage}
+				onNavigate={(id) => handlePageChange(id as DeanPage)}
 				onLogout={handleLogout}
+				title="Tezpur University"
+				subtitle="Academic Dean"
 			/>
 
 			{/* Main Content */}
 			<div className="flex-1 flex flex-col overflow-hidden">
-				<DeanHeader
+				<AppHeader
 					sidebarOpen={sidebarOpen}
-					currentPage={currentPage}
-					currentUser={currentUser}
-					refreshing={refreshing}
 					onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-					onRefresh={handleRefresh}
-				/>
+					title={currentPage}
+					description={`Welcome back, ${
+						currentUser?.username?.split(" ")[0] || "Dean"
+					}!`}
+				>
+					<Button
+						variant="outline"
+						size="icon"
+						onClick={handleRefresh}
+						disabled={refreshing}
+					>
+						<RefreshCw
+							className={`w-4 h-4 ${
+								refreshing ? "animate-spin" : ""
+							}`}
+						/>
+					</Button>
+				</AppHeader>
 
 				{/* Dashboard Content */}
 				<main className="flex-1 overflow-auto">

@@ -12,9 +12,8 @@ import type {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import {
-	AdminSidebar,
-	AdminHeader,
 	StatsCards,
 	QuickAccessCards,
 	UsersView,
@@ -23,6 +22,25 @@ import {
 	TestsView,
 	DepartmentsView,
 } from "@/components/admin";
+import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import {
+	LayoutDashboard,
+	Users as UsersIcon,
+	BookOpen,
+	GraduationCap,
+	FileText,
+	Building2,
+} from "lucide-react";
+
+const adminNavItems: NavItem[] = [
+	{ id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ id: "departments", label: "Departments", icon: Building2 },
+	{ id: "users", label: "Users", icon: UsersIcon },
+	{ id: "courses", label: "Courses", icon: BookOpen },
+	{ id: "students", label: "Students", icon: GraduationCap },
+	{ id: "tests", label: "Tests", icon: FileText },
+];
 
 export function AdminDashboard() {
 	const [activeNav, setActiveNav] = useState("dashboard");
@@ -224,33 +242,52 @@ export function AdminDashboard() {
 	}
 
 	return (
-		<div className="flex h-screen bg-gray-50 dark:bg-gray-950">
-			<AdminSidebar
-				sidebarOpen={sidebarOpen}
-				activeNav={activeNav}
-				currentUser={currentUser}
-				onNavChange={handleNavChange}
-				onLogout={handleLogout}
-			/>
-
-			{/* Main Content */}
-			<div className="flex-1 flex flex-col overflow-hidden">
-				<AdminHeader
+		<>
+			<Toaster />
+			<div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+				<AppSidebar
+					user={currentUser}
 					sidebarOpen={sidebarOpen}
-					activeNav={activeNav}
-					currentUser={currentUser}
-					refreshing={refreshing}
-					onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-					onRefresh={handleRefresh}
+					items={adminNavItems}
+					activeId={activeNav}
+					onNavigate={handleNavChange}
+					onLogout={handleLogout}
+					title="NBA System"
+					subtitle="Administrator"
 				/>
 
-				{/* Dashboard Content */}
-				<main className="flex-1 overflow-auto">
-					<ScrollArea className="h-full">
-						<div className="p-6">{renderContent()}</div>
-					</ScrollArea>
-				</main>
+				{/* Main Content */}
+				<div className="flex-1 flex flex-col overflow-hidden">
+					<AppHeader
+						sidebarOpen={sidebarOpen}
+						onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+						title={activeNav}
+						description={`Welcome back, ${
+							currentUser?.username?.split(" ")[0] || "Admin"
+						}!`}
+					>
+						<Button
+							variant="outline"
+							size="icon"
+							onClick={handleRefresh}
+							disabled={refreshing}
+						>
+							<RefreshCw
+								className={`w-4 h-4 ${
+									refreshing ? "animate-spin" : ""
+								}`}
+							/>
+						</Button>
+					</AppHeader>
+
+					{/* Dashboard Content */}
+					<main className="flex-1 overflow-auto">
+						<ScrollArea className="h-full">
+							<div className="p-6">{renderContent()}</div>
+						</ScrollArea>
+					</main>
+				</div>
 			</div>
-		</div>
+		</>
 	);
 }

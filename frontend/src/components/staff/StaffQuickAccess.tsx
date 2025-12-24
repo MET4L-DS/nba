@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, UserPlus } from "lucide-react";
-import type { StaffPage } from "./StaffSidebar";
+
+type StaffPage = "courses" | "enrollments";
 
 interface StaffQuickAccessProps {
 	onNavigate: (page: StaffPage) => void;

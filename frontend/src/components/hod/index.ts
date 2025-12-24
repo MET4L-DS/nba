@@ -1,5 +1,12 @@
-export { HODSidebar, type HODPage } from "./HODSidebar";
-export { HODHeader } from "./HODHeader";
+export type HODPage =
+	| "dashboard"
+	| "courses"
+	| "faculty"
+	| "students"
+	| "assessments"
+	| "marks"
+	| "copo";
+
 export { HODStatsCards } from "./HODStatsCards";
 export { HODQuickAccess } from "./HODQuickAccess";
 export { CoursesManagement } from "./CoursesManagement";

@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -37,6 +40,8 @@ import {
 	CheckCircle2,
 	AlertTriangle,
 	FileText,
+	UserPlus,
+	X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { staffApi } from "@/services/api";
@@ -68,6 +73,10 @@ export function StaffEnrollmentView({
 	const [, setUploading] = useState(false);
 	const [enrolling, setEnrolling] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Manual enrollment state
+	const [manualRollno, setManualRollno] = useState("");
+	const [manualName, setManualName] = useState("");
 
 	const handleCourseChange = async (courseId: string) => {
 		const course = courses.find((c) => c.id.toString() === courseId);
@@ -253,6 +262,36 @@ export function StaffEnrollmentView({
 		}
 	};
 
+	// Manual enrollment handlers
+	const handleAddManualStudent = () => {
+		if (!manualRollno.trim()) {
+			toast.error("Please enter a roll number");
+			return;
+		}
+		if (!manualName.trim()) {
+			toast.error("Please enter student name");
+			return;
+		}
+
+		// Check for duplicate
+		if (students.some((s) => s.rollno === manualRollno.trim())) {
+			toast.error("This roll number is already in the list");
+			return;
+		}
+
+		setStudents((prev) => [
+			...prev,
+			{ rollno: manualRollno.trim(), name: manualName.trim() },
+		]);
+		setManualRollno("");
+		setManualName("");
+		toast.success("Student added to enrollment list");
+	};
+
+	const handleRemoveFromList = (rollno: string) => {
+		setStudents((prev) => prev.filter((s) => s.rollno !== rollno));
+	};
+
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-64">
@@ -298,78 +337,172 @@ export function StaffEnrollmentView({
 
 			{selectedCourse && (
 				<>
-					{/* Bulk Enrollment Section */}
+					{/* Enrollment Section with Tabs */}
 					<Card>
 						<CardHeader>
-							<div className="flex items-center justify-between">
-								<div>
-									<CardTitle className="flex items-center gap-2">
-										<Upload className="w-5 h-5" />
-										Bulk Enrollment
-									</CardTitle>
-									<p className="text-sm text-muted-foreground mt-1">
-										Upload a CSV file with student roll
-										numbers and names
-									</p>
-								</div>
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={downloadTemplate}
-								>
-									<Download className="w-4 h-4 mr-2" />
-									Download Template
-								</Button>
-							</div>
+							<CardTitle className="flex items-center gap-2">
+								<Users className="w-5 h-5" />
+								Add Students to Course
+							</CardTitle>
+							<p className="text-sm text-muted-foreground">
+								Enroll students using CSV upload or manual entry
+							</p>
 						</CardHeader>
-						<CardContent className="space-y-4">
-							{/* CSV Format Info */}
-							<div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4">
-								<h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
-									<FileText className="w-4 h-4" />
-									CSV Format Requirements
-								</h4>
-								<ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-disc list-inside">
-									<li>
-										First row should be headers: rollno,name
-									</li>
-									<li>
-										Each subsequent row should contain:
-										roll_number,student_name
-									</li>
-									<li>Example: CS101,John Doe</li>
-								</ul>
-							</div>
+						<CardContent>
+							<Tabs defaultValue="csv" className="w-full">
+								<TabsList className="grid w-full grid-cols-2 mb-4">
+									<TabsTrigger
+										value="csv"
+										className="flex items-center gap-2"
+									>
+										<Upload className="w-4 h-4" />
+										CSV Upload
+									</TabsTrigger>
+									<TabsTrigger
+										value="manual"
+										className="flex items-center gap-2"
+									>
+										<UserPlus className="w-4 h-4" />
+										Manual Entry
+									</TabsTrigger>
+								</TabsList>
 
-							{/* File Upload */}
-							<div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6">
-								<input
-									ref={fileInputRef}
-									type="file"
-									accept=".csv"
-									onChange={handleFileChange}
-									className="hidden"
-									id="csv-upload"
-								/>
-								<label
-									htmlFor="csv-upload"
-									className="flex flex-col items-center cursor-pointer"
+								{/* CSV Upload Tab */}
+								<TabsContent value="csv" className="space-y-4">
+									<div className="flex items-center justify-between">
+										<div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 flex-1">
+											<h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
+												<FileText className="w-4 h-4" />
+												CSV Format Requirements
+											</h4>
+											<ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-disc list-inside">
+												<li>
+													First row should be headers:
+													rollno,name
+												</li>
+												<li>
+													Each subsequent row should
+													contain:
+													roll_number,student_name
+												</li>
+												<li>Example: CS101,John Doe</li>
+											</ul>
+										</div>
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={downloadTemplate}
+											className="ml-4"
+										>
+											<Download className="w-4 h-4 mr-2" />
+											Template
+										</Button>
+									</div>
+
+									{/* File Upload */}
+									<div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6">
+										<input
+											ref={fileInputRef}
+											type="file"
+											accept=".csv"
+											onChange={handleFileChange}
+											className="hidden"
+											id="csv-upload"
+										/>
+										<label
+											htmlFor="csv-upload"
+											className="flex flex-col items-center cursor-pointer"
+										>
+											<Upload className="w-10 h-10 text-gray-400 mb-2" />
+											<span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+												{file
+													? file.name
+													: "Click to upload CSV file"}
+											</span>
+											<span className="text-xs text-gray-500 mt-1">
+												or drag and drop
+											</span>
+										</label>
+									</div>
+								</TabsContent>
+
+								{/* Manual Entry Tab */}
+								<TabsContent
+									value="manual"
+									className="space-y-4"
 								>
-									<Upload className="w-10 h-10 text-gray-400 mb-2" />
-									<span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-										{file
-											? file.name
-											: "Click to upload CSV file"}
-									</span>
-									<span className="text-xs text-gray-500 mt-1">
-										or drag and drop
-									</span>
-								</label>
-							</div>
+									<div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-4">
+										<h4 className="text-sm font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
+											<UserPlus className="w-4 h-4" />
+											Manual Student Entry
+										</h4>
+										<p className="text-sm text-green-700 dark:text-green-300 mt-1">
+											Add students one by one to the
+											enrollment list
+										</p>
+									</div>
 
-							{/* Preview Table */}
+									<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-end">
+										<div className="space-y-2">
+											<Label htmlFor="rollno">
+												Roll Number
+											</Label>
+											<Input
+												id="rollno"
+												placeholder="e.g., CS101"
+												value={manualRollno}
+												onChange={(e) =>
+													setManualRollno(
+														e.target.value
+													)
+												}
+												onKeyDown={(e) => {
+													if (e.key === "Enter") {
+														e.preventDefault();
+														document
+															.getElementById(
+																"studentName"
+															)
+															?.focus();
+													}
+												}}
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="studentName">
+												Student Name
+											</Label>
+											<Input
+												id="studentName"
+												placeholder="e.g., John Doe"
+												value={manualName}
+												onChange={(e) =>
+													setManualName(
+														e.target.value
+													)
+												}
+												onKeyDown={(e) => {
+													if (e.key === "Enter") {
+														e.preventDefault();
+														handleAddManualStudent();
+													}
+												}}
+											/>
+										</div>
+										<Button
+											onClick={handleAddManualStudent}
+											className="h-10"
+										>
+											<UserPlus className="w-4 h-4 mr-2" />
+											Add
+										</Button>
+									</div>
+								</TabsContent>
+							</Tabs>
+
+							{/* Preview Table - Shows for both tabs */}
 							{students.length > 0 && (
-								<div className="space-y-4">
+								<div className="space-y-4 mt-6 pt-6 border-t">
 									<div className="flex items-center justify-between">
 										<div className="flex items-center gap-2">
 											<CheckCircle2 className="w-5 h-5 text-green-500" />
@@ -383,7 +516,7 @@ export function StaffEnrollmentView({
 											size="sm"
 											onClick={clearUpload}
 										>
-											Clear
+											Clear All
 										</Button>
 									</div>
 
@@ -395,6 +528,9 @@ export function StaffEnrollmentView({
 														Roll No
 													</TableHead>
 													<TableHead>Name</TableHead>
+													<TableHead className="w-20">
+														Remove
+													</TableHead>
 												</TableRow>
 											</TableHeader>
 											<TableBody>
@@ -406,6 +542,20 @@ export function StaffEnrollmentView({
 															</TableCell>
 															<TableCell>
 																{student.name}
+															</TableCell>
+															<TableCell>
+																<Button
+																	variant="ghost"
+																	size="icon"
+																	className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+																	onClick={() =>
+																		handleRemoveFromList(
+																			student.rollno
+																		)
+																	}
+																>
+																	<X className="w-4 h-4" />
+																</Button>
 															</TableCell>
 														</TableRow>
 													)

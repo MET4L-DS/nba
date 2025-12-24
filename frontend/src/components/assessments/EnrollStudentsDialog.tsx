@@ -8,11 +8,21 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { CheckCircle2, Upload, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { CSVFormatInfo } from "./CSVFormatInfo";
 import { CSVFileUpload } from "./CSVFileUpload";
-import { StudentPreviewTable } from "./StudentPreviewTable";
 import { apiService } from "@/services/api";
 import type { Course } from "@/services/api";
 
@@ -37,6 +47,10 @@ export function EnrollStudentsDialog({
 	const [uploading, setUploading] = useState(false);
 	const [enrolling, setEnrolling] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Manual enrollment state
+	const [manualRollno, setManualRollno] = useState("");
+	const [manualName, setManualName] = useState("");
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFile = e.target.files?.[0];
@@ -174,10 +188,50 @@ export function EnrollStudentsDialog({
 	const handleClose = () => {
 		setFile(null);
 		setStudents([]);
+		setManualRollno("");
+		setManualName("");
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
 		}
 		onOpenChange(false);
+	};
+
+	// Manual enrollment handlers
+	const handleAddManualStudent = () => {
+		if (!manualRollno.trim()) {
+			toast.error("Please enter a roll number");
+			return;
+		}
+		if (!manualName.trim()) {
+			toast.error("Please enter student name");
+			return;
+		}
+
+		// Check for duplicate
+		if (students.some((s) => s.rollno === manualRollno.trim())) {
+			toast.error("This roll number is already in the list");
+			return;
+		}
+
+		setStudents((prev) => [
+			...prev,
+			{ rollno: manualRollno.trim(), name: manualName.trim() },
+		]);
+		setManualRollno("");
+		setManualName("");
+		toast.success("Student added to enrollment list");
+	};
+
+	const handleRemoveFromList = (rollno: string) => {
+		setStudents((prev) => prev.filter((s) => s.rollno !== rollno));
+	};
+
+	const clearAllStudents = () => {
+		setFile(null);
+		setStudents([]);
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
 	};
 
 	const downloadTemplate = () => {
@@ -204,23 +258,166 @@ export function EnrollStudentsDialog({
 				</DialogHeader>
 
 				<div className="space-y-4 py-4">
-					<CSVFormatInfo onDownloadTemplate={downloadTemplate} />
-					<CSVFileUpload
-						fileInputRef={fileInputRef}
-						onFileChange={handleFileChange}
-						uploading={uploading}
-						enrolling={enrolling}
-					/>
-					<StudentPreviewTable students={students} />
+					<Tabs defaultValue="csv" className="w-full">
+						<TabsList className="grid w-full grid-cols-2 mb-4">
+							<TabsTrigger
+								value="csv"
+								className="flex items-center gap-2"
+							>
+								<Upload className="w-4 h-4" />
+								CSV Upload
+							</TabsTrigger>
+							<TabsTrigger
+								value="manual"
+								className="flex items-center gap-2"
+							>
+								<UserPlus className="w-4 h-4" />
+								Manual Entry
+							</TabsTrigger>
+						</TabsList>
 
-					{/* Success Message */}
-					{file && students.length > 0 && !uploading && (
-						<div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-							<CheckCircle2 className="w-4 h-4" />
-							<span>
-								Ready to enroll {students.length} student
-								{students.length > 1 ? "s" : ""}
-							</span>
+						{/* CSV Upload Tab */}
+						<TabsContent value="csv" className="space-y-4">
+							<CSVFormatInfo
+								onDownloadTemplate={downloadTemplate}
+							/>
+							<CSVFileUpload
+								fileInputRef={fileInputRef}
+								onFileChange={handleFileChange}
+								uploading={uploading}
+								enrolling={enrolling}
+							/>
+						</TabsContent>
+
+						{/* Manual Entry Tab */}
+						<TabsContent value="manual" className="space-y-4">
+							<div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-4">
+								<h4 className="text-sm font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
+									<UserPlus className="w-4 h-4" />
+									Manual Student Entry
+								</h4>
+								<p className="text-sm text-green-700 dark:text-green-300 mt-1">
+									Add students one by one to the enrollment
+									list
+								</p>
+							</div>
+
+							<div className="grid grid-cols-1 gap-4">
+								<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-2">
+										<Label htmlFor="rollno">
+											Roll Number
+										</Label>
+										<Input
+											id="rollno"
+											placeholder="e.g., CS101"
+											value={manualRollno}
+											onChange={(e) =>
+												setManualRollno(e.target.value)
+											}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													e.preventDefault();
+													document
+														.getElementById(
+															"studentName"
+														)
+														?.focus();
+												}
+											}}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="studentName">
+											Student Name
+										</Label>
+										<Input
+											id="studentName"
+											placeholder="e.g., John Doe"
+											value={manualName}
+											onChange={(e) =>
+												setManualName(e.target.value)
+											}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													e.preventDefault();
+													handleAddManualStudent();
+												}
+											}}
+										/>
+									</div>
+								</div>
+								<Button
+									onClick={handleAddManualStudent}
+									className="w-full"
+								>
+									<UserPlus className="w-4 h-4 mr-2" />
+									Add Student
+								</Button>
+							</div>
+						</TabsContent>
+					</Tabs>
+
+					{/* Preview Table - Shows for both tabs */}
+					{students.length > 0 && (
+						<div className="space-y-4 pt-4 border-t">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+									<CheckCircle2 className="w-4 h-4" />
+									<span>
+										Ready to enroll {students.length}{" "}
+										student
+										{students.length > 1 ? "s" : ""}
+									</span>
+								</div>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={clearAllStudents}
+								>
+									Clear All
+								</Button>
+							</div>
+
+							<div className="max-h-48 overflow-y-auto rounded-md border">
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>Roll No</TableHead>
+											<TableHead>Name</TableHead>
+											<TableHead className="w-16">
+												Remove
+											</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										{students.map((student, index) => (
+											<TableRow key={index}>
+												<TableCell className="font-mono">
+													{student.rollno}
+												</TableCell>
+												<TableCell>
+													{student.name}
+												</TableCell>
+												<TableCell>
+													<Button
+														variant="ghost"
+														size="icon"
+														className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+														onClick={() =>
+															handleRemoveFromList(
+																student.rollno
+															)
+														}
+													>
+														<X className="w-4 h-4" />
+													</Button>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</div>
 						</div>
 					)}
 				</div>

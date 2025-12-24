@@ -40,6 +40,7 @@ require_once __DIR__ . '/../controllers/AttainmentController.php';
 require_once __DIR__ . '/../controllers/AdminController.php';
 require_once __DIR__ . '/../controllers/HODController.php';
 require_once __DIR__ . '/../controllers/StaffController.php';
+require_once __DIR__ . '/../controllers/DeanController.php';
 
 /**
  * Router Class
@@ -57,6 +58,7 @@ class Router
     private $adminController;
     private $hodController;
     private $staffController;
+    private $deanController;
 
     public function __construct()
     {
@@ -96,6 +98,9 @@ class Router
         // Initialize enrollment repository for staff controller
         $enrollmentRepository = new EnrollmentRepository($db);
         $this->staffController = new StaffController($userRepository, $courseRepository, $departmentRepository, $enrollmentRepository, $studentRepository, $validationMiddleware, $db);
+        
+        // Initialize dean controller
+        $this->deanController = new DeanController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository);
     }
 
     /**
@@ -334,6 +339,77 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->staffController->getDepartmentStudents();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            // Dean routes (read-only access to all data)
+            case 'dean/stats':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getStats();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'dean/departments':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getAllDepartments();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'dean/users':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getAllUsers();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'dean/courses':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getAllCourses();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'dean/students':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getAllStudents();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'dean/tests':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getAllTests();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'dean/analytics':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getDepartmentAnalytics();
                 } else {
                     $this->sendMethodNotAllowed();
                 }

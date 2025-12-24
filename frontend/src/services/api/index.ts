@@ -9,6 +9,7 @@ import { marksApi } from "./marks";
 import { adminApi } from "./admin";
 import { hodApi } from "./hod";
 import { staffApi } from "./staff";
+import { deanApi } from "./dean";
 
 // Create a unified API service that maintains backward compatibility
 class ApiService {
@@ -70,6 +71,15 @@ class ApiService {
 	getStaffCourseEnrollments = staffApi.getCourseEnrollments;
 	staffBulkEnrollStudents = staffApi.bulkEnrollStudents;
 	staffRemoveEnrollment = staffApi.removeEnrollment;
+
+	// Dean methods (read-only)
+	getDeanStats = deanApi.getStats;
+	getDeanDepartments = deanApi.getAllDepartments;
+	getDeanUsers = deanApi.getAllUsers;
+	getDeanCourses = deanApi.getAllCourses;
+	getDeanStudents = deanApi.getAllStudents;
+	getDeanTests = deanApi.getAllTests;
+	getDepartmentAnalytics = deanApi.getDepartmentAnalytics;
 }
 
 // Export a singleton instance for backward compatibility
@@ -84,4 +94,5 @@ export {
 	adminApi,
 	hodApi,
 	staffApi,
+	deanApi,
 };

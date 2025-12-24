@@ -369,3 +369,86 @@ export interface StaffCourse {
 	co_threshold: number;
 	passing_threshold: number;
 }
+
+// Dean Types (read-only views)
+export interface DeanStats {
+	totalDepartments: number;
+	totalUsers: number;
+	totalCourses: number;
+	totalStudents: number;
+	totalAssessments: number;
+	usersByRole: {
+		hod: number;
+		faculty: number;
+		staff: number;
+	};
+}
+
+export interface DeanDepartment {
+	department_id: number;
+	department_name: string;
+	department_code: string;
+	hod_name: string | null;
+	faculty_count: number;
+	staff_count: number;
+	course_count: number;
+	student_count: number;
+}
+
+export interface DeanUser {
+	employee_id: number;
+	username: string;
+	email: string;
+	role: string;
+	department_id: number | null;
+	department_name: string | null;
+	department_code: string | null;
+}
+
+export interface DeanCourse {
+	id: number;
+	course_code: string;
+	name: string;
+	credit: number;
+	faculty_id: number;
+	faculty_name: string;
+	year: number;
+	semester: number;
+	co_threshold: number;
+	passing_threshold: number;
+	department_name?: string;
+	department_code?: string;
+	enrollment_count: number;
+	test_count: number;
+}
+
+export interface DeanStudent {
+	rollno: string;
+	name: string;
+	dept: number;
+	department_name: string;
+	department_code: string;
+}
+
+export interface DeanTest {
+	id: number;
+	course_id: number;
+	name: string;
+	full_marks: number;
+	pass_marks: number;
+	course_code: string;
+	course_name: string;
+	faculty_name: string;
+	department_name?: string;
+	department_code?: string;
+}
+
+export interface DepartmentAnalytics {
+	department_id: number;
+	department_name: string;
+	department_code: string;
+	total_courses: number;
+	total_tests: number;
+	total_students: number;
+	total_enrollments: number;
+}

@@ -33,6 +33,8 @@ export function LoginPage() {
 					navigate("/hod");
 				} else if (user.role === "staff") {
 					navigate("/staff");
+				} else if (user.role === "dean") {
+					navigate("/dean");
 				} else if (user.role === "admin") {
 					navigate("/dashboard");
 				} else {

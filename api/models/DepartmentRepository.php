@@ -188,4 +188,19 @@ class DepartmentRepository
             throw new Exception("Database error: " . $e->getMessage());
         }
     }
+
+    /**
+     * Count all departments
+     * @return int
+     */
+    public function countAll()
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM departments");
+            $stmt->execute();
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
 }

@@ -9,6 +9,7 @@ import {
 	FileText,
 	Settings,
 	LogOut,
+	Building2,
 } from "lucide-react";
 import type { User } from "@/services/api";
 
@@ -20,6 +21,7 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
 	{ id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ id: "departments", label: "Departments", icon: Building2 },
 	{ id: "users", label: "Users", icon: Users },
 	{ id: "courses", label: "Courses", icon: BookOpen },
 	{ id: "students", label: "Students", icon: GraduationCap },

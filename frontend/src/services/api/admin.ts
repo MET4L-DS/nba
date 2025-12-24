@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete } from "./base";
+import { apiGet, apiPost, apiPut, apiDelete } from "./base";
 import type {
 	User,
 	Student,
@@ -7,6 +7,8 @@ import type {
 	AdminCourse,
 	AdminTest,
 	CreateUserRequest,
+	CreateDepartmentRequest,
+	UpdateDepartmentRequest,
 } from "./types";
 
 export const adminApi = {
@@ -28,6 +30,27 @@ export const adminApi = {
 
 	async getAllDepartments(): Promise<Department[]> {
 		return apiGet<Department[]>("/departments");
+	},
+
+	async createDepartment(data: CreateDepartmentRequest): Promise<Department> {
+		return apiPost<CreateDepartmentRequest, Department>(
+			"/admin/departments",
+			data
+		);
+	},
+
+	async updateDepartment(
+		departmentId: number,
+		data: UpdateDepartmentRequest
+	): Promise<Department> {
+		return apiPut<UpdateDepartmentRequest, Department>(
+			`/admin/departments/${departmentId}`,
+			data
+		);
+	},
+
+	async deleteDepartment(departmentId: number): Promise<void> {
+		return apiDelete(`/admin/departments/${departmentId}`);
 	},
 
 	async getAllCourses(): Promise<AdminCourse[]> {

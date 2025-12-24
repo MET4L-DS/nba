@@ -226,4 +226,18 @@ class EnrollmentRepository
         $stmt->execute([$courseId]);
         return $stmt->fetchColumn();
     }
+
+    /**
+     * Count enrollments by department (through course faculty)
+     */
+    public function countByDepartment($departmentId)
+    {
+        $sql = "SELECT COUNT(*) FROM enrollment e
+                INNER JOIN course c ON e.course_id = c.id
+                INNER JOIN users u ON c.faculty_id = u.employee_id
+                WHERE u.department_id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$departmentId]);
+        return (int)$stmt->fetchColumn();
+    }
 }

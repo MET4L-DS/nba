@@ -8,6 +8,7 @@ import { assessmentsApi } from "./assessments";
 import { marksApi } from "./marks";
 import { adminApi } from "./admin";
 import { hodApi } from "./hod";
+import { staffApi } from "./staff";
 
 // Create a unified API service that maintains backward compatibility
 class ApiService {
@@ -44,6 +45,9 @@ class ApiService {
 	createUser = adminApi.createUser;
 	deleteUser = adminApi.deleteUser;
 	getAllDepartments = adminApi.getAllDepartments;
+	createDepartment = adminApi.createDepartment;
+	updateDepartment = adminApi.updateDepartment;
+	deleteDepartment = adminApi.deleteDepartment;
 	getAllCoursesAdmin = adminApi.getAllCourses;
 	getAllStudentsAdmin = adminApi.getAllStudents;
 	getAllTestsAdmin = adminApi.getAllTests;
@@ -58,10 +62,26 @@ class ApiService {
 	createDepartmentUser = hodApi.createUser;
 	updateDepartmentUser = hodApi.updateUser;
 	deleteDepartmentUser = hodApi.deleteUser;
+
+	// Staff methods
+	getStaffStats = staffApi.getStats;
+	getStaffDepartmentCourses = staffApi.getDepartmentCourses;
+	getStaffDepartmentStudents = staffApi.getDepartmentStudents;
+	getStaffCourseEnrollments = staffApi.getCourseEnrollments;
+	staffBulkEnrollStudents = staffApi.bulkEnrollStudents;
+	staffRemoveEnrollment = staffApi.removeEnrollment;
 }
 
 // Export a singleton instance for backward compatibility
 export const apiService = new ApiService();
 
 // Also export individual API modules for direct use
-export { authApi, coursesApi, assessmentsApi, marksApi, adminApi, hodApi };
+export {
+	authApi,
+	coursesApi,
+	assessmentsApi,
+	marksApi,
+	adminApi,
+	hodApi,
+	staffApi,
+};

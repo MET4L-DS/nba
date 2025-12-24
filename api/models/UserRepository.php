@@ -327,6 +327,22 @@ class UserRepository
     }
 
     /**
+     * Count all users by department
+     * @param int $departmentId
+     * @return int
+     */
+    public function countByDepartment($departmentId)
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE department_id = ?");
+            $stmt->execute([$departmentId]);
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Count students by department
      * @param int $departmentId
      * @return int

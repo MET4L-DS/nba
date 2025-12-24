@@ -338,3 +338,34 @@ export interface UpdateUserRequest {
 	password?: string;
 	role?: "faculty" | "staff";
 }
+
+// Admin Department Management Types
+export interface CreateDepartmentRequest {
+	department_name: string;
+	department_code: string;
+}
+
+export interface UpdateDepartmentRequest {
+	department_name?: string;
+	department_code?: string;
+}
+
+// Staff Types
+export interface StaffStats {
+	totalCourses: number;
+	totalStudents: number;
+	totalEnrollments: number;
+}
+
+export interface StaffCourse {
+	id: number;
+	course_code: string;
+	name: string;
+	credit: number;
+	faculty_id: string;
+	faculty_name: string;
+	year: number;
+	semester: number;
+	co_threshold: number;
+	passing_threshold: number;
+}

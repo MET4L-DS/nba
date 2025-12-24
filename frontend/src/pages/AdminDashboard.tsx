@@ -21,6 +21,7 @@ import {
 	CoursesView,
 	StudentsView,
 	TestsView,
+	DepartmentsView,
 } from "@/components/admin";
 
 export function AdminDashboard() {
@@ -98,6 +99,11 @@ export function AdminDashboard() {
 					const usersData = await apiService.getAllUsers();
 					setUsers(usersData);
 					break;
+				case "departments":
+					const departmentsData =
+						await apiService.getAllDepartments();
+					setDepartments(departmentsData);
+					break;
 				case "courses":
 					const coursesData = await apiService.getAllCoursesAdmin();
 					setCourses(coursesData);
@@ -147,6 +153,10 @@ export function AdminDashboard() {
 		setUsers(newUsers);
 	};
 
+	const handleDepartmentsRefresh = (newDepartments: Department[]) => {
+		setDepartments(newDepartments);
+	};
+
 	const renderContent = () => {
 		if (loading) {
 			return (
@@ -166,6 +176,14 @@ export function AdminDashboard() {
 							onNavChange={handleNavChange}
 						/>
 					</div>
+				);
+			case "departments":
+				return (
+					<DepartmentsView
+						departments={departments}
+						refreshing={refreshing}
+						onDataRefresh={handleDepartmentsRefresh}
+					/>
 				);
 			case "users":
 				return (

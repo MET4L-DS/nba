@@ -336,7 +336,7 @@ VALUES (
         'faculty',
         7
     );
--- Staff
+-- Staff (assigned to departments for enrollment management)
 INSERT INTO `users`
 VALUES (
         4001,
@@ -344,7 +344,7 @@ VALUES (
         'biren@tezu.ernet.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'staff',
-        NULL
+        1
     ),
     (
         4002,
@@ -352,7 +352,7 @@ VALUES (
         'anjali@tezu.ernet.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'staff',
-        NULL
+        2
     ),
     (
         4003,
@@ -360,7 +360,7 @@ VALUES (
         'rajesh@tezu.ernet.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'staff',
-        NULL
+        4
     );
 -- Courses
 INSERT INTO `course` (

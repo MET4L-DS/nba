@@ -1,32 +1,29 @@
 import { Menu, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
-import type { HODPage } from "./HODSidebar";
+import type { StaffPage } from "./StaffSidebar";
 
-interface HODHeaderProps {
+interface StaffHeaderProps {
 	sidebarOpen: boolean;
 	onToggleSidebar: () => void;
-	currentPage: HODPage;
+	currentPage: StaffPage;
 	onRefresh?: () => void;
 	isLoading?: boolean;
 }
 
-const pageTitles: Record<HODPage, string> = {
-	dashboard: "HOD Dashboard",
-	courses: "Manage Courses",
-	faculty: "Faculty & Staff",
-	assessments: "Assessments",
-	marks: "Marks Entry",
-	copo: "CO-PO Mapping",
+const pageTitles: Record<StaffPage, string> = {
+	dashboard: "Staff Dashboard",
+	courses: "Department Courses",
+	enrollments: "Student Enrollment",
 };
 
-export function HODHeader({
+export function StaffHeader({
 	sidebarOpen,
 	onToggleSidebar,
 	currentPage,
 	onRefresh,
 	isLoading,
-}: HODHeaderProps) {
+}: StaffHeaderProps) {
 	return (
 		<header className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center px-4 gap-4">
 			<Button

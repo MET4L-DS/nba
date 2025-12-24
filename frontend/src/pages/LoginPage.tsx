@@ -87,23 +87,14 @@ export function LoginPage() {
 					</CardContent>
 				</Card>
 
-				{/* Terms and Privacy */}
+				{/* Footer */}
 				<p className="mt-6 text-center text-xs text-slate-600 dark:text-slate-500">
-					By continuing, you agree to our{" "}
-					<a
-						href="#"
-						className="text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300"
-					>
-						Terms of Service
-					</a>{" "}
-					and{" "}
-					<a
-						href="#"
-						className="text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300"
-					>
-						Privacy Policy
-					</a>
-					.
+					© {new Date().getFullYear()} Tezpur University. All rights
+					reserved.
+					<br />
+					<span className="text-slate-500 dark:text-slate-600">
+						NBA Outcome Based Education System
+					</span>
 				</p>
 			</div>
 		</div>

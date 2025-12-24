@@ -9,12 +9,14 @@ import {
 	Network,
 	LogOut,
 	Settings,
+	Users,
 } from "lucide-react";
 import type { User } from "@/services/api";
 
 export type HODPage =
 	| "dashboard"
 	| "courses"
+	| "faculty"
 	| "assessments"
 	| "marks"
 	| "copo";
@@ -41,6 +43,7 @@ export function HODSidebar({
 			icon: LayoutDashboard,
 		},
 		{ id: "courses" as HODPage, label: "Manage Courses", icon: BookOpen },
+		{ id: "faculty" as HODPage, label: "Faculty & Staff", icon: Users },
 		{
 			id: "assessments" as HODPage,
 			label: "Assessments",

@@ -322,3 +322,19 @@ export interface UpdateCourseRequest {
 	year?: number;
 	semester?: number;
 }
+
+// HOD User Management Types
+export interface CreateUserRequest {
+	employee_id: number;
+	username: string;
+	email: string;
+	password: string;
+	role: "faculty" | "staff";
+}
+
+export interface UpdateUserRequest {
+	username?: string;
+	email?: string;
+	password?: string;
+	role?: "faculty" | "staff";
+}

@@ -264,6 +264,16 @@ class Router
                 }
                 break;
 
+            case 'hod/users':
+                if ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->hodController->createUser();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
             case 'courses':
                 if ($method === 'GET') {
                     $user = $this->authMiddleware->requireAuth();
@@ -441,6 +451,19 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->hodController->deleteCourse($courseId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^hod/users/(\d+)$#', $path, $matches)) {
+                    $employeeId = $matches[1];
+                    if ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->updateUser($employeeId);
+                    } elseif ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->deleteUser($employeeId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

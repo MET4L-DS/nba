@@ -275,7 +275,7 @@ class UserRepository
     }
 
     /**
-     * Find faculty by department
+     * Find faculty and staff by department
      * @param int $departmentId
      * @return array
      */
@@ -285,8 +285,8 @@ class UserRepository
             $stmt = $this->db->prepare("
                 SELECT employee_id, username, email, role, department_id 
                 FROM users 
-                WHERE department_id = ? AND role IN ('faculty', 'hod')
-                ORDER BY username
+                WHERE department_id = ? AND role IN ('faculty', 'hod', 'staff')
+                ORDER BY role, username
             ");
             $stmt->execute([$departmentId]);
             $faculty = [];

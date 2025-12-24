@@ -55,6 +55,9 @@ class ApiService {
 	createCourse = hodApi.createCourse;
 	updateCourse = hodApi.updateCourse;
 	deleteCourse = hodApi.deleteCourse;
+	createDepartmentUser = hodApi.createUser;
+	updateDepartmentUser = hodApi.updateUser;
+	deleteDepartmentUser = hodApi.deleteUser;
 }
 
 // Export a singleton instance for backward compatibility

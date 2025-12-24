@@ -3,3 +3,4 @@ export { HODHeader } from "./HODHeader";
 export { HODStatsCards } from "./HODStatsCards";
 export { HODQuickAccess } from "./HODQuickAccess";
 export { CoursesManagement } from "./CoursesManagement";
+export { FacultyManagement } from "./FacultyManagement";

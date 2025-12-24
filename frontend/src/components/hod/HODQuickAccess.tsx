@@ -1,5 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, ClipboardList, FileCheck, Network } from "lucide-react";
+import {
+	BookOpen,
+	ClipboardList,
+	FileCheck,
+	Network,
+	Users,
+} from "lucide-react";
 import type { HODPage } from "./HODSidebar";
 
 interface HODQuickAccessProps {
@@ -14,6 +20,13 @@ export function HODQuickAccess({ onNavigate }: HODQuickAccessProps) {
 			icon: BookOpen,
 			page: "courses" as HODPage,
 			gradient: "from-emerald-500 to-teal-600",
+		},
+		{
+			title: "Faculty & Staff",
+			description: "Manage department members",
+			icon: Users,
+			page: "faculty" as HODPage,
+			gradient: "from-cyan-500 to-blue-600",
 		},
 		{
 			title: "Create Assessment",
@@ -39,7 +52,7 @@ export function HODQuickAccess({ onNavigate }: HODQuickAccessProps) {
 	];
 
 	return (
-		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 			{quickAccessItems.map((item) => (
 				<Card
 					key={item.title}

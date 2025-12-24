@@ -17,6 +17,7 @@ import {
 	HODStatsCards,
 	HODQuickAccess,
 	CoursesManagement,
+	FacultyManagement,
 	type HODPage,
 } from "@/components/hod";
 import { AssessmentsHeader } from "@/components/assessments/AssessmentsHeader";
@@ -147,6 +148,15 @@ export function HODDashboard() {
 				return (
 					<CoursesManagement
 						courses={courses}
+						faculty={faculty}
+						isLoading={isLoading}
+						onRefresh={loadDashboardData}
+					/>
+				);
+
+			case "faculty":
+				return (
+					<FacultyManagement
 						faculty={faculty}
 						isLoading={isLoading}
 						onRefresh={loadDashboardData}

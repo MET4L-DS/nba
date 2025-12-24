@@ -5,6 +5,8 @@ import type {
 	DepartmentFaculty,
 	CreateCourseRequest,
 	UpdateCourseRequest,
+	CreateUserRequest,
+	UpdateUserRequest,
 } from "./types";
 
 export const hodApi = {
@@ -41,5 +43,27 @@ export const hodApi = {
 
 	async deleteCourse(courseId: number): Promise<void> {
 		return apiDelete(`/hod/courses/${courseId}`);
+	},
+
+	// User management
+	async createUser(userData: CreateUserRequest): Promise<DepartmentFaculty> {
+		return apiPost<CreateUserRequest, DepartmentFaculty>(
+			"/hod/users",
+			userData
+		);
+	},
+
+	async updateUser(
+		employeeId: number,
+		userData: UpdateUserRequest
+	): Promise<DepartmentFaculty> {
+		return apiPut<UpdateUserRequest, DepartmentFaculty>(
+			`/hod/users/${employeeId}`,
+			userData
+		);
+	},
+
+	async deleteUser(employeeId: number): Promise<void> {
+		return apiDelete(`/hod/users/${employeeId}`);
 	},
 };

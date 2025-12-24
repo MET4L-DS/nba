@@ -366,4 +366,279 @@ class HODController
             ]);
         }
     }
+
+    /**
+     * Create a new faculty or staff member for the department
+     */
+    public function createUser()
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            
+            $userData = $_REQUEST['authenticated_user'];
+            $departmentId = $userData['department_id'];
+
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            // Validate required fields
+            $requiredFields = ['employee_id', 'username', 'email', 'password', 'role'];
+            $errors = [];
+
+            foreach ($requiredFields as $field) {
+                if (!isset($input[$field]) || $input[$field] === '') {
+                    $errors[] = "Field '$field' is required";
+                }
+            }
+
+            if (!empty($errors)) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $errors
+                ]);
+                return;
+            }
+
+            // Validate role (HOD can only create faculty or staff)
+            if (!in_array($input['role'], ['faculty', 'staff'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid role. HOD can only create faculty or staff members.'
+                ]);
+                return;
+            }
+
+            // Check if employee_id already exists
+            $existingUser = $this->userRepository->findByEmployeeId($input['employee_id']);
+            if ($existingUser) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Employee ID already exists'
+                ]);
+                return;
+            }
+
+            // Check if email already exists
+            $existingEmail = $this->userRepository->findByEmail($input['email']);
+            if ($existingEmail) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Email already exists'
+                ]);
+                return;
+            }
+
+            // Hash password
+            $hashedPassword = password_hash($input['password'], PASSWORD_DEFAULT);
+
+            // Create user with HOD's department
+            $user = new User(
+                $input['employee_id'],
+                $input['username'],
+                $input['email'],
+                $hashedPassword,
+                $input['role'],
+                $departmentId
+            );
+
+            $this->userRepository->save($user);
+
+            http_response_code(201);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => ucfirst($input['role']) . ' created successfully',
+                'data' => [
+                    'employee_id' => $user->getEmployeeId(),
+                    'username' => $user->getUsername(),
+                    'email' => $user->getEmail(),
+                    'role' => $user->getRole(),
+                    'department_id' => $user->getDepartmentId()
+                ]
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to create user',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update a faculty or staff member
+     */
+    public function updateUser($employeeId)
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            
+            $userData = $_REQUEST['authenticated_user'];
+            $departmentId = $userData['department_id'];
+
+            // Get existing user
+            $existingUser = $this->userRepository->findByEmployeeId($employeeId);
+            if (!$existingUser) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+                return;
+            }
+
+            // Check user belongs to HOD's department
+            if ($existingUser->getDepartmentId() != $departmentId) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only update users in your department'
+                ]);
+                return;
+            }
+
+            // HOD cannot update other HODs or admins
+            if (in_array($existingUser->getRole(), ['hod', 'admin', 'dean'])) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You cannot update this user'
+                ]);
+                return;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            // Update fields
+            $username = isset($input['username']) ? $input['username'] : $existingUser->getUsername();
+            $email = isset($input['email']) ? $input['email'] : $existingUser->getEmail();
+            $role = isset($input['role']) ? $input['role'] : $existingUser->getRole();
+            $password = $existingUser->getPassword();
+
+            // Validate role if provided
+            if (isset($input['role']) && !in_array($input['role'], ['faculty', 'staff'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid role. Can only be faculty or staff.'
+                ]);
+                return;
+            }
+
+            // Check if email already exists (for another user)
+            if (isset($input['email'])) {
+                $emailUser = $this->userRepository->findByEmail($input['email']);
+                if ($emailUser && $emailUser->getEmployeeId() != $employeeId) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Email already exists'
+                    ]);
+                    return;
+                }
+            }
+
+            // Update password if provided
+            if (isset($input['password']) && !empty($input['password'])) {
+                $password = password_hash($input['password'], PASSWORD_DEFAULT);
+            }
+
+            $updatedUser = new User(
+                $employeeId,
+                $username,
+                $email,
+                $password,
+                $role,
+                $departmentId
+            );
+
+            $this->userRepository->save($updatedUser);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'User updated successfully',
+                'data' => [
+                    'employee_id' => $updatedUser->getEmployeeId(),
+                    'username' => $updatedUser->getUsername(),
+                    'email' => $updatedUser->getEmail(),
+                    'role' => $updatedUser->getRole(),
+                    'department_id' => $updatedUser->getDepartmentId()
+                ]
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to update user',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Delete a faculty or staff member
+     */
+    public function deleteUser($employeeId)
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            
+            $userData = $_REQUEST['authenticated_user'];
+            $departmentId = $userData['department_id'];
+
+            // Get existing user
+            $existingUser = $this->userRepository->findByEmployeeId($employeeId);
+            if (!$existingUser) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+                return;
+            }
+
+            // Check user belongs to HOD's department
+            if ($existingUser->getDepartmentId() != $departmentId) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You can only delete users in your department'
+                ]);
+                return;
+            }
+
+            // HOD cannot delete other HODs or admins
+            if (in_array($existingUser->getRole(), ['hod', 'admin', 'dean'])) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You cannot delete this user'
+                ]);
+                return;
+            }
+
+            $this->userRepository->delete($employeeId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'User deleted successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to delete user',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }

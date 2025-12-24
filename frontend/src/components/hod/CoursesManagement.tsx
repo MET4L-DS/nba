@@ -45,6 +45,7 @@ import type {
 	DepartmentCourse,
 	DepartmentFaculty,
 	CreateCourseRequest,
+	UpdateCourseRequest,
 } from "@/services/api";
 
 interface CoursesManagementProps {
@@ -65,8 +66,19 @@ export function CoursesManagement({
 	onRefresh,
 }: CoursesManagementProps) {
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [selectedCourse, setSelectedCourse] =
+		useState<DepartmentCourse | null>(null);
 	const [formData, setFormData] = useState<CreateCourseRequest>({
+		course_code: "",
+		name: "",
+		credit: 3,
+		faculty_id: 0,
+		year: currentYear,
+		semester: 1,
+	});
+	const [editFormData, setEditFormData] = useState<UpdateCourseRequest>({
 		course_code: "",
 		name: "",
 		credit: 3,
@@ -121,6 +133,49 @@ export function CoursesManagement({
 					? error.message
 					: "Failed to delete course"
 			);
+		}
+	};
+
+	const openEditDialog = (course: DepartmentCourse) => {
+		setSelectedCourse(course);
+		setEditFormData({
+			course_code: course.course_code,
+			name: course.name,
+			credit: course.credit,
+			faculty_id: course.faculty_id,
+			year: course.year,
+			semester: course.semester,
+		});
+		setIsEditDialogOpen(true);
+	};
+
+	const handleUpdateCourse = async () => {
+		if (!selectedCourse) return;
+
+		if (
+			!editFormData.course_code ||
+			!editFormData.name ||
+			!editFormData.faculty_id
+		) {
+			toast.error("Please fill in all required fields");
+			return;
+		}
+
+		setIsSubmitting(true);
+		try {
+			await apiService.updateCourse(selectedCourse.id, editFormData);
+			toast.success("Course updated successfully");
+			setIsEditDialogOpen(false);
+			setSelectedCourse(null);
+			onRefresh();
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to update course"
+			);
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -238,17 +293,25 @@ export function CoursesManagement({
 										<SelectValue placeholder="Select faculty member" />
 									</SelectTrigger>
 									<SelectContent>
-										{faculty.map((f) => (
-											<SelectItem
-												key={f.employee_id}
-												value={String(f.employee_id)}
-											>
-												{f.username}{" "}
-												{f.role === "hod"
-													? "(HOD)"
-													: ""}
-											</SelectItem>
-										))}
+										{faculty
+											.filter(
+												(f) =>
+													f.role === "faculty" ||
+													f.role === "hod"
+											)
+											.map((f) => (
+												<SelectItem
+													key={f.employee_id}
+													value={String(
+														f.employee_id
+													)}
+												>
+													{f.username}{" "}
+													{f.role === "hod"
+														? "(HOD)"
+														: ""}
+												</SelectItem>
+											))}
 									</SelectContent>
 								</Select>
 							</div>
@@ -385,6 +448,9 @@ export function CoursesManagement({
 												variant="ghost"
 												size="icon"
 												className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+												onClick={() =>
+													openEditDialog(course)
+												}
 											>
 												<Pencil className="w-4 h-4" />
 											</Button>
@@ -441,6 +507,194 @@ export function CoursesManagement({
 					</Table>
 				)}
 			</CardContent>
+
+			{/* Edit Course Dialog */}
+			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+				<DialogContent className="sm:max-w-[500px]">
+					<DialogHeader>
+						<DialogTitle>Edit Course</DialogTitle>
+						<DialogDescription>
+							Update course information
+						</DialogDescription>
+					</DialogHeader>
+					<div className="grid gap-4 py-4">
+						<div className="grid grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label htmlFor="edit_course_code">
+									Course Code *
+								</Label>
+								<Input
+									id="edit_course_code"
+									placeholder="e.g., CS301"
+									value={editFormData.course_code || ""}
+									onChange={(e) =>
+										setEditFormData({
+											...editFormData,
+											course_code: e.target.value,
+										})
+									}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit_credit">Credits *</Label>
+								<Select
+									value={String(editFormData.credit)}
+									onValueChange={(value) =>
+										setEditFormData({
+											...editFormData,
+											credit: parseInt(value),
+										})
+									}
+								>
+									<SelectTrigger>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										{[1, 2, 3, 4, 5, 6].map((c) => (
+											<SelectItem
+												key={c}
+												value={String(c)}
+											>
+												{c}{" "}
+												{c === 1 ? "Credit" : "Credits"}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="edit_name">Course Name *</Label>
+							<Input
+								id="edit_name"
+								placeholder="e.g., Database Management Systems"
+								value={editFormData.name || ""}
+								onChange={(e) =>
+									setEditFormData({
+										...editFormData,
+										name: e.target.value,
+									})
+								}
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="edit_faculty">
+								Assign Faculty *
+							</Label>
+							<Select
+								value={
+									editFormData.faculty_id
+										? String(editFormData.faculty_id)
+										: ""
+								}
+								onValueChange={(value) =>
+									setEditFormData({
+										...editFormData,
+										faculty_id: parseInt(value),
+									})
+								}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder="Select faculty member" />
+								</SelectTrigger>
+								<SelectContent>
+									{faculty
+										.filter(
+											(f) =>
+												f.role === "faculty" ||
+												f.role === "hod"
+										)
+										.map((f) => (
+											<SelectItem
+												key={f.employee_id}
+												value={String(f.employee_id)}
+											>
+												{f.username}{" "}
+												{f.role === "hod"
+													? "(HOD)"
+													: ""}
+											</SelectItem>
+										))}
+								</SelectContent>
+							</Select>
+						</div>
+						<div className="grid grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label htmlFor="edit_year">Year *</Label>
+								<Select
+									value={String(editFormData.year)}
+									onValueChange={(value) =>
+										setEditFormData({
+											...editFormData,
+											year: parseInt(value),
+										})
+									}
+								>
+									<SelectTrigger>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										{years.map((y) => (
+											<SelectItem
+												key={y}
+												value={String(y)}
+											>
+												{y}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit_semester">
+									Semester *
+								</Label>
+								<Select
+									value={String(editFormData.semester)}
+									onValueChange={(value) =>
+										setEditFormData({
+											...editFormData,
+											semester: parseInt(value),
+										})
+									}
+								>
+									<SelectTrigger>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										{semesters.map((s) => (
+											<SelectItem
+												key={s}
+												value={String(s)}
+											>
+												Semester {s}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setIsEditDialogOpen(false);
+								setSelectedCourse(null);
+							}}
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleUpdateCourse}
+							disabled={isSubmitting}
+							className="bg-emerald-600 hover:bg-emerald-700"
+						>
+							{isSubmitting ? "Saving..." : "Save Changes"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Card>
 	);
 }

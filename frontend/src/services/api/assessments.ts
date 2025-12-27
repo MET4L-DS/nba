@@ -1,4 +1,4 @@
-import { apiGet, apiPostFull } from "./base";
+import { apiGet, apiPostFull, tokenManager } from "./base";
 import type {
 	Course,
 	Test,
@@ -33,5 +33,34 @@ export const assessmentsApi = {
 			course: Course;
 			questions: QuestionResponse[];
 		}>(`/assessment?test_id=${testId}`);
+	},
+
+	async deleteTest(testId: number): Promise<{
+		success: boolean;
+		message: string;
+		data: {
+			test_name: string;
+			course_code: string;
+			questions_deleted: number;
+			students_affected: number;
+			raw_marks_deleted: number;
+		};
+	}> {
+		const response = await fetch(
+			`http://localhost/nba/api/tests/${testId}`,
+			{
+				method: "DELETE",
+				headers: tokenManager.getJsonHeaders(),
+			}
+		);
+
+		if (!response.ok) {
+			const error = await response.json().catch(() => ({
+				message: `HTTP ${response.status}: ${response.statusText}`,
+			}));
+			throw new Error(error.message || "Failed to delete test");
+		}
+
+		return response.json();
 	},
 };

@@ -110,4 +110,70 @@ class FacultyController
             ]);
         }
     }
+
+    /**
+     * Delete a test/assessment
+     * Also deletes all associated questions, raw marks, and CO marks (CASCADE)
+     */
+    public function deleteTest($testId, $facultyId)
+    {
+        try {
+            // First verify that this test belongs to a course taught by this faculty
+            $stmt = $this->db->prepare("
+                SELECT test.id, test.name, course.course_code, course.name as course_name
+                FROM test
+                JOIN course ON test.course_id = course.id
+                WHERE test.id = ? AND course.faculty_id = ?
+            ");
+            $stmt->execute([$testId, $facultyId]);
+            $test = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$test) {
+                http_response_code(403);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Test not found or you do not have permission to delete this test'
+                ]);
+                return;
+            }
+
+            // Get counts for confirmation message
+            $stmt = $this->db->prepare("
+                SELECT 
+                    (SELECT COUNT(*) FROM question WHERE test_id = ?) as question_count,
+                    (SELECT COUNT(DISTINCT student_id) FROM marks WHERE test_id = ?) as student_count,
+                    (SELECT COUNT(*) FROM rawMarks WHERE test_id = ?) as raw_marks_count
+            ");
+            $stmt->execute([$testId, $testId, $testId]);
+            $counts = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Delete the test (CASCADE will handle questions, rawMarks, and marks)
+            $stmt = $this->db->prepare("DELETE FROM test WHERE id = ?");
+            $stmt->execute([$testId]);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Test deleted successfully',
+                'data' => [
+                    'test_name' => $test['name'],
+                    'course_code' => $test['course_code'],
+                    'questions_deleted' => (int)$counts['question_count'],
+                    'students_affected' => (int)$counts['student_count'],
+                    'raw_marks_deleted' => (int)$counts['raw_marks_count']
+                ]
+            ]);
+        } catch (Exception $e) {
+            error_log("Error deleting test: " . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to delete test',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }

@@ -10,9 +10,21 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, FileText } from "lucide-react";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eye, FileText, Trash2 } from "lucide-react";
 import { ViewAssessmentDialog } from "./ViewAssessmentDialog";
 import { apiService } from "@/services/api";
+import { assessmentsApi } from "@/services/api/assessments";
+import { toast } from "sonner";
 import type { Course, Test } from "@/services/api";
 
 interface TestsListProps {
@@ -25,6 +37,10 @@ export function TestsList({ course, refreshTrigger }: TestsListProps) {
 	const [loading, setLoading] = useState(false);
 	const [selectedTestId, setSelectedTestId] = useState<number | null>(null);
 	const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+	const [testToDelete, setTestToDelete] = useState<Test | null>(null);
+	const [deleteConfirmation, setDeleteConfirmation] = useState("");
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	useEffect(() => {
 		if (course) {
@@ -51,6 +67,45 @@ export function TestsList({ course, refreshTrigger }: TestsListProps) {
 			setTests([]);
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handleDeleteClick = (test: Test) => {
+		setTestToDelete(test);
+		setDeleteConfirmation("");
+		setShowDeleteDialog(true);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (!testToDelete || deleteConfirmation !== "Yes") {
+			return;
+		}
+
+		setIsDeleting(true);
+		try {
+			const result = await assessmentsApi.deleteTest(testToDelete.id);
+
+			toast.success(result.message || "Test deleted successfully", {
+				description: `${result.data.questions_deleted} questions and marks for ${result.data.students_affected} students were removed.`,
+			});
+
+			// Refresh the tests list
+			loadTests();
+
+			// Close dialog
+			setShowDeleteDialog(false);
+			setTestToDelete(null);
+			setDeleteConfirmation("");
+		} catch (error) {
+			console.error("Failed to delete test:", error);
+			toast.error("Failed to delete test", {
+				description:
+					error instanceof Error
+						? error.message
+						: "An error occurred",
+			});
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
@@ -134,18 +189,35 @@ export function TestsList({ course, refreshTrigger }: TestsListProps) {
 											</Badge>
 										</TableCell>
 										<TableCell className="text-right">
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => {
-													setSelectedTestId(test.id);
-													setShowDetailsDialog(true);
-												}}
-												className="gap-2"
-											>
-												<Eye className="w-4 h-4" />
-												View Details
-											</Button>
+											<div className="flex justify-end gap-2">
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => {
+														setSelectedTestId(
+															test.id
+														);
+														setShowDetailsDialog(
+															true
+														);
+													}}
+													className="gap-2"
+												>
+													<Eye className="w-4 h-4" />
+													View Details
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() =>
+														handleDeleteClick(test)
+													}
+													className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+												>
+													<Trash2 className="w-4 h-4" />
+													Delete
+												</Button>
+											</div>
 										</TableCell>
 									</TableRow>
 								))}
@@ -160,6 +232,87 @@ export function TestsList({ course, refreshTrigger }: TestsListProps) {
 				onOpenChange={setShowDetailsDialog}
 				testId={selectedTestId}
 			/>
+
+			{/* Delete Confirmation Dialog */}
+			<Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+				<DialogContent className="sm:max-w-[500px]">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2 text-red-600">
+							<Trash2 className="w-5 h-5" />
+							Delete Assessment
+						</DialogTitle>
+						<DialogDescription asChild>
+							<div className="space-y-3 pt-2">
+								<p className="font-semibold text-gray-900 dark:text-white">
+									Are you sure you want to delete "
+									{testToDelete?.name}"?
+								</p>
+								<div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md p-4">
+									<p className="text-sm text-red-800 dark:text-red-200 font-medium mb-2">
+										⚠️ Warning: This action cannot be
+										undone!
+									</p>
+									<p className="text-sm text-red-700 dark:text-red-300">
+										Deleting this test will permanently
+										remove:
+									</p>
+									<ul className="list-disc list-inside text-sm text-red-700 dark:text-red-300 mt-2 space-y-1">
+										<li>
+											All questions in this assessment
+										</li>
+										<li>
+											All student marks (raw and
+											CO-aggregated)
+										</li>
+										<li>All related test records</li>
+									</ul>
+								</div>
+							</div>
+						</DialogDescription>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<div className="space-y-2">
+							<Label htmlFor="confirm-delete">
+								Type{" "}
+								<span className="font-mono font-bold">Yes</span>{" "}
+								to confirm deletion
+							</Label>
+							<Input
+								id="confirm-delete"
+								value={deleteConfirmation}
+								onChange={(e) =>
+									setDeleteConfirmation(e.target.value)
+								}
+								placeholder="Type Yes to confirm"
+								className="font-mono"
+								autoComplete="off"
+							/>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setShowDeleteDialog(false);
+								setTestToDelete(null);
+								setDeleteConfirmation("");
+							}}
+							disabled={isDeleting}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={handleDeleteConfirm}
+							disabled={
+								deleteConfirmation !== "Yes" || isDeleting
+							}
+						>
+							{isDeleting ? "Deleting..." : "Delete Test"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Card>
 	);
 }

@@ -129,6 +129,21 @@ class Router
             $path = substr($path, strlen($basePath));
         }
 
+        // Check for dynamic routes before switch
+        // DELETE /tests/{id}
+        if (preg_match('/^tests\/(\d+)$/', $path, $matches)) {
+            $testId = $matches[1];
+            if ($method === 'DELETE') {
+                $user = $this->authMiddleware->requireAuth();
+                $_REQUEST['authenticated_user'] = $user;
+                $this->facultyController->deleteTest($testId, $user['employee_id']);
+                return;
+            } else {
+                $this->sendMethodNotAllowed();
+                return;
+            }
+        }
+
         // Route requests
         switch ($path) {
             case '':

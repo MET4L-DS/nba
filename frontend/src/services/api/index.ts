@@ -33,6 +33,7 @@ class ApiService {
 	// Assessment methods
 	createAssessment = assessmentsApi.createAssessment;
 	getAssessment = assessmentsApi.getAssessment;
+	deleteTest = assessmentsApi.deleteTest;
 
 	// Marks methods
 	saveMarksByQuestion = marksApi.saveMarksByQuestion;

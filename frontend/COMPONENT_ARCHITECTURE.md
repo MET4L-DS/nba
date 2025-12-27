@@ -1,174 +1,282 @@
-# NBA Admin Panel - Component Architecture
+# NBA System - Component Architecture
+
+## Application Architecture
+
+### Routing Structure
+
+```
+App.tsx (BrowserRouter)
+├── /login → LoginPage
+├── /dashboard → AdminDashboard
+├── /dean → DeanDashboard
+├── /hod → HODDashboard
+├── /staff → StaffDashboard
+├── /faculty → FacultyDashboard
+├── / → Navigate to /login
+└── * → Navigate to /login
+```
 
 ## Component Hierarchy
 
 ```
 App.tsx (Root)
-├── State: isLoggedIn
-├── LoginPage (when !isLoggedIn)
-│   ├── Card
-│   │   ├── Form
-│   │   │   ├── Label + Input (Email)
-│   │   │   ├── Label + Input (Password)
-│   │   │   └── ShimmerButton (Submit)
-│   │   └── Social Login Buttons
-│   │       ├── Button (Apple)
-│   │       ├── Button (Google)
-│   │       └── Button (GitHub)
-│   ├── DotPattern (Background)
-│   └── AnimatedThemeToggler
-│
-└── AdminDashboard (when isLoggedIn)
-    ├── Sidebar
-    │   ├── Logo Section
-    │   ├── Navigation Menu
-    │   │   ├── Dashboard
-    │   │   ├── Users
-    │   │   ├── Courses
-    │   │   ├── Students
-    │   │   ├── Assessments
-    │   │   ├── Tests
-    │   │   └── Analytics
-    │   ├── Separator
-    │   ├── Settings Button
-    │   ├── Logout Button
-    │   └── User Profile
-    │       └── Avatar + Info
-    │
-    └── Main Content Area
-        ├── Header
-        │   ├── Hamburger Menu Button
-        │   ├── Page Title
-        │   └── AnimatedThemeToggler
-        │
-        └── Dashboard Content (ScrollArea)
-            ├── Stats Row (Grid)
-            │   ├── Card (Total Users)
-            │   │   └── NumberTicker
-            │   ├── Card (Total Courses)
-            │   │   └── NumberTicker
-            │   ├── Card (Total Students)
-            │   │   └── NumberTicker
-            │   └── Card (Total Assessments)
-            │       └── NumberTicker
-            │
-            ├── Tables Grid
-            │   ├── Card (Recent Courses)
-            │   │   └── Table
-            │   │       ├── TableHeader
-            │   │       └── TableBody
-            │   │           └── TableRow (x5)
-            │   │               └── Badge (Credits)
-            │   │
-            │   └── Card (Recent Students)
-            │       └── Table
-            │           ├── TableHeader
-            │           └── TableBody
-            │               └── TableRow (x5)
-            │                   └── Badge (Department)
-            │
-            └── Card (Recent Assessments)
-                └── Table
-                    ├── TableHeader
-                    └── TableBody
-                        └── TableRow (x5)
-                            ├── Progress Bar (Marks)
-                            └── Badge (Grade)
+├── BrowserRouter
+│   └── Routes
+│       ├── LoginPage (/login)
+│       │   ├── Card
+│       │   │   ├── Form
+│       │   │   │   ├── Label + Input (Email/Employee ID)
+│       │   │   │   ├── Label + Input (Password)
+│       │   │   │   └── Button (Submit)
+│       │   │   └── Error Display
+│       │   └── Background Effects
+│       │
+│       ├── AdminDashboard (/dashboard)
+│       │   ├── Sidebar
+│       │   │   ├── Logo + Navigation Menu
+│       │   │   ├── Logout Button
+│       │   │   └── User Profile
+│       │   └── Main Content
+│       │       ├── PageHeader
+│       │       ├── StatsCards (Admin variant)
+│       │       ├── QuickAccessCards (Admin variant)
+│       │       └── Views (Users, Departments, Courses, Students, Tests)
+│       │
+│       ├── DeanDashboard (/dean)
+│       │   ├── Sidebar
+│       │   └── Main Content
+│       │       ├── PageHeader
+│       │       ├── StatsCards (Dean variant - 6 cards)
+│       │       ├── QuickAccessCards (Dean variant)
+│       │       └── Views (Departments, Users, Courses, Students, Tests, Analytics)
+│       │
+│       ├── HODDashboard (/hod)
+│       │   ├── Sidebar
+│       │   └── Main Content
+│       │       ├── PageHeader
+│       │       ├── StatsCards (HOD variant)
+│       │       ├── QuickAccessCards (HOD variant)
+│       │       └── Views (Courses, Faculty Management, Students, Assessments)
+│       │
+│       ├── StaffDashboard (/staff)
+│       │   ├── Sidebar
+│       │   └── Main Content
+│       │       ├── PageHeader
+│       │       ├── StatsCards (Staff variant)
+│       │       ├── QuickAccessCards (Staff variant)
+│       │       └── Views (Courses, Students, Enrollments)
+│       │
+│       └── FacultyDashboard (/faculty)
+│           ├── Sidebar
+│           └── Main Content
+│               ├── PageHeader
+│               ├── StatsCards (Faculty variant)
+│               ├── QuickAccessCards (Faculty variant)
+│               └── Views (My Courses, Assessments, Students)
 ```
 
-## Component Details
+## Shared Component Library
 
-### 1. LoginPage Component
+### Overview
 
-**Purpose**: Authentication interface  
-**Props**: `onLogin: () => void`  
-**State**:
+Created reusable components to eliminate redundancy across dashboards.
 
--   `email: string`
--   `password: string`
+### 1. StatsCard Component (`src/components/shared/StatsCard.tsx`)
 
-**Children**:
-
--   Card (form container)
--   Input × 2 (email, password)
--   Label × 2
--   ShimmerButton (submit)
--   Button × 3 (social login)
--   DotPattern (background)
--   AnimatedThemeToggler
-
-### 2. AdminDashboard Component
-
-**Purpose**: Main dashboard interface  
-**Props**: `onLogout: () => void`  
-**State**:
-
--   `activeNav: string` (current nav item)
--   `sidebarOpen: boolean` (sidebar visibility)
-
-**Sections**:
-
--   **Sidebar** (280px width, collapsible)
--   **Header** (64px height, fixed)
--   **Content** (flexible, scrollable)
-
-### 3. Stats Cards (4 cards)
-
-**Structure**: Card → CardHeader → CardContent  
-**Features**:
-
--   Gradient backgrounds (blue, purple, green, orange)
--   Icon in header
--   NumberTicker for animated values
--   Growth indicators
-
-**Data**:
-
--   Total Users: 42
--   Total Courses: 28
--   Total Students: 350
--   Total Assessments: 156
-
-### 4. Data Tables (3 tables)
-
-#### Recent Courses Table
-
-**Columns**: Code, Name, Credits, Faculty  
-**Rows**: 5  
-**Special**: Badge for credits
-
-#### Recent Students Table
-
-**Columns**: Roll No, Name, Dept, Programme  
-**Rows**: 5  
-**Special**: Badge for department
-
-#### Recent Assessments Table
-
-**Columns**: Student, Course, Marks, Grade  
-**Rows**: 5  
-**Special**:
-
--   Progress bar for marks
--   Color-coded badge for grades
-
-## UI Component Library Usage
-
-### From ShadCn UI
+**Purpose**: Unified statistics display  
+**Props**:
 
 ```typescript
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+{
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  variant?: 'gradient' | 'solid' | 'outline';
+  suffix?: string;  // e.g., "%" for percentages
+}
+```
+
+**Variants**:
+
+-   `gradient` - Gradient background with white text
+-   `solid` - Solid color background
+-   `outline` - Border with transparent background
+
+**Used By**: All dashboards (Admin, Dean, HOD, Staff, Faculty)
+
+---
+
+### 2. QuickAccessCard Component (`src/components/shared/QuickAccessCard.tsx`)
+
+**Purpose**: Action shortcuts  
+**Props**:
+
+```typescript
+{
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  onItemClick: (id: string) => void;
+  variant?: 'default' | 'elevated' | 'compact';
+}
+```
+
+**Variants**:
+
+-   `default` - Standard card with hover effect
+-   `elevated` - Drop shadow with scale animation
+-   `compact` - Reduced padding for dense layouts
+
+**Used By**: All dashboards for quick navigation
+
+---
+
+### 3. DataTableView Component (`src/components/shared/DataTableView.tsx`)
+
+**Purpose**: Generic data table with CRUD actions  
+**Props**:
+
+```typescript
+{
+  data: any[];
+  columns: Column[];
+  onAdd?: () => void;
+  onEdit?: (item: any) => void;
+  onDelete?: (item: any) => void;
+  onView?: (item: any) => void;
+  isLoading?: boolean;
+  emptyMessage?: string;
+}
+```
+
+**Features**:
+
+-   Action buttons (Add, Edit, Delete, View)
+-   Loading states with skeleton
+-   Empty state display
+-   Responsive table layout
+
+---
+
+### 4. LoadingSpinner Component (`src/components/shared/LoadingSpinner.tsx`)
+
+**Purpose**: Loading indicator  
+**Props**: `size?: 'sm' | 'md' | 'lg'`  
+**Used By**: All data fetching components
+
+---
+
+### 5. EmptyState Component (`src/components/shared/EmptyState.tsx`)
+
+**Purpose**: No data placeholder  
+**Props**:
+
+```typescript
+{
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  action?: { label: string; onClick: () => void };
+}
+```
+
+---
+
+### 6. PageHeader Component (`src/components/shared/PageHeader.tsx`)
+
+**Purpose**: Consistent page titles  
+**Props**:
+
+```typescript
+{
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}
+```
+
+## Role-Based Dashboards
+
+### AdminDashboard
+
+**Route**: `/dashboard`  
+**Role**: `admin`  
+**Stats**: Total Users, Total Courses, Total Students, Total Assessments  
+**Quick Access**: Manage Users, Manage Departments, View Courses, View Students, View Tests  
+**Views**: Users Management, Departments Management, Courses List, Students List, Tests List
+
+---
+
+### DeanDashboard
+
+**Route**: `/dean`  
+**Role**: `dean`  
+**Stats**: Total Departments, Total Users, Total Courses, Total Students, Total Assessments, Users by Role  
+**Quick Access**: View Departments, View Users, View Courses, View Analytics  
+**Views**: Departments (read-only), Users (read-only), Courses (read-only), Students (read-only), Tests (read-only), Department Analytics
+
+**Note**: All views are read-only for institutional oversight
+
+---
+
+### HODDashboard
+
+**Route**: `/hod`  
+**Role**: `hod`  
+**Stats**: Total Courses, Total Faculty, Total Students, Total Assessments  
+**Quick Access**: Manage Courses, Manage Faculty, View Students, View Assessments  
+**Views**: Course Management (CRUD), Faculty Management (CRUD), Students List, Assessments Management
+
+---
+
+### StaffDashboard
+
+**Route**: `/staff`  
+**Role**: `staff`  
+**Stats**: Total Courses, Total Students, Total Enrollments  
+**Quick Access**: View Courses, Manage Students, Manage Enrollments  
+**Views**: Courses List, Students Management, Enrollment Management
+
+---
+
+### FacultyDashboard
+
+**Route**: `/faculty`  
+**Role**: `faculty`  
+**Stats**: Total Courses, Total Assessments, Total Students, Average Attainment %  
+**Quick Access**: My Courses, Create Assessment, View Students, Grade Assessments  
+**Views**: My Courses, Assessments, Enrolled Students, Marks Entry
+
+## UI Component Library
+
+### ShadCN UI Components
+
+```typescript
+// Layout
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+
+// Forms
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+
+// Data Display
 import {
 	Table,
 	TableBody,
@@ -177,66 +285,182 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Feedback
+import { useToast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 ```
 
-### From Magic UI
+### Magic UI Components
 
 ```typescript
-import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { NumberTicker } from "@/components/ui/number-ticker";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
-import { NumberTicker } from "@/components/ui/number-ticker";
 ```
 
-### From Lucide Icons
+### Lucide React Icons
 
 ```typescript
 import {
+	// Navigation
 	LayoutDashboard,
-	Users,
-	BookOpen,
-	GraduationCap,
-	ClipboardList,
-	FileText,
-	BarChart3,
+	Home,
 	Settings,
 	LogOut,
 	Menu,
 	X,
+
+	// Data
+	Users,
+	BookOpen,
+	GraduationCap,
+	Building2,
+	ClipboardList,
+	FileText,
+	BarChart3,
+	TrendingUp,
+	Calendar,
+	Upload,
+
+	// Actions
+	Plus,
+	Edit,
+	Trash2,
+	Eye,
+	Search,
+	Filter,
+	Download,
+
+	// Status
+	CheckCircle,
+	XCircle,
+	AlertCircle,
+	Info,
 } from "lucide-react";
 ```
 
 ## State Management
 
-### App Level
+### React Router
 
 ```typescript
-const [isLoggedIn, setIsLoggedIn] = useState(false);
+// Navigation state managed by react-router-dom
+import { useNavigate, useLocation } from "react-router-dom";
+
+// Programmatic navigation
+const navigate = useNavigate();
+navigate("/dashboard"); // After login
+navigate("/login"); // After logout
 ```
 
-### LoginPage
+### TanStack Query (React Query)
 
 ```typescript
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
+// Server state management for API calls
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// Example: Fetch admin stats
+const { data: stats, isLoading, error } = useQuery({
+  queryKey: ['adminStats'],
+  queryFn: adminApi.getStats,
+});
+
+// Example: Create user mutation
+const createUser = useMutation({
+  mutationFn: adminApi.createUser,
+  onSuccess: () => {
+    queryClient.invalidateQueries(['adminUsers']);
+  },
+}); Architecture
+
+### Authentication Flow
 ```
 
-### AdminDashboard
+1. Login:
+   LoginPage → authApi.login() → Receive JWT + User
+   → Store in localStorage → Navigate to role-based dashboard
 
+2. Logout:
+   Dashboard Logout → Clear localStorage → Navigate to /login
+
+3. Protected Routes:
+   Route Access → Check localStorage for token
+   → If missing: Navigate to /login
+   → If present: Load dashboard
+
+```
+
+### API Data Flow
+```
+
+Component → React Query Hook → API Service → Backend API
+↓
+Cache Management
+↓
+Automatic Re-fetch
+↓
+UI Update
+
+Example (Admin Stats):
+AdminDashboard → useQuery('adminStats') → adminApi.getStats()
+→ GET /admin/stats → Cache result → Display in StatsCards
+
+```
+
+### CRUD Operations Flow
+```
+
+User Action → Mutation → API Call → Success/Error
+↓ ↓
+Modal Form Update Cache & Refetch
+↓ ↓
+Submit Close Modal & Toast
+
+Example (Create User):
+Click Add User → Open Dialog → Fill Form → Submit
+→ useMutation(adminApi.createUser) → POST /admin/users
+→ Success → Invalidate 'adminUsers' query → Refetch list
+→ Close dialog → Show success toast
+
+```
+
+### Component Communication
+```
+
+Parent Dashboard
+↓ (props)
+Shared Components (StatsCard, QuickAccessCard)
+↑ (callbacks)
+Parent Dashboard
+↓ (API mutation)
+Backend
+↑ (refetch query)
+UI Update
+// Persisted in localStorage as "vite-ui-theme"
+
+````
+
+### Authentication State
 ```typescript
-const [activeNav, setActiveNav] = useState("dashboard");
-const [sidebarOpen, setSidebarOpen] = useState(true);
-```
+// Stored in localStorage
+const token = localStorage.getItem('authToken');
+const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-### ThemeProvider (Global)
-
-```typescript
-type Theme = "dark" | "light" | "system";
-const [theme, setTheme] = useState<Theme>();
-// Persisted in localStorage as "nba-ui-theme"
-```
+// User object structure:
+{
+  employee_id: number;
+  username: string;
+  email: string;
+  role: 'admin' | 'dean' | 'hod' | 'faculty' | 'staff';
+  department_id?: number;
+  department_name?: string;
+  department_code?: string;
+}
+````
 
 ## Data Flow
 
@@ -276,36 +500,248 @@ md:grid-cols-2 lg:grid-cols-4
 transition-all duration-300 ease-in-out
 ```
 
-### CSS Variables
+API Service Layer
 
-```css
-/* Theme colors stored in :root */
---primary, --secondary, --background, --foreground, etc.
+### Structure
+
+```
+src/services/
+├── api.ts                  # Base configuration
+└── api/
+    ├── index.ts           # Export all API modules
+    ├── auth.ts            # Authentication
+    ├── admin.ts           # Admin endpoints
+    ├── dean.ts            # Dean endpoints
+    ├── hod.ts             # HOD endpoints
+    ├── faculty.ts         # Faculty endpoints
+    ├── staff.ts           # Staff endpoints
+    ├── courses.ts         # Course management
+    ├── assessments.ts     # Assessment management
+    ├── marks.ts           # Marks management
+    ├── enrollment.ts      # Enrollment management
+    └── types.ts           # TypeScript interfaces
 ```
 
-## Animation System
+### Type Definitions (types.ts)
 
-### Framer Motion
+```typescript
+// User Types
+export interface User {
+  employee_id: number;
+  username: string;
+  email: string;
+  role: 'admin' | 'dean' | 'hod' | 'faculty' | 'staff';
+  department_id?: number;
+}
 
--   **AnimatedThemeToggler**: Circular transition effect
--   **DotPattern**: SVG dot animation
--   **ShimmerButton**: Shimmer slide animation
--   **NumberTicker**: Count-up animation with spring physics
+// Stats Types
+export interface AdminStats {
+  totalUsers: number;
+  totalCourses: number;
+  totalStudents: number;
+  totalAssessments: number;
+}
 
-### CSS Animations
+export interface DeanStats {
+  totalDepartments: number;
+  totalUsers: number;
+  totalCourses: number;
+  totalStudents: number;
+  totalAssessments: number;
+  usersByRole: Record<string, number>;
+}
 
--   Sidebar slide in/out
--   Button hover effects
--   Card hover shadows
--   Progress bar fills
+export interface HODStats {
+  totalCourses: number;
+  totalFaculty: number;
+  totalStudents: number;
+  totalAssessments: number;
+}
+theme-provider.tsx
+│   │   ├── shared/               # Reusable components
+│   │   │   ├── StatsCard.tsx
+│   │   │   ├── QuickAccessCard.tsx
+│   │   │   ├── DataTableView.tsx
+│   │   │   ├── LoadingSpinner.tsx
+│   │   │   ├── EmptyState.tsx
+│   │   │   └── PageHeader.tsx
+│   │   ├── admin/                # Admin-specific components
+│   │   │   ├── index.ts
+│   │   │   ├── QuickAccessCards.tsx
+│   │   │   ├── UsersView.tsx
+│   │   │   ├── DepartmentsView.tsx
+│   │   │   ├── CoursesView.tsx
+│   │   │   ├── StudentsView.tsx
+│   │   │   └── TestsView.tsx
+│   │   ├── dean/                 # Dean-specific components
+│   │   │   ├── index.ts
+│   │   │   ├── DeanStatsCards.tsx
+│   │   │   ├── DeanQuickAccess.tsx
+│   │   │   └── [view components...]
+│   │   ├── hod/                  # HOD-specific components
+│   │   │   ├── index.ts
+│   │   │   ├── HODStatsCards.tsx
+│   │   │   ├── HODQuickAccess.tsx
+│   │   │   ├── CourseManagement.tsx
+│   │   │   └── FacultyManagement.tsx
+│   │   ├── staff/                # Staff-specific components
+│   │   │   ├── index.ts
+│   │   │   ├── StaffStatsCards.tsx
+│   │   │   └── StaffQuickAccess.tsx
+│   │   ├── faculty/              # Faculty-specific components
+│   │   │   ├── index.ts
+│   │   │   ├── FacultyStatsCards.tsx
+│   │   │   ├── FacultyQuickAccess.tsx
+│   │   │   └── FacultyOverview.tsx
+│   │   ├── layout/               # Layout components
+│   │   │   ├── Sidebar.tsx
+│   │   │   └── Header.tsx
+│   │   └── ui/                   # ShadCN + Magic UI components
+│   │       ├── card.tsx
+│   │       ├── button.tsx
+│   │       ├── table.tsx
+│   │       ├── badge.tsx
+│   │       ├── dialog.tsx
+│   │       ├── select.tsx
+│   │       ├── skeleton.tsx
+│   │       ├── number-ticker.tsx
+│   │       └── [30+ UI components...]
+│   ├── pages/
+│   │   ├── LoginPage.tsx
+│   │   ├── AdminDashboard.tsx
+│   │   ├── DeanDashboard.tsx
+│   │   ├── HODDashboard.tsx
+│   │   ├── StaffDashboard.tsx
+│   │   └── FacultyDashboard.tsx
+│   ├── services/
+│   │   ├── api.ts                # Base API config
+│   │   └── api/
+│   │       ├── index.ts
+│   │       ├── auth.ts
+│   │       ├── admin.ts
+│   │       ├── dean.ts
+│   │       ├── hod.ts
+│   │       ├── faculty.ts
+│   │       ├── staff.ts
+│   │       └── types.ts
+│   ├── lib/
+│   │   ├── utils.ts
+│   │   └── excel/
+│   │       └── excelParser.ts
+│   ├── App.tsx
+│   ├── App.css
+## Key Features
 
-## Responsive Breakpoints
+### 1. Role-Based Access Control (RBAC)
+- **Admin**: Full system access (users, departments, all data)
+- **Dean**: Read-only access to all departments' data
+- **HOD**: Manage department's courses, faculty, students
+- **Staff**: Manage enrollments and students in department
+- **Faculty**: Manage own courses, assessments, and marks
 
-```css
-/* Tailwind defaults */
-sm: 640px   /* Small devices */
-md: 768px   /* Medium devices */
-lg: 1024px  /* Large devices */
+### 2. Component Reusability
+- **Shared Components**: StatsCard, QuickAccessCard, DataTableView eliminate code duplication
+- **Variant System**: Single component with multiple visual styles (gradient/solid/outline)
+- **Props-based Customization**: Flexible components adapt to different contexts
+
+### 3. Performance Optimizations
+- **React Query**: Automatic caching, background refetching, optimistic updates
+- **Code Splitting**: Route-based lazy loading (potential)
+- **Memoization**: Prevent unnecessary re-renders in data-heavy components
+- **Virtual Scrolling**: For large data tables (future enhancement)
+
+### 4. Developer Experience
+- **TypeScript**: Full type safety across API calls and components
+- **Component Indexing**: Barrel exports (index.ts) for clean imports
+- **Consistent Patterns**: Same structure across all dashboards
+- **Type-Safe API**: Complete type definitions for all API responses
+
+### 5. User Experience
+- **Loading States**: Skeleton screens during data fetching
+- **Empty States**: Helpful messages when no data exists
+- **Error Handling**: Toast notifications for success/error feedback
+- **Responsive Design**: Mobile-friendly layouts
+- **Dark Mode**: Theme persistence across sessions
+
+## Technology Stack
+
+### Core
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool
+- **React Router v6** - Client-side routing
+
+### State Management
+- **TanStack Query v5** - Server state management
+- **React Context** - Theme provider
+
+### UI Libraries
+- **ShadCN UI** - Base component library
+- **Magic UI** - Animated components
+- **Tailwind CSS** - Utility-first styling
+- **Lucide React** - Icon library
+
+### Data Handling
+- **Axios** - HTTP client
+- **React Hook Form** - Form management (future)
+- **Zod** - Schema validation (future)
+
+## Future Enhancements
+
+### Planned Features
+1. **Protected Routes**: Add AuthProvider and PrivateRoute components
+2. **Form Validation**: Integrate React Hook Form + Zod
+3. **File Upload**: Excel parsing for bulk operations
+4. **PDF Generation**: Export reports and mark sheets
+5. **Real-time Updates**: WebSocket integration for live data
+6. **Advanced Filtering**: Search, sort, and filter across all tables
+7. **Batch Operations**: Multi-select for bulk actions
+8. **Analytics Dashboard**: Charts and graphs using Recharts
+9. **Audit Logs**: Track all CRUD operations
+10. **Notifications**: In-app notification system
+
+### Code Organization Goals
+- Extract common patterns into custom hooks
+- Implement error boundary components
+- Add unit tests (Vitest + React Testing Library)
+- Create Storybook documentation for components
+- Implement CI/CD pipeline
+
+---
+
+**Version**: 2.0
+**Last Updated**: December 27, 2025
+**Architecture Status**: Fully implemented with shared component library and role-based dashboards
+├── components.json
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── COMPONENT_ARCHITECTURE.md
+└── README
+export interface Department {
+  department_id: number;
+  department_name: string;
+  department_code: string;
+}
+```
+
+### API Module Example (admin.ts)
+
+```typescript
+import { apiGet, apiPost, apiPut, apiDelete } from '../api';
+import { AdminStats, User, Department } from './types';
+
+export const adminApi = {
+  getStats: () => apiGet<AdminStats>('/admin/stats'),
+  getUsers: () => apiGet<User[]>('/admin/users'),
+  createUser: (data: CreateUserRequest) => apiPost('/admin/users', data),
+  updateUser: (id: number, data: UpdateUserRequest) => apiPut(`/admin/users/${id}`, data),
+  deleteUser: (id: number) => apiDelete(`/admin/users/${id}`),
+
+  getDepartments: () => apiGet<Department[]>('/admin/departments'),
+  createDepartment: (data: CreateDepartmentRequest) => apiPost('/admin/departments', data),
+  // ... more endpoints
+};g: 1024px  /* Large devices */
 xl: 1280px  /* Extra large devices */
 ```
 

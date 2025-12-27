@@ -42,7 +42,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Users, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
-import type { DepartmentFaculty, CreateUserRequest } from "@/services/api";
+import type { DepartmentFaculty, HODCreateUserRequest } from "@/services/api";
 
 interface FacultyManagementProps {
 	faculty: DepartmentFaculty[];
@@ -62,7 +62,7 @@ export function FacultyManagement({
 	const [selectedUser, setSelectedUser] = useState<DepartmentFaculty | null>(
 		null
 	);
-	const [formData, setFormData] = useState<CreateUserRequest>({
+	const [formData, setFormData] = useState<HODCreateUserRequest>({
 		employee_id: 0,
 		username: "",
 		email: "",

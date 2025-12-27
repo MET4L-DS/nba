@@ -1,13 +1,27 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import { FacultyAssessments } from "@/components/faculty/FacultyAssessments";
-import { FacultyMarks } from "@/components/faculty/FacultyMarks";
-import { FacultyCOPO } from "@/components/faculty/FacultyCOPO";
+import {
+	FacultyAssessments,
+	FacultyMarks,
+	FacultyCOPO,
+	FacultyStatsCards,
+	FacultyQuickAccess,
+	FacultyOverview,
+	type FacultyPage,
+} from "@/components/faculty";
 import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiService } from "@/services/api";
-import type { User, Course } from "@/services/api";
-import { ClipboardList, FileCheck, Network, ChevronDown } from "lucide-react";
+import type { User, Course, FacultyStats } from "@/services/api";
+import {
+	LayoutDashboard,
+	ClipboardList,
+	FileCheck,
+	Network,
+	ChevronDown,
+	RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -17,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const facultyNavItems: NavItem[] = [
+	{ id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
 	{ id: "assessments", label: "Assessments", icon: ClipboardList },
 	{ id: "marks", label: "Marks Entry", icon: FileCheck },
 	{ id: "copo", label: "CO-PO Mapping", icon: Network },
@@ -27,9 +42,14 @@ export function FacultyDashboard() {
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [courses, setCourses] = useState<Course[]>([]);
 	const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-	const [activeView, setActiveView] = useState<
-		"assessments" | "marks" | "copo"
-	>("assessments");
+	const [activeView, setActiveView] = useState<FacultyPage>("dashboard");
+	const [isLoading, setIsLoading] = useState(false);
+	const [stats, setStats] = useState<FacultyStats>({
+		totalCourses: 0,
+		totalAssessments: 0,
+		totalStudents: 0,
+		averageAttainment: 0,
+	});
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -60,6 +80,7 @@ export function FacultyDashboard() {
 		}
 		setUser(storedUser);
 		loadCourses();
+		loadStats();
 	}, [navigate]);
 
 	const loadCourses = async () => {
@@ -73,6 +94,34 @@ export function FacultyDashboard() {
 		} catch (error) {
 			console.error("Failed to load courses:", error);
 		}
+	};
+
+	const loadStats = async () => {
+		setIsLoading(true);
+		try {
+			const statsData = await apiService.getFacultyStats();
+			setStats(statsData);
+		} catch (error) {
+			// If the faculty stats endpoint doesn't exist yet, calculate from courses
+			console.error("Failed to load faculty stats:", error);
+			setStats({
+				totalCourses: courses.length,
+				totalAssessments: 0,
+				totalStudents: 0,
+				averageAttainment: 0,
+			});
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleRefresh = () => {
+		loadStats();
+		loadCourses();
+	};
+
+	const handleNavigate = (page: FacultyPage) => {
+		setActiveView(page);
 	};
 
 	const handleLogout = async () => {
@@ -92,9 +141,7 @@ export function FacultyDashboard() {
 					items={facultyNavItems}
 					user={user}
 					activeId={activeView}
-					onNavigate={(id) =>
-						setActiveView(id as "assessments" | "marks" | "copo")
-					}
+					onNavigate={(id) => handleNavigate(id as FacultyPage)}
 					onLogout={handleLogout}
 					sidebarOpen={sidebarOpen}
 				/>
@@ -104,45 +151,87 @@ export function FacultyDashboard() {
 						sidebarOpen={sidebarOpen}
 						onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
 						title="Faculty Dashboard"
-						description="Manage assessments, marks, and CO-PO mapping."
+						description={
+							activeView === "dashboard"
+								? "Overview of your courses and performance"
+								: "Manage assessments, marks, and CO-PO mapping."
+						}
 					>
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
+						<div className="flex items-center gap-3">
+							{activeView !== "dashboard" && (
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="outline"
+											className="w-[250px] justify-between"
+										>
+											{selectedCourse
+												? `${selectedCourse.course_code} - ${selectedCourse.name}`
+												: "Select Course"}
+											<ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent className="w-[250px]">
+										{courses.map((course) => (
+											<DropdownMenuItem
+												key={course.id}
+												onSelect={() =>
+													setSelectedCourse(course)
+												}
+											>
+												{course.course_code} -{" "}
+												{course.name}
+											</DropdownMenuItem>
+										))}
+									</DropdownMenuContent>
+								</DropdownMenu>
+							)}
+							{activeView === "dashboard" && (
 								<Button
 									variant="outline"
-									className="w-[250px] justify-between"
+									size="icon"
+									onClick={handleRefresh}
+									disabled={isLoading}
 								>
-									{selectedCourse
-										? `${selectedCourse.course_code} - ${selectedCourse.name}`
-										: "Select Course"}
-									<ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+									<RefreshCw
+										className={`h-4 w-4 ${
+											isLoading ? "animate-spin" : ""
+										}`}
+									/>
 								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent className="w-[250px]">
-								{courses.map((course) => (
-									<DropdownMenuItem
-										key={course.id}
-										onSelect={() =>
-											setSelectedCourse(course)
-										}
-									>
-										{course.course_code} - {course.name}
-									</DropdownMenuItem>
-								))}
-							</DropdownMenuContent>
-						</DropdownMenu>
+							)}
+						</div>
 					</AppHeader>
 
 					<main className="flex-1 overflow-hidden">
-						{activeView === "assessments" && (
+						{activeView === "dashboard" ? (
+							<ScrollArea className="h-full">
+								<div className="p-6 space-y-6">
+									<FacultyStatsCards
+										stats={stats}
+										isLoading={isLoading}
+									/>
+									<div>
+										<h2 className="text-lg font-semibold mb-4">
+											Quick Access
+										</h2>
+										<FacultyQuickAccess
+											onNavigate={handleNavigate}
+										/>
+									</div>
+									<FacultyOverview
+										courses={courses}
+										isLoading={isLoading}
+									/>
+								</div>
+							</ScrollArea>
+						) : activeView === "assessments" ? (
 							<FacultyAssessments
 								selectedCourse={selectedCourse}
 							/>
-						)}
-						{activeView === "marks" && (
+						) : activeView === "marks" ? (
 							<FacultyMarks selectedCourse={selectedCourse} />
-						)}
-						{activeView === "copo" && (
+						) : (
 							<FacultyCOPO
 								selectedCourse={selectedCourse}
 								user={user}

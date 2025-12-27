@@ -10,6 +10,7 @@ import { adminApi } from "./admin";
 import { hodApi } from "./hod";
 import { staffApi } from "./staff";
 import { deanApi } from "./dean";
+import { facultyApi } from "./faculty";
 
 // Create a unified API service that maintains backward compatibility
 class ApiService {
@@ -64,6 +65,9 @@ class ApiService {
 	updateDepartmentUser = hodApi.updateUser;
 	deleteDepartmentUser = hodApi.deleteUser;
 
+	// Faculty methods
+	getFacultyStats = facultyApi.getStats;
+
 	// Staff methods
 	getStaffStats = staffApi.getStats;
 	getStaffDepartmentCourses = staffApi.getDepartmentCourses;
@@ -93,6 +97,7 @@ export {
 	marksApi,
 	adminApi,
 	hodApi,
+	facultyApi,
 	staffApi,
 	deanApi,
 };

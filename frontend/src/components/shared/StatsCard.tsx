@@ -11,6 +11,7 @@ export interface StatItem {
 	color?: string;
 	bgColor?: string;
 	description?: string;
+	suffix?: string;
 }
 
 interface StatsCardProps {
@@ -44,7 +45,10 @@ export function StatsCard({
 						{isLoading ? (
 							<span className="animate-pulse">--</span>
 						) : (
-							<NumberTicker value={stat.value} />
+							<>
+								<NumberTicker value={stat.value} />
+								{stat.suffix && <span>{stat.suffix}</span>}
+							</>
 						)}
 					</div>
 					{stat.description && (
@@ -82,7 +86,10 @@ export function StatsCard({
 						{isLoading ? (
 							<span className="animate-pulse">--</span>
 						) : (
-							<NumberTicker value={stat.value} />
+							<>
+								<NumberTicker value={stat.value} />
+								{stat.suffix && <span>{stat.suffix}</span>}
+							</>
 						)}
 					</div>
 				</CardContent>
@@ -112,7 +119,10 @@ export function StatsCard({
 					{isLoading ? (
 						<span className="animate-pulse">--</span>
 					) : (
-						<NumberTicker value={stat.value} />
+						<>
+							<NumberTicker value={stat.value} />
+							{stat.suffix && <span>{stat.suffix}</span>}
+						</>
 					)}
 				</div>
 			</CardContent>

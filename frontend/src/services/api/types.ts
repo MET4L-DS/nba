@@ -324,7 +324,7 @@ export interface UpdateCourseRequest {
 }
 
 // HOD User Management Types
-export interface CreateUserRequest {
+export interface HODCreateUserRequest {
 	employee_id: number;
 	username: string;
 	email: string;
@@ -332,7 +332,7 @@ export interface CreateUserRequest {
 	role: "faculty" | "staff";
 }
 
-export interface UpdateUserRequest {
+export interface HODUpdateUserRequest {
 	username?: string;
 	email?: string;
 	password?: string;
@@ -348,6 +348,14 @@ export interface CreateDepartmentRequest {
 export interface UpdateDepartmentRequest {
 	department_name?: string;
 	department_code?: string;
+}
+
+// Faculty Types
+export interface FacultyStats {
+	totalCourses: number;
+	totalAssessments: number;
+	totalStudents: number;
+	averageAttainment: number;
 }
 
 // Staff Types

@@ -39,6 +39,7 @@ require_once __DIR__ . '/../controllers/EnrollmentController.php';
 require_once __DIR__ . '/../controllers/AttainmentController.php';
 require_once __DIR__ . '/../controllers/AdminController.php';
 require_once __DIR__ . '/../controllers/HODController.php';
+require_once __DIR__ . '/../controllers/FacultyController.php';
 require_once __DIR__ . '/../controllers/StaffController.php';
 require_once __DIR__ . '/../controllers/DeanController.php';
 
@@ -57,6 +58,7 @@ class Router
     private $attainmentController;
     private $adminController;
     private $hodController;
+    private $facultyController;
     private $staffController;
     private $deanController;
 
@@ -98,6 +100,9 @@ class Router
         // Initialize enrollment repository for staff controller
         $enrollmentRepository = new EnrollmentRepository($db);
         $this->staffController = new StaffController($userRepository, $courseRepository, $departmentRepository, $enrollmentRepository, $studentRepository, $validationMiddleware, $db);
+        
+        // Initialize faculty controller
+        $this->facultyController = new FacultyController($courseRepository, $testRepository, $enrollmentRepository, $marksRepository, $db);
         
         // Initialize dean controller
         $this->deanController = new DeanController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository);
@@ -305,6 +310,17 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->staffController->getStats();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            // Faculty routes
+            case 'faculty/stats':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->facultyController->getStats($user['employee_id']);
                 } else {
                     $this->sendMethodNotAllowed();
                 }

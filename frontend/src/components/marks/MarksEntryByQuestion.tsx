@@ -1,5 +1,4 @@
 ﻿import { useState, useEffect } from "react";
-import { CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import type {
@@ -29,6 +28,10 @@ export function MarksEntryByQuestion({
 	const [marks, setMarks] = useState<Record<string, Record<string, string>>>(
 		{}
 	);
+	const [originalMarks, setOriginalMarks] = useState<
+		Record<string, Record<string, string>>
+	>({});
+	const [dirtyRows, setDirtyRows] = useState<Set<string>>(new Set());
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 
@@ -103,6 +106,8 @@ export function MarksEntryByQuestion({
 			}
 
 			setMarks(initialMarks);
+			setOriginalMarks(JSON.parse(JSON.stringify(initialMarks))); // Deep copy
+			setDirtyRows(new Set()); // Reset dirty rows on reload
 		} catch (error) {
 			console.error("Failed to load data:", error);
 			toast.error("Failed to load students and questions");
@@ -123,6 +128,36 @@ export function MarksEntryByQuestion({
 				[questionId]: value,
 			},
 		}));
+
+		// Mark row as dirty if value differs from original
+		setDirtyRows((prev) => {
+			const newDirtyRows = new Set(prev);
+			const originalValue =
+				originalMarks[studentRollno]?.[questionId] || "";
+
+			// Check if this student has any changes
+			const hasChanges = value !== originalValue;
+
+			if (hasChanges) {
+				newDirtyRows.add(studentRollno);
+			} else {
+				// Check if all other questions for this student are unchanged
+				const allQuestionsUnchanged = Object.keys(
+					marks[studentRollno] || {}
+				).every((qId) => {
+					if (qId === questionId) return value === originalValue;
+					return (
+						(marks[studentRollno]?.[qId] || "") ===
+						(originalMarks[studentRollno]?.[qId] || "")
+					);
+				});
+				if (allQuestionsUnchanged) {
+					newDirtyRows.delete(studentRollno);
+				}
+			}
+
+			return newDirtyRows;
+		});
 	};
 
 	const handleSubmit = async () => {
@@ -136,9 +171,17 @@ export function MarksEntryByQuestion({
 			return;
 		}
 
+		if (dirtyRows.size === 0) {
+			toast.error("No changes to save");
+			return;
+		}
+
 		const bulkEntries: BulkMarksEntry[] = [];
 
-		for (const [studentRollno, studentMarks] of Object.entries(marks)) {
+		// Only process dirty (modified) rows
+		for (const studentRollno of dirtyRows) {
+			const studentMarks = marks[studentRollno];
+			if (!studentMarks) continue;
 			for (const [questionIdentifier, markValue] of Object.entries(
 				studentMarks
 			)) {
@@ -210,7 +253,7 @@ export function MarksEntryByQuestion({
 	};
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-2 w-full min-w-0">
 			<MarksEntryHeader
 				title="Bulk Marks Entry (By Question)"
 				course={course}
@@ -223,20 +266,19 @@ export function MarksEntryByQuestion({
 				isSaving={submitting}
 				isDisabled={enrollments.length === 0}
 			>
-				<CardContent>
-					{loading ? (
-						<div className="text-center py-8 text-gray-500">
-							Loading students and questions...
-						</div>
-					) : (
-						<BulkMarksTable
-							questions={questions}
-							enrollments={enrollments}
-							marks={marks}
-							onMarkChange={handleMarkChange}
-						/>
-					)}
-				</CardContent>
+				{loading ? (
+					<div className="text-center py-8 text-gray-500">
+						Loading students and questions...
+					</div>
+				) : (
+					<BulkMarksTable
+						questions={questions}
+						enrollments={enrollments}
+						marks={marks}
+						dirtyRows={dirtyRows}
+						onMarkChange={handleMarkChange}
+					/>
+				)}
 			</TestInfoCard>
 		</div>
 	);

@@ -33,7 +33,7 @@ export function FacultyMarks({ selectedCourse }: FacultyMarksProps) {
 	return (
 		<div className="h-full flex flex-col overflow-hidden">
 			<ScrollArea className="h-full">
-				<div className="p-6">
+				<div className="px-6 pt-4">
 					{!selectedTest ? (
 						<MarksEntrySelector
 							course={selectedCourse}

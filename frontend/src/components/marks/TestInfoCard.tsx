@@ -20,7 +20,7 @@ export function TestInfoCard({
 	children,
 }: TestInfoCardProps) {
 	return (
-		<Card>
+		<Card className="w-full gap-2 overflow-hidden">
 			<CardHeader>
 				<div className="flex items-center justify-between">
 					<div>

@@ -137,32 +137,16 @@ export function EnrollStudentsDialog({
 
 		setEnrolling(true);
 		try {
-			const response = await fetch(
-				`http://localhost/nba/api/courses/${course.id}/enroll`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${apiService.getToken()}`,
-					},
-					body: JSON.stringify({ students }),
-				}
-			);
+			const data = await apiService.enrollStudents(course.id, students);
 
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.message || "Failed to enroll students");
-			}
-
-			if (data.data.failure_count > 0) {
+			if (data.failure_count > 0) {
 				toast.warning(
-					`Enrollment completed with ${data.data.failure_count} failures. ${data.data.success_count} students enrolled successfully.`
+					`Enrollment completed with ${data.failure_count} failures. ${data.success_count} students enrolled successfully.`
 				);
-				console.warn("Failed enrollments:", data.data.failed);
+				console.warn("Failed enrollments:", data.failed);
 			} else {
 				toast.success(
-					`All ${data.data.success_count} students enrolled successfully!`
+					`All ${data.success_count} students enrolled successfully!`
 				);
 			}
 

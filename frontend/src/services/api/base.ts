@@ -1,4 +1,5 @@
-export const API_BASE_URL = "http://localhost/nba/api";
+export const API_BASE_URL =
+	import.meta.env.VITE_API_BASE_URL || "http://localhost/nba/api";
 
 class TokenManager {
 	private token: string | null = null;
@@ -75,7 +76,7 @@ export async function apiPost<T, R>(endpoint: string, body: T): Promise<R> {
 }
 
 // Helper function for making DELETE requests
-export async function apiDelete(endpoint: string): Promise<void> {
+export async function apiDelete<T = void>(endpoint: string): Promise<T> {
 	const response = await fetch(`${API_BASE_URL}${endpoint}`, {
 		method: "DELETE",
 		headers: tokenManager.getAuthHeaders(),
@@ -86,6 +87,8 @@ export async function apiDelete(endpoint: string): Promise<void> {
 	if (!response.ok) {
 		throw new Error(data.message || "Request failed");
 	}
+
+	return data as T;
 }
 
 // Helper function for making PUT requests

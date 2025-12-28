@@ -29,6 +29,7 @@ class ApiService {
 	getCourseEnrollments = coursesApi.getCourseEnrollments;
 	getAttainmentConfig = coursesApi.getAttainmentConfig;
 	saveAttainmentConfig = coursesApi.saveAttainmentConfig;
+	enrollStudents = coursesApi.enrollStudents;
 
 	// Assessment methods
 	createAssessment = assessmentsApi.createAssessment;

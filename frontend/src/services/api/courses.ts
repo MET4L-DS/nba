@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiGet, tokenManager } from "./base";
+import { apiGet, apiGetFull, apiPost, apiPostFull } from "./base";
 import type {
 	Course,
 	Test,
@@ -13,22 +13,18 @@ export const coursesApi = {
 	},
 
 	async getCourseTests(courseId: number): Promise<Test[]> {
-		const response = await fetch(
-			`${API_BASE_URL}/course-tests?course_id=${courseId}`,
-			{
-				headers: tokenManager.getAuthHeaders(),
-			}
-		);
-
-		const data = await response.json();
-
-		if (!response.ok) {
-			throw new Error(data.message || "Failed to fetch tests");
-		}
+		const response = await apiGetFull<{
+			course: Course;
+			tests: Test[];
+		}>(`/course-tests?course_id=${courseId}`);
 
 		// API returns { success: true, message: "...", data: { course: {...}, tests: [...] } }
-		if (data.data && data.data.tests && Array.isArray(data.data.tests)) {
-			return data.data.tests;
+		if (
+			response.data &&
+			response.data.tests &&
+			Array.isArray(response.data.tests)
+		) {
+			return response.data.tests;
 		}
 
 		return [];
@@ -54,23 +50,37 @@ export const coursesApi = {
 	async saveAttainmentConfig(
 		config: SaveAttainmentConfigRequest
 	): Promise<{ success: boolean; message: string }> {
-		const response = await fetch(
-			`${API_BASE_URL}/courses/${config.course_id}/attainment-config`,
-			{
-				method: "POST",
-				headers: tokenManager.getJsonHeaders(),
-				body: JSON.stringify(config),
-			}
+		return apiPostFull<SaveAttainmentConfigRequest, void>(
+			`/courses/${config.course_id}/attainment-config`,
+			config
 		);
+	},
 
-		const data = await response.json();
-
-		if (!response.ok) {
-			throw new Error(
-				data.message || "Failed to save attainment configuration"
-			);
-		}
-
-		return data;
+	async enrollStudents(
+		courseId: number,
+		students: Array<{ rollno: string; name: string }>
+	): Promise<{
+		success_count: number;
+		failure_count: number;
+		successful: Array<{ rollno: string; name: string }>;
+		failed: Array<{
+			rollno: string;
+			name: string;
+			error: string;
+		}>;
+	}> {
+		return apiPost<
+			{ students: Array<{ rollno: string; name: string }> },
+			{
+				success_count: number;
+				failure_count: number;
+				successful: Array<{ rollno: string; name: string }>;
+				failed: Array<{
+					rollno: string;
+					name: string;
+					error: string;
+				}>;
+			}
+		>(`/courses/${courseId}/enroll`, { students });
 	},
 };

@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiGet, apiPost, tokenManager } from "./base";
+import { apiGet, apiPost, apiPostFull } from "./base";
 import type {
 	Course,
 	Test,
@@ -31,19 +31,10 @@ export const marksApi = {
 	async saveBulkMarks(
 		bulkMarksData: BulkMarksSaveRequest
 	): Promise<BulkMarksSaveResponse> {
-		const response = await fetch(`${API_BASE_URL}/marks/bulk`, {
-			method: "POST",
-			headers: tokenManager.getJsonHeaders(),
-			body: JSON.stringify(bulkMarksData),
-		});
-
-		const data = await response.json();
-
-		if (!response.ok) {
-			throw new Error(data.message || "Failed to save bulk marks");
-		}
-
-		return data;
+		return apiPostFull<BulkMarksSaveRequest, BulkMarksSaveResponse["data"]>(
+			"/marks/bulk",
+			bulkMarksData
+		);
 	},
 
 	async getStudentMarks(

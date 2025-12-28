@@ -546,6 +546,19 @@ export function COPOMapping({
 	const attainmentData =
 		studentsData.length > 0 ? calculateCOAttainment() : null;
 
+	// Calculate total max marks per CO across all tests (for NA detection)
+	const coMaxMarks: Record<string, number> = Object.values(maxMarks).reduce(
+		(totals, testMarks) => ({
+			CO1: (totals.CO1 || 0) + (testMarks.CO1 || 0),
+			CO2: (totals.CO2 || 0) + (testMarks.CO2 || 0),
+			CO3: (totals.CO3 || 0) + (testMarks.CO3 || 0),
+			CO4: (totals.CO4 || 0) + (testMarks.CO4 || 0),
+			CO5: (totals.CO5 || 0) + (testMarks.CO5 || 0),
+			CO6: (totals.CO6 || 0) + (testMarks.CO6 || 0),
+		}),
+		{ CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0, CO6: 0 }
+	);
+
 	// Helper function wrappers
 	// Calculate zero level threshold as lowest attainment threshold
 	const zeroLevelThreshold = Math.min(
@@ -760,6 +773,7 @@ export function COPOMapping({
 				semester={semester}
 				loading={loading}
 				getPercentageColor={getPercentageColorFn}
+				coMaxMarks={coMaxMarks}
 			/>
 
 			{/* CO Attainment Tables */}
@@ -769,6 +783,7 @@ export function COPOMapping({
 					getAttainmentLevel={getLevel}
 					getPercentageColor={getPercentageColorFn}
 					coThreshold={coThreshold}
+					coMaxMarks={coMaxMarks}
 				/>
 			)}
 
@@ -797,6 +812,7 @@ export function COPOMapping({
 				getAttainmentLevel={getLevel}
 				getLevelColor={getLevelColorFn}
 				attainmentThresholds={attainmentThresholds}
+				coMaxMarks={coMaxMarks}
 			/>
 		</div>
 	);

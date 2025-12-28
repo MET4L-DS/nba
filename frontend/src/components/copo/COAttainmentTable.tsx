@@ -12,6 +12,7 @@ import type { AttainmentData } from "./types";
 interface COAttainmentTableProps {
 	attainmentData: AttainmentData;
 	coThreshold: number;
+	coMaxMarks?: Record<string, number>; // Total max marks per CO across all tests
 	getAttainmentLevel: (percentage: number) => number;
 	getPercentageColor: (percentage: number) => string;
 }
@@ -19,10 +20,17 @@ interface COAttainmentTableProps {
 export function COAttainmentTable({
 	attainmentData,
 	coThreshold,
+	coMaxMarks,
 	getAttainmentLevel,
 	getPercentageColor,
 }: COAttainmentTableProps) {
 	const coList = ["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"];
+
+	// Helper to check if a CO is assessed (has max marks > 0)
+	const isCOAssessed = (co: string): boolean => {
+		if (!coMaxMarks) return true; // If no max marks data, assume all are assessed
+		return (coMaxMarks[co] || 0) > 0;
+	};
 
 	return (
 		<>
@@ -72,7 +80,9 @@ export function COAttainmentTable({
 											key={co}
 											className="border border-gray-300 dark:border-gray-700 text-center"
 										>
-											{attainmentData.absentees}
+											{isCOAssessed(co)
+												? attainmentData.absentees
+												: "NA"}
 										</TableCell>
 									))}
 								</TableRow>
@@ -85,7 +95,9 @@ export function COAttainmentTable({
 											key={co}
 											className="border border-gray-300 dark:border-gray-700 text-center"
 										>
-											{attainmentData.presentStudents}
+											{isCOAssessed(co)
+												? attainmentData.presentStudents
+												: "NA"}
 										</TableCell>
 									))}
 								</TableRow>
@@ -99,11 +111,11 @@ export function COAttainmentTable({
 											key={co}
 											className="border border-gray-300 dark:border-gray-700 text-center bg-gray-900 dark:bg-gray-950 text-white"
 										>
-											{
-												attainmentData.coStats[
-													co as keyof typeof attainmentData.coStats
-												].aboveCOThreshold
-											}
+											{isCOAssessed(co)
+												? attainmentData.coStats[
+														co as keyof typeof attainmentData.coStats
+												  ].aboveCOThreshold
+												: "NA"}
 										</TableCell>
 									))}
 								</TableRow>
@@ -113,6 +125,16 @@ export function COAttainmentTable({
 										{coThreshold}% (CO THRESHOLD)
 									</TableCell>
 									{coList.map((co) => {
+										if (!isCOAssessed(co)) {
+											return (
+												<TableCell
+													key={co}
+													className="border border-gray-300 dark:border-gray-700 text-center text-gray-500"
+												>
+													NA
+												</TableCell>
+											);
+										}
 										const percentage =
 											attainmentData.presentStudents > 0
 												? (attainmentData.coStats[
@@ -136,6 +158,16 @@ export function COAttainmentTable({
 										CO Attainment Level (Based on Criteria)
 									</TableCell>
 									{coList.map((co) => {
+										if (!isCOAssessed(co)) {
+											return (
+												<TableCell
+													key={co}
+													className="border border-gray-300 dark:border-gray-700 text-center text-gray-500 bg-gray-100 dark:bg-gray-800"
+												>
+													NA
+												</TableCell>
+											);
+										}
 										const percentage =
 											attainmentData.presentStudents > 0
 												? (attainmentData.coStats[
@@ -164,6 +196,16 @@ export function COAttainmentTable({
 										Assessment):
 									</TableCell>
 									{coList.map((co) => {
+										if (!isCOAssessed(co)) {
+											return (
+												<TableCell
+													key={co}
+													className="border border-gray-300 dark:border-gray-700 text-center font-bold text-gray-500 bg-gray-200 dark:bg-gray-700"
+												>
+													NA
+												</TableCell>
+											);
+										}
 										const percentage =
 											attainmentData.presentStudents > 0
 												? (attainmentData.coStats[
@@ -238,7 +280,9 @@ export function COAttainmentTable({
 											key={co}
 											className="border border-gray-300 dark:border-gray-700 text-center"
 										>
-											{attainmentData.absentees}
+											{isCOAssessed(co)
+												? attainmentData.absentees
+												: "NA"}
 										</TableCell>
 									))}
 								</TableRow>
@@ -251,7 +295,9 @@ export function COAttainmentTable({
 											key={co}
 											className="border border-gray-300 dark:border-gray-700 text-center"
 										>
-											{attainmentData.presentStudents}
+											{isCOAssessed(co)
+												? attainmentData.presentStudents
+												: "NA"}
 										</TableCell>
 									))}
 								</TableRow>
@@ -265,11 +311,11 @@ export function COAttainmentTable({
 											key={co}
 											className="border border-gray-300 dark:border-gray-700 text-center bg-gray-800 dark:bg-gray-950 text-white"
 										>
-											{
-												attainmentData.coStats[
-													co as keyof typeof attainmentData.coStats
-												].abovePass
-											}
+											{isCOAssessed(co)
+												? attainmentData.coStats[
+														co as keyof typeof attainmentData.coStats
+												  ].abovePass
+												: "NA"}
 										</TableCell>
 									))}
 								</TableRow>
@@ -279,6 +325,16 @@ export function COAttainmentTable({
 										PASSING MARKS
 									</TableCell>
 									{coList.map((co) => {
+										if (!isCOAssessed(co)) {
+											return (
+												<TableCell
+													key={co}
+													className="border border-gray-300 dark:border-gray-700 text-center text-gray-500"
+												>
+													NA
+												</TableCell>
+											);
+										}
 										const percentage =
 											attainmentData.presentStudents > 0
 												? (attainmentData.coStats[
@@ -299,10 +355,20 @@ export function COAttainmentTable({
 								</TableRow>
 								<TableRow>
 									<TableCell className="border border-gray-300 dark:border-gray-700 font-medium">
-										CO Attainment (AVERAGE OF PERCENTAGE
-										ATTAINMENTS)
+										CO Attainment (% of Students Above
+										Passing Marks)
 									</TableCell>
 									{coList.map((co) => {
+										if (!isCOAssessed(co)) {
+											return (
+												<TableCell
+													key={co}
+													className="border border-gray-300 dark:border-gray-700 text-center text-gray-500 bg-gray-100 dark:bg-gray-800"
+												>
+													NA
+												</TableCell>
+											);
+										}
 										const percentage =
 											attainmentData.presentStudents > 0
 												? (attainmentData.coStats[
@@ -329,6 +395,16 @@ export function COAttainmentTable({
 										SCALE):
 									</TableCell>
 									{coList.map((co) => {
+										if (!isCOAssessed(co)) {
+											return (
+												<TableCell
+													key={co}
+													className="border border-gray-300 dark:border-gray-700 text-center font-bold text-gray-500 bg-gray-200 dark:bg-gray-700"
+												>
+													NA
+												</TableCell>
+											);
+										}
 										const percentage =
 											attainmentData.presentStudents > 0
 												? (attainmentData.coStats[

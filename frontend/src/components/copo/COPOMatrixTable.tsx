@@ -31,6 +31,7 @@ interface COPOMatrixTableProps {
 	getAttainmentLevel: (percentage: number) => number;
 	getLevelColor: (level: number) => string;
 	attainmentThresholds: { id: number; percentage: number }[];
+	coMaxMarks?: Record<string, number>; // Total max marks per CO
 }
 
 export function COPOMatrixTable({
@@ -41,7 +42,13 @@ export function COPOMatrixTable({
 	getAttainmentLevel,
 	getLevelColor,
 	attainmentThresholds,
+	coMaxMarks,
 }: COPOMatrixTableProps) {
+	// Helper to check if a CO is assessed
+	const isCOAssessed = (co: string): boolean => {
+		if (!coMaxMarks) return true;
+		return (coMaxMarks[co] || 0) > 0;
+	};
 	return (
 		<Card>
 			<CardHeader className="bg-orange-100 dark:bg-orange-950 border-b-4 border-orange-500">
@@ -119,18 +126,21 @@ export function COPOMatrixTable({
 							{/* CO Rows */}
 							{["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"].map(
 								(co) => {
-									const coLevel = attainmentData
-										? getAttainmentLevel(
-												attainmentData.presentStudents >
-													0
-													? (attainmentData.coStats[
-															co as keyof typeof attainmentData.coStats
-													  ].aboveCOThreshold /
-															attainmentData.presentStudents) *
-															100
-													: 0
-										  )
-										: 0;
+									const assessed = isCOAssessed(co);
+									const coLevel =
+										assessed && attainmentData
+											? getAttainmentLevel(
+													attainmentData.presentStudents >
+														0
+														? (attainmentData
+																.coStats[
+																co as keyof typeof attainmentData.coStats
+														  ].aboveCOThreshold /
+																attainmentData.presentStudents) *
+																100
+														: 0
+											  )
+											: 0;
 
 									return (
 										<TableRow key={co}>
@@ -138,13 +148,19 @@ export function COPOMatrixTable({
 												{co}
 											</TableCell>
 											<TableCell className="border border-gray-300 dark:border-gray-700 text-center">
-												<Badge
-													className={getLevelColor(
-														coLevel
-													)}
-												>
-													{coLevel}
-												</Badge>
+												{assessed ? (
+													<Badge
+														className={getLevelColor(
+															coLevel
+														)}
+													>
+														{coLevel}
+													</Badge>
+												) : (
+													<span className="text-gray-500 font-medium">
+														NA
+													</span>
+												)}
 											</TableCell>
 											{/* PO Mappings */}
 											{[

@@ -1,5 +1,5 @@
 import type ExcelJS from "exceljs";
-import type { StudentMarksData } from "./types";
+import type { StudentMarksData, COMarks } from "./types";
 
 interface AttainmentThreshold {
 	id: number;
@@ -24,6 +24,14 @@ interface AttainmentCalculation {
 		CO5: { abovePass: number };
 		CO6: { abovePass: number };
 	};
+}
+
+/**
+ * Check if a CO is assessed (has total max marks > 0)
+ */
+function isCOAssessed(co: string, coMaxMarks?: COMarks): boolean {
+	if (!coMaxMarks) return true; // Default to assessed if no data provided
+	return (coMaxMarks[co as keyof COMarks] || 0) > 0;
 }
 
 /**
@@ -88,7 +96,8 @@ function calculatePOAttainment(
 	po: string,
 	copoMatrix: COPOMatrix,
 	attainmentData: AttainmentCalculation,
-	attainmentThresholds: AttainmentThreshold[]
+	attainmentThresholds: AttainmentThreshold[],
+	coMaxMarks?: COMarks
 ): number {
 	const cos = ["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"];
 	const attainmentPointsScale = attainmentThresholds.length;
@@ -96,6 +105,9 @@ function calculatePOAttainment(
 	let mappedCount = 0;
 
 	cos.forEach((co) => {
+		// Skip unassessed COs
+		if (!isCOAssessed(co, coMaxMarks)) return;
+
 		const percentage =
 			attainmentData.presentStudents > 0
 				? (attainmentData.coStats[
@@ -126,7 +138,8 @@ export function createCOPOMappingTable(
 	studentsData: StudentMarksData[],
 	coThreshold: number,
 	attainmentThresholds: AttainmentThreshold[],
-	copoMatrix: COPOMatrix
+	copoMatrix: COPOMatrix,
+	coMaxMarks?: COMarks
 ): number {
 	const attainment = calculateCOAttainment(studentsData, coThreshold);
 	const coList = ["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"];
@@ -186,6 +199,8 @@ export function createCOPOMappingTable(
 
 	// CO rows
 	coList.forEach((co) => {
+		const assessed = isCOAssessed(co, coMaxMarks);
+
 		// CO label in column A
 		const coCell = ws.getCell(currentRow, 1);
 		coCell.value = co;
@@ -194,7 +209,7 @@ export function createCOPOMappingTable(
 		coCell.fill = {
 			type: "pattern",
 			pattern: "solid",
-			fgColor: { argb: "FFFFC000" }, // Orange
+			fgColor: { argb: assessed ? "FFFFC000" : "FFD3D3D3" }, // Orange or gray for unassessed
 		};
 		coCell.border = {
 			top: { style: "thin" },
@@ -203,15 +218,18 @@ export function createCOPOMappingTable(
 			right: { style: "thin" },
 		};
 
-		// Calculate CO attainment level
-		const percentage =
-			attainment.presentStudents > 0
-				? (attainment.coStats[co as keyof typeof attainment.coStats]
-						.abovePass /
-						attainment.presentStudents) *
-				  100
-				: 0;
-		const coLevel = getAttainmentLevel(percentage, attainmentThresholds);
+		// Calculate CO attainment level (only if assessed)
+		let coLevel = 0;
+		if (assessed) {
+			const percentage =
+				attainment.presentStudents > 0
+					? (attainment.coStats[co as keyof typeof attainment.coStats]
+							.abovePass /
+							attainment.presentStudents) *
+					  100
+					: 0;
+			coLevel = getAttainmentLevel(percentage, attainmentThresholds);
+		}
 
 		// PO/PSO mapping values
 		poList.forEach((po, idx) => {
@@ -219,14 +237,35 @@ export function createCOPOMappingTable(
 			const mappingValue = copoMatrix[co]?.[po] || 0;
 			const attainmentPointsScale = attainmentThresholds.length;
 
-			// Calculate the mapped value: (CO Level × Mapping) / Point Scale
-			const computedValue =
-				mappingValue > 0
-					? (coLevel * mappingValue) / attainmentPointsScale
-					: 0;
+			if (!assessed) {
+				// Show NA for unassessed COs
+				cell.value = "NA";
+				cell.font = { color: { argb: "FF808080" } };
+				cell.fill = {
+					type: "pattern",
+					pattern: "solid",
+					fgColor: { argb: "FFD3D3D3" }, // Light gray
+				};
+			} else {
+				// Calculate the mapped value: (CO Level × Mapping) / Point Scale
+				const computedValue =
+					mappingValue > 0
+						? (coLevel * mappingValue) / attainmentPointsScale
+						: 0;
 
-			cell.value =
-				computedValue > 0 ? Number(computedValue.toFixed(2)) : "";
+				cell.value =
+					computedValue > 0 ? Number(computedValue.toFixed(2)) : "";
+
+				// Apply conditional formatting - only show values if mapping exists
+				if (mappingValue === 0) {
+					cell.fill = {
+						type: "pattern",
+						pattern: "solid",
+						fgColor: { argb: "FFD3D3D3" }, // Light gray for empty cells
+					};
+				}
+			}
+
 			cell.alignment = { horizontal: "center", vertical: "middle" };
 			cell.border = {
 				top: { style: "thin" },
@@ -234,15 +273,6 @@ export function createCOPOMappingTable(
 				bottom: { style: "thin" },
 				right: { style: "thin" },
 			};
-
-			// Apply conditional formatting - only show values if mapping exists
-			if (mappingValue === 0) {
-				cell.fill = {
-					type: "pattern",
-					pattern: "solid",
-					fgColor: { argb: "FFD3D3D3" }, // Light gray for empty cells
-				};
-			}
 		});
 
 		currentRow++;
@@ -272,7 +302,8 @@ export function createCOPOMappingTable(
 			po,
 			copoMatrix,
 			attainment,
-			attainmentThresholds
+			attainmentThresholds,
+			coMaxMarks
 		);
 
 		cell.value = poAttainment > 0 ? Number(poAttainment.toFixed(2)) : "";

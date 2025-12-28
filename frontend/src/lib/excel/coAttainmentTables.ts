@@ -1,5 +1,5 @@
 import type ExcelJS from "exceljs";
-import type { StudentMarksData } from "./types";
+import type { StudentMarksData, COMarks } from "./types";
 
 interface COStats {
 	above70: number;
@@ -23,6 +23,14 @@ interface AttainmentCalculation {
 interface AttainmentThreshold {
 	id: number;
 	percentage: number;
+}
+
+/**
+ * Check if a CO is assessed (has total max marks > 0)
+ */
+function isCOAssessed(co: string, coMaxMarks?: COMarks): boolean {
+	if (!coMaxMarks) return true; // Default to assessed if no data provided
+	return (coMaxMarks[co as keyof COMarks] || 0) > 0;
 }
 
 /**
@@ -107,7 +115,8 @@ export function createCOAttainmentPointScaleTable(
 	studentsData: StudentMarksData[],
 	passingThreshold: number,
 	coThreshold: number,
-	attainmentThresholds: AttainmentThreshold[]
+	attainmentThresholds: AttainmentThreshold[],
+	coMaxMarks?: COMarks
 ): number {
 	const attainment = calculateCOAttainment(
 		studentsData,
@@ -252,15 +261,17 @@ export function createCOAttainmentPointScaleTable(
 	ws.mergeCells(currentRow, 1, currentRow, 4);
 	coList.forEach((co, idx) => {
 		const cell = ws.getCell(currentRow, idx + 5);
-		cell.value =
-			attainment.coStats[co as keyof typeof attainment.coStats].above70;
+		const assessed = isCOAssessed(co, coMaxMarks);
+		cell.value = assessed
+			? attainment.coStats[co as keyof typeof attainment.coStats].above70
+			: "NA";
 		cell.alignment = { horizontal: "center" };
 		cell.fill = {
 			type: "pattern",
 			pattern: "solid",
-			fgColor: { argb: "FF404040" }, // Dark gray
+			fgColor: { argb: assessed ? "FF404040" : "FFD3D3D3" }, // Dark gray or light gray for NA
 		};
-		cell.font = { color: { argb: "FFFFFFFF" } }; // White text
+		cell.font = { color: { argb: assessed ? "FFFFFFFF" : "FF808080" } }; // White or gray text
 		cell.border = {
 			top: { style: "thin" },
 			left: { style: "thin" },
@@ -285,14 +296,20 @@ export function createCOAttainmentPointScaleTable(
 	ws.mergeCells(currentRow, 1, currentRow, 4);
 	coList.forEach((co, idx) => {
 		const cell = ws.getCell(currentRow, idx + 5);
-		const percentage =
-			attainment.presentStudents > 0
-				? (attainment.coStats[co as keyof typeof attainment.coStats]
-						.above70 /
-						attainment.presentStudents) *
-				  100
-				: 0;
-		cell.value = Number(percentage.toFixed(2));
+		const assessed = isCOAssessed(co, coMaxMarks);
+		if (assessed) {
+			const percentage =
+				attainment.presentStudents > 0
+					? (attainment.coStats[co as keyof typeof attainment.coStats]
+							.above70 /
+							attainment.presentStudents) *
+					  100
+					: 0;
+			cell.value = Number(percentage.toFixed(2));
+		} else {
+			cell.value = "NA";
+			cell.font = { color: { argb: "FF808080" } };
+		}
 		cell.alignment = { horizontal: "center" };
 		cell.border = {
 			top: { style: "thin" },
@@ -317,24 +334,35 @@ export function createCOAttainmentPointScaleTable(
 	ws.mergeCells(currentRow, 1, currentRow, 4);
 	coList.forEach((co, idx) => {
 		const cell = ws.getCell(currentRow, idx + 5);
-		const percentage =
-			attainment.presentStudents > 0
-				? (attainment.coStats[co as keyof typeof attainment.coStats]
-						.above70 /
-						attainment.presentStudents) *
-				  100
-				: 0;
-		const level = getAttainmentLevel(percentage, attainmentThresholds);
-		cell.value = Number(level.toFixed(2));
+		const assessed = isCOAssessed(co, coMaxMarks);
+		if (assessed) {
+			const percentage =
+				attainment.presentStudents > 0
+					? (attainment.coStats[co as keyof typeof attainment.coStats]
+							.above70 /
+							attainment.presentStudents) *
+					  100
+					: 0;
+			const level = getAttainmentLevel(percentage, attainmentThresholds);
+			cell.value = Number(level.toFixed(2));
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: {
+					argb: getPercentageColor(percentage, attainmentThresholds),
+				},
+			};
+		} else {
+			cell.value = "NA";
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: { argb: "FFD3D3D3" }, // Light gray for NA
+			};
+			cell.font = { bold: true, color: { argb: "FF808080" } };
+		}
 		cell.alignment = { horizontal: "center" };
 		cell.font = { bold: true };
-		cell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: {
-				argb: getPercentageColor(percentage, attainmentThresholds),
-			},
-		};
 		cell.border = {
 			top: { style: "thin" },
 			left: { style: "thin" },
@@ -363,24 +391,35 @@ export function createCOAttainmentPointScaleTable(
 	ws.mergeCells(currentRow, 1, currentRow, 4);
 	coList.forEach((co, idx) => {
 		const cell = ws.getCell(currentRow, idx + 5);
-		const percentage =
-			attainment.presentStudents > 0
-				? (attainment.coStats[co as keyof typeof attainment.coStats]
-						.above70 /
-						attainment.presentStudents) *
-				  100
-				: 0;
-		const level = getAttainmentLevel(percentage, attainmentThresholds);
-		cell.value = level;
+		const assessed = isCOAssessed(co, coMaxMarks);
+		if (assessed) {
+			const percentage =
+				attainment.presentStudents > 0
+					? (attainment.coStats[co as keyof typeof attainment.coStats]
+							.above70 /
+							attainment.presentStudents) *
+					  100
+					: 0;
+			const level = getAttainmentLevel(percentage, attainmentThresholds);
+			cell.value = level;
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: {
+					argb: getPercentageColor(percentage, attainmentThresholds),
+				},
+			};
+		} else {
+			cell.value = "NA";
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: { argb: "FFD3D3D3" }, // Light gray for NA
+			};
+			cell.font = { bold: true, color: { argb: "FF808080" } };
+		}
 		cell.alignment = { horizontal: "center" };
 		cell.font = { bold: true };
-		cell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: {
-				argb: getPercentageColor(percentage, attainmentThresholds),
-			},
-		};
 		cell.border = {
 			top: { style: "thin" },
 			left: { style: "thin" },
@@ -402,7 +441,8 @@ export function createCOAttainmentAbsoluteScaleTable(
 	studentsData: StudentMarksData[],
 	passingThreshold: number,
 	coThreshold: number,
-	attainmentThresholds: AttainmentThreshold[]
+	attainmentThresholds: AttainmentThreshold[],
+	coMaxMarks?: COMarks
 ): number {
 	const attainment = calculateCOAttainment(
 		studentsData,
@@ -546,15 +586,18 @@ export function createCOAttainmentAbsoluteScaleTable(
 	ws.mergeCells(currentRow, 1, currentRow, 4);
 	coList.forEach((co, idx) => {
 		const cell = ws.getCell(currentRow, idx + 5);
-		cell.value =
-			attainment.coStats[co as keyof typeof attainment.coStats].abovePass;
+		const assessed = isCOAssessed(co, coMaxMarks);
+		cell.value = assessed
+			? attainment.coStats[co as keyof typeof attainment.coStats]
+					.abovePass
+			: "NA";
 		cell.alignment = { horizontal: "center" };
 		cell.fill = {
 			type: "pattern",
 			pattern: "solid",
-			fgColor: { argb: "FF505050" }, // Dark gray
+			fgColor: { argb: assessed ? "FF505050" : "FFD3D3D3" }, // Dark gray or light gray for NA
 		};
-		cell.font = { color: { argb: "FFFFFFFF" } }; // White text
+		cell.font = { color: { argb: assessed ? "FFFFFFFF" : "FF808080" } }; // White or gray text
 		cell.border = {
 			top: { style: "thin" },
 			left: { style: "thin" },
@@ -564,9 +607,9 @@ export function createCOAttainmentAbsoluteScaleTable(
 	});
 	currentRow++;
 
-	// Row 4: PC. OF STUDENTS SECURE MARKS > PASSING MARKS
+	// Row 4: % of Students Above Passing Marks
 	const passingPctCell = ws.getCell(currentRow, 1);
-	passingPctCell.value = "PC. OF STUDENTS SECURE MARKS > PASSING MARKS";
+	passingPctCell.value = "% of Students Above Passing Marks";
 	passingPctCell.font = { bold: true };
 	passingPctCell.alignment = { horizontal: "left", vertical: "middle" };
 	passingPctCell.border = {
@@ -578,14 +621,20 @@ export function createCOAttainmentAbsoluteScaleTable(
 	ws.mergeCells(currentRow, 1, currentRow, 4);
 	coList.forEach((co, idx) => {
 		const cell = ws.getCell(currentRow, idx + 5);
-		const percentage =
-			attainment.presentStudents > 0
-				? (attainment.coStats[co as keyof typeof attainment.coStats]
-						.abovePass /
-						attainment.presentStudents) *
-				  100
-				: 0;
-		cell.value = Number(percentage.toFixed(2));
+		const assessed = isCOAssessed(co, coMaxMarks);
+		if (assessed) {
+			const percentage =
+				attainment.presentStudents > 0
+					? (attainment.coStats[co as keyof typeof attainment.coStats]
+							.abovePass /
+							attainment.presentStudents) *
+					  100
+					: 0;
+			cell.value = Number(percentage.toFixed(2));
+		} else {
+			cell.value = "NA";
+			cell.font = { color: { argb: "FF808080" } };
+		}
 		cell.alignment = { horizontal: "center" };
 		cell.border = {
 			top: { style: "thin" },
@@ -596,10 +645,10 @@ export function createCOAttainmentAbsoluteScaleTable(
 	});
 	currentRow++;
 
-	// Row 5: CO Attainment (AVERAGE OF PERCENTAGE ATTAINMENTS)
+	// Row 5: CO Attainment (% of Students Above Passing Marks)
 	const avgAttainmentCell = ws.getCell(currentRow, 1);
 	avgAttainmentCell.value =
-		"CO Attainment (AVERAGE OF PERCENTAGE ATTAINMENTS)";
+		"CO Attainment (% of Students Above Passing Marks)";
 	avgAttainmentCell.font = { bold: true };
 	avgAttainmentCell.alignment = { horizontal: "left", vertical: "middle" };
 	avgAttainmentCell.border = {
@@ -611,23 +660,34 @@ export function createCOAttainmentAbsoluteScaleTable(
 	ws.mergeCells(currentRow, 1, currentRow, 4);
 	coList.forEach((co, idx) => {
 		const cell = ws.getCell(currentRow, idx + 5);
-		const percentage =
-			attainment.presentStudents > 0
-				? (attainment.coStats[co as keyof typeof attainment.coStats]
-						.abovePass /
-						attainment.presentStudents) *
-				  100
-				: 0;
-		cell.value = Number(percentage.toFixed(2));
+		const assessed = isCOAssessed(co, coMaxMarks);
+		if (assessed) {
+			const percentage =
+				attainment.presentStudents > 0
+					? (attainment.coStats[co as keyof typeof attainment.coStats]
+							.abovePass /
+							attainment.presentStudents) *
+					  100
+					: 0;
+			cell.value = Number(percentage.toFixed(2));
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: {
+					argb: getPercentageColor(percentage, attainmentThresholds),
+				},
+			};
+		} else {
+			cell.value = "NA";
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: { argb: "FFD3D3D3" }, // Light gray for NA
+			};
+			cell.font = { bold: true, color: { argb: "FF808080" } };
+		}
 		cell.alignment = { horizontal: "center" };
 		cell.font = { bold: true };
-		cell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: {
-				argb: getPercentageColor(percentage, attainmentThresholds),
-			},
-		};
 		cell.border = {
 			top: { style: "thin" },
 			left: { style: "thin" },
@@ -656,23 +716,34 @@ export function createCOAttainmentAbsoluteScaleTable(
 	ws.mergeCells(currentRow, 1, currentRow, 4);
 	coList.forEach((co, idx) => {
 		const cell = ws.getCell(currentRow, idx + 5);
-		const percentage =
-			attainment.presentStudents > 0
-				? (attainment.coStats[co as keyof typeof attainment.coStats]
-						.abovePass /
-						attainment.presentStudents) *
-				  100
-				: 0;
-		cell.value = Number(percentage.toFixed(2));
+		const assessed = isCOAssessed(co, coMaxMarks);
+		if (assessed) {
+			const percentage =
+				attainment.presentStudents > 0
+					? (attainment.coStats[co as keyof typeof attainment.coStats]
+							.abovePass /
+							attainment.presentStudents) *
+					  100
+					: 0;
+			cell.value = Number(percentage.toFixed(2));
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: {
+					argb: getPercentageColor(percentage, attainmentThresholds),
+				},
+			};
+		} else {
+			cell.value = "NA";
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: { argb: "FFD3D3D3" }, // Light gray for NA
+			};
+			cell.font = { bold: true, color: { argb: "FF808080" } };
+		}
 		cell.alignment = { horizontal: "center" };
 		cell.font = { bold: true };
-		cell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: {
-				argb: getPercentageColor(percentage, attainmentThresholds),
-			},
-		};
 		cell.border = {
 			top: { style: "thin" },
 			left: { style: "thin" },

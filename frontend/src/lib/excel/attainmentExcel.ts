@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import type { AttainmentExportOptions } from "./types";
+import { calculateTotalCOMaxMarks } from "./types";
 
 import {
 	createAttainmentCriteriaSection,
@@ -109,6 +110,9 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 	const studentDataEndRow = tableStartRow + 4 + studentsData.length;
 	const attainmentTablesStartRow = studentDataEndRow + 3; // Leave 2 empty rows
 
+	// Calculate total CO max marks from all assessments
+	const coMaxMarks = calculateTotalCOMaxMarks(assessments);
+
 	// Create CO Attainment in x.0 Point Scale table
 	const pointScaleEndRow = createCOAttainmentPointScaleTable(
 		ws,
@@ -116,7 +120,8 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		studentsData,
 		passingThreshold,
 		coThreshold,
-		attainmentThresholds
+		attainmentThresholds,
+		coMaxMarks
 	);
 
 	// Create CO Attainment in Absolute Scale table
@@ -126,7 +131,8 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		studentsData,
 		passingThreshold,
 		coThreshold,
-		attainmentThresholds
+		attainmentThresholds,
+		coMaxMarks
 	);
 
 	// Create CO-PO Mapping table on a separate sheet (only if copoMatrix is provided)
@@ -145,7 +151,8 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 			studentsData,
 			coThreshold,
 			attainmentThresholds,
-			copoMatrix
+			copoMatrix,
+			coMaxMarks
 		);
 	}
 

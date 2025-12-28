@@ -31,6 +31,7 @@ interface StudentMarksTableProps {
 	semester: number;
 	loading: boolean;
 	getPercentageColor: (percentage: number) => string;
+	coMaxMarks?: Record<string, number>; // Total max marks per CO across all tests
 }
 
 export function StudentMarksTable({
@@ -44,6 +45,7 @@ export function StudentMarksTable({
 	semester,
 	loading,
 	getPercentageColor,
+	coMaxMarks,
 }: StudentMarksTableProps) {
 	const getAcademicYear = (year: number) => `${year}-${year + 1}`;
 	const getSemesterDisplay = (sem: number) => {
@@ -53,6 +55,12 @@ export function StudentMarksTable({
 	const getCurrentSession = () => {
 		const currentYear = new Date().getFullYear();
 		return `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+	};
+
+	// Helper to check if a CO is assessed
+	const isCOAssessed = (co: string): boolean => {
+		if (!coMaxMarks) return true;
+		return (coMaxMarks[co] || 0) > 0;
 	};
 
 	return (
@@ -255,19 +263,21 @@ export function StudentMarksTable({
 									%
 								</TableHead>
 								{[
-									"100",
-									"100",
-									"100",
-									"100",
-									"100",
-									"100",
-									"100",
-								].map((val, idx) => (
+									"CO1",
+									"CO2",
+									"CO3",
+									"CO4",
+									"CO5",
+									"CO6",
+									"ΣCO",
+								].map((co) => (
 									<TableHead
-										key={`max-${idx}`}
+										key={`max-${co}`}
 										className="text-center border border-gray-300 dark:border-gray-700 font-bold"
 									>
-										{val}
+										{co === "ΣCO" || isCOAssessed(co)
+											? "100"
+											: "NA"}
 									</TableHead>
 								))}
 							</TableRow>
@@ -362,6 +372,20 @@ export function StudentMarksTable({
 											"CO6",
 											"ΣCO",
 										].map((co) => {
+											// Show NA for unassessed COs (except ΣCO which is always calculated)
+											if (
+												co !== "ΣCO" &&
+												!isCOAssessed(co)
+											) {
+												return (
+													<TableCell
+														key={`co-${co}`}
+														className="text-center border border-gray-300 dark:border-gray-700 font-bold text-gray-500"
+													>
+														NA
+													</TableCell>
+												);
+											}
 											const percentage =
 												student.coTotals[
 													co as keyof typeof student.coTotals

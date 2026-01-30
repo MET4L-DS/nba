@@ -25,8 +25,21 @@ class CorsMiddleware
      */
     public function setCorsHeaders()
     {
-        // Allow from any origin (adjust for production)
-        header('Access-Control-Allow-Origin: *');
+        // Allow from specific origins (Production & Local Development)
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $allowed_origins = [
+            'https://nba.wily.in',    // Production Frontend
+            'http://localhost:5173',  // Local Development
+            'http://localhost:3000'   // Local Development (Alternative)
+        ];
+
+        if (in_array($origin, $allowed_origins)) {
+            header("Access-Control-Allow-Origin: $origin");
+        } else {
+            // Default fallback (optional, can be removed for stricter security)
+            header('Access-Control-Allow-Origin: *');
+        }
+
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
         header('Access-Control-Allow-Credentials: true');

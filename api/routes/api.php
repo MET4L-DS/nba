@@ -90,20 +90,20 @@ class Router
 
         // Initialize controllers
         $this->userController = new UserController($authService, $userRepository, $departmentRepository, $validationMiddleware);
-        $this->assessmentController = new AssessmentController($courseRepository, $testRepository, $questionRepository, $validationMiddleware);
+        $this->assessmentController = new AssessmentController($courseRepository, $testRepository, $questionRepository, $validationMiddleware, $db);
         $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository);
         $this->enrollmentController = new EnrollmentController($db);
         $this->attainmentController = new AttainmentController($courseRepository, $attainmentScaleRepository);
         $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository);
         $this->hodController = new HODController($userRepository, $courseRepository, $departmentRepository, $validationMiddleware);
-        
+
         // Initialize enrollment repository for staff controller
         $enrollmentRepository = new EnrollmentRepository($db);
         $this->staffController = new StaffController($userRepository, $courseRepository, $departmentRepository, $enrollmentRepository, $studentRepository, $validationMiddleware, $db);
-        
+
         // Initialize faculty controller
         $this->facultyController = new FacultyController($courseRepository, $testRepository, $enrollmentRepository, $marksRepository, $db);
-        
+
         // Initialize dean controller
         $this->deanController = new DeanController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository);
     }
@@ -123,10 +123,17 @@ class Router
         $method = $_SERVER['REQUEST_METHOD'];
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-        // Remove base path (/nba/api/)
+        // Normalize path: Remove base path if present, otherwise trim leading slash
+        // This handles both /nba/api/login (XAMPP) and /login (Subdomain)
         $basePath = '/nba/api/';
         if (strpos($path, $basePath) === 0) {
             $path = substr($path, strlen($basePath));
+        } else {
+            // Remove /api/ if it exists at the start (e.g. from Nginx rewrite)
+            if (strpos($path, '/api/') === 0) {
+                $path = substr($path, 5);
+            }
+            $path = ltrim($path, '/');
         }
 
         // Check for dynamic routes before switch
@@ -264,7 +271,8 @@ class Router
                 if ($method === 'GET') {
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
-                    $this->userController->getDepartments();
+                    // Correct implementation calls AdminController
+                    $this->adminController->getAllDepartments();
                 } elseif ($method === 'POST') {
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;

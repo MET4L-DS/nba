@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { Upload } from "lucide-react";
 import { apiService } from "@/services/api";
 import type {
 	Course,
@@ -11,6 +12,7 @@ import type {
 import { MarksEntryHeader } from "./MarksEntryHeader";
 import { TestInfoCard } from "./TestInfoCard";
 import { BulkMarksTable } from "./BulkMarksTable";
+import { Button } from "@/components/ui/button";
 
 interface MarksEntryByQuestionProps {
 	test: Test;
@@ -34,6 +36,7 @@ export function MarksEntryByQuestion({
 	const [dirtyRows, setDirtyRows] = useState<Set<string>>(new Set());
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (test && course) {
@@ -99,9 +102,7 @@ export function MarksEntryByQuestion({
 					}
 				} catch (error) {
 					// If student has no marks yet, continue with empty values
-					console.log(
-						`No existing marks for student ${enrollment.student_rollno}`
-					);
+					// console.log(`No existing marks for student ${enrollment.student_rollno}`);
 				}
 			}
 
@@ -114,6 +115,103 @@ export function MarksEntryByQuestion({
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			const text = e.target?.result as string;
+			processCSV(text);
+		};
+		reader.readAsText(file);
+		
+		// Reset input
+		if (fileInputRef.current) {
+			fileInputRef.current.value = '';
+		}
+	};
+
+	const processCSV = (text: string) => {
+		const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
+		if (lines.length < 2) {
+			toast.error("CSV file is empty or missing header");
+			return;
+		}
+
+		console.log("Processing CSV with " + lines.length + " lines");
+
+		// Header analysis
+		const headerLine = lines[0];
+		const headers = headerLine.split(",").map(h => h.trim().toLowerCase());
+		
+		// Determine columns
+		// Expected: Roll No, [Name?], Q1, Q2...
+		// If 2nd column is 'name', skip it
+		let marksStartIndex = 1;
+		if (headers.length > 1 && (headers[1].includes("name") || headers[1] === "student name")) {
+			marksStartIndex = 2;
+		} else {
+            // Heuristic check on first data row
+            const firstData = lines[1].split(",");
+            if (firstData.length > 1 && isNaN(parseFloat(firstData[1]))) {
+                 // Likely a name
+                 marksStartIndex = 2;
+            }
+        }
+
+		setMarks((prevMarks) => {
+			const newMarks = { ...prevMarks };
+			const newDirtyRows = new Set(dirtyRows);
+			let updatedCount = 0;
+
+			// Map visible questions to verify count
+			const questionIds = questions.map(q => q.question_identifier);
+
+			lines.slice(1).forEach((line) => {
+				const values = line.split(",").map(v => v.trim());
+				if (values.length < 2) return; // Skip invalid lines
+
+				const rollNo = values[0]; // First col is Roll No
+				
+				// Ensure student exists in our list (enrolled)
+				if (!enrollments.some(e => e.student_rollno === rollNo)) {
+					// Optionally warn or skip
+					return;
+				}
+
+				// If student entry doesn't exist in state (shouldn't happen if enrolled), init it
+				if (!newMarks[rollNo]) newMarks[rollNo] = {};
+
+				const markValues = values.slice(marksStartIndex);
+
+				markValues.forEach((val, index) => {
+					if (index < questionIds.length) {
+						const qId = questionIds[index];
+						// Only update if value is provided and valid number
+						if (val !== "" && !isNaN(parseFloat(val))) {
+							newMarks[rollNo][qId] = val;
+						}
+					}
+				});
+
+				// Mark as dirty
+				newDirtyRows.add(rollNo);
+				updatedCount++;
+			});
+
+			setDirtyRows(newDirtyRows);
+			
+			if (updatedCount > 0) {
+				toast.success(`Imported marks for ${updatedCount} students. Review and click Save.`);
+			} else {
+				toast.warning("No matching students found in CSV.");
+			}
+
+			return newMarks;
+		});
 	};
 
 	const handleMarkChange = (
@@ -265,6 +363,25 @@ export function MarksEntryByQuestion({
 				onSave={handleSubmit}
 				isSaving={submitting}
 				isDisabled={enrollments.length === 0}
+				extraActions={
+					<>
+						<input
+							type="file"
+							ref={fileInputRef}
+							className="hidden"
+							accept=".csv"
+							onChange={handleFileUpload}
+						/>
+						<Button
+							variant="outline"
+							onClick={() => fileInputRef.current?.click()}
+							className="gap-2"
+						>
+							<Upload className="w-4 h-4" />
+							Import CSV
+						</Button>
+					</>
+				}
 			>
 				{loading ? (
 					<div className="text-center py-8 text-gray-500">

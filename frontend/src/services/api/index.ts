@@ -14,78 +14,78 @@ import { facultyApi } from "./faculty";
 
 // Create a unified API service that maintains backward compatibility
 class ApiService {
-	// Auth methods
-	login = authApi.login;
-	logout = authApi.logout;
-	getProfile = authApi.getProfile;
-	getStoredUser = authApi.getStoredUser;
-	getToken = authApi.getToken;
-	setToken = authApi.setToken;
-	clearToken = authApi.clearToken;
+  // Auth methods
+  login = authApi.login;
+  logout = authApi.logout;
+  getProfile = authApi.getProfile;
+  getStoredUser = authApi.getStoredUser;
+  getToken = authApi.getToken;
+  setToken = authApi.setToken;
+  clearToken = authApi.clearToken;
 
-	// Course methods
-	getCourses = coursesApi.getCourses;
-	getCourseTests = coursesApi.getCourseTests;
-	getCourseEnrollments = coursesApi.getCourseEnrollments;
-	getAttainmentConfig = coursesApi.getAttainmentConfig;
-	saveAttainmentConfig = coursesApi.saveAttainmentConfig;
-	enrollStudents = coursesApi.enrollStudents;
+  // Course methods
+  getCourses = coursesApi.getCourses;
+  getCourseTests = coursesApi.getCourseTests;
+  getCourseEnrollments = coursesApi.getCourseEnrollments;
+  getAttainmentConfig = coursesApi.getAttainmentConfig;
+  saveAttainmentConfig = coursesApi.saveAttainmentConfig;
+  enrollStudents = coursesApi.enrollStudents;
 
-	// Assessment methods
-	createAssessment = assessmentsApi.createAssessment;
-	getAssessment = assessmentsApi.getAssessment;
-	deleteTest = assessmentsApi.deleteTest;
+  // Assessment methods
+  createAssessment = assessmentsApi.createAssessment;
+  getAssessment = assessmentsApi.getAssessment;
+  deleteTest = assessmentsApi.deleteTest;
 
-	// Marks methods
-	saveMarksByQuestion = marksApi.saveMarksByQuestion;
-	saveMarksByCO = marksApi.saveMarksByCO;
-	saveBulkMarks = marksApi.saveBulkMarks;
-	getStudentMarks = marksApi.getStudentMarks;
-	getTestMarks = marksApi.getTestMarks;
+  // Marks methods
+  saveMarksByQuestion = marksApi.saveMarksByQuestion;
+  saveMarksByCO = marksApi.saveMarksByCO;
+  saveBulkMarks = marksApi.saveBulkMarks;
+  getStudentMarks = marksApi.getStudentMarks;
+  getTestMarks = marksApi.getTestMarks;
 
-	// Admin methods
-	getAdminStats = adminApi.getStats;
-	getAllUsers = adminApi.getAllUsers;
-	createUser = adminApi.createUser;
-	deleteUser = adminApi.deleteUser;
-	getAllDepartments = adminApi.getAllDepartments;
-	createDepartment = adminApi.createDepartment;
-	updateDepartment = adminApi.updateDepartment;
-	deleteDepartment = adminApi.deleteDepartment;
-	getAllCoursesAdmin = adminApi.getAllCourses;
-	getAllStudentsAdmin = adminApi.getAllStudents;
-	getAllTestsAdmin = adminApi.getAllTests;
+  // Admin methods
+  getAdminStats = adminApi.getStats;
+  getAllUsers = adminApi.getAllUsers;
+  createUser = adminApi.createUser;
+  deleteUser = adminApi.deleteUser;
+  getAllDepartments = adminApi.getAllDepartments;
+  createDepartment = adminApi.createDepartment;
+  updateDepartment = adminApi.updateDepartment;
+  deleteDepartment = adminApi.deleteDepartment;
+  getAllCoursesAdmin = adminApi.getAllCourses;
+  getAllStudentsAdmin = adminApi.getAllStudents;
+  getAllTestsAdmin = adminApi.getAllTests;
 
-	// HOD methods
-	getHODStats = hodApi.getStats;
-	getDepartmentCourses = hodApi.getDepartmentCourses;
-	getDepartmentFaculty = hodApi.getDepartmentFaculty;
-	createCourse = hodApi.createCourse;
-	updateCourse = hodApi.updateCourse;
-	deleteCourse = hodApi.deleteCourse;
-	createDepartmentUser = hodApi.createUser;
-	updateDepartmentUser = hodApi.updateUser;
-	deleteDepartmentUser = hodApi.deleteUser;
+  // HOD methods
+  getHODStats = hodApi.getStats;
+  getDepartmentCourses = hodApi.getDepartmentCourses;
+  getDepartmentFaculty = hodApi.getDepartmentFaculty;
+  createCourse = hodApi.createCourse;
+  updateCourse = hodApi.updateCourse;
+  deleteCourse = hodApi.deleteCourse;
+  createDepartmentUser = hodApi.createUser;
+  updateDepartmentUser = hodApi.updateUser;
+  deleteDepartmentUser = hodApi.deleteUser;
 
-	// Faculty methods
-	getFacultyStats = facultyApi.getStats;
+  // Faculty methods
+  getFacultyStats = facultyApi.getStats;
 
-	// Staff methods
-	getStaffStats = staffApi.getStats;
-	getStaffDepartmentCourses = staffApi.getDepartmentCourses;
-	getStaffDepartmentStudents = staffApi.getDepartmentStudents;
-	getStaffCourseEnrollments = staffApi.getCourseEnrollments;
-	staffBulkEnrollStudents = staffApi.bulkEnrollStudents;
-	staffRemoveEnrollment = staffApi.removeEnrollment;
+  // Staff methods
+  getStaffStats = staffApi.getStats;
+  getStaffDepartmentCourses = staffApi.getDepartmentCourses;
+  getStaffDepartmentStudents = staffApi.getDepartmentStudents;
+  getStaffCourseEnrollments = staffApi.getCourseEnrollments;
+  staffBulkEnrollStudents = staffApi.bulkEnrollStudents;
+  staffRemoveEnrollment = staffApi.removeEnrollment;
 
-	// Dean methods (read-only)
-	getDeanStats = deanApi.getStats;
-	getDeanDepartments = deanApi.getAllDepartments;
-	getDeanUsers = deanApi.getAllUsers;
-	getDeanCourses = deanApi.getAllCourses;
-	getDeanStudents = deanApi.getAllStudents;
-	getDeanTests = deanApi.getAllTests;
-	getDepartmentAnalytics = deanApi.getDepartmentAnalytics;
+  // Dean methods (read-only)
+  getDeanStats = deanApi.getStats;
+  getDeanDepartments = deanApi.getAllDepartments;
+  getDeanUsers = deanApi.getAllUsers;
+  getDeanCourses = deanApi.getAllCourses;
+  getDeanStudents = deanApi.getAllStudents;
+  getDeanTests = deanApi.getAllTests;
+  getDepartmentAnalytics = deanApi.getDepartmentAnalytics;
 }
 
 // Export a singleton instance for backward compatibility
@@ -93,13 +93,13 @@ export const apiService = new ApiService();
 
 // Also export individual API modules for direct use
 export {
-	authApi,
-	coursesApi,
-	assessmentsApi,
-	marksApi,
-	adminApi,
-	hodApi,
-	facultyApi,
-	staffApi,
-	deanApi,
+  authApi,
+  coursesApi,
+  assessmentsApi,
+  marksApi,
+  adminApi,
+  hodApi,
+  facultyApi,
+  staffApi,
+  deanApi,
 };

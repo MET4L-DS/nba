@@ -10,17 +10,20 @@ class AssessmentController
     private $testRepository;
     private $questionRepository;
     private $validationMiddleware;
+    private $db;
 
     public function __construct(
         CourseRepository $courseRepository,
         TestRepository $testRepository,
         QuestionRepository $questionRepository,
-        ValidationMiddleware $validationMiddleware
+        ValidationMiddleware $validationMiddleware,
+        $db = null
     ) {
         $this->courseRepository = $courseRepository;
         $this->testRepository = $testRepository;
         $this->questionRepository = $questionRepository;
         $this->validationMiddleware = $validationMiddleware;
+        $this->db = $db;
     }
 
     /**
@@ -133,52 +136,57 @@ class AssessmentController
             );
 
             // Start transaction
-            $this->testRepository->save($test);
-            $testId = $test->getId();
+            if ($this->db) {
+                $this->db->beginTransaction();
+            }
 
-            // Create questions
-            $questions = [];
-            foreach ($data['questions'] as $qData) {
-                // Validate required fields for each question
-                if (
-                    !isset($qData['question_number']) ||
-                    !isset($qData['co']) ||
-                    !isset($qData['max_marks'])
-                ) {
-                    $this->testRepository->delete($testId);
-                    http_response_code(400);
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Each question must have question_number, co, and max_marks'
-                    ]);
-                    return;
-                }
+            try {
+                $this->testRepository->save($test);
+                $testId = $test->getId();
 
-                try {
+                // Create questions
+                $questions = [];
+                foreach ($data['questions'] as $qData) {
+                    // Validate required fields for each question
+                    if (
+                        !isset($qData['question_number']) ||
+                        !isset($qData['co']) ||
+                        !isset($qData['max_marks'])
+                    ) {
+                        throw new Exception('Each question must have question_number, co, and max_marks');
+                    }
+
                     $question = new Question(
                         null,
                         $testId,
                         $qData['question_number'],
                         $qData['sub_question'] ?? null,
-                        $qData['is_optional'] ?? false,
+                        !empty($qData['is_optional']), // Cast to boolean properly
                         $qData['co'],
                         $qData['max_marks']
                     );
                     $questions[] = $question;
-                } catch (Exception $e) {
-                    // Delete the test if question validation fails
-                    $this->testRepository->delete($testId);
-                    http_response_code(400);
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Validation failed',
-                        'error' => $e->getMessage()
-                    ]);
-                    return;
                 }
-            }
 
-            $this->questionRepository->saveMultiple($questions);
+                foreach ($questions as $question) {
+                    $this->questionRepository->save($question);
+                }
+
+                if ($this->db) {
+                    $this->db->commit();
+                }
+            } catch (Exception $e) {
+                if ($this->db) {
+                    $this->db->rollBack();
+                }
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Assessment creation failed: ' . $e->getMessage(),
+                    'error' => $e->getMessage()
+                ]);
+                return;
+            }
 
             // Retrieve complete test with questions
             $savedTest = $this->testRepository->findById($testId);

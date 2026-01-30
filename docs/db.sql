@@ -3,8 +3,6 @@
 -- Database: nba_db
 -- Purpose: Manage courses, tests, and CO-based assessments
 -- =============================================
-DROP DATABASE IF EXISTS `nba_db`;
-CREATE DATABASE `nba_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `nba_db`;
 -- =============================================
 -- TABLES
@@ -44,8 +42,14 @@ CREATE TABLE `course` (
         `year` BETWEEN 1000 AND 9999
     ),
     `semester` INT NOT NULL,
-    `co_threshold` DECIMAL(5, 2) DEFAULT 40.00 CHECK (`co_threshold` >= 0 AND `co_threshold` <= 100),
-    `passing_threshold` DECIMAL(5, 2) DEFAULT 60.00 CHECK (`passing_threshold` >= 0 AND `passing_threshold` <= 100),
+    `co_threshold` DECIMAL(5, 2) DEFAULT 40.00 CHECK (
+        `co_threshold` >= 0
+        AND `co_threshold` <= 100
+    ),
+    `passing_threshold` DECIMAL(5, 2) DEFAULT 60.00 CHECK (
+        `passing_threshold` >= 0
+        AND `passing_threshold` <= 100
+    ),
     PRIMARY KEY (`id`),
     UNIQUE KEY (`course_code`),
     INDEX (`faculty_id`),
@@ -56,8 +60,14 @@ CREATE TABLE `course` (
 CREATE TABLE `attainment_scale` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `course_id` BIGINT NOT NULL,
-    `level` SMALLINT NOT NULL CHECK (`level` >= 0 AND `level` <= 10),
-    `min_percentage` DECIMAL(5, 2) NOT NULL CHECK (`min_percentage` >= 0 AND `min_percentage` <= 100),
+    `level` SMALLINT NOT NULL CHECK (
+        `level` >= 0
+        AND `level` <= 10
+    ),
+    `min_percentage` DECIMAL(5, 2) NOT NULL CHECK (
+        `min_percentage` >= 0
+        AND `min_percentage` <= 100
+    ),
     PRIMARY KEY (`id`),
     UNIQUE KEY (`course_id`, `level`),
     INDEX (`course_id`),
@@ -150,217 +160,99 @@ CREATE TABLE `marks` (
     FOREIGN KEY (`student_id`) REFERENCES `student`(`rollno`) ON DELETE CASCADE,
     FOREIGN KEY (`test_id`) REFERENCES `test`(`id`) ON DELETE CASCADE
 );
--- =============================================
--- SAMPLE DATA
--- =============================================
 -- Departments
 INSERT INTO `departments` (`department_name`, `department_code`)
 VALUES ('Computer Science & Engineering', 'CSE'),
-    ('Electronics & Communication Engineering', 'ECE'),
-    ('Electrical Engineering', 'EE'),
-    ('Mechanical Engineering', 'ME'),
-    ('Civil Engineering', 'CE'),
-    ('Food Engineering & Technology', 'FET'),
-    ('Energy', 'ENE');
--- Admin (password: admin123)
+    ('Electronics & Communication Engineering', 'ECE');
+-- password: password123
 INSERT INTO `users`
 VALUES (
         1001,
-        'System Administrator',
-        'admin@tezu.edu',
-        '$2y$10$tnWpFNPhCWgg5y7.HTB7LeiMchFNnxp783V3dD8ZVOzsd5didUlqG',
+        'Admin One',
+        'admin_01@tezu.ac.in',
+        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'admin',
         NULL
-    );
--- HODs (password: password123)
-INSERT INTO `users`
-VALUES (
+    ),
+    (
         2001,
-        'Prof. Kamal Uddin Ahmed',
-        'kamal@tezu.ernet.in',
+        'HOD CSE',
+        'hod_cse@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'hod',
         1
     ),
     (
         2002,
-        'Prof. Santanu Sharma',
-        'santanu@tezu.ernet.in',
+        'HOD ECE',
+        'hod_ece@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'hod',
         2
     ),
     (
-        2003,
-        'Prof. Partha Pratim Dutta',
-        'partha@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'hod',
-        4
-    ),
-    (
-        2004,
-        'Prof. Karobi Saikia',
-        'karobi@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'hod',
-        5
-    ),
-    (
-        2005,
-        'Prof. Madhumita Barbora',
-        'madhu@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'hod',
-        6
-    );
--- Faculty (password: password123)
-INSERT INTO `users`
-VALUES (
         3001,
-        'Dr. Nityananda Sarma',
-        'nityananda@tezu.ernet.in',
+        'Faculty One',
+        'faculty_01@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'faculty',
         1
     ),
     (
         3002,
-        'Dr. Shobhan Kumar Majumder',
-        'skm@tezu.ernet.in',
+        'Faculty Two',
+        'faculty_02@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'faculty',
         1
     ),
     (
         3003,
-        'Dr. Rosy Sarmah',
-        'rosy8@tezu.ernet.in',
+        'Faculty Three',
+        'faculty_03@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'faculty',
         1
     ),
     (
         3004,
-        'Dr. Sanjib Kumar Deka',
-        'sdeka@tezu.ernet.in',
+        'Faculty Four',
+        'faculty_04@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'faculty',
         1
     ),
     (
         3005,
-        'Dr. Bhabesh Deka',
-        'bhabesh@tezu.ernet.in',
+        'Faculty Five',
+        'faculty_05@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'faculty',
         2
     ),
     (
         3006,
-        'Dr. Soumik Roy',
-        'soumik@tezu.ernet.in',
+        'Faculty Six',
+        'faculty_06@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'faculty',
         2
     ),
     (
-        3007,
-        'Dr. Tapan Kumar Gogoi',
-        'tgogoi@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        4
-    ),
-    (
-        3008,
-        'Dr. Dilip Datta',
-        'ddatta@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        4
-    ),
-    (
-        3009,
-        'Dr. Polash Pratim Dutta',
-        'polash@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        4
-    ),
-    (
-        3010,
-        'Dr. Manash Jyoti Dutta',
-        'manash@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        5
-    ),
-    (
-        3011,
-        'Dr. Ankurjyoti Saikia',
-        'ankur@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        5
-    ),
-    (
-        3012,
-        'Dr. Charu Lata Mahanta',
-        'charu@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        6
-    ),
-    (
-        3013,
-        'Dr. Laxmikant S. Badwaik',
-        'laxmikant@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        6
-    ),
-    (
-        3014,
-        'Dr. Rupam Kataki',
-        'rupam@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        7
-    ),
-    (
-        3015,
-        'Dr. Debendra Chandra Baruah',
-        'dcbaruah@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'faculty',
-        7
-    );
--- Staff (assigned to departments for enrollment management)
-INSERT INTO `users`
-VALUES (
         4001,
-        'Mr. Biren Das',
-        'biren@tezu.ernet.in',
+        'Staff One',
+        'staff_01@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'staff',
         1
     ),
     (
         4002,
-        'Ms. Anjali Borah',
-        'anjali@tezu.ernet.in',
+        'Staff Two',
+        'staff_02@tezu.ac.in',
         '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
         'staff',
         2
-    ),
-    (
-        4003,
-        'Mr. Rajesh Saikia',
-        'rajesh@tezu.ernet.in',
-        '$2y$10$nlejuSHfBoAun490JDUHCuB4ZudU/4YR7eSh0OGuCV50poRy1NGUe',
-        'staff',
-        4
     );
 -- Courses
 INSERT INTO `course` (
@@ -412,53 +304,4 @@ VALUES (
         3004,
         2024,
         2
-    ),
-    (
-        5,
-        'EC201',
-        'Digital Electronics',
-        4,
-        NULL,
-        3005,
-        2025,
-        1
-    ),
-    (
-        6,
-        'EC301',
-        'Microprocessors',
-        3,
-        NULL,
-        3006,
-        2025,
-        1
-    ),
-    (
-        7,
-        'ME201',
-        'Thermodynamics',
-        4,
-        NULL,
-        3007,
-        2025,
-        2
-    ),
-    (
-        8,
-        'ME301',
-        'Fluid Mechanics',
-        3,
-        NULL,
-        3008,
-        2025,
-        2
     );
--- Students
-INSERT INTO `student`
-VALUES ('CS101', 'Rajesh Kumar', 1),
-    ('CS102', 'Priya Sharma', 1),
-    ('CS103', 'Amit Patel', 1),
-    ('EC101', 'Sneha Das', 2),
-    ('EC102', 'Vikram Singh', 2),
-    ('ME101', 'Anita Roy', 4),
-    ('ME102', 'Suresh Yadav', 4);

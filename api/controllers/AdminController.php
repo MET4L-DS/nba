@@ -33,7 +33,7 @@ class AdminController
     {
         try {
             $userData = $_REQUEST['authenticated_user'];
-            
+
             // Check if user is admin
             if ($userData['role'] !== 'admin') {
                 http_response_code(403);
@@ -75,7 +75,7 @@ class AdminController
     {
         try {
             $userData = $_REQUEST['authenticated_user'];
-            
+
             // Check if user is admin
             if ($userData['role'] !== 'admin') {
                 http_response_code(403);
@@ -106,13 +106,61 @@ class AdminController
     }
 
     /**
+     * Get all departments (Admin only)
+     */
+    public function getAllDepartments()
+    {
+        try {
+            $userData = $_REQUEST['authenticated_user'];
+
+            // Allow admin, dean, and maybe others if needed (currently checking admin based on controller name)
+            // Ideally DeanController should handle dean requests, but if this is shared...
+            // For AdminController methods, let's enforce admin role or just use it as is if routed correctly.
+            // The route middleware auth checks for valid user.
+
+            if ($userData['role'] !== 'admin' && $userData['role'] !== 'dean') {
+                // Allowing Dean too since DeanController might not have this implemented separately yet 
+                // or if we want reuse. But 'admin/departments' route suggests admin specific.
+                // However, let's keep it consistent: check admin.
+            }
+
+            // Since this is AdminController, let's enforce Admin.
+            if ($userData['role'] !== 'admin') {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Access denied. Admin privileges required.'
+                ]);
+                return;
+            }
+
+            $departments = $this->departmentRepository->findAll();
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Departments retrieved successfully',
+                'data' => $departments
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to retrieve departments',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get all students (Admin only)
      */
     public function getAllStudents()
     {
         try {
             $userData = $_REQUEST['authenticated_user'];
-            
+
             // Check if user is admin
             if ($userData['role'] !== 'admin') {
                 http_response_code(403);
@@ -149,7 +197,7 @@ class AdminController
     {
         try {
             $userData = $_REQUEST['authenticated_user'];
-            
+
             // Check if user is admin
             if ($userData['role'] !== 'admin') {
                 http_response_code(403);
@@ -185,7 +233,7 @@ class AdminController
     private function requireAdmin()
     {
         $userData = $_REQUEST['authenticated_user'];
-        
+
         if ($userData['role'] !== 'admin') {
             http_response_code(403);
             echo json_encode([
@@ -303,8 +351,10 @@ class AdminController
             // Update fields
             if (!empty($input['department_name'])) {
                 $newName = trim($input['department_name']);
-                if ($newName !== $department->getDepartmentName() && 
-                    $this->departmentRepository->nameExists($newName, $departmentId)) {
+                if (
+                    $newName !== $department->getDepartmentName() &&
+                    $this->departmentRepository->nameExists($newName, $departmentId)
+                ) {
                     http_response_code(409);
                     echo json_encode([
                         'success' => false,
@@ -317,8 +367,10 @@ class AdminController
 
             if (!empty($input['department_code'])) {
                 $newCode = strtoupper(trim($input['department_code']));
-                if ($newCode !== $department->getDepartmentCode() && 
-                    $this->departmentRepository->codeExists($newCode, $departmentId)) {
+                if (
+                    $newCode !== $department->getDepartmentCode() &&
+                    $this->departmentRepository->codeExists($newCode, $departmentId)
+                ) {
                     http_response_code(409);
                     echo json_encode([
                         'success' => false,

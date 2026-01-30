@@ -107,7 +107,8 @@ class Question
 
     public function setIsOptional($isOptional)
     {
-        $this->isOptional = (bool)$isOptional;
+        // Convert to integer (0 or 1) for MySQL compatibility
+        $this->isOptional = $isOptional ? 1 : 0;
     }
 
     public function setCo($co)

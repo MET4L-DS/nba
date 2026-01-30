@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import type { Course, Test } from "@/services/api";
@@ -25,12 +25,92 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 		CO6: "",
 	});
 	const [submitting, setSubmitting] = useState(false);
+	const [importing, setImporting] = useState(false);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const handleCoMarkChange = (co: string, value: string) => {
 		setCoMarks((prev) => ({
 			...prev,
 			[co]: value,
 		}));
+	};
+
+	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			const text = e.target?.result as string;
+			processCSV(text);
+		};
+		reader.readAsText(file);
+		
+		// Reset input
+		if (fileInputRef.current) {
+			fileInputRef.current.value = '';
+		}
+	};
+
+	const processCSV = async (text: string) => {
+		const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
+		if (lines.length < 2) {
+			toast.error("CSV file is empty or missing header");
+			return;
+		}
+
+		// Heuristic to detect name column
+		const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+		let marksStartIndex = 1;
+		if (headers.length > 1 && (headers[1].includes("name") || headers[1] === "student name")) {
+			marksStartIndex = 2;
+		} else {
+             const firstData = lines[1].split(",");
+             if (firstData.length > 1 && isNaN(parseFloat(firstData[1]))) {
+                  marksStartIndex = 2;
+             }
+        }
+
+		setImporting(true);
+		
+		let successCount = 0;
+		let failCount = 0;
+		const failures: string[] = [];
+
+		for (const line of lines.slice(1)) {
+			const values = line.split(",").map(v => v.trim());
+			if (values.length < 2) continue;
+
+			const rollNo = values[0];
+			const coValues = values.slice(marksStartIndex);
+			
+			// CO1 to CO6
+			const marksData: any = {
+				test_id: test.id,
+				student_id: rollNo,
+				CO1: parseFloat(coValues[0] || "0") || 0,
+				CO2: parseFloat(coValues[1] || "0") || 0,
+				CO3: parseFloat(coValues[2] || "0") || 0,
+				CO4: parseFloat(coValues[3] || "0") || 0,
+				CO5: parseFloat(coValues[4] || "0") || 0,
+				CO6: parseFloat(coValues[5] || "0") || 0
+			};
+
+			try {
+				await apiService.saveMarksByCO(marksData);
+				successCount++;
+			} catch (error) {
+				failCount++;
+				failures.push(rollNo);
+			}
+		}
+
+		setImporting(false);
+		toast.success(`Import complete: ${successCount} successful, ${failCount} failed.`);
+		if (failCount > 0) {
+			console.error("Failed students:", failures);
+			toast.error(`Failed to separate marks for: ${failures.slice(0, 5).join(", ")}...`);
+		}
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -96,20 +176,40 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center gap-4">
-				<Button variant="ghost" onClick={onBack} className="gap-2">
-					<ArrowLeft className="w-4 h-4" />
-					Back
-				</Button>
+			<div className="flex items-center justify-between">
+				<div className="flex items-center gap-4">
+					<Button variant="ghost" onClick={onBack} className="gap-2">
+						<ArrowLeft className="w-4 h-4" />
+						Back
+					</Button>
+					<div>
+						<h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+							{test.name}
+						</h2>
+						{course && (
+							<p className="text-sm text-gray-500 dark:text-gray-400">
+								{course.course_code} - {course.name}
+							</p>
+						)}
+					</div>
+				</div>
 				<div>
-					<h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-						{test.name}
-					</h2>
-					{course && (
-						<p className="text-sm text-gray-500 dark:text-gray-400">
-							{course.course_code} - {course.name}
-						</p>
-					)}
+					<input
+						type="file"
+						ref={fileInputRef}
+						className="hidden"
+						accept=".csv"
+						onChange={handleFileUpload}
+					/>
+					<Button 
+						variant="outline" 
+						onClick={() => fileInputRef.current?.click()}
+						disabled={importing}
+						className="gap-2"
+					>
+						<Upload className="w-4 h-4" />
+						{importing ? "Importing..." : "Import CSV"}
+					</Button>
 				</div>
 			</div>
 

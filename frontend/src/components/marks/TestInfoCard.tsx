@@ -9,6 +9,7 @@ interface TestInfoCardProps {
 	onSave: () => void;
 	isSaving: boolean;
 	isDisabled: boolean;
+	extraActions?: ReactNode;
 	children: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function TestInfoCard({
 	onSave,
 	isSaving,
 	isDisabled,
+	extraActions,
 	children,
 }: TestInfoCardProps) {
 	return (
@@ -30,14 +32,17 @@ export function TestInfoCard({
 							{test.pass_marks}
 						</p>
 					</div>
-					<Button
-						onClick={onSave}
-						disabled={isSaving || isDisabled}
-						className="gap-2"
-					>
-						<Save className="w-4 h-4" />
-						{isSaving ? "Saving..." : "Save All Marks"}
-					</Button>
+					<div className="flex gap-2">
+						{extraActions}
+						<Button
+							onClick={onSave}
+							disabled={isSaving || isDisabled}
+							className="gap-2"
+						>
+							<Save className="w-4 h-4" />
+							{isSaving ? "Saving..." : "Save All Marks"}
+						</Button>
+					</div>
 				</div>
 			</CardHeader>
 			{children}

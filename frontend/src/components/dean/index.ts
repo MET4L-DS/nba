@@ -5,7 +5,8 @@ export type DeanPage =
 	| "courses"
 	| "students"
 	| "assessments"
-	| "analytics";
+	| "analytics"
+	| "hod-management";
 
 export { DeanStatsCards } from "./DeanStatsCards";
 export { DepartmentsView } from "./DepartmentsView";
@@ -14,3 +15,4 @@ export { CoursesView } from "./CoursesView";
 export { StudentsView } from "./StudentsView";
 export { TestsView } from "./TestsView";
 export { AnalyticsView } from "./AnalyticsView";
+export { HODManagement } from "./HODManagement";

@@ -456,6 +456,37 @@ class Router
                 }
                 break;
 
+            // Dean HOD management routes
+            case (preg_match('#^dean/departments/(\d+)/faculty$#', $path, $matches) ? true : false):
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getDepartmentFaculty($matches[1]);
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case (preg_match('#^dean/departments/(\d+)/hod$#', $path, $matches) ? true : false):
+                if ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->appointHOD($matches[1]);
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case (preg_match('#^dean/hod/(\d+)$#', $path, $matches) ? true : false):
+                if ($method === 'DELETE') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->demoteHOD($matches[1]);
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
             case 'courses':
                 if ($method === 'GET') {
                     $user = $this->authMiddleware->requireAuth();

@@ -14,6 +14,7 @@ import type {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import {
 	DeanStatsCards,
 	DepartmentsView,
@@ -22,6 +23,7 @@ import {
 	StudentsView,
 	TestsView,
 	AnalyticsView,
+	HODManagement,
 	type DeanPage,
 } from "@/components/dean";
 import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
@@ -35,11 +37,13 @@ import {
 	ClipboardList,
 	BarChart3,
 	LayoutDashboard,
+	UserCog,
 } from "lucide-react";
 
 const deanNavItems: NavItem[] = [
 	{ id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
 	{ id: "departments", label: "Departments", icon: Building2 },
+	{ id: "hod-management", label: "HOD Management", icon: UserCog },
 	{ id: "users", label: "Users", icon: UsersIcon },
 	{ id: "courses", label: "Courses", icon: BookOpen },
 	{ id: "students", label: "Students", icon: GraduationCap },
@@ -130,10 +134,12 @@ export function DeanDashboard() {
 		try {
 			switch (view) {
 				case "departments":
+				case "hod-management": {
 					const departmentsData =
 						await apiService.getDeanDepartments();
 					setDepartments(departmentsData);
 					break;
+				}
 				case "users":
 					const usersData = await apiService.getDeanUsers();
 					setUsers(usersData);
@@ -171,10 +177,13 @@ export function DeanDashboard() {
 	const handleRefresh = async () => {
 		setRefreshing(true);
 		try {
-			const statsData = await apiService.getDeanStats();
+			const [statsData, departmentsData] = await Promise.all([
+				apiService.getDeanStats(),
+				apiService.getDeanDepartments(),
+			]);
 			setStats(statsData);
+			setDepartments(departmentsData);
 			await fetchViewData(currentPage);
-			toast.success("Data refreshed successfully");
 		} catch (error) {
 			toast.error("Failed to refresh data");
 		} finally {
@@ -214,6 +223,14 @@ export function DeanDashboard() {
 									icon={Building2}
 									onClick={() =>
 										handlePageChange("departments")
+									}
+								/>
+								<QuickAccessCard
+									title="HOD Management"
+									description="Appoint and manage department HODs"
+									icon={UserCog}
+									onClick={() =>
+										handlePageChange("hod-management")
 									}
 								/>
 								<QuickAccessCard
@@ -260,6 +277,15 @@ export function DeanDashboard() {
 					<DepartmentsView
 						departments={departments}
 						isLoading={refreshing}
+					/>
+				);
+
+			case "hod-management":
+				return (
+					<HODManagement
+						departments={departments}
+						isLoading={refreshing}
+						onSuccess={handleRefresh}
 					/>
 				);
 
@@ -343,6 +369,7 @@ export function DeanDashboard() {
 					</ScrollArea>
 				</main>
 			</div>
+			<Toaster />
 		</div>
 	);
 }

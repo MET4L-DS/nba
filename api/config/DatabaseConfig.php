@@ -14,10 +14,11 @@ class DatabaseConfig
 
     public function __construct()
     {
-        $this->host = 'localhost';
-        $this->username = 'root'; // Default XAMPP MySQL username
-        $this->password = ''; // Default XAMPP MySQL password (empty)
-        $this->database = 'nba_db';
+        // Try to get config from environment variables (Production/AWS), fallback to local XAMPP defaults
+        $this->host = getenv('DB_HOST') ?: 'localhost';
+        $this->username = getenv('DB_USER') ?: 'root';
+        $this->password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
+        $this->database = getenv('DB_NAME') ?: 'nba_db';
         $this->charset = 'utf8mb4';
     }
 

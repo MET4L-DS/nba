@@ -308,7 +308,7 @@
 
 ## Dean Endpoints
 
-**Role Required:** `dean` (Read-only access to all data)
+**Role Required:** `dean` (Read-only access to all data + HOD management)
 
 ### 15. Get Dean Stats
 
@@ -348,9 +348,104 @@
 
 ---
 
+### 18. Get Department Faculty
+
+**GET** `/dean/departments/{departmentId}/faculty`
+
+```json
+// RESPONSE (200)
+{
+	"success": true,
+	"data": [
+		{
+			"employee_id": 3001,
+			"username": "Dr. Faculty One",
+			"email": "faculty01@tezu.edu",
+			"role": "faculty",
+			"department_id": 1
+		}
+	]
+}
+
+// NOTE: Only returns faculty members (not HOD, staff, or admin)
+```
+
+---
+
+### 19. Appoint HOD
+
+**POST** `/dean/departments/{departmentId}/hod`
+
+```json
+// REQUEST (Scenario 1: Promote existing faculty)
+{
+	"employee_id": 3001
+}
+
+// REQUEST (Scenario 2: Create new HOD)
+{
+	"employee_id": 2005,
+	"username": "Dr. New HOD",
+	"email": "hod_new@tezu.edu",
+	"password": "pass123"
+}
+
+// RESPONSE (200/201)
+{
+	"success": true,
+	"message": "Faculty promoted to HOD successfully",
+	"data": {
+		"employee_id": 3001,
+		"username": "Dr. Faculty One",
+		"email": "faculty01@tezu.edu",
+		"role": "hod",
+		"department_id": 1
+	}
+}
+
+// ERROR (409) - HOD already exists
+{"success": false, "message": "An HOD already exists for this department. Please demote the current HOD first."}
+
+// ERROR (400) - User not in department
+{"success": false, "message": "User does not belong to this department"}
+
+// CONSTRAINTS:
+// - Only one HOD per department
+// - When promoting: user must be faculty in that department
+// - When creating: standard user creation validations apply
+```
+
+---
+
+### 20. Demote HOD
+
+**DELETE** `/dean/hod/{employeeId}`
+
+```json
+// RESPONSE (200)
+{
+	"success": true,
+	"message": "HOD demoted to faculty successfully",
+	"data": {
+		"employee_id": 3001,
+		"username": "Dr. Faculty One",
+		"email": "faculty01@tezu.edu",
+		"role": "faculty",
+		"department_id": 1
+	}
+}
+
+// ERROR (400) - Not an HOD
+{"success": false, "message": "User is not an HOD"}
+
+// NOTE: Demotes HOD to faculty role
+```
+
+---
+
 ## Course Management
 
-### 18. Get Faculty Courses
+### 21. Get Faculty Courses
 
 **GET** `/courses`
 
@@ -373,7 +468,7 @@
 
 ---
 
-### 19. Get Course Tests
+### 22. Get Course Tests
 
 **GET** `/course-tests?course_id=1`
 
@@ -397,7 +492,7 @@
 
 ## Assessment Management
 
-### 20. Create Assessment
+### 23. Create Assessment
 
 **POST** `/assessment`
 
@@ -437,7 +532,7 @@
 
 ---
 
-### 21. Get Assessment Details
+### 24. Get Assessment Details
 
 **GET** `/assessment?test_id=1`
 
@@ -476,7 +571,7 @@
 
 ## Marks Management
 
-### 22. Save Marks by Question
+### 25. Save Marks by Question
 
 **POST** `/marks/by-question`
 
@@ -506,7 +601,7 @@
 
 ---
 
-### 23. Save Marks by CO
+### 26. Save Marks by CO
 
 **POST** `/marks/by-co`
 
@@ -532,7 +627,7 @@
 
 ---
 
-### 24. Bulk Save Marks
+### 27. Bulk Save Marks
 
 **POST** `/marks/bulk`
 
@@ -568,7 +663,7 @@
 
 ---
 
-### 25. Get Student Marks
+### 28. Get Student Marks
 
 **GET** `/marks?test_id=1&student_id=CS101`
 
@@ -593,7 +688,7 @@
 
 ---
 
-### 26. Get Test Marks (All Students)
+### 29. Get Test Marks (All Students)
 
 **GET** `/marks/test?test_id=1&include_raw=true`
 
@@ -622,7 +717,7 @@
 
 ---
 
-### 27. Update Raw Marks Entry
+### 30. Update Raw Marks Entry
 
 **PUT** `/marks/raw/{id}`
 
@@ -650,7 +745,7 @@
 
 ---
 
-### 28. Delete Raw Marks Entry
+### 31. Delete Raw Marks Entry
 
 **DELETE** `/marks/raw/{id}`
 
@@ -663,7 +758,7 @@
 
 ---
 
-### 29. Delete All Student Marks
+### 32. Delete All Student Marks
 
 **DELETE** `/marks/student/{testId}/{studentId}`
 
@@ -685,7 +780,7 @@
 
 ## Question Management
 
-### 30. Update Question
+### 33. Update Question
 
 **PUT** `/questions/{id}`
 
@@ -711,7 +806,7 @@
 
 ---
 
-### 31. Delete Question
+### 34. Delete Question
 
 **DELETE** `/questions/{id}`
 
@@ -726,7 +821,7 @@
 
 ## Student Enrollment
 
-### 32. Bulk Enroll Students
+### 35. Bulk Enroll Students
 
 **POST** `/courses/{courseId}/enroll`
 
@@ -757,7 +852,7 @@
 
 ---
 
-### 33. Get Course Enrollments
+### 36. Get Course Enrollments
 
 **GET** `/courses/{courseId}/enrollments?test_id={testId}`
 
@@ -792,7 +887,7 @@
 
 ---
 
-### 33.1. Remove Enrollment
+### 36.1. Remove Enrollment
 
 **DELETE** `/courses/{courseId}/enroll/{rollno}`
 
@@ -805,7 +900,7 @@
 
 ## Attainment Configuration
 
-### 34. Get Attainment Config
+### 37. Get Attainment Config
 
 **GET** `/courses/{courseId}/attainment-config`
 
@@ -826,7 +921,7 @@
 
 ---
 
-### 35. Save Attainment Config
+### 38. Save Attainment Config
 
 **POST** `/courses/{courseId}/attainment-config`
 
@@ -847,7 +942,7 @@
 
 ---
 
-### 36. Get CO-PO Matrix
+### 39. Get CO-PO Matrix
 
 **GET** `/courses/{courseId}/copo-matrix`
 
@@ -864,7 +959,7 @@
 
 ---
 
-### 37. Save CO-PO Matrix
+### 40. Save CO-PO Matrix
 
 **POST** `/courses/{courseId}/copo-matrix`
 

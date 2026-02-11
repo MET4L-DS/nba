@@ -119,11 +119,15 @@ class DeanController
                 $facultyCount = 0;
                 $staffCount = 0;
                 $hodName = null;
+                $hodEmployeeId = null;
                 
                 foreach ($users as $user) {
                     if ($user['role'] === 'faculty') $facultyCount++;
                     elseif ($user['role'] === 'staff') $staffCount++;
-                    elseif ($user['role'] === 'hod') $hodName = $user['username'];
+                    elseif ($user['role'] === 'hod') {
+                        $hodName = $user['username'];
+                        $hodEmployeeId = $user['employee_id'];
+                    }
                 }
                 
                 // Count courses in department
@@ -137,6 +141,7 @@ class DeanController
                     'department_name' => $dept['department_name'],
                     'department_code' => $dept['department_code'],
                     'hod_name' => $hodName,
+                    'hod_employee_id' => $hodEmployeeId,
                     'faculty_count' => $facultyCount,
                     'staff_count' => $staffCount,
                     'course_count' => count($courses),
@@ -428,6 +433,242 @@ class DeanController
             echo json_encode([
                 'success' => false,
                 'message' => 'Failed to retrieve department analytics',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Appoint HOD for a department (Dean only)
+     * Can either promote existing faculty or create new HOD
+     */
+    public function appointHOD($departmentId)
+    {
+        if (!$this->requireDean()) return;
+
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+
+            // Validate department exists
+            $department = $this->departmentRepository->findById($departmentId);
+            if (!$department) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Department not found'
+                ]);
+                return;
+            }
+
+            // Check if HOD already exists for this department
+            if ($this->userRepository->hodExistsForDepartment($departmentId)) {
+                http_response_code(409);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'An HOD already exists for this department. Please demote the current HOD first.'
+                ]);
+                return;
+            }
+
+            // Two scenarios: promote existing faculty OR create new HOD
+            if (isset($data['employee_id']) && !isset($data['username'])) {
+                // Scenario 1: Promote existing faculty
+                $employeeId = (int)$data['employee_id'];
+                $user = $this->userRepository->findByEmployeeId($employeeId);
+                
+                if (!$user) {
+                    http_response_code(404);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'User not found'
+                    ]);
+                    return;
+                }
+
+                // Validate user is faculty in this department
+                if ($user->getDepartmentId() != $departmentId) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'User does not belong to this department'
+                    ]);
+                    return;
+                }
+
+                if ($user->getRole() !== 'faculty') {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Only faculty members can be promoted to HOD'
+                    ]);
+                    return;
+                }
+
+                // Promote to HOD
+                $user->setRole('hod');
+                $this->userRepository->save($user);
+
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Faculty promoted to HOD successfully',
+                    'data' => $user->toArray()
+                ]);
+            } else {
+                // Scenario 2: Create new HOD
+                $requiredFields = ['employee_id', 'username', 'email', 'password'];
+                $errors = [];
+                foreach ($requiredFields as $field) {
+                    if (empty($data[$field])) {
+                        $errors[] = "$field is required";
+                    }
+                }
+
+                if (!empty($errors)) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $errors
+                    ]);
+                    return;
+                }
+
+                // Check if employee_id already exists
+                if ($this->userRepository->findByEmployeeId($data['employee_id'])) {
+                    http_response_code(409);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Employee ID already exists'
+                    ]);
+                    return;
+                }
+
+                // Check if email already exists
+                if ($this->userRepository->emailExists($data['email'])) {
+                    http_response_code(409);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Email already exists'
+                    ]);
+                    return;
+                }
+
+                // Create new HOD
+                $newHOD = new User(
+                    (int)$data['employee_id'],
+                    $data['username'],
+                    $data['email'],
+                    password_hash($data['password'], PASSWORD_DEFAULT),
+                    'hod',
+                    $departmentId
+                );
+
+                if ($this->userRepository->save($newHOD)) {
+                    http_response_code(201);
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'HOD created successfully',
+                        'data' => $newHOD->toArray()
+                    ]);
+                } else {
+                    throw new Exception("Failed to create HOD");
+                }
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to appoint HOD',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Demote HOD to faculty (Dean only)
+     */
+    public function demoteHOD($employeeId)
+    {
+        if (!$this->requireDean()) return;
+
+        try {
+            $user = $this->userRepository->findByEmployeeId($employeeId);
+            
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+                return;
+            }
+
+            if ($user->getRole() !== 'hod') {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'User is not an HOD'
+                ]);
+                return;
+            }
+
+            // Demote to faculty
+            $user->setRole('faculty');
+            $this->userRepository->save($user);
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'message' => 'HOD demoted to faculty successfully',
+                'data' => $user->toArray()
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to demote HOD',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get faculty members in a department (for HOD appointment)
+     */
+    public function getDepartmentFaculty($departmentId)
+    {
+        if (!$this->requireDean()) return;
+
+        try {
+            $department = $this->departmentRepository->findById($departmentId);
+            if (!$department) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Department not found'
+                ]);
+                return;
+            }
+
+            // Get all users in department
+            $users = $this->userRepository->findFacultyByDepartment($departmentId);
+            
+            // Filter to only faculty (not staff, not current HOD)
+            $facultyMembers = array_filter($users, function($user) {
+                return $user['role'] === 'faculty';
+            });
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => array_values($facultyMembers)
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to retrieve faculty',
                 'error' => $e->getMessage()
             ]);
         }

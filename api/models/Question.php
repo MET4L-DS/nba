@@ -6,7 +6,7 @@
  */
 class Question
 {
-    private $id;
+    private $question_id;
     private $testId;
     private $questionNumber;    // 1-20
     private $subQuestion;       // a-h or NULL
@@ -15,7 +15,7 @@ class Question
     private $maxMarks;          // decimal
 
     public function __construct(
-        $id,
+        $question_id,
         $testId,
         $questionNumber,
         $subQuestion,
@@ -23,7 +23,7 @@ class Question
         $co,
         $maxMarks
     ) {
-        $this->id = $id;
+        $this->question_id = $question_id;
         $this->setTestId($testId);
         $this->setQuestionNumber($questionNumber);
         $this->setSubQuestion($subQuestion);
@@ -33,9 +33,9 @@ class Question
     }
 
     // Getters
-    public function getId()
+    public function getQuestionId()
     {
-        return $this->id;
+        return $this->question_id;
     }
     public function getTestId()
     {
@@ -71,9 +71,9 @@ class Question
     }
 
     // Setters with validation
-    public function setId($id)
+    public function setQuestionId($question_id)
     {
-        $this->id = $id;
+        $this->question_id = $question_id;
     }
 
     public function setTestId($testId)
@@ -133,7 +133,7 @@ class Question
     public function toArray()
     {
         return [
-            'id' => $this->id,
+            'question_id' => $this->question_id,
             'test_id' => $this->testId,
             'question_number' => $this->questionNumber,
             'sub_question' => $this->subQuestion,

@@ -6,41 +6,62 @@
  */
 class Test
 {
-    private $id;
+    private $test_id;
     private $courseId;
-    private $name;
+    private $test_name;
     private $fullMarks;
     private $passMarks;
     private $questionPaperPdf;
+    private $test_type;
+    private $test_date;
+    private $max_marks;
+    private $weightage;
     private $courseCode; // For filename generation
     private $year; // For filename generation
     private $semester; // For filename generation
 
-    public function __construct($id, $courseId, $name, $fullMarks, $passMarks, $questionPaperPdf = null, $courseCode = null, $year = null, $semester = null)
-    {
-        $this->id = $id;
+    public function __construct(
+        $test_id, 
+        $courseId, 
+        $test_name, 
+        $fullMarks, 
+        $passMarks, 
+        $questionPaperPdf = null, 
+        $test_type = null,
+        $test_date = null,
+        $max_marks = null,
+        $weightage = null,
+        $courseCode = null, 
+        $year = null, 
+        $semester = null
+    ) {
+        $this->test_id = $test_id;
         $this->setCourseId($courseId);
-        $this->setName($name);
+        $this->setTestName($test_name);
         $this->setFullMarks($fullMarks);
         $this->setPassMarks($passMarks);
         $this->questionPaperPdf = $questionPaperPdf;
+        $this->test_type = $test_type;
+        $this->test_date = $test_date;
+        $this->max_marks = $max_marks;
+        $this->weightage = $weightage;
         $this->courseCode = $courseCode;
         $this->year = $year;
         $this->semester = $semester;
     }
 
     // Getters
-    public function getId()
+    public function getTestId()
     {
-        return $this->id;
+        return $this->test_id;
     }
     public function getCourseId()
     {
         return $this->courseId;
     }
-    public function getName()
+    public function getTestName()
     {
-        return $this->name;
+        return $this->test_name;
     }
     public function getFullMarks()
     {
@@ -54,11 +75,27 @@ class Test
     {
         return $this->questionPaperPdf;
     }
+    public function getTestType()
+    {
+        return $this->test_type;
+    }
+    public function getTestDate()
+    {
+        return $this->test_date;
+    }
+    public function getMaxMarks()
+    {
+        return $this->max_marks;
+    }
+    public function getWeightage()
+    {
+        return $this->weightage;
+    }
 
     // Setters with validation
-    public function setId($id)
+    public function setTestId($test_id)
     {
-        $this->id = $id;
+        $this->test_id = $test_id;
     }
 
     public function setCourseId($courseId)
@@ -69,12 +106,12 @@ class Test
         $this->courseId = (int)$courseId;
     }
 
-    public function setName($name)
+    public function setTestName($test_name)
     {
-        if (empty($name) || strlen($name) > 255) {
+        if (empty($test_name) || strlen($test_name) > 255) {
             throw new Exception("Test name must be between 1 and 255 characters");
         }
-        $this->name = $name;
+        $this->test_name = $test_name;
     }
 
     public function setFullMarks($fullMarks)
@@ -96,6 +133,26 @@ class Test
     public function setQuestionPaperPdf($questionPaperPdf)
     {
         $this->questionPaperPdf = $questionPaperPdf;
+    }
+
+    public function setTestType($test_type)
+    {
+        $this->test_type = $test_type;
+    }
+
+    public function setTestDate($test_date)
+    {
+        $this->test_date = $test_date;
+    }
+
+    public function setMaxMarks($max_marks)
+    {
+        $this->max_marks = $max_marks;
+    }
+
+    public function setWeightage($weightage)
+    {
+        $this->weightage = $weightage;
     }
 
     public function setCourseCode($courseCode)
@@ -122,17 +179,21 @@ class Test
         $generatedFilename = null;
         if (!is_null($this->questionPaperPdf) && $this->courseCode && $this->year && $this->semester) {
             // Sanitize test name for filename (remove special chars, spaces to underscores)
-            $sanitizedTestName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $this->name);
+            $sanitizedTestName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $this->test_name);
             $sanitizedTestName = preg_replace('/_+/', '_', $sanitizedTestName); // Remove multiple underscores
             $generatedFilename = $this->courseCode . '_' . $this->year . '_' . $this->semester . '_' . $sanitizedTestName . '.pdf';
         }
 
         return [
-            'id' => $this->id,
+            'test_id' => $this->test_id,
             'course_id' => $this->courseId,
-            'name' => $this->name,
+            'test_name' => $this->test_name,
             'full_marks' => $this->fullMarks,
             'pass_marks' => $this->passMarks,
+            'test_type' => $this->test_type,
+            'test_date' => $this->test_date,
+            'max_marks' => $this->max_marks,
+            'weightage' => $this->weightage,
             'question_paper_filename' => $generatedFilename,
             'has_question_paper_pdf' => !is_null($this->questionPaperPdf)
         ];

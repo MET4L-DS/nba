@@ -55,7 +55,10 @@ class DepartmentRepository
                 return new Department(
                     $deptData['department_id'],
                     $deptData['department_name'],
-                    $deptData['department_code']
+                    $deptData['department_code'],
+                    $deptData['school_id'] ?? null,
+                    $deptData['description'] ?? null,
+                    $deptData['created_at'] ?? null
                 );
             }
             return null;
@@ -79,7 +82,10 @@ class DepartmentRepository
                 $departments[] = [
                     'department_id' => $deptData['department_id'],
                     'department_name' => $deptData['department_name'],
-                    'department_code' => $deptData['department_code']
+                    'department_code' => $deptData['department_code'],
+                    'school_id' => $deptData['school_id'],
+                    'description' => $deptData['description'],
+                    'created_at' => $deptData['created_at']
                 ];
             }
 
@@ -99,18 +105,22 @@ class DepartmentRepository
         try {
             if ($department->getDepartmentId()) {
                 // Update existing department
-                $stmt = $this->db->prepare("UPDATE departments SET department_name = ?, department_code = ? WHERE department_id = ?");
+                $stmt = $this->db->prepare("UPDATE departments SET department_name = ?, department_code = ?, school_id = ?, description = ? WHERE department_id = ?");
                 return $stmt->execute([
                     $department->getDepartmentName(),
                     $department->getDepartmentCode(),
+                    $department->getSchoolId(),
+                    $department->getDescription(),
                     $department->getDepartmentId()
                 ]);
             } else {
                 // Insert new department
-                $stmt = $this->db->prepare("INSERT INTO departments (department_name, department_code) VALUES (?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO departments (department_name, department_code, school_id, description) VALUES (?, ?, ?, ?)");
                 $result = $stmt->execute([
                     $department->getDepartmentName(),
-                    $department->getDepartmentCode()
+                    $department->getDepartmentCode(),
+                    $department->getSchoolId(),
+                    $department->getDescription()
                 ]);
 
                 if ($result) {

@@ -13,11 +13,15 @@ class User
     private $password;
     private $role;
     private $departmentId;
+    private $designation;
+    private $phone;
+    private $createdAt;
+    private $updatedAt;
 
     // Valid roles
     const ROLES = ['admin', 'dean', 'hod', 'faculty', 'staff'];
 
-    public function __construct($employeeId, $username = null, $email = null, $password = null, $role = null, $departmentId = null)
+    public function __construct($employeeId, $username = null, $email = null, $password = null, $role = null, $departmentId = null, $designation = null, $phone = null, $createdAt = null, $updatedAt = null)
     {
         $this->employeeId = $employeeId;
         $this->username = $username;
@@ -25,6 +29,10 @@ class User
         $this->password = $password;
         $this->role = $role;
         $this->departmentId = $departmentId;
+        $this->designation = $designation;
+        $this->phone = $phone;
+        $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
     }
 
     // Getters
@@ -51,6 +59,22 @@ class User
     public function getDepartmentId()
     {
         return $this->departmentId;
+    }
+    public function getDesignation()
+    {
+        return $this->designation;
+    }
+    public function getPhone()
+    {
+        return $this->phone;
+    }
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
+    public function getUpdatedAt()
+    {
+        return $this->updatedAt;
     }
 
     // Setters with validation
@@ -102,6 +126,29 @@ class User
         $this->departmentId = $departmentId;
     }
 
+    public function setDesignation($designation)
+    {
+        $this->designation = $designation;
+    }
+
+    public function setPhone($phone)
+    {
+        if ($phone !== null && strlen($phone) > 15) {
+            throw new InvalidArgumentException("Phone number must not exceed 15 characters");
+        }
+        $this->phone = $phone;
+    }
+
+    public function setCreatedAt($createdAt)
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    public function setUpdatedAt($updatedAt)
+    {
+        $this->updatedAt = $updatedAt;
+    }
+
     /**
      * Convert user object to array (for JSON responses)
      * @return array
@@ -113,7 +160,11 @@ class User
             'username' => $this->username,
             'email' => $this->email,
             'role' => $this->role,
-            'department_id' => $this->departmentId
+            'department_id' => $this->departmentId,
+            'designation' => $this->designation,
+            'phone' => $this->phone,
+            'created_at' => $this->createdAt,
+            'updated_at' => $this->updatedAt
         ];
     }
 

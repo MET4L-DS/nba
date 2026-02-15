@@ -33,7 +33,11 @@ class UserRepository
                     $userData['email'],
                     $userData['password'],
                     $userData['role'],
-                    $userData['department_id']
+                    $userData['department_id'],
+                    $userData['designation'] ?? null,
+                    $userData['phone'] ?? null,
+                    $userData['created_at'] ?? null,
+                    $userData['updated_at'] ?? null
                 );
             }
             return null;
@@ -61,7 +65,11 @@ class UserRepository
                     $userData['email'],
                     $userData['password'],
                     $userData['role'],
-                    $userData['department_id']
+                    $userData['department_id'],
+                    $userData['designation'] ?? null,
+                    $userData['phone'] ?? null,
+                    $userData['created_at'] ?? null,
+                    $userData['updated_at'] ?? null
                 );
             }
             return null;
@@ -112,7 +120,11 @@ class UserRepository
                     $userData['email'],
                     $userData['password'],
                     $userData['role'],
-                    $userData['department_id']
+                    $userData['department_id'],
+                    $userData['designation'] ?? null,
+                    $userData['phone'] ?? null,
+                    $userData['created_at'] ?? null,
+                    $userData['updated_at'] ?? null
                 );
             }
             return null;
@@ -134,25 +146,29 @@ class UserRepository
 
             if ($existingUser) {
                 // Update existing user
-                $stmt = $this->db->prepare("UPDATE users SET username = ?, email = ?, password = ?, role = ?, department_id = ? WHERE employee_id = ?");
+                $stmt = $this->db->prepare("UPDATE users SET username = ?, email = ?, password = ?, role = ?, department_id = ?, designation = ?, phone = ? WHERE employee_id = ?");
                 return $stmt->execute([
                     $user->getUsername(),
                     $user->getEmail(),
                     $user->getPassword(),
                     $user->getRole(),
                     $user->getDepartmentId(),
+                    $user->getDesignation(),
+                    $user->getPhone(),
                     $user->getEmployeeId()
                 ]);
             } else {
                 // Insert new user
-                $stmt = $this->db->prepare("INSERT INTO users (employee_id, username, email, password, role, department_id) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO users (employee_id, username, email, password, role, department_id, designation, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 return $stmt->execute([
                     $user->getEmployeeId(),
                     $user->getUsername(),
                     $user->getEmail(),
                     $user->getPassword(),
                     $user->getRole(),
-                    $user->getDepartmentId()
+                    $user->getDepartmentId(),
+                    $user->getDesignation(),
+                    $user->getPhone()
                 ]);
             }
         } catch (PDOException $e) {

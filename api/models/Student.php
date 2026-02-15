@@ -6,42 +6,97 @@
  */
 class Student
 {
-    private $rollno;
-    private $name;
-    private $dept;
+    private $roll_no;
+    private $student_name;
+    private $department_id;
+    private $batch_year;
+    private $student_status;
+    private $email;
+    private $phone;
 
-    public function __construct($rollno, $name, $dept)
-    {
-        $this->rollno = $rollno;
-        $this->name = $name;
-        $this->dept = $dept;
+    public function __construct(
+        $roll_no, 
+        $student_name, 
+        $department_id,
+        $batch_year = null,
+        $student_status = 'Active',
+        $email = null,
+        $phone = null
+    ) {
+        $this->roll_no = $roll_no;
+        $this->student_name = $student_name;
+        $this->department_id = $department_id;
+        $this->batch_year = $batch_year;
+        $this->student_status = $student_status;
+        $this->email = $email;
+        $this->phone = $phone;
     }
 
     // Getters
-    public function getRollno()
+    public function getRollNo()
     {
-        return $this->rollno;
+        return $this->roll_no;
     }
 
-    public function getName()
+    public function getStudentName()
     {
-        return $this->name;
+        return $this->student_name;
     }
 
-    public function getDept()
+    public function getDepartmentId()
     {
-        return $this->dept;
+        return $this->department_id;
+    }
+
+    public function getBatchYear()
+    {
+        return $this->batch_year;
+    }
+
+    public function getStudentStatus()
+    {
+        return $this->student_status;
+    }
+
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    public function getPhone()
+    {
+        return $this->phone;
     }
 
     // Setters
-    public function setName($name)
+    public function setStudentName($student_name)
     {
-        $this->name = $name;
+        $this->student_name = $student_name;
     }
 
-    public function setDept($dept)
+    public function setDepartmentId($department_id)
     {
-        $this->dept = $dept;
+        $this->department_id = $department_id;
+    }
+
+    public function setBatchYear($batch_year)
+    {
+        $this->batch_year = $batch_year;
+    }
+
+    public function setStudentStatus($student_status)
+    {
+        $this->student_status = $student_status;
+    }
+
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    }
+
+    public function setPhone($phone)
+    {
+        $this->phone = $phone;
     }
 
     /**
@@ -50,9 +105,13 @@ class Student
     public function toArray()
     {
         return [
-            'rollno' => $this->rollno,
-            'name' => $this->name,
-            'dept' => $this->dept
+            'roll_no' => $this->roll_no,
+            'student_name' => $this->student_name,
+            'department_id' => $this->department_id,
+            'batch_year' => $this->batch_year,
+            'student_status' => $this->student_status,
+            'email' => $this->email,
+            'phone' => $this->phone
         ];
     }
 }

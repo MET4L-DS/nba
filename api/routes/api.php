@@ -351,6 +351,16 @@ class Router
                 }
                 break;
 
+            case 'faculty/courses':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->assessmentController->getFacultyCourses();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
             case 'staff/courses':
                 if ($method === 'GET') {
                     $user = $this->authMiddleware->requireAuth();

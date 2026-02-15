@@ -34,7 +34,7 @@ class FacultyController
         try {
             // Get courses taught by this faculty
             $stmt = $this->db->prepare("
-                SELECT id FROM course WHERE faculty_id = ?
+                SELECT course_id FROM courses WHERE faculty_id = ?
             ");
             $stmt->execute([$facultyId]);
             $courses = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -49,7 +49,7 @@ class FacultyController
             foreach ($courses as $courseId) {
                 // Count tests for this course
                 $stmt = $this->db->prepare("
-                    SELECT COUNT(*) FROM test WHERE course_id = ?
+                    SELECT COUNT(*) FROM tests WHERE course_id = ?
                 ");
                 $stmt->execute([$courseId]);
                 $totalAssessments += $stmt->fetchColumn();
@@ -57,7 +57,7 @@ class FacultyController
                 // Count enrolled students
                 $stmt = $this->db->prepare("
                     SELECT COUNT(DISTINCT student_rollno) 
-                    FROM enrollment 
+                    FROM enrollments 
                     WHERE course_id = ?
                 ");
                 $stmt->execute([$courseId]);
@@ -68,11 +68,11 @@ class FacultyController
                 $stmt = $this->db->prepare("
                     SELECT 
                         AVG(
-                            ((marks.CO1 + marks.CO2 + marks.CO3 + marks.CO4 + marks.CO5 + marks.CO6) / test.full_marks) * 100
+                            ((marks.CO1 + marks.CO2 + marks.CO3 + marks.CO4 + marks.CO5 + marks.CO6) / tests.full_marks) * 100
                         ) as avg_attainment
                     FROM marks
-                    JOIN test ON marks.test_id = test.id
-                    WHERE test.course_id = ?
+                    JOIN tests ON marks.test_id = tests.test_id
+                    WHERE tests.course_id = ?
                 ");
                 $stmt->execute([$courseId]);
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -120,10 +120,10 @@ class FacultyController
         try {
             // First verify that this test belongs to a course taught by this faculty
             $stmt = $this->db->prepare("
-                SELECT test.id, test.name, course.course_code, course.name as course_name
-                FROM test
-                JOIN course ON test.course_id = course.id
-                WHERE test.id = ? AND course.faculty_id = ?
+                SELECT t.test_id, t.test_name, c.course_code, c.course_name
+                FROM tests t
+                JOIN courses c ON t.course_id = c.course_id
+                WHERE t.test_id = ? AND c.faculty_id = ?
             ");
             $stmt->execute([$testId, $facultyId]);
             $test = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -141,15 +141,15 @@ class FacultyController
             // Get counts for confirmation message
             $stmt = $this->db->prepare("
                 SELECT 
-                    (SELECT COUNT(*) FROM question WHERE test_id = ?) as question_count,
+                    (SELECT COUNT(*) FROM questions WHERE test_id = ?) as question_count,
                     (SELECT COUNT(DISTINCT student_id) FROM marks WHERE test_id = ?) as student_count,
-                    (SELECT COUNT(*) FROM rawMarks WHERE test_id = ?) as raw_marks_count
+                    (SELECT COUNT(*) FROM raw_marks WHERE test_id = ?) as raw_marks_count
             ");
             $stmt->execute([$testId, $testId, $testId]);
             $counts = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Delete the test (CASCADE will handle questions, rawMarks, and marks)
-            $stmt = $this->db->prepare("DELETE FROM test WHERE id = ?");
+            // Delete the test (CASCADE will handle questions, raw_marks, and marks)
+            $stmt = $this->db->prepare("DELETE FROM tests WHERE test_id = ?");
             $stmt->execute([$testId]);
 
             http_response_code(200);

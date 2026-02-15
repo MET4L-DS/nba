@@ -18,12 +18,20 @@ class StudentRepository
      */
     public function findByRollno($rollno)
     {
-        $stmt = $this->db->prepare("SELECT * FROM student WHERE rollno = ?");
+        $stmt = $this->db->prepare("SELECT * FROM students WHERE roll_no = ?");
         $stmt->execute([$rollno]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($row) {
-            return new Student($row['rollno'], $row['name'], $row['dept']);
+            return new Student(
+                $row['roll_no'], 
+                $row['student_name'], 
+                $row['department_id'],
+                $row['batch_year'] ?? null,
+                $row['student_status'] ?? 'Active',
+                $row['email'] ?? null,
+                $row['phone'] ?? null
+            );
         }
         return null;
     }
@@ -33,12 +41,20 @@ class StudentRepository
      */
     public function findByDepartment($deptId)
     {
-        $stmt = $this->db->prepare("SELECT * FROM student WHERE dept = ? ORDER BY rollno");
+        $stmt = $this->db->prepare("SELECT * FROM students WHERE department_id = ? ORDER BY roll_no");
         $stmt->execute([$deptId]);
 
         $students = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $students[] = new Student($row['rollno'], $row['name'], $row['dept']);
+            $students[] = new Student(
+                $row['roll_no'], 
+                $row['student_name'], 
+                $row['department_id'],
+                $row['batch_year'] ?? null,
+                $row['student_status'] ?? 'Active',
+                $row['email'] ?? null,
+                $row['phone'] ?? null
+            );
         }
         return $students;
     }
@@ -48,11 +64,18 @@ class StudentRepository
      */
     public function save(Student $student)
     {
-        $stmt = $this->db->prepare("INSERT INTO student (rollno, name, dept) VALUES (?, ?, ?)");
+        $stmt = $this->db->prepare(
+            "INSERT INTO students (roll_no, student_name, department_id, batch_year, student_status, email, phone) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        );
         return $stmt->execute([
-            $student->getRollno(),
-            $student->getName(),
-            $student->getDept()
+            $student->getRollNo(),
+            $student->getStudentName(),
+            $student->getDepartmentId(),
+            $student->getBatchYear(),
+            $student->getStudentStatus(),
+            $student->getEmail(),
+            $student->getPhone()
         ]);
     }
 
@@ -61,11 +84,18 @@ class StudentRepository
      */
     public function update(Student $student)
     {
-        $stmt = $this->db->prepare("UPDATE student SET name = ?, dept = ? WHERE rollno = ?");
+        $stmt = $this->db->prepare(
+            "UPDATE students SET student_name = ?, department_id = ?, batch_year = ?, 
+             student_status = ?, email = ?, phone = ? WHERE roll_no = ?"
+        );
         return $stmt->execute([
-            $student->getName(),
-            $student->getDept(),
-            $student->getRollno()
+            $student->getStudentName(),
+            $student->getDepartmentId(),
+            $student->getBatchYear(),
+            $student->getStudentStatus(),
+            $student->getEmail(),
+            $student->getPhone(),
+            $student->getRollNo()
         ]);
     }
 
@@ -74,7 +104,7 @@ class StudentRepository
      */
     public function exists($rollno)
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM student WHERE rollno = ?");
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM students WHERE roll_no = ?");
         $stmt->execute([$rollno]);
         return $stmt->fetchColumn() > 0;
     }
@@ -88,18 +118,22 @@ class StudentRepository
         try {
             $stmt = $this->db->prepare("
                 SELECT s.*, d.department_name, d.department_code 
-                FROM student s 
-                LEFT JOIN departments d ON s.dept = d.department_id 
-                ORDER BY s.rollno
+                FROM students s 
+                LEFT JOIN departments d ON s.department_id = d.department_id 
+                ORDER BY s.roll_no
             ");
             $stmt->execute();
             $students = [];
 
             while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $students[] = [
-                    'rollno' => $data['rollno'],
-                    'name' => $data['name'],
-                    'dept' => $data['dept'],
+                    'roll_no' => $data['roll_no'],
+                    'student_name' => $data['student_name'],
+                    'department_id' => $data['department_id'],
+                    'batch_year' => $data['batch_year'],
+                    'student_status' => $data['student_status'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'],
                     'department_name' => $data['department_name'],
                     'department_code' => $data['department_code']
                 ];
@@ -118,7 +152,7 @@ class StudentRepository
     public function countAll()
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM student");
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM students");
             $stmt->execute();
             return (int)$stmt->fetchColumn();
         } catch (PDOException $e) {

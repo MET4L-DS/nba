@@ -51,16 +51,16 @@ class RawMarksRepository
     public function save(RawMarks $rawMarks)
     {
         $stmt = $this->db->prepare("
-            INSERT INTO rawMarks (test_id, student_id, question_id, marks) 
+            INSERT INTO raw_marks (test_id, student_id, question_id, marks_obtained) 
             VALUES (?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE marks = VALUES(marks)
+            ON DUPLICATE KEY UPDATE marks_obtained = VALUES(marks_obtained)
         ");
 
         $result = $stmt->execute([
             $rawMarks->getTestId(),
             $rawMarks->getStudentId(),
             $rawMarks->getQuestionId(),
-            $rawMarks->getMarks()
+            $rawMarks->getMarksObtained()
         ]);
 
         if ($result && $rawMarks->getId() === null) {
@@ -93,7 +93,7 @@ class RawMarksRepository
      */
     public function deleteByTestAndStudent($testId, $studentId)
     {
-        $stmt = $this->db->prepare("DELETE FROM rawMarks WHERE test_id = ? AND student_id = ?");
+        $stmt = $this->db->prepare("DELETE FROM raw_marks WHERE test_id = ? AND student_id = ?");
         return $stmt->execute([$testId, $studentId]);
     }
 
@@ -133,7 +133,7 @@ class RawMarksRepository
      */
     public function findById($id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM rawMarks WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT * FROM raw_marks WHERE id = ?");
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -155,12 +155,12 @@ class RawMarksRepository
     public function update(RawMarks $rawMarks)
     {
         $stmt = $this->db->prepare("
-            UPDATE rawMarks 
-            SET marks = ? 
+            UPDATE raw_marks 
+            SET marks_obtained = ? 
             WHERE id = ?
         ");
         return $stmt->execute([
-            $rawMarks->getMarks(),
+            $rawMarks->getMarksObtained(),
             $rawMarks->getId()
         ]);
     }
@@ -170,7 +170,7 @@ class RawMarksRepository
      */
     public function delete($id)
     {
-        $stmt = $this->db->prepare("DELETE FROM rawMarks WHERE id = ?");
+        $stmt = $this->db->prepare("DELETE FROM raw_marks WHERE id = ?");
         return $stmt->execute([$id]);
     }
 }

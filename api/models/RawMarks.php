@@ -10,15 +10,15 @@ class RawMarks
     private $testId;
     private $studentId;
     private $questionId;
-    private $marks;
+    private $marks_obtained;
 
-    public function __construct($testId, $studentId, $questionId, $marks, $id = null)
+    public function __construct($testId, $studentId, $questionId, $marks_obtained, $id = null)
     {
         $this->id = $id;
         $this->testId = $testId;
         $this->studentId = $studentId;
         $this->questionId = $questionId;
-        $this->marks = $marks;
+        $this->marks_obtained = $marks_obtained;
     }
 
     // Getters
@@ -42,9 +42,9 @@ class RawMarks
         return $this->questionId;
     }
 
-    public function getMarks()
+    public function getMarksObtained()
     {
-        return $this->marks;
+        return $this->marks_obtained;
     }
 
     // Setters
@@ -53,9 +53,9 @@ class RawMarks
         $this->id = $id;
     }
 
-    public function setMarks($marks)
+    public function setMarksObtained($marks_obtained)
     {
-        $this->marks = $marks;
+        $this->marks_obtained = $marks_obtained;
     }
 
     /**
@@ -68,7 +68,7 @@ class RawMarks
             'test_id' => $this->testId,
             'student_id' => $this->studentId,
             'question_id' => $this->questionId,
-            'marks' => $this->marks
+            'marks_obtained' => $this->marks_obtained
         ];
     }
 }

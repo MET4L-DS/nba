@@ -19,13 +19,13 @@ class QuestionRepository
     public function findById($id)
     {
         try {
-            $stmt = $this->db->prepare("SELECT * FROM question WHERE id = ?");
+            $stmt = $this->db->prepare("SELECT * FROM questions WHERE question_id = ?");
             $stmt->execute([$id]);
             $data = $stmt->fetch();
 
             if ($data) {
                 return new Question(
-                    $data['id'],
+                    $data['question_id'],
                     $data['test_id'],
                     $data['question_number'],
                     $data['sub_question'],
@@ -47,7 +47,7 @@ class QuestionRepository
     {
         try {
             $stmt = $this->db->prepare(
-                "SELECT * FROM question WHERE test_id = ? 
+                "SELECT * FROM questions WHERE test_id = ? 
                 ORDER BY question_number, sub_question"
             );
             $stmt->execute([$testId]);
@@ -55,7 +55,7 @@ class QuestionRepository
 
             while ($data = $stmt->fetch()) {
                 $questions[] = new Question(
-                    $data['id'],
+                    $data['question_id'],
                     $data['test_id'],
                     $data['question_number'],
                     $data['sub_question'],
@@ -77,13 +77,13 @@ class QuestionRepository
     public function save(Question $question)
     {
         try {
-            if ($question->getId()) {
+            if ($question->getQuestionId()) {
                 // Update existing question
                 $stmt = $this->db->prepare(
-                    "UPDATE question SET 
+                    "UPDATE questions SET 
                     test_id = ?, question_number = ?, sub_question = ?, 
                     is_optional = ?, co = ?, max_marks = ? 
-                    WHERE id = ?"
+                    WHERE question_id = ?"
                 );
                 return $stmt->execute([
                     $question->getTestId(),
@@ -92,12 +92,12 @@ class QuestionRepository
                     $question->getIsOptional(),
                     $question->getCo(),
                     $question->getMaxMarks(),
-                    $question->getId()
+                    $question->getQuestionId()
                 ]);
             } else {
                 // Insert new question
                 $stmt = $this->db->prepare(
-                    "INSERT INTO question 
+                    "INSERT INTO questions 
                     (test_id, question_number, sub_question, is_optional, co, max_marks) 
                     VALUES (?, ?, ?, ?, ?, ?)"
                 );
@@ -111,7 +111,7 @@ class QuestionRepository
                 ]);
 
                 if ($result) {
-                    $question->setId($this->db->lastInsertId());
+                    $question->setQuestionId($this->db->lastInsertId());
                 }
 
                 return $result;
@@ -147,7 +147,7 @@ class QuestionRepository
     public function delete($id)
     {
         try {
-            $stmt = $this->db->prepare("DELETE FROM question WHERE id = ?");
+            $stmt = $this->db->prepare("DELETE FROM questions WHERE question_id = ?");
             return $stmt->execute([$id]);
         } catch (PDOException $e) {
             throw new Exception("Database error: " . $e->getMessage());
@@ -160,7 +160,7 @@ class QuestionRepository
     public function deleteByTestId($testId)
     {
         try {
-            $stmt = $this->db->prepare("DELETE FROM question WHERE test_id = ?");
+            $stmt = $this->db->prepare("DELETE FROM questions WHERE test_id = ?");
             return $stmt->execute([$testId]);
         } catch (PDOException $e) {
             throw new Exception("Database error: " . $e->getMessage());

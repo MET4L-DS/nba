@@ -22,21 +22,25 @@ class TestRepository
             // Join with course to get course_code, year, semester for filename generation
             $stmt = $this->db->prepare("
                 SELECT t.*, c.course_code, c.year, c.semester 
-                FROM test t
-                JOIN course c ON t.course_id = c.id
-                WHERE t.id = ?
+                FROM tests t
+                JOIN courses c ON t.course_id = c.course_id
+                WHERE t.test_id = ?
             ");
             $stmt->execute([$id]);
             $data = $stmt->fetch();
 
             if ($data) {
                 return new Test(
-                    $data['id'],
+                    $data['test_id'],
                     $data['course_id'],
-                    $data['name'],
+                    $data['test_name'],
                     $data['full_marks'],
                     $data['pass_marks'],
                     $data['question_paper_pdf'],
+                    $data['test_type'] ?? null,
+                    $data['test_date'] ?? null,
+                    $data['max_marks'] ?? null,
+                    $data['weightage'] ?? null,
                     $data['course_code'],
                     $data['year'],
                     $data['semester']
@@ -57,22 +61,26 @@ class TestRepository
             // Join with course to get course_code, year, semester for filename generation
             $stmt = $this->db->prepare("
                 SELECT t.*, c.course_code, c.year, c.semester 
-                FROM test t
-                JOIN course c ON t.course_id = c.id
+                FROM tests t
+                JOIN courses c ON t.course_id = c.course_id
                 WHERE t.course_id = ? 
-                ORDER BY t.id DESC
+                ORDER BY t.test_id DESC
             ");
             $stmt->execute([$courseId]);
             $tests = [];
 
             while ($data = $stmt->fetch()) {
                 $tests[] = new Test(
-                    $data['id'],
+                    $data['test_id'],
                     $data['course_id'],
-                    $data['name'],
+                    $data['test_name'],
                     $data['full_marks'],
                     $data['pass_marks'],
                     $data['question_paper_pdf'],
+                    $data['test_type'] ?? null,
+                    $data['test_date'] ?? null,
+                    $data['max_marks'] ?? null,
+                    $data['weightage'] ?? null,
                     $data['course_code'],
                     $data['year'],
                     $data['semester']
@@ -91,30 +99,38 @@ class TestRepository
     public function save(Test $test)
     {
         try {
-            if ($test->getId()) {
+            if ($test->getTestId()) {
                 // Update existing test
-                $stmt = $this->db->prepare("UPDATE test SET course_id = ?, name = ?, full_marks = ?, pass_marks = ?, question_paper_pdf = ? WHERE id = ?");
+                $stmt = $this->db->prepare("UPDATE tests SET course_id = ?, test_name = ?, full_marks = ?, pass_marks = ?, question_paper_pdf = ?, test_type = ?, test_date = ?, max_marks = ?, weightage = ? WHERE test_id = ?");
                 return $stmt->execute([
                     $test->getCourseId(),
-                    $test->getName(),
+                    $test->getTestName(),
                     $test->getFullMarks(),
                     $test->getPassMarks(),
                     $test->getQuestionPaperPdf(),
-                    $test->getId()
+                    $test->getTestType(),
+                    $test->getTestDate(),
+                    $test->getMaxMarks(),
+                    $test->getWeightage(),
+                    $test->getTestId()
                 ]);
             } else {
                 // Insert new test
-                $stmt = $this->db->prepare("INSERT INTO test (course_id, name, full_marks, pass_marks, question_paper_pdf) VALUES (?, ?, ?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO tests (course_id, test_name, full_marks, pass_marks, question_paper_pdf, test_type, test_date, max_marks, weightage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $result = $stmt->execute([
                     $test->getCourseId(),
-                    $test->getName(),
+                    $test->getTestName(),
                     $test->getFullMarks(),
                     $test->getPassMarks(),
-                    $test->getQuestionPaperPdf()
+                    $test->getQuestionPaperPdf(),
+                    $test->getTestType(),
+                    $test->getTestDate(),
+                    $test->getMaxMarks(),
+                    $test->getWeightage()
                 ]);
 
                 if ($result) {
-                    $test->setId($this->db->lastInsertId());
+                    $test->setTestId($this->db->lastInsertId());
                 }
 
                 return $result;
@@ -130,7 +146,7 @@ class TestRepository
     public function delete($id)
     {
         try {
-            $stmt = $this->db->prepare("DELETE FROM test WHERE id = ?");
+            $stmt = $this->db->prepare("DELETE FROM tests WHERE test_id = ?");
             return $stmt->execute([$id]);
         } catch (PDOException $e) {
             throw new Exception("Database error: " . $e->getMessage());
@@ -145,23 +161,27 @@ class TestRepository
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT t.*, c.course_code, c.name as course_name, c.year, c.semester 
-                FROM test t 
-                JOIN course c ON t.course_id = c.id 
-                ORDER BY t.id DESC
+                SELECT t.*, c.course_code, c.course_name, c.year, c.semester 
+                FROM tests t 
+                JOIN courses c ON t.course_id = c.course_id 
+                ORDER BY t.test_id DESC
             ");
             $stmt->execute();
             $tests = [];
 
             while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $tests[] = [
-                    'id' => $data['id'],
+                    'test_id' => $data['test_id'],
                     'course_id' => $data['course_id'],
                     'course_code' => $data['course_code'],
                     'course_name' => $data['course_name'],
-                    'name' => $data['name'],
+                    'test_name' => $data['test_name'],
                     'full_marks' => $data['full_marks'],
                     'pass_marks' => $data['pass_marks'],
+                    'test_type' => $data['test_type'] ?? null,
+                    'test_date' => $data['test_date'] ?? null,
+                    'max_marks' => $data['max_marks'] ?? null,
+                    'weightage' => $data['weightage'] ?? null,
                     'year' => $data['year'],
                     'semester' => $data['semester']
                 ];
@@ -180,7 +200,7 @@ class TestRepository
     public function countAll()
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM test");
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM tests");
             $stmt->execute();
             return (int)$stmt->fetchColumn();
         } catch (PDOException $e) {

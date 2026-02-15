@@ -10,12 +10,18 @@ class Department
     private $departmentId;
     private $departmentName;
     private $departmentCode;
+    private $schoolId;
+    private $description;
+    private $createdAt;
 
-    public function __construct($departmentId = null, $departmentName = null, $departmentCode = null)
+    public function __construct($departmentId = null, $departmentName = null, $departmentCode = null, $schoolId = null, $description = null, $createdAt = null)
     {
         $this->departmentId = $departmentId;
         $this->departmentName = $departmentName;
         $this->departmentCode = $departmentCode;
+        $this->schoolId = $schoolId;
+        $this->description = $description;
+        $this->createdAt = $createdAt;
     }
 
     // Getters
@@ -30,6 +36,18 @@ class Department
     public function getDepartmentCode()
     {
         return $this->departmentCode;
+    }
+    public function getSchoolId()
+    {
+        return $this->schoolId;
+    }
+    public function getDescription()
+    {
+        return $this->description;
+    }
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
     }
 
     // Setters with validation
@@ -57,6 +75,24 @@ class Department
         $this->departmentCode = strtoupper($departmentCode);
     }
 
+    public function setSchoolId($schoolId)
+    {
+        if ($schoolId !== null && (!is_numeric($schoolId) || $schoolId <= 0)) {
+            throw new InvalidArgumentException("School ID must be a positive number or null");
+        }
+        $this->schoolId = $schoolId;
+    }
+
+    public function setDescription($description)
+    {
+        $this->description = $description;
+    }
+
+    public function setCreatedAt($createdAt)
+    {
+        $this->createdAt = $createdAt;
+    }
+
     /**
      * Convert department object to array (for JSON responses)
      * @return array
@@ -66,7 +102,10 @@ class Department
         return [
             'department_id' => $this->departmentId,
             'department_name' => $this->departmentName,
-            'department_code' => $this->departmentCode
+            'department_code' => $this->departmentCode,
+            'school_id' => $this->schoolId,
+            'description' => $this->description,
+            'created_at' => $this->createdAt
         ];
     }
 

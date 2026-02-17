@@ -660,7 +660,8 @@
 							"raw": "{{base_url}}/staff/courses/1/enrollments",
 							"host": ["{{base_url}}"],
 							"path": ["staff", "courses", "1", "enrollments"]
-						}
+						},
+						"description": "DEPRECATED: Returns 501. Use /offerings/{id}/enrollments instead."
 					},
 					"response": []
 				},
@@ -676,13 +677,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"students\": [\n    {\"roll_no\": \"2026CS001\"},\n    {\"roll_no\": \"2026CS002\"},\n    {\"roll_no\": \"2026CS003\"}\n  ]\n}"
+							"raw": "{\n  \"students\": [\n    {\"roll_no\": \"2024CSE001\"},\n    {\"roll_no\": \"2024CSE002\"},\n    {\"roll_no\": \"2024CSE003\"}\n  ]\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/staff/courses/1/enroll",
 							"host": ["{{base_url}}"],
 							"path": ["staff", "courses", "1", "enroll"]
-						}
+						},
+						"description": "DEPRECATED: Returns 501. Use /offerings/{id}/enroll instead."
 					},
 					"response": []
 				},
@@ -692,16 +694,17 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/staff/courses/1/enroll/2026CS001",
+							"raw": "{{base_url}}/staff/courses/1/enroll/2024CSE001",
 							"host": ["{{base_url}}"],
 							"path": [
 								"staff",
 								"courses",
 								"1",
 								"enroll",
-								"2026CS001"
+								"2024CSE001"
 							]
-						}
+						},
+						"description": "DEPRECATED: Returns 501. Use DELETE /offerings/{id}/enroll/{rollno} instead."
 					},
 					"response": []
 				}
@@ -929,7 +932,8 @@
 							"raw": "{{base_url}}/assessment",
 							"host": ["{{base_url}}"],
 							"path": ["assessment"]
-						}
+						},
+						"description": "Note: course_id is actually the offering_id (backward compatibility with legacy frontend)"
 					},
 					"response": []
 				},
@@ -964,10 +968,12 @@
 							"query": [
 								{
 									"key": "course_id",
-									"value": "1"
+									"value": "1",
+									"description": "Actually offering_id (backward compatibility)"
 								}
 							]
-						}
+						},
+						"description": "Note: course_id parameter is actually the offering_id (backward compatibility)"
 					},
 					"response": []
 				},
@@ -1023,7 +1029,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"test_id\": 1,\n  \"student_id\": \"2026CS001\",\n  \"marks\": [\n    {\n      \"question_identifier\": \"1\",\n      \"marks\": 8.5\n    },\n    {\n      \"question_identifier\": \"2\",\n      \"marks\": 12.0\n    },\n    {\n      \"question_identifier\": \"3a\",\n      \"marks\": 7.0\n    },\n    {\n      \"question_identifier\": \"3b\",\n      \"marks\": 6.5\n    }\n  ]\n}"
+							"raw": "{\n  \"test_id\": 1,\n  \"student_id\": \"2024CSE001\",\n  \"marks\": [\n    {\n      \"question_identifier\": \"1\",\n      \"marks\": 8.5\n    },\n    {\n      \"question_identifier\": \"2\",\n      \"marks\": 12.0\n    },\n    {\n      \"question_identifier\": \"3a\",\n      \"marks\": 7.0\n    },\n    {\n      \"question_identifier\": \"3b\",\n      \"marks\": 6.5\n    }\n  ]\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/marks/by-question",
@@ -1045,7 +1051,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"test_id\": 1,\n  \"student_id\": \"2026CS001\",\n  \"CO1\": 10,\n  \"CO2\": 8.5,\n  \"CO3\": 15,\n  \"CO4\": 12,\n  \"CO5\": 0,\n  \"CO6\": 0\n}"
+							"raw": "{\n  \"test_id\": 1,\n  \"student_id\": \"2024CSE001\",\n  \"CO1\": 10,\n  \"CO2\": 8.5,\n  \"CO3\": 15,\n  \"CO4\": 12,\n  \"CO5\": 0,\n  \"CO6\": 0\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/marks/by-co",
@@ -1067,7 +1073,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"test_id\": 1,\n  \"marks_entries\": [\n    {\n      \"student_rollno\": \"2026CS001\",\n      \"question_number\": 1,\n      \"sub_question\": null,\n      \"marks_obtained\": 8.5\n    },\n    {\n      \"student_rollno\": \"2026CS001\",\n      \"question_number\": 2,\n      \"sub_question\": null,\n      \"marks_obtained\": 12.0\n    },\n    {\n      \"student_rollno\": \"2026CS001\",\n      \"question_number\": 3,\n      \"sub_question\": \"a\",\n      \"marks_obtained\": 7.0\n    },\n    {\n      \"student_rollno\": \"2026CS002\",\n      \"question_number\": 1,\n      \"sub_question\": null,\n      \"marks_obtained\": 9.0\n    },\n    {\n      \"student_rollno\": \"2026CS002\",\n      \"question_number\": 2,\n      \"sub_question\": null,\n      \"marks_obtained\": 13.5\n    },\n    {\n      \"student_rollno\": \"2026CS002\",\n      \"question_number\": 3,\n      \"sub_question\": \"a\",\n      \"marks_obtained\": 6.5\n    }\n  ]\n}"
+							"raw": "{\n  \"test_id\": 1,\n  \"marks_entries\": [\n    {\n      \"student_rollno\": \"2024CSE001\",\n      \"question_number\": 1,\n      \"sub_question\": null,\n      \"marks_obtained\": 8.5\n    },\n    {\n      \"student_rollno\": \"2024CSE001\",\n      \"question_number\": 2,\n      \"sub_question\": null,\n      \"marks_obtained\": 12.0\n    },\n    {\n      \"student_rollno\": \"2024CSE001\",\n      \"question_number\": 3,\n      \"sub_question\": \"a\",\n      \"marks_obtained\": 7.0\n    },\n    {\n      \"student_rollno\": \"2024CSE002\",\n      \"question_number\": 1,\n      \"sub_question\": null,\n      \"marks_obtained\": 9.0\n    },\n    {\n      \"student_rollno\": \"2024CSE002\",\n      \"question_number\": 2,\n      \"sub_question\": null,\n      \"marks_obtained\": 13.5\n    },\n    {\n      \"student_rollno\": \"2024CSE002\",\n      \"question_number\": 3,\n      \"sub_question\": \"a\",\n      \"marks_obtained\": 6.5\n    }\n  ]\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/marks/bulk",
@@ -1083,16 +1089,21 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/marks?course_id=1",
+							"raw": "{{base_url}}/marks?test_id=1&student_id=2024CSE001",
 							"host": ["{{base_url}}"],
 							"path": ["marks"],
 							"query": [
 								{
-									"key": "course_id",
+									"key": "test_id",
 									"value": "1"
+								},
+								{
+									"key": "student_id",
+									"value": "2024CSE001"
 								}
 							]
-						}
+						},
+						"description": "Get aggregated marks (CO-wise) and raw marks (per question) for a specific student in a test"
 					},
 					"response": []
 				},
@@ -1156,9 +1167,9 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/marks/student/1/2026CS001",
+							"raw": "{{base_url}}/marks/student/1/2024CSE001",
 							"host": ["{{base_url}}"],
-							"path": ["marks", "student", "1", "2026CS001"]
+							"path": ["marks", "student", "1", "2024CSE001"]
 						}
 					},
 					"response": []
@@ -1180,25 +1191,25 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"students\": [\n    {\"roll_no\": \"2026CS001\"},\n    {\"roll_no\": \"2026CS002\"},\n    {\"roll_no\": \"2026CS003\"},\n    {\"roll_no\": \"2026CS004\"}\n  ]\n}"
+							"raw": "{\n  \"students\": [\n    {\"roll_no\": \"2024CSE001\"},\n    {\"roll_no\": \"2024CSE002\"},\n    {\"roll_no\": \"2024CSE003\"},\n    {\"roll_no\": \"2024CSE004\"}\n  ]\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/courses/1/enroll",
+							"raw": "{{base_url}}/offerings/1/enroll",
 							"host": ["{{base_url}}"],
-							"path": ["courses", "1", "enroll"]
+							"path": ["offerings", "1", "enroll"]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Get Course Enrollments",
+					"name": "Get Offering Enrollments",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/courses/1/enrollments",
+							"raw": "{{base_url}}/offerings/1/enrollments",
 							"host": ["{{base_url}}"],
-							"path": ["courses", "1", "enrollments"]
+							"path": ["offerings", "1", "enrollments"]
 						}
 					},
 					"response": []
@@ -1209,9 +1220,9 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/courses/1/enroll/2026CS001",
+							"raw": "{{base_url}}/offerings/1/enroll/2024CSE001",
 							"host": ["{{base_url}}"],
-							"path": ["courses", "1", "enroll", "2026CS001"]
+							"path": ["offerings", "1", "enroll", "2024CSE001"]
 						}
 					},
 					"response": []

@@ -31,7 +31,7 @@ class UserRepository
                     $userData['employee_id'],
                     $userData['username'],
                     $userData['email'],
-                    $userData['password'],
+                    $userData['password_hash'],
                     $userData['role'],
                     $userData['department_id'],
                     $userData['designation'] ?? null,
@@ -63,7 +63,7 @@ class UserRepository
                     $userData['employee_id'],
                     $userData['username'],
                     $userData['email'],
-                    $userData['password'],
+                    $userData['password_hash'],
                     $userData['role'],
                     $userData['department_id'],
                     $userData['designation'] ?? null,
@@ -126,7 +126,7 @@ class UserRepository
                     $userData['employee_id'],
                     $userData['username'],
                     $userData['email'],
-                    $userData['password'],
+                    $userData['password_hash'],
                     $userData['role'],
                     $userData['department_id'],
                     $userData['designation'] ?? null,
@@ -188,7 +188,7 @@ class UserRepository
                     $userData['employee_id'],
                     $userData['username'],
                     $userData['email'],
-                    $userData['password'],
+                    $userData['password_hash'],
                     $userData['role'],
                     $userData['department_id'],
                     $userData['designation'] ?? null,
@@ -216,7 +216,7 @@ class UserRepository
 
             if ($existingUser) {
                 // Update existing user
-                $stmt = $this->db->prepare("UPDATE users SET username = ?, email = ?, password = ?, role = ?, department_id = ?, designation = ?, phone = ? WHERE employee_id = ?");
+                $stmt = $this->db->prepare("UPDATE users SET username = ?, email = ?, password_hash = ?, role = ?, department_id = ?, designation = ?, phone = ? WHERE employee_id = ?");
                 return $stmt->execute([
                     $user->getUsername(),
                     $user->getEmail(),
@@ -229,7 +229,7 @@ class UserRepository
                 ]);
             } else {
                 // Insert new user
-                $stmt = $this->db->prepare("INSERT INTO users (employee_id, username, email, password, role, department_id, designation, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO users (employee_id, username, email, password_hash, role, department_id, designation, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 return $stmt->execute([
                     $user->getEmployeeId(),
                     $user->getUsername(),

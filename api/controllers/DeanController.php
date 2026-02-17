@@ -9,6 +9,8 @@ class DeanController
 {
     private $userRepository;
     private $courseRepository;
+    private $courseOfferingRepository;
+    private $assignmentRepository;
     private $studentRepository;
     private $testRepository;
     private $departmentRepository;
@@ -19,21 +21,25 @@ class DeanController
     public function __construct(
         UserRepository $userRepository,
         CourseRepository $courseRepository,
+        CourseOfferingRepository $courseOfferingRepository,
         StudentRepository $studentRepository,
         TestRepository $testRepository,
         DepartmentRepository $departmentRepository,
         EnrollmentRepository $enrollmentRepository,
         MarksRepository $marksRepository,
-        $hodAssignmentRepository = null
+        $hodAssignmentRepository = null,
+        CourseFacultyAssignmentRepository $assignmentRepository = null
     ) {
         $this->userRepository = $userRepository;
         $this->courseRepository = $courseRepository;
+        $this->courseOfferingRepository = $courseOfferingRepository;
         $this->studentRepository = $studentRepository;
         $this->testRepository = $testRepository;
         $this->departmentRepository = $departmentRepository;
         $this->enrollmentRepository = $enrollmentRepository;
         $this->marksRepository = $marksRepository;
         $this->hodAssignmentRepository = $hodAssignmentRepository;
+        $this->assignmentRepository = $assignmentRepository;
     }
 
     /**
@@ -256,6 +262,7 @@ class DeanController
 
     /**
      * Get all courses (Dean only) - filtered by school
+     * Now returns offerings with their session info
      */
     public function getAllCourses()
     {
@@ -267,42 +274,10 @@ class DeanController
                 throw new Exception("School ID not found in user session.");
             }
 
-            $courses = $this->courseRepository->findBySchool($schoolId);
+            // Get all offerings for the school
+            $offerings = $this->courseOfferingRepository->findBySchool($schoolId);
             
-            // Enrich with faculty and department info
-            $enrichedCourses = [];
-            foreach ($courses as $course) {
-                $courseArray = [
-                    'course_id' => $course->getCourseId(),
-                    'course_code' => $course->getCourseCode(),
-                    'course_name' => $course->getCourseName(),
-                    'year' => $course->getYear(),
-                    'semester' => $course->getSemester(),
-                    'department_id' => $course->getDepartmentId(),
-                    'faculty_name' => null,
-                    'department_name' => null,
-                    'department_code' => null
-                ];
-                
-                // Get faculty info
-                $faculty = $this->userRepository->findByEmployeeId($course->getFacultyId());
-                if ($faculty) {
-                    $courseArray['faculty_name'] = $faculty->getUsername();
-                }
-
-                // Get department info
-                if ($course->getDepartmentId()) {
-                    $dept = $this->departmentRepository->findById($course->getDepartmentId());
-                    if ($dept) {
-                        $courseArray['department_name'] = $dept->getDepartmentName();
-                        $courseArray['department_code'] = $dept->getDepartmentCode();
-                    }
-                }
-                
-                $enrichedCourses[] = $courseArray;
-            }
-
-            echo json_encode(['status' => 'success', 'data' => $enrichedCourses]);
+            echo json_encode(['status' => 'success', 'data' => $offerings]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
@@ -377,31 +352,33 @@ class DeanController
         try {
             $tests = $this->testRepository->findAll();
             
-            // Enrich with course and department info
+            // Enrich with faculty and department info
             $enrichedTests = [];
             foreach ($tests as $test) {
                 $testArray = $test;
                 
-                // Get course info
-                $course = $this->courseRepository->findById($test['course_id']);
-                if ($course) {
-                    $testArray['course_code'] = $course->getCourseCode();
-                    $testArray['course_name'] = $course->getCourseName();
-                    
-                    // Get faculty info
-                    $faculty = $this->userRepository->findByEmployeeId($course->getFacultyId());
-                    if ($faculty) {
-                        $testArray['faculty_name'] = $faculty->getUsername();
-                        
-                        // Get department info
-                        $deptId = $faculty->getDepartmentId();
-                        if ($deptId) {
-                            $dept = $this->departmentRepository->findById($deptId);
+                // Get offering to find course department
+                if ($this->courseOfferingRepository) {
+                    $offering = $this->courseOfferingRepository->findById($test['offering_id']);
+                    if ($offering) {
+                        $course = $this->courseRepository->findById($offering->getCourseId());
+                        if ($course && $course->getDepartmentId()) {
+                            // Get department info
+                            $dept = $this->departmentRepository->findById($course->getDepartmentId());
                             if ($dept) {
                                 $testArray['department_name'] = $dept->getDepartmentName();
                                 $testArray['department_code'] = $dept->getDepartmentCode();
                             }
                         }
+                    }
+                }
+                
+                // Get faculty info from offering assignments
+                if ($this->assignmentRepository) {
+                    $primaryFaculty = $this->assignmentRepository->getPrimaryFaculty($test['offering_id']);
+                    if ($primaryFaculty) {
+                        $testArray['faculty_name'] = $primaryFaculty['username'];
+                        $testArray['faculty_email'] = $primaryFaculty['email'];
                     }
                 }
                 

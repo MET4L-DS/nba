@@ -7,6 +7,8 @@
 class FacultyController
 {
     private $courseRepository;
+    private $courseOfferingRepository;
+    private $courseFacultyAssignmentRepository;
     private $testRepository;
     private $enrollmentRepository;
     private $marksRepository;
@@ -14,12 +16,16 @@ class FacultyController
 
     public function __construct(
         CourseRepository $courseRepository,
+        CourseOfferingRepository $courseOfferingRepository,
+        CourseFacultyAssignmentRepository $courseFacultyAssignmentRepository,
         TestRepository $testRepository,
         EnrollmentRepository $enrollmentRepository,
         MarksRepository $marksRepository,
         $db
     ) {
         $this->courseRepository = $courseRepository;
+        $this->courseOfferingRepository = $courseOfferingRepository;
+        $this->courseFacultyAssignmentRepository = $courseFacultyAssignmentRepository;
         $this->testRepository = $testRepository;
         $this->enrollmentRepository = $enrollmentRepository;
         $this->marksRepository = $marksRepository;
@@ -32,59 +38,46 @@ class FacultyController
     public function getStats($facultyId)
     {
         try {
-            // Get courses taught by this faculty
-            $stmt = $this->db->prepare("
-                SELECT course_id FROM courses WHERE faculty_id = ?
-            ");
-            $stmt->execute([$facultyId]);
-            $courses = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            $totalCourses = count($courses);
+            // Get active offerings for this faculty (all years/semesters for stats)
+            $assignments = $this->courseFacultyAssignmentRepository->getAssignmentsByFaculty($facultyId);
+            $totalOfferings = count($assignments);
 
-            // Get total assessments
             $totalAssessments = 0;
             $totalStudents = 0;
             $totalAttainment = 0;
-            $assessmentCount = 0;
+            $offeringCountWithAttainment = 0;
 
-            foreach ($courses as $courseId) {
-                // Count tests for this course
-                $stmt = $this->db->prepare("
-                    SELECT COUNT(*) FROM tests WHERE course_id = ?
-                ");
-                $stmt->execute([$courseId]);
+            foreach ($assignments as $assignment) {
+                $offeringId = $assignment['offering_id'];
+
+                // Count tests for this offering
+                $stmt = $this->db->prepare("SELECT COUNT(*) FROM tests WHERE offering_id = ?");
+                $stmt->execute([$offeringId]);
                 $totalAssessments += $stmt->fetchColumn();
 
                 // Count enrolled students
-                $stmt = $this->db->prepare("
-                    SELECT COUNT(DISTINCT student_rollno) 
-                    FROM enrollments 
-                    WHERE course_id = ?
-                ");
-                $stmt->execute([$courseId]);
+                $stmt = $this->db->prepare("SELECT COUNT(*) FROM enrollments WHERE offering_id = ?");
+                $stmt->execute([$offeringId]);
                 $totalStudents += $stmt->fetchColumn();
 
-                // Calculate average attainment for this course (if tests exist)
-                // Sum all CO marks and compare to full_marks to get percentage
+                // Simple attainment check (average percentage of marks for this offering)
                 $stmt = $this->db->prepare("
-                    SELECT 
-                        AVG(
-                            ((marks.CO1 + marks.CO2 + marks.CO3 + marks.CO4 + marks.CO5 + marks.CO6) / tests.full_marks) * 100
-                        ) as avg_attainment
-                    FROM marks
-                    JOIN tests ON marks.test_id = tests.test_id
-                    WHERE tests.course_id = ?
+                    SELECT AVG(percentage) as avg_percentage
+                    FROM marks m
+                    JOIN tests t ON m.test_id = t.test_id
+                    WHERE t.offering_id = ?
                 ");
-                $stmt->execute([$courseId]);
+                $stmt->execute([$offeringId]);
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
                 
-                if ($result && $result['avg_attainment'] !== null) {
-                    $totalAttainment += floatval($result['avg_attainment']);
-                    $assessmentCount++;
+                if ($result && $result['avg_percentage'] !== null) {
+                    $totalAttainment += floatval($result['avg_percentage']);
+                    $offeringCountWithAttainment++;
                 }
             }
 
-            $averageAttainment = $assessmentCount > 0 
-                ? round($totalAttainment / $assessmentCount, 1) 
+            $averageAttainment = $offeringCountWithAttainment > 0 
+                ? round($totalAttainment / $offeringCountWithAttainment, 1) 
                 : 0;
 
             http_response_code(200);
@@ -93,7 +86,7 @@ class FacultyController
                 'success' => true,
                 'message' => 'Faculty stats retrieved successfully',
                 'data' => [
-                    'totalCourses' => $totalCourses,
+                    'totalCourses' => $totalOfferings,
                     'totalAssessments' => $totalAssessments,
                     'totalStudents' => $totalStudents,
                     'averageAttainment' => $averageAttainment
@@ -119,11 +112,14 @@ class FacultyController
     {
         try {
             // First verify that this test belongs to a course taught by this faculty
+            // In new schema: test -> offering -> course_faculty_assignments
             $stmt = $this->db->prepare("
                 SELECT t.test_id, t.test_name, c.course_code, c.course_name
                 FROM tests t
-                JOIN courses c ON t.course_id = c.course_id
-                WHERE t.test_id = ? AND c.faculty_id = ?
+                JOIN course_offerings co ON t.offering_id = co.offering_id
+                JOIN courses c ON co.course_id = c.course_id
+                JOIN course_faculty_assignments cfa ON co.offering_id = cfa.offering_id
+                WHERE t.test_id = ? AND cfa.employee_id = ? AND cfa.is_active = 1
             ");
             $stmt->execute([$testId, $facultyId]);
             $test = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -142,7 +138,7 @@ class FacultyController
             $stmt = $this->db->prepare("
                 SELECT 
                     (SELECT COUNT(*) FROM questions WHERE test_id = ?) as question_count,
-                    (SELECT COUNT(DISTINCT student_roll_no) FROM marks WHERE test_id = ?) as student_count,
+                    (SELECT COUNT(DISTINCT student_rollno) FROM marks WHERE test_id = ?) as student_count,
                     (SELECT COUNT(*) FROM raw_marks WHERE test_id = ?) as raw_marks_count
             ");
             $stmt->execute([$testId, $testId, $testId]);

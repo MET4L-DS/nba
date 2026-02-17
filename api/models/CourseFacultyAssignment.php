@@ -2,16 +2,14 @@
 
 /**
  * CourseFacultyAssignment Model Class
- * Represents a course-faculty assignment with year/semester tracking
+ * Represents a faculty assignment to a course offering
  * Follows Single Responsibility Principle - handles only course faculty assignment data operations
  */
 class CourseFacultyAssignment
 {
     private $id;
-    private $courseId;
+    private $offeringId;
     private $employeeId;
-    private $year;
-    private $semester;
     private $assignmentType;
     private $assignedDate;
     private $completionDate;
@@ -21,13 +19,11 @@ class CourseFacultyAssignment
     // Valid assignment types
     const ASSIGNMENT_TYPES = ['Primary', 'Co-instructor', 'Lab'];
 
-    public function __construct($id = null, $courseId = null, $employeeId = null, $year = null, $semester = null, $assignmentType = 'Primary', $assignedDate = null, $completionDate = null, $isActive = 1, $createdAt = null)
+    public function __construct($id = null, $offeringId = null, $employeeId = null, $assignmentType = 'Primary', $assignedDate = null, $completionDate = null, $isActive = 1, $createdAt = null)
     {
         $this->id = $id;
-        $this->courseId = $courseId;
+        $this->offeringId = $offeringId;
         $this->employeeId = $employeeId;
-        $this->year = $year;
-        $this->semester = $semester;
         $this->assignmentType = $assignmentType;
         $this->assignedDate = $assignedDate;
         $this->completionDate = $completionDate;
@@ -41,24 +37,14 @@ class CourseFacultyAssignment
         return $this->id;
     }
 
-    public function getCourseId()
+    public function getOfferingId()
     {
-        return $this->courseId;
+        return $this->offeringId;
     }
 
     public function getEmployeeId()
     {
         return $this->employeeId;
-    }
-
-    public function getYear()
-    {
-        return $this->year;
-    }
-
-    public function getSemester()
-    {
-        return $this->semester;
     }
 
     public function getAssignmentType()
@@ -95,12 +81,12 @@ class CourseFacultyAssignment
         $this->id = $id;
     }
 
-    public function setCourseId($courseId)
+    public function setOfferingId($offeringId)
     {
-        if (!is_numeric($courseId) || $courseId <= 0) {
-            throw new InvalidArgumentException("Course ID must be a positive number");
+        if (!is_numeric($offeringId) || $offeringId <= 0) {
+            throw new InvalidArgumentException("Offering ID must be a positive number");
         }
-        $this->courseId = $courseId;
+        $this->offeringId = $offeringId;
     }
 
     public function setEmployeeId($employeeId)
@@ -109,22 +95,6 @@ class CourseFacultyAssignment
             throw new InvalidArgumentException("Employee ID must be a positive number");
         }
         $this->employeeId = $employeeId;
-    }
-
-    public function setYear($year)
-    {
-        if (!is_numeric($year) || $year < 1000 || $year > 9999) {
-            throw new InvalidArgumentException("Year must be a valid 4-digit year");
-        }
-        $this->year = $year;
-    }
-
-    public function setSemester($semester)
-    {
-        if (!is_numeric($semester) || $semester < 1 || $semester > 8) {
-            throw new InvalidArgumentException("Semester must be between 1 and 8");
-        }
-        $this->semester = $semester;
     }
 
     public function setAssignmentType($assignmentType)
@@ -160,10 +130,8 @@ class CourseFacultyAssignment
     {
         return [
             'id' => $this->id,
-            'course_id' => $this->courseId,
+            'offering_id' => $this->offeringId,
             'employee_id' => $this->employeeId,
-            'year' => $this->year,
-            'semester' => $this->semester,
             'assignment_type' => $this->assignmentType,
             'assigned_date' => $this->assignedDate,
             'completion_date' => $this->completionDate,
@@ -175,17 +143,11 @@ class CourseFacultyAssignment
     // Validate the complete object
     public function validate()
     {
-        if (empty($this->courseId)) {
-            throw new InvalidArgumentException("Course ID is required");
+        if (empty($this->offeringId)) {
+            throw new InvalidArgumentException("Offering ID is required");
         }
         if (empty($this->employeeId)) {
             throw new InvalidArgumentException("Employee ID is required");
-        }
-        if (empty($this->year)) {
-            throw new InvalidArgumentException("Year is required");
-        }
-        if (empty($this->semester)) {
-            throw new InvalidArgumentException("Semester is required");
         }
         return true;
     }

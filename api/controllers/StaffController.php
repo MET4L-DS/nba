@@ -316,8 +316,7 @@ class StaffController
             }
 
             // Check course belongs to department
-            $faculty = $this->userRepository->findByEmployeeId($existingCourse->getFacultyId());
-            if (!$faculty || $faculty->getDepartmentId() != $departmentId) {
+            if ($existingCourse->getDepartmentId() != $departmentId) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -414,8 +413,7 @@ class StaffController
             }
 
             // Check course belongs to department
-            $faculty = $this->userRepository->findByEmployeeId($existingCourse->getFacultyId());
-            if (!$faculty || $faculty->getDepartmentId() != $departmentId) {
+            if ($existingCourse->getDepartmentId() != $departmentId) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -444,12 +442,22 @@ class StaffController
 
     /**
      * Get enrollments for a specific course
+     * @deprecated This method needs to be updated to work with course offerings instead of course templates
      */
     public function getCourseEnrollments($courseId)
     {
         try {
             if (!$this->requireStaff()) return;
             
+            http_response_code(501);
+            echo json_encode([
+                'success' => false,
+                'message' => 'This feature needs to be updated to work with course offerings. Please use the offering-specific enrollment endpoints instead.'
+            ]);
+            return;
+            
+            // TODO: Update to work with offering_id instead of course_id
+            /*
             $userData = $_REQUEST['authenticated_user'];
             $departmentId = $userData['department_id'];
 
@@ -465,8 +473,7 @@ class StaffController
             }
 
             // Check if the course belongs to the staff's department
-            $faculty = $this->userRepository->findByEmployeeId($course->getFacultyId());
-            if (!$faculty || $faculty->getDepartmentId() != $departmentId) {
+            if ($course->getDepartmentId() != $departmentId) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -491,6 +498,7 @@ class StaffController
                     'enrollments' => $enrollments
                 ]
             ]);
+            */
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
@@ -502,12 +510,22 @@ class StaffController
 
     /**
      * Bulk enroll students in a course
+     * @deprecated This method needs to be updated to work with course offerings instead of course templates
      */
     public function bulkEnroll($courseId)
     {
         try {
             if (!$this->requireStaff()) return;
 
+            http_response_code(501);
+            echo json_encode([
+                'success' => false,
+                'message' => 'This feature needs to be updated to work with course offerings. Please use the offering-specific enrollment endpoints instead.'
+            ]);
+            return;
+            
+            // TODO: Update to work with offering_id instead of course_id
+            /*
             $userData = $_REQUEST['authenticated_user'];
             $departmentId = $userData['department_id'];
 
@@ -545,8 +563,7 @@ class StaffController
             }
 
             // Check if the course belongs to the staff's department
-            $faculty = $this->userRepository->findByEmployeeId($course->getFacultyId());
-            if (!$faculty || $faculty->getDepartmentId() != $departmentId) {
+            if ($course->getDepartmentId() != $departmentId) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -603,6 +620,7 @@ class StaffController
                 'message' => "Enrollment completed: {$results['success_count']} successful, {$results['failure_count']} failed",
                 'data' => $results
             ]);
+            */
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
@@ -614,12 +632,22 @@ class StaffController
 
     /**
      * Remove a student from a course
+     * @deprecated This method needs to be updated to work with course offerings instead of course templates
      */
     public function removeEnrollment($courseId, $rollno)
     {
         try {
             if (!$this->requireStaff()) return;
 
+            http_response_code(501);
+            echo json_encode([
+                'success' => false,
+                'message' => 'This feature needs to be updated to work with course offerings. Please use the offering-specific enrollment endpoints instead.'
+            ]);
+            return;
+            
+            // TODO: Update to work with offering_id instead of course_id
+            /*
             $userData = $_REQUEST['authenticated_user'];
             $departmentId = $userData['department_id'];
 
@@ -635,8 +663,7 @@ class StaffController
             }
 
             // Check if the course belongs to the staff's department
-            $faculty = $this->userRepository->findByEmployeeId($course->getFacultyId());
-            if (!$faculty || $faculty->getDepartmentId() != $departmentId) {
+            if ($course->getDepartmentId() != $departmentId) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -663,6 +690,7 @@ class StaffController
                 'success' => true,
                 'message' => 'Student removed from course successfully'
             ]);
+            */
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([

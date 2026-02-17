@@ -7,7 +7,7 @@
 class Test
 {
     private $test_id;
-    private $courseId;
+    private $offeringId;
     private $test_name;
     private $fullMarks;
     private $passMarks;
@@ -17,12 +17,12 @@ class Test
     private $max_marks;
     private $weightage;
     private $courseCode; // For filename generation
-    private $year; // For filename generation
-    private $semester; // For filename generation
+    private $year; // For information
+    private $semester; // For information
 
     public function __construct(
         $test_id, 
-        $courseId, 
+        $offeringId, 
         $test_name, 
         $fullMarks, 
         $passMarks, 
@@ -36,7 +36,7 @@ class Test
         $semester = null
     ) {
         $this->test_id = $test_id;
-        $this->setCourseId($courseId);
+        $this->setOfferingId($offeringId);
         $this->setTestName($test_name);
         $this->setFullMarks($fullMarks);
         $this->setPassMarks($passMarks);
@@ -55,9 +55,14 @@ class Test
     {
         return $this->test_id;
     }
+    public function getOfferingId()
+    {
+        return $this->offeringId;
+    }
     public function getCourseId()
     {
-        return $this->courseId;
+        // Backward compatibility
+        return $this->offeringId;
     }
     public function getTestName()
     {
@@ -98,12 +103,18 @@ class Test
         $this->test_id = $test_id;
     }
 
+    public function setOfferingId($offeringId)
+    {
+        if (!is_numeric($offeringId)) {
+            throw new Exception("Offering ID must be a number");
+        }
+        $this->offeringId = (int)$offeringId;
+    }
+
     public function setCourseId($courseId)
     {
-        if (!is_numeric($courseId)) {
-            throw new Exception("Course ID must be a number");
-        }
-        $this->courseId = (int)$courseId;
+        // For compatibility
+        $this->setOfferingId($courseId);
     }
 
     public function setTestName($test_name)

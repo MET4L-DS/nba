@@ -13,6 +13,8 @@ class MarksController
     private $testRepository;
     private $validationMiddleware;
     private $courseRepository;
+    private $courseOfferingRepository;
+    private $assignmentRepository;
 
     public function __construct(
         StudentRepository $studentRepository,
@@ -21,7 +23,9 @@ class MarksController
         QuestionRepository $questionRepository,
         TestRepository $testRepository,
         ValidationMiddleware $validationMiddleware,
-        CourseRepository $courseRepository = null
+        CourseRepository $courseRepository = null,
+        CourseOfferingRepository $courseOfferingRepository = null,
+        CourseFacultyAssignmentRepository $assignmentRepository = null
     ) {
         $this->studentRepository = $studentRepository;
         $this->rawMarksRepository = $rawMarksRepository;
@@ -30,6 +34,8 @@ class MarksController
         $this->testRepository = $testRepository;
         $this->validationMiddleware = $validationMiddleware;
         $this->courseRepository = $courseRepository;
+        $this->courseOfferingRepository = $courseOfferingRepository;
+        $this->assignmentRepository = $assignmentRepository;
     }
 
     /**
@@ -328,19 +334,25 @@ class MarksController
                 return;
             }
 
-            // Check if user is faculty for this course
-            if (!$this->courseRepository) {
-                require_once __DIR__ . '/../models/CourseRepository.php';
-                // We need to create CourseRepository - get db from another repository
-                $this->sendError("Course authorization not available", 500);
+            // Check if user is faculty for this course offering
+            if (!$this->assignmentRepository) {
+                $this->sendError("Authorization not available", 500);
                 return;
             }
 
-            $course = $this->courseRepository->findById($test->getCourseId());
-
-            if (!$course || $course->getFacultyId() != $user['employee_id']) {
+            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $user['employee_id'])) {
                 $this->sendError("You are not authorized to view marks for this test", 403);
                 return;
+            }
+
+            // Get offering and course details for context
+            $offering = null;
+            $course = null;
+            if ($this->courseOfferingRepository && $this->courseRepository) {
+                $offering = $this->courseOfferingRepository->findById($test->getOfferingId());
+                if ($offering) {
+                    $course = $this->courseRepository->findById($offering->getCourseId());
+                }
             }
 
             // Get CO aggregated marks
@@ -350,11 +362,16 @@ class MarksController
                 'success' => true,
                 'data' => [
                     'test' => $test->toArray(),
-                    'course' => [
+                    'course' => $course ? [
                         'id' => $course->getCourseId(),
                         'course_code' => $course->getCourseCode(),
                         'name' => $course->getCourseName()
-                    ],
+                    ] : null,
+                    'offering' => $offering ? [
+                        'id' => $offering->getOfferingId(),
+                        'year' => $offering->getYear(),
+                        'semester' => $offering->getSemester()
+                    ] : null,
                     'marks' => array_map(function ($item) {
                         return [
                             'student_id' => $item['marks']->getStudentRollNo(),
@@ -691,20 +708,19 @@ class MarksController
                 return;
             }
 
-            // Verify authorization - check if test belongs to faculty's course
+            // Verify authorization - check if test belongs to faculty's course offering
             $test = $this->testRepository->findById($rawMarks->getTestId());
             if (!$test) {
                 $this->sendError("Test not found", 404);
                 return;
             }
 
-            if (!$this->courseRepository) {
-                $this->sendError("Course authorization not available", 500);
+            if (!$this->assignmentRepository) {
+                $this->sendError("Authorization not available", 500);
                 return;
             }
 
-            $course = $this->courseRepository->findById($test->getCourseId());
-            if (!$course || $course->getFacultyId() != $userData['employee_id']) {
+            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $userData['employee_id'])) {
                 $this->sendError("Unauthorized to update marks for this test", 403);
                 return;
             }
@@ -784,13 +800,12 @@ class MarksController
                 return;
             }
 
-            if (!$this->courseRepository) {
-                $this->sendError("Course authorization not available", 500);
+            if (!$this->assignmentRepository) {
+                $this->sendError("Authorization not available", 500);
                 return;
             }
 
-            $course = $this->courseRepository->findById($test->getCourseId());
-            if (!$course || $course->getFacultyId() != $userData['employee_id']) {
+            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $userData['employee_id'])) {
                 $this->sendError("Unauthorized to delete marks for this test", 403);
                 return;
             }
@@ -843,13 +858,12 @@ class MarksController
                 return;
             }
 
-            if (!$this->courseRepository) {
-                $this->sendError("Course authorization not available", 500);
+            if (!$this->assignmentRepository) {
+                $this->sendError("Authorization not available", 500);
                 return;
             }
 
-            $course = $this->courseRepository->findById($test->getCourseId());
-            if (!$course || $course->getFacultyId() != $userData['employee_id']) {
+            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $userData['employee_id'])) {
                 $this->sendError("Unauthorized to delete marks for this test", 403);
                 return;
             }

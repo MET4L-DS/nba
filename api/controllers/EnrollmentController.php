@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../models/EnrollmentRepository.php';
 require_once __DIR__ . '/../models/CourseRepository.php';
+require_once __DIR__ . '/../models/CourseOfferingRepository.php';
+require_once __DIR__ . '/../models/CourseFacultyAssignmentRepository.php';
 require_once __DIR__ . '/../models/StudentRepository.php';
 require_once __DIR__ . '/../models/UserRepository.php';
 
@@ -9,6 +11,8 @@ class EnrollmentController
 {
     private $enrollmentRepo;
     private $courseRepo;
+    private $offeringRepo;
+    private $assignmentRepo;
     private $studentRepo;
     private $userRepo;
     private $pdo;
@@ -18,13 +22,15 @@ class EnrollmentController
         $this->pdo = $pdo;
         $this->enrollmentRepo = new EnrollmentRepository($pdo);
         $this->courseRepo = new CourseRepository($pdo);
+        $this->offeringRepo = new CourseOfferingRepository($pdo);
+        $this->assignmentRepo = new CourseFacultyAssignmentRepository($pdo);
         $this->studentRepo = new StudentRepository($pdo);
         $this->userRepo = new UserRepository($pdo);
     }
 
     /**
-     * POST /courses/{courseId}/enroll
-     * Bulk enroll students in a course
+     * POST /offerings/{offeringId}/enroll
+     * Bulk enroll students in a course offering
      * 
      * Request body:
      * {
@@ -34,7 +40,7 @@ class EnrollmentController
      *   ]
      * }
      */
-    public function bulkEnroll($courseId, $userId)
+    public function bulkEnroll($offeringId, $userId)
     {
         try {
             // Get request body
@@ -59,23 +65,34 @@ class EnrollmentController
                 return;
             }
 
-            // Verify course exists and belongs to this faculty
-            $course = $this->courseRepo->findById($courseId);
-            if (!$course) {
+            // Verify offering exists
+            $offering = $this->offeringRepo->findById($offeringId);
+            if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Course not found'
+                    'message' => 'Course offering not found'
                 ]);
                 return;
             }
 
-            // Check if the authenticated user is the faculty for this course
-            if ($course->getFacultyId() != $userId) {
+            // Check if the authenticated user is assigned to this offering
+            if (!$this->assignmentRepo->isFacultyAssignedToOffering($offeringId, $userId)) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'You are not authorized to enroll students in this course'
+                    'message' => 'You are not authorized to enroll students in this course offering'
+                ]);
+                return;
+            }
+
+            // Get course details for department info
+            $course = $this->courseRepo->findById($offering->getCourseId());
+            if (!$course) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Course template not found'
                 ]);
                 return;
             }
@@ -107,19 +124,20 @@ class EnrollmentController
                 // Check if student exists in database, if not create them
                 $existingStudent = $this->studentRepo->findByRollno($rollno);
                 if (!$existingStudent) {
-                    // Get faculty user to get department
-                    $faculty = $this->userRepo->findByEmployeeId($course->getFacultyId());
+                    // Get faculty user to get department (use course's department)
+                    $faculty = $this->userRepo->findByEmployeeId($userId);
                     if (!$faculty) {
                         http_response_code(500);
                         echo json_encode([
                             'success' => false,
-                            'message' => 'Faculty not found for this course'
+                            'message' => 'Faculty not found'
                         ]);
                         return;
                     }
 
-                    // Create new student with the same department as faculty
-                    $student = new Student($rollno, $name, $faculty->getDepartmentId());
+                    // Create new student with course's department
+                    $departmentId = $course->getDepartmentId() ?? $faculty->getDepartmentId();
+                    $student = new Student($rollno, $name, $departmentId);
                     $this->studentRepo->save($student);
                 }
 
@@ -130,7 +148,7 @@ class EnrollmentController
             }
 
             // Perform bulk enrollment
-            $results = $this->enrollmentRepo->bulkEnrollStudents($courseId, $validatedStudents);
+            $results = $this->enrollmentRepo->bulkEnrollStudents($offeringId, $validatedStudents);
 
             // Return results
             http_response_code(200);
@@ -149,35 +167,46 @@ class EnrollmentController
     }
 
     /**
-     * GET /courses/{courseId}/enrollments
-     * Get all students enrolled in a course (with optional test_id for marks entry context)
+     * GET /offerings/{offeringId}/enrollments
+     * Get all students enrolled in a course offering (with optional test_id for marks entry context)
      */
-    public function getEnrollments($courseId, $userId)
+    public function getEnrollments($offeringId, $userId)
     {
         try {
-            // Verify course exists and belongs to this faculty
-            $course = $this->courseRepo->findById($courseId);
-            if (!$course) {
+            // Verify offering exists
+            $offering = $this->offeringRepo->findById($offeringId);
+            if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Course not found'
+                    'message' => 'Course offering not found'
                 ]);
                 return;
             }
 
-            // Check if the authenticated user is the faculty for this course
-            if ($course->getFacultyId() != $userId) {
+            // Check if the authenticated user is assigned to this offering
+            if (!$this->assignmentRepo->isFacultyAssignedToOffering($offeringId, $userId)) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'You are not authorized to view enrollments for this course'
+                    'message' => 'You are not authorized to view enrollments for this course offering'
+                ]);
+                return;
+            }
+
+            // Get course details
+            $course = $this->courseRepo->findById($offering->getCourseId());
+            if (!$course) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Course template not found'
                 ]);
                 return;
             }
 
             // Get enrollments
-            $enrollments = $this->enrollmentRepo->findByCourseId($courseId);
+            $enrollments = $this->enrollmentRepo->findByOfferingId($offeringId);
             $count = count($enrollments);
 
             // Check if test_id is provided for marks entry context
@@ -193,7 +222,7 @@ class EnrollmentController
                 $questionRepo = new QuestionRepository($this->pdo);
 
                 $test = $testRepo->findById($testId);
-                if ($test && $test->getCourseId() == $courseId) {
+                if ($test && $test->getOfferingId() == $offeringId) {
                     $questions = $questionRepo->findByTestId($testId);
                     $testInfo = [
                         'test_id' => $testId,
@@ -218,9 +247,12 @@ class EnrollmentController
                 'success' => true,
                 'message' => "Found $count enrolled students",
                 'data' => [
-                    'course_id' => $courseId,
+                    'offering_id' => $offeringId,
+                    'course_id' => $offering->getCourseId(),
                     'course_code' => $course->getCourseCode(),
                     'course_name' => $course->getCourseName(),
+                    'year' => $offering->getYear(),
+                    'semester' => $offering->getSemester(),
                     'enrollment_count' => $count,
                     'enrollments' => $enrollments
                 ]
@@ -242,50 +274,50 @@ class EnrollmentController
     }
 
     /**
-     * DELETE /courses/{courseId}/enroll/{rollno}
-     * Remove a student from a course
+     * DELETE /offerings/{offeringId}/enroll/{rollno}
+     * Remove a student from a course offering
      */
-    public function removeEnrollment($courseId, $rollno, $userId)
+    public function removeEnrollment($offeringId, $rollno, $userId)
     {
         try {
-            // Verify course exists and belongs to this faculty
-            $course = $this->courseRepo->findById($courseId);
-            if (!$course) {
+            // Verify offering exists
+            $offering = $this->offeringRepo->findById($offeringId);
+            if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Course not found'
+                    'message' => 'Course offering not found'
                 ]);
                 return;
             }
 
-            // Check if the authenticated user is the faculty for this course
-            if ($course->getFacultyId() != $userId) {
+            // Check if the authenticated user is assigned to this offering
+            if (!$this->assignmentRepo->isFacultyAssignedToOffering($offeringId, $userId)) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'You are not authorized to remove enrollments from this course'
+                    'message' => 'You are not authorized to remove enrollments from this course offering'
                 ]);
                 return;
             }
 
             // Check if student is enrolled
-            if (!$this->enrollmentRepo->isEnrolled($courseId, $rollno)) {
+            if (!$this->enrollmentRepo->isEnrolled($offeringId, $rollno)) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Student is not enrolled in this course'
+                    'message' => 'Student is not enrolled in this course offering'
                 ]);
                 return;
             }
 
             // Remove enrollment
-            $this->enrollmentRepo->removeEnrollment($courseId, $rollno);
+            $this->enrollmentRepo->removeEnrollment($offeringId, $rollno);
 
             http_response_code(200);
             echo json_encode([
                 'success' => true,
-                'message' => 'Student removed from course successfully'
+                'message' => 'Student removed from course offering successfully'
             ]);
         } catch (Exception $e) {
             http_response_code(500);

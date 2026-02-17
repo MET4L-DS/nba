@@ -8,17 +8,23 @@ class HODController
 {
     private $userRepository;
     private $courseRepository;
+    private $courseOfferingRepository;
+    private $courseFacultyAssignmentRepository;
     private $departmentRepository;
     private $validationMiddleware;
 
     public function __construct(
         UserRepository $userRepository,
         CourseRepository $courseRepository,
+        CourseOfferingRepository $courseOfferingRepository,
+        CourseFacultyAssignmentRepository $courseFacultyAssignmentRepository,
         DepartmentRepository $departmentRepository,
         ValidationMiddleware $validationMiddleware
     ) {
         $this->userRepository = $userRepository;
         $this->courseRepository = $courseRepository;
+        $this->courseOfferingRepository = $courseOfferingRepository;
+        $this->courseFacultyAssignmentRepository = $courseFacultyAssignmentRepository;
         $this->departmentRepository = $departmentRepository;
         $this->validationMiddleware = $validationMiddleware;
     }
@@ -78,6 +84,7 @@ class HODController
 
     /**
      * Get all courses for the HOD's department
+     * Can be filtered by year and semester
      */
     public function getDepartmentCourses()
     {
@@ -87,7 +94,17 @@ class HODController
             $userData = $_REQUEST['authenticated_user'];
             $departmentId = $userData['department_id'];
 
-            $courses = $this->courseRepository->findByDepartment($departmentId);
+            // Optional filters from query params
+            $year = isset($_GET['year']) ? intval($_GET['year']) : null;
+            $semester = isset($_GET['semester']) ? intval($_GET['semester']) : null;
+
+            if ($year && $semester) {
+                // Get offerings for this session
+                $courses = $this->courseOfferingRepository->findByDepartment($departmentId, $year, $semester);
+            } else {
+                // Fallback to all course templates in department
+                $courses = $this->courseRepository->findByDepartment($departmentId);
+            }
 
             http_response_code(200);
             header('Content-Type: application/json');
@@ -137,7 +154,7 @@ class HODController
     }
 
     /**
-     * Create a new course for the department
+     * Create a new course offering (and template if needed) for the department
      */
     public function createCourse()
     {
@@ -171,7 +188,7 @@ class HODController
 
             // Verify faculty belongs to the same department
             $faculty = $this->userRepository->findByEmployeeId($input['faculty_id']);
-            if (!$faculty || ($faculty->getDepartmentId() != $departmentId && $faculty->getRole() !== 'hod')) {
+            if (!$faculty || ($faculty->getDepartmentId() != $departmentId && $faculty->getRole() !== 'HOD')) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
@@ -180,57 +197,77 @@ class HODController
                 return;
             }
 
-            // Check if course code already exists
-            $existingCourse = $this->courseRepository->findByCourseCode($input['course_code']);
-            if ($existingCourse) {
+            // 1. Get or Create Course Template
+            $course = $this->courseRepository->findByCourseCode($input['course_code']);
+            if (!$course) {
+                $course = new Course(
+                    null,
+                    $input['course_code'],
+                    $input['name'],
+                    intval($input['credit']),
+                    $departmentId
+                );
+                $this->courseRepository->save($course);
+            } else {
+                // If course template exists, optionally update name/credit if they differ?
+                // For now, let's keep it simple.
+            }
+
+            // 2. Check if offering already exists for this year/sem
+            $existingOffering = $this->courseOfferingRepository->findByCourseYearSem($course->getCourseId(), $input['year'], $input['semester']);
+            if ($existingOffering) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Course code already exists'
+                    'message' => 'Course offering already exists for this year and semester'
                 ]);
                 return;
             }
 
-            // Create course
-            $course = new Course(
+            // 3. Create Course Offering
+            $offering = new CourseOffering(
                 null,
-                $input['course_code'],
-                $input['name'],
-                $input['credit'],
-                $input['faculty_id'],
-                $input['year'],
-                $input['semester'],
-                null,
+                $course->getCourseId(),
+                intval($input['year']),
+                intval($input['semester']),
                 $input['co_threshold'] ?? 40.00,
                 $input['passing_threshold'] ?? 60.00
             );
+            $this->courseOfferingRepository->save($offering);
 
-            $this->courseRepository->save($course);
+            // 4. Create Faculty Assignment
+            $assignment = new CourseFacultyAssignment(
+                null,
+                $offering->getOfferingId(),
+                $input['faculty_id'],
+                'Primary'
+            );
+            $this->courseFacultyAssignmentRepository->save($assignment);
 
-            // Get the created course with faculty info
-            $createdCourse = $this->courseRepository->findByIdWithFaculty($course->getCourseId());
+            // Get the created offering with full details (for consistency with UI)
+            $createdOffering = $this->courseOfferingRepository->findById($offering->getOfferingId());
 
             http_response_code(201);
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
-                'message' => 'Course created successfully',
-                'data' => $createdCourse
+                'message' => 'Course offering created successfully',
+                'data' => $createdOffering
             ]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Failed to create course',
+                'message' => 'Failed to create course offering',
                 'error' => $e->getMessage()
             ]);
         }
     }
 
     /**
-     * Update a course
+     * Update a course offering and its details
      */
-    public function updateCourse($courseId)
+    public function updateCourse($offeringId)
     {
         try {
             if (!$this->requireHOD()) return;
@@ -238,20 +275,20 @@ class HODController
             $userData = $_REQUEST['authenticated_user'];
             $departmentId = $userData['department_id'];
 
-            // Get existing course
-            $existingCourse = $this->courseRepository->findById($courseId);
-            if (!$existingCourse) {
+            // 1. Get existing offering
+            $offering = $this->courseOfferingRepository->findById($offeringId);
+            if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Course not found'
+                    'message' => 'Course offering not found'
                 ]);
                 return;
             }
 
-            // Check course belongs to department
-            $faculty = $this->userRepository->findByEmployeeId($existingCourse->getFacultyId());
-            if (!$faculty || $faculty->getDepartmentId() != $departmentId) {
+            // 2. Get course template to verify ownership
+            $course = $this->courseRepository->findById($offering->getCourseId());
+            if (!$course || $course->getDepartmentId() != $departmentId) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -262,49 +299,77 @@ class HODController
 
             $input = json_decode(file_get_contents('php://input'), true);
 
-            // Update course fields
+            // 3. Update Course Template Fields (if provided)
+            $templateChanged = false;
             if (isset($input['course_code'])) {
-                // Check if new code conflicts with another course
-                $conflictingCourse = $this->courseRepository->findByCourseCode($input['course_code']);
-                if ($conflictingCourse && $conflictingCourse->getCourseId() != $courseId) {
+                // Check for conflicts
+                $conflicting = $this->courseRepository->findByCourseCode($input['course_code']);
+                if ($conflicting && $conflicting->getCourseId() != $course->getCourseId()) {
                     http_response_code(400);
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Course code already exists'
-                    ]);
+                    echo json_encode(['success' => false, 'message' => 'Course code already exists']);
                     return;
                 }
-                $existingCourse->setCourseCode($input['course_code']);
+                $course->setCourseCode($input['course_code']);
+                $templateChanged = true;
             }
-            if (isset($input['name'])) $existingCourse->setCourseName($input['name']);
-            if (isset($input['credit'])) $existingCourse->setCredit($input['credit']);
+            if (isset($input['name'])) { $course->setCourseName($input['name']); $templateChanged = true; }
+            if (isset($input['credit'])) { $course->setCredit(intval($input['credit'])); $templateChanged = true; }
+            
+            if ($templateChanged) {
+                $this->courseRepository->save($course);
+            }
+
+            // 4. Update Offering Fields
+            if (isset($input['year'])) $offering->setYear(intval($input['year']));
+            if (isset($input['semester'])) $offering->setSemester(intval($input['semester']));
+            if (isset($input['co_threshold'])) $offering->setCoThreshold(floatval($input['co_threshold']));
+            if (isset($input['passing_threshold'])) $offering->setPassingThreshold(floatval($input['passing_threshold']));
+            
+            $this->courseOfferingRepository->save($offering);
+
+            // 5. Update Faculty Assignment (if provided)
             if (isset($input['faculty_id'])) {
                 // Verify new faculty belongs to department
                 $newFaculty = $this->userRepository->findByEmployeeId($input['faculty_id']);
-                if (!$newFaculty || $newFaculty->getDepartmentId() != $departmentId) {
+                if (!$newFaculty || ($newFaculty->getDepartmentId() != $departmentId && $newFaculty->getRole() !== 'HOD')) {
                     http_response_code(400);
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Faculty must belong to your department'
-                    ]);
+                    echo json_encode(['success' => false, 'message' => 'Faculty must belong to your department']);
                     return;
                 }
-                $existingCourse->setFacultyId($input['faculty_id']);
+
+                // Get current primary assignment
+                $assignments = $this->courseFacultyAssignmentRepository->getAssignmentsByOffering($offeringId);
+                $primaryAssignment = null;
+                foreach ($assignments as $a) {
+                    if ($a['assignment_type'] === 'Primary') {
+                        $primaryAssignment = $a;
+                        break;
+                    }
+                }
+
+                if ($primaryAssignment) {
+                    // Update existing assignment (in a real app, maybe end previous and start new)
+                    // For now, simplicity: update employee_id
+                    $stmt = $this->courseOfferingRepository->getDb()->prepare(
+                        "UPDATE course_faculty_assignments SET employee_id = ? WHERE id = ?"
+                    );
+                    $stmt->execute([$input['faculty_id'], $primaryAssignment['id']]);
+                } else {
+                    // Create new primary assignment
+                    $newAssign = new CourseFacultyAssignment(null, $offeringId, $input['faculty_id'], 'Primary');
+                    $this->courseFacultyAssignmentRepository->save($newAssign);
+                }
             }
-            if (isset($input['year'])) $existingCourse->setYear($input['year']);
-            if (isset($input['semester'])) $existingCourse->setSemester($input['semester']);
 
-            $this->courseRepository->save($existingCourse);
-
-            // Get updated course with faculty info
-            $updatedCourse = $this->courseRepository->findByIdWithFaculty($courseId);
+            // Get updated offering with full info
+            $updatedOffering = $this->courseOfferingRepository->findById($offeringId);
 
             http_response_code(200);
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
                 'message' => 'Course updated successfully',
-                'data' => $updatedCourse
+                'data' => $updatedOffering
             ]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -317,9 +382,9 @@ class HODController
     }
 
     /**
-     * Delete a course
+     * Delete a course offering (and potentially its data)
      */
-    public function deleteCourse($courseId)
+    public function deleteCourse($offeringId)
     {
         try {
             if (!$this->requireHOD()) return;
@@ -327,41 +392,39 @@ class HODController
             $userData = $_REQUEST['authenticated_user'];
             $departmentId = $userData['department_id'];
 
-            // Get existing course
-            $existingCourse = $this->courseRepository->findById($courseId);
-            if (!$existingCourse) {
+            // 1. Get existing offering
+            $offering = $this->courseOfferingRepository->findById($offeringId);
+            if (!$offering) {
                 http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Course not found'
-                ]);
+                echo json_encode(['success' => false, 'message' => 'Course offering not found']);
                 return;
             }
 
-            // Check course belongs to department
-            $faculty = $this->userRepository->findByEmployeeId($existingCourse->getFacultyId());
-            if (!$faculty || $faculty->getDepartmentId() != $departmentId) {
+            // 2. Verify ownership via template
+            $course = $this->courseRepository->findById($offering->getCourseId());
+            if (!$course || $course->getDepartmentId() != $departmentId) {
                 http_response_code(403);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'You can only delete courses in your department'
-                ]);
+                echo json_encode(['success' => false, 'message' => 'You can only delete courses in your department']);
                 return;
             }
 
-            $this->courseRepository->delete($courseId);
+            // 3. Delete offering (this will cascade to assignments, enrollments, tests, etc.)
+            $this->courseOfferingRepository->delete($offeringId);
+
+            // Optional: If no more offerings exist for this course, delete the template?
+            // For now, let's keep templates.
 
             http_response_code(200);
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
-                'message' => 'Course deleted successfully'
+                'message' => 'Course offering deleted successfully'
             ]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Failed to delete course',
+                'message' => 'Failed to delete course offering',
                 'error' => $e->getMessage()
             ]);
         }

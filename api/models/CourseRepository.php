@@ -29,12 +29,6 @@ class CourseRepository
                     $data['course_code'],
                     $data['course_name'],
                     $data['credit'],
-                    $data['faculty_id'],
-                    $data['year'],
-                    $data['semester'],
-                    $data['syllabus_pdf'],
-                    $data['co_threshold'] ?? 40.00,
-                    $data['passing_threshold'] ?? 60.00,
                     $data['department_id'] ?? null,
                     $data['course_type'] ?? 'Theory',
                     $data['course_level'] ?? 'Undergraduate',
@@ -49,79 +43,7 @@ class CourseRepository
         }
     }
 
-    /**
-     * Find courses by faculty ID
-     */
-    public function findByFacultyId($facultyId)
-    {
-        try {
-            $stmt = $this->db->prepare("SELECT * FROM courses WHERE faculty_id = ? ORDER BY year, semester");
-            $stmt->execute([$facultyId]);
-            $courses = [];
 
-            while ($data = $stmt->fetch()) {
-                $courses[] = new Course(
-                    $data['course_id'],
-                    $data['course_code'],
-                    $data['course_name'],
-                    $data['credit'],
-                    $data['faculty_id'],
-                    $data['year'],
-                    $data['semester'],
-                    $data['syllabus_pdf'],
-                    $data['co_threshold'] ?? 40.00,
-                    $data['passing_threshold'] ?? 60.00,
-                    $data['department_id'] ?? null,
-                    $data['course_type'] ?? 'Theory',
-                    $data['course_level'] ?? 'Undergraduate',
-                    $data['is_active'] ?? 1,
-                    $data['created_at'] ?? null,
-                    $data['updated_at'] ?? null
-                );
-            }
-
-            return $courses;
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Find courses by faculty ID, year, and semester
-     */
-    public function findByFacultyYearSemester($facultyId, $year, $semester)
-    {
-        try {
-            $stmt = $this->db->prepare("SELECT * FROM courses WHERE faculty_id = ? AND year = ? AND semester = ?");
-            $stmt->execute([$facultyId, $year, $semester]);
-            $courses = [];
-
-            while ($data = $stmt->fetch()) {
-                $courses[] = new Course(
-                    $data['course_id'],
-                    $data['course_code'],
-                    $data['course_name'],
-                    $data['credit'],
-                    $data['faculty_id'],
-                    $data['year'],
-                    $data['semester'],
-                    $data['syllabus_pdf'],
-                    $data['co_threshold'] ?? 40.00,
-                    $data['passing_threshold'] ?? 60.00,
-                    $data['department_id'] ?? null,
-                    $data['course_type'] ?? 'Theory',
-                    $data['course_level'] ?? 'Undergraduate',
-                    $data['is_active'] ?? 1,
-                    $data['created_at'] ?? null,
-                    $data['updated_at'] ?? null
-                );
-            }
-
-            return $courses;
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
-        }
-    }
 
     /**
      * Find courses by School ID
@@ -132,11 +54,11 @@ class CourseRepository
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT c.* 
+                SELECT c.*, d.department_code, d.department_name
                 FROM courses c
                 JOIN departments d ON c.department_id = d.department_id
                 WHERE d.school_id = ?
-                ORDER BY c.year DESC, c.semester, c.course_code
+                ORDER BY c.course_code
             ");
             $stmt->execute([$schoolId]);
             $courses = [];
@@ -147,12 +69,6 @@ class CourseRepository
                     $data['course_code'],
                     $data['course_name'],
                     $data['credit'],
-                    $data['faculty_id'],
-                    $data['year'],
-                    $data['semester'],
-                    $data['syllabus_pdf'],
-                    $data['co_threshold'] ?? 40.00,
-                    $data['passing_threshold'] ?? 60.00,
                     $data['department_id'] ?? null,
                     $data['course_type'] ?? 'Theory',
                     $data['course_level'] ?? 'Undergraduate',
@@ -189,19 +105,7 @@ class CourseRepository
         }
     }
 
-    /**
-     * Get unique years and semesters for a faculty
-     */
-    public function getYearSemestersByFaculty($facultyId)
-    {
-        try {
-            $stmt = $this->db->prepare("SELECT DISTINCT year, semester FROM courses WHERE faculty_id = ? ORDER BY year, semester");
-            $stmt->execute([$facultyId]);
-            return $stmt->fetchAll();
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
-        }
-    }
+
 
     /**
      * Save course
@@ -211,17 +115,11 @@ class CourseRepository
         try {
             if ($course->getCourseId()) {
                 // Update existing course
-                $stmt = $this->db->prepare("UPDATE courses SET course_code = ?, course_name = ?, credit = ?, syllabus_pdf = ?, faculty_id = ?, year = ?, semester = ?, co_threshold = ?, passing_threshold = ?, department_id = ?, course_type = ?, course_level = ?, is_active = ? WHERE course_id = ?");
+                $stmt = $this->db->prepare("UPDATE courses SET course_code = ?, course_name = ?, credit = ?, department_id = ?, course_type = ?, course_level = ?, is_active = ? WHERE course_id = ?");
                 return $stmt->execute([
                     $course->getCourseCode(),
                     $course->getCourseName(),
                     $course->getCredit(),
-                    $course->getSyllabusPdf(),
-                    $course->getFacultyId(),
-                    $course->getYear(),
-                    $course->getSemester(),
-                    $course->getCoThreshold(),
-                    $course->getPassingThreshold(),
                     $course->getDepartmentId(),
                     $course->getCourseType(),
                     $course->getCourseLevel(),
@@ -230,17 +128,11 @@ class CourseRepository
                 ]);
             } else {
                 // Insert new course
-                $stmt = $this->db->prepare("INSERT INTO courses (course_code, course_name, credit, syllabus_pdf, faculty_id, year, semester, co_threshold, passing_threshold, department_id, course_type, course_level, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO courses (course_code, course_name, credit, department_id, course_type, course_level, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 $result = $stmt->execute([
                     $course->getCourseCode(),
                     $course->getCourseName(),
                     $course->getCredit(),
-                    $course->getSyllabusPdf(),
-                    $course->getFacultyId(),
-                    $course->getYear(),
-                    $course->getSemester(),
-                    $course->getCoThreshold(),
-                    $course->getPassingThreshold(),
                     $course->getDepartmentId(),
                     $course->getCourseType(),
                     $course->getCourseLevel(),
@@ -272,30 +164,17 @@ class CourseRepository
     }
 
     /**
-     * Update course thresholds
-     */
-    public function updateThresholds($courseId, $coThreshold, $passingThreshold)
-    {
-        try {
-            $stmt = $this->db->prepare("UPDATE courses SET co_threshold = ?, passing_threshold = ? WHERE course_id = ?");
-            return $stmt->execute([$coThreshold, $passingThreshold, $courseId]);
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Get all courses with faculty info
+     * Get all courses with department info
      * @return array
      */
     public function findAll()
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT c.*, u.username as faculty_name 
+                SELECT c.*, d.department_code, d.department_name
                 FROM courses c 
-                LEFT JOIN users u ON c.faculty_id = u.employee_id 
-                ORDER BY c.year DESC, c.semester, c.course_code
+                LEFT JOIN departments d ON c.department_id = d.department_id
+                ORDER BY c.course_code
             ");
             $stmt->execute();
             $courses = [];
@@ -306,13 +185,9 @@ class CourseRepository
                     'course_code' => $data['course_code'],
                     'course_name' => $data['course_name'],
                     'credit' => $data['credit'],
-                    'faculty_id' => $data['faculty_id'],
-                    'faculty_name' => $data['faculty_name'],
-                    'year' => $data['year'],
-                    'semester' => $data['semester'],
-                    'co_threshold' => $data['co_threshold'],
-                    'passing_threshold' => $data['passing_threshold'],
                     'department_id' => $data['department_id'] ?? null,
+                    'department_code' => $data['department_code'] ?? null,
+                    'department_name' => $data['department_name'] ?? null,
                     'course_type' => $data['course_type'] ?? 'Theory',
                     'course_level' => $data['course_level'] ?? 'Undergraduate',
                     'is_active' => $data['is_active'] ?? 1,
@@ -360,12 +235,6 @@ class CourseRepository
                     $data['course_code'],
                     $data['course_name'],
                     $data['credit'],
-                    $data['faculty_id'],
-                    $data['year'],
-                    $data['semester'],
-                    $data['syllabus_pdf'],
-                    $data['co_threshold'] ?? 40.00,
-                    $data['passing_threshold'] ?? 60.00,
                     $data['department_id'] ?? null,
                     $data['course_type'] ?? 'Theory',
                     $data['course_level'] ?? 'Undergraduate',
@@ -381,17 +250,17 @@ class CourseRepository
     }
 
     /**
-     * Find course by ID with faculty info
+     * Find course by ID with department info
      * @param int $id
      * @return array|null
      */
-    public function findByIdWithFaculty($id)
+    public function findByIdWithDepartment($id)
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT c.*, u.username as faculty_name 
+                SELECT c.*, d.department_code, d.department_name
                 FROM courses c 
-                LEFT JOIN users u ON c.faculty_id = u.employee_id 
+                LEFT JOIN departments d ON c.department_id = d.department_id
                 WHERE c.course_id = ?
             ");
             $stmt->execute([$id]);
@@ -403,13 +272,9 @@ class CourseRepository
                     'course_code' => $data['course_code'],
                     'course_name' => $data['course_name'],
                     'credit' => $data['credit'],
-                    'faculty_id' => $data['faculty_id'],
-                    'faculty_name' => $data['faculty_name'],
-                    'year' => $data['year'],
-                    'semester' => $data['semester'],
-                    'co_threshold' => $data['co_threshold'],
-                    'passing_threshold' => $data['passing_threshold'],
                     'department_id' => $data['department_id'] ?? null,
+                    'department_code' => $data['department_code'] ?? null,
+                    'department_name' => $data['department_name'] ?? null,
                     'course_type' => $data['course_type'] ?? 'Theory',
                     'course_level' => $data['course_level'] ?? 'Undergraduate',
                     'is_active' => $data['is_active'] ?? 1,
@@ -424,7 +289,7 @@ class CourseRepository
     }
 
     /**
-     * Find courses by department (through faculty)
+     * Find courses by department
      * @param int $departmentId
      * @return array
      */
@@ -432,11 +297,10 @@ class CourseRepository
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT c.*, u.username as faculty_name 
+                SELECT c.*
                 FROM courses c 
-                INNER JOIN users u ON c.faculty_id = u.employee_id 
-                WHERE u.department_id = ?
-                ORDER BY c.year DESC, c.semester, c.course_code
+                WHERE c.department_id = ?
+                ORDER BY c.course_code
             ");
             $stmt->execute([$departmentId]);
             $courses = [];
@@ -447,12 +311,6 @@ class CourseRepository
                     'course_code' => $data['course_code'],
                     'course_name' => $data['course_name'],
                     'credit' => $data['credit'],
-                    'faculty_id' => $data['faculty_id'],
-                    'faculty_name' => $data['faculty_name'],
-                    'year' => $data['year'],
-                    'semester' => $data['semester'],
-                    'co_threshold' => $data['co_threshold'],
-                    'passing_threshold' => $data['passing_threshold'],
                     'department_id' => $data['department_id'] ?? null,
                     'course_type' => $data['course_type'] ?? 'Theory',
                     'course_level' => $data['course_level'] ?? 'Undergraduate',
@@ -476,10 +334,26 @@ class CourseRepository
     public function countByDepartment($departmentId)
     {
         try {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE department_id = ?");
+            $stmt->execute([$departmentId]);
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Count offerings by department
+     * @param int $departmentId
+     * @return int
+     */
+    public function countOfferingsByDepartment($departmentId)
+    {
+        try {
             $stmt = $this->db->prepare("
-                SELECT COUNT(*) FROM courses c 
-                INNER JOIN users u ON c.faculty_id = u.employee_id 
-                WHERE u.department_id = ?
+                SELECT COUNT(*) FROM course_offerings co
+                INNER JOIN courses c ON co.course_id = c.course_id
+                WHERE c.department_id = ?
             ");
             $stmt->execute([$departmentId]);
             return (int)$stmt->fetchColumn();
@@ -497,10 +371,10 @@ class CourseRepository
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT COUNT(*) FROM tests t
-                INNER JOIN courses c ON t.course_id = c.course_id
-                INNER JOIN users u ON c.faculty_id = u.employee_id 
-                WHERE u.department_id = ?
+                SELECT COUNT(DISTINCT t.test_id) FROM tests t
+                INNER JOIN course_offerings co ON t.offering_id = co.offering_id
+                INNER JOIN courses c ON co.course_id = c.course_id
+                WHERE c.department_id = ?
             ");
             $stmt->execute([$departmentId]);
             return (int)$stmt->fetchColumn();

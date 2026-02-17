@@ -29,10 +29,8 @@ class CourseFacultyAssignmentRepository
             if ($data) {
                 return new CourseFacultyAssignment(
                     $data['id'],
-                    $data['course_id'],
+                    $data['offering_id'],
                     $data['employee_id'],
-                    $data['year'],
-                    $data['semester'],
                     $data['assignment_type'],
                     $data['assigned_date'],
                     $data['completion_date'],
@@ -47,13 +45,11 @@ class CourseFacultyAssignmentRepository
     }
 
     /**
-     * Get active assignments for a course in specific year/semester
-     * @param int $courseId
-     * @param int $year
-     * @param int $semester
+     * Get active assignments for a course offering
+     * @param int $offeringId
      * @return array
      */
-    public function getAssignmentsByCourse($courseId, $year, $semester)
+    public function getAssignmentsByOffering($offeringId)
     {
         try {
             $stmt = $this->db->prepare("
@@ -64,7 +60,7 @@ class CourseFacultyAssignmentRepository
                     u.designation
                 FROM course_faculty_assignments cfa
                 JOIN users u ON cfa.employee_id = u.employee_id
-                WHERE cfa.course_id = ? AND cfa.year = ? AND cfa.semester = ? AND cfa.is_active = 1
+                WHERE cfa.offering_id = ? AND cfa.is_active = 1
                 ORDER BY 
                     CASE cfa.assignment_type
                         WHEN 'Primary' THEN 1
@@ -72,7 +68,7 @@ class CourseFacultyAssignmentRepository
                         WHEN 'Lab' THEN 3
                     END
             ");
-            $stmt->execute([$courseId, $year, $semester]);
+            $stmt->execute([$offeringId]);
             
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -83,8 +79,8 @@ class CourseFacultyAssignmentRepository
     /**
      * Get active assignments for a faculty member
      * @param int $employeeId
-     * @param int $year
-     * @param int $semester
+     * @param int $year (optional)
+     * @param int $semester (optional)
      * @return array
      */
     public function getAssignmentsByFaculty($employeeId, $year = null, $semester = null)
@@ -93,26 +89,29 @@ class CourseFacultyAssignmentRepository
             $sql = "
                 SELECT 
                     cfa.*,
+                    co.year,
+                    co.semester,
                     c.course_code,
-                    c.course_name as course_name
+                    c.course_name
                 FROM course_faculty_assignments cfa
-                JOIN courses c ON cfa.course_id = c.course_id
+                JOIN course_offerings co ON cfa.offering_id = co.offering_id
+                JOIN courses c ON co.course_id = c.course_id
                 WHERE cfa.employee_id = ? AND cfa.is_active = 1
             ";
             
             $params = [$employeeId];
             
             if ($year !== null) {
-                $sql .= " AND cfa.year = ?";
+                $sql .= " AND co.year = ?";
                 $params[] = $year;
             }
             
             if ($semester !== null) {
-                $sql .= " AND cfa.semester = ?";
+                $sql .= " AND co.semester = ?";
                 $params[] = $semester;
             }
             
-            $sql .= " ORDER BY cfa.year DESC, cfa.semester DESC, c.course_code";
+            $sql .= " ORDER BY co.year DESC, co.semester DESC, c.course_code";
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);
@@ -124,13 +123,11 @@ class CourseFacultyAssignmentRepository
     }
 
     /**
-     * Get primary faculty for a course
-     * @param int $courseId
-     * @param int $year
-     * @param int $semester
+     * Get primary faculty for a course offering
+     * @param int $offeringId
      * @return array|null
      */
-    public function getPrimaryFaculty($courseId, $year, $semester)
+    public function getPrimaryFaculty($offeringId)
     {
         try {
             $stmt = $this->db->prepare("
@@ -141,11 +138,11 @@ class CourseFacultyAssignmentRepository
                     u.designation
                 FROM course_faculty_assignments cfa
                 JOIN users u ON cfa.employee_id = u.employee_id
-                WHERE cfa.course_id = ? AND cfa.year = ? AND cfa.semester = ? 
+                WHERE cfa.offering_id = ? 
                     AND cfa.assignment_type = 'Primary' AND cfa.is_active = 1
                 LIMIT 1
             ");
-            $stmt->execute([$courseId, $year, $semester]);
+            $stmt->execute([$offeringId]);
             
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -165,15 +162,13 @@ class CourseFacultyAssignmentRepository
             
             $stmt = $this->db->prepare("
                 INSERT INTO course_faculty_assignments 
-                (course_id, employee_id, year, semester, assignment_type, assigned_date, completion_date, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (offering_id, employee_id, assignment_type, assigned_date, completion_date, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?)
             ");
             
             $stmt->execute([
-                $assignment->getCourseId(),
+                $assignment->getOfferingId(),
                 $assignment->getEmployeeId(),
-                $assignment->getYear(),
-                $assignment->getSemester(),
                 $assignment->getAssignmentType(),
                 $assignment->getAssignedDate(),
                 $assignment->getCompletionDate(),
@@ -183,7 +178,7 @@ class CourseFacultyAssignmentRepository
             return $this->db->lastInsertId();
         } catch (PDOException $e) {
             if ($e->getCode() == 23000) {
-                throw new Exception("Duplicate assignment for this course, faculty, year, semester, and type");
+                throw new Exception("Duplicate assignment for this offering, faculty, and type");
             }
             throw new Exception("Database error: " . $e->getMessage());
         }
@@ -201,16 +196,14 @@ class CourseFacultyAssignmentRepository
             
             $stmt = $this->db->prepare("
                 UPDATE course_faculty_assignments 
-                SET course_id = ?, employee_id = ?, year = ?, semester = ?, 
+                SET offering_id = ?, employee_id = ?, 
                     assignment_type = ?, assigned_date = ?, completion_date = ?, is_active = ?
                 WHERE id = ?
             ");
 
             $stmt->execute([
-                $assignment->getCourseId(),
+                $assignment->getOfferingId(),
                 $assignment->getEmployeeId(),
-                $assignment->getYear(),
-                $assignment->getSemester(),
                 $assignment->getAssignmentType(),
                 $assignment->getAssignedDate(),
                 $assignment->getCompletionDate(),
@@ -221,7 +214,7 @@ class CourseFacultyAssignmentRepository
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             if ($e->getCode() == 23000) {
-                throw new Exception("Duplicate assignment for this course, faculty, year, semester, and type");
+                throw new Exception("Duplicate assignment for this offering, faculty, and type");
             }
             throw new Exception("Database error: " . $e->getMessage());
         }
@@ -280,19 +273,45 @@ class CourseFacultyAssignmentRepository
             $stmt = $this->db->prepare("
                 SELECT 
                     cfa.*,
+                    co.offering_id,
+                    co.year,
+                    co.semester,
                     c.course_code,
-                    c.course_name as course_name,
+                    c.course_name,
                     u.username,
                     u.email
                 FROM course_faculty_assignments cfa
-                JOIN courses c ON cfa.course_id = c.course_id
+                JOIN course_offerings co ON cfa.offering_id = co.offering_id
+                JOIN courses c ON co.course_id = c.course_id
                 JOIN users u ON cfa.employee_id = u.employee_id
-                WHERE c.department_id = ? AND cfa.year = ? AND cfa.semester = ? AND cfa.is_active = 1
+                WHERE c.department_id = ? AND co.year = ? AND co.semester = ? AND cfa.is_active = 1
                 ORDER BY c.course_code, cfa.assignment_type
             ");
             $stmt->execute([$departmentId, $year, $semester]);
             
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Check if a faculty member is assigned to an offering
+     * @param int $offeringId
+     * @param int $employeeId
+     * @return bool
+     */
+    public function isFacultyAssignedToOffering($offeringId, $employeeId)
+    {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) 
+                FROM course_faculty_assignments 
+                WHERE offering_id = ? AND employee_id = ? AND is_active = 1
+            ");
+            $stmt->execute([$offeringId, $employeeId]);
+            
+            return $stmt->fetchColumn() > 0;
         } catch (PDOException $e) {
             throw new Exception("Database error: " . $e->getMessage());
         }

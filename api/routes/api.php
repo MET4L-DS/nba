@@ -13,6 +13,10 @@ require_once __DIR__ . '/../models/Department.php';
 require_once __DIR__ . '/../models/DepartmentRepository.php';
 require_once __DIR__ . '/../models/Course.php';
 require_once __DIR__ . '/../models/CourseRepository.php';
+require_once __DIR__ . '/../models/CourseOffering.php';
+require_once __DIR__ . '/../models/CourseOfferingRepository.php';
+require_once __DIR__ . '/../models/CourseFacultyAssignment.php';
+require_once __DIR__ . '/../models/CourseFacultyAssignmentRepository.php';
 require_once __DIR__ . '/../models/Test.php';
 require_once __DIR__ . '/../models/TestRepository.php';
 require_once __DIR__ . '/../models/Question.php';
@@ -79,6 +83,8 @@ class Router
         $userRepository = new UserRepository($db);
         $departmentRepository = new DepartmentRepository($db);
         $courseRepository = new CourseRepository($db);
+        $courseOfferingRepository = new CourseOfferingRepository($db);
+        $courseFacultyAssignmentRepository = new CourseFacultyAssignmentRepository($db);
         $testRepository = new TestRepository($db);
         $questionRepository = new QuestionRepository($db);
         $studentRepository = new StudentRepository($db);
@@ -101,22 +107,22 @@ class Router
 
         // Initialize controllers
         $this->userController = new UserController($authService, $userRepository, $departmentRepository, $validationMiddleware);
-        $this->assessmentController = new AssessmentController($courseRepository, $testRepository, $questionRepository, $validationMiddleware, $db);
-        $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository);
+        $this->assessmentController = new AssessmentController($courseRepository, $courseOfferingRepository, $testRepository, $questionRepository, $validationMiddleware, $db, $courseFacultyAssignmentRepository);
+        $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository);
         $this->enrollmentController = new EnrollmentController($db);
         $this->attainmentController = new AttainmentController($courseRepository, $attainmentScaleRepository, $coPoRepository);
         $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $deanAssignmentRepository, $schoolRepository);
-        $this->hodController = new HODController($userRepository, $courseRepository, $departmentRepository, $validationMiddleware);
+        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware);
 
         // Initialize enrollment repository for staff controller
         $enrollmentRepository = new EnrollmentRepository($db);
         $this->staffController = new StaffController($userRepository, $courseRepository, $departmentRepository, $enrollmentRepository, $studentRepository, $validationMiddleware, $db);
 
         // Initialize faculty controller
-        $this->facultyController = new FacultyController($courseRepository, $testRepository, $enrollmentRepository, $marksRepository, $db);
+        $this->facultyController = new FacultyController($courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $testRepository, $enrollmentRepository, $marksRepository, $db);
 
         // Initialize dean controller
-        $this->deanController = new DeanController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository, $hodAssignmentRepository);
+        $this->deanController = new DeanController($userRepository, $courseRepository, $courseOfferingRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository, $hodAssignmentRepository, $courseFacultyAssignmentRepository);
     }
 
     /**
@@ -643,19 +649,28 @@ class Router
 
             default:
                 // Handle dynamic routes
-                if (preg_match('#^courses/(\d+)/enroll$#', $path, $matches)) {
-                    $courseId = $matches[1];
+                if (preg_match('#^offerings/(\d+)/enroll$#', $path, $matches)) {
+                    $offeringId = $matches[1];
                     if ($method === 'POST') {
                         $user = $this->authMiddleware->requireAuth();
-                        $this->enrollmentController->bulkEnroll($courseId, $user['employee_id']);
+                        $this->enrollmentController->bulkEnroll($offeringId, $user['employee_id']);
                     } else {
                         $this->sendMethodNotAllowed();
                     }
-                } elseif (preg_match('#^courses/(\d+)/enrollments$#', $path, $matches)) {
-                    $courseId = $matches[1];
+                } elseif (preg_match('#^offerings/(\d+)/enrollments$#', $path, $matches)) {
+                    $offeringId = $matches[1];
                     if ($method === 'GET') {
                         $user = $this->authMiddleware->requireAuth();
-                        $this->enrollmentController->getEnrollments($courseId, $user['employee_id']);
+                        $this->enrollmentController->getEnrollments($offeringId, $user['employee_id']);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^offerings/(\d+)/enroll/([A-Za-z0-9]+)$#', $path, $matches)) {
+                    $offeringId = $matches[1];
+                    $rollno = $matches[2];
+                    if ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $this->enrollmentController->removeEnrollment($offeringId, $rollno, $user['employee_id']);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

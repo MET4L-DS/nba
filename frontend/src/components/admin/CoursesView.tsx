@@ -54,47 +54,68 @@ export function CoursesView({ courses, refreshing }: CoursesViewProps) {
 			),
 		},
 		{
-			accessorKey: "faculty_name",
-			header: "Faculty",
+			accessorKey: "department_name",
+			header: "Department",
 			filterFn: (row, id, value) => {
-				return value.includes(row.getValue(id));
+				const val = row.getValue(id) as string;
+				if (!val) return false;
+				return value.includes(val);
+			},
+			cell: ({ row }) => {
+				const name = row.getValue("department_name") as string;
+				return name || "N/A";
 			},
 		},
 		{
-			accessorKey: "year",
-			header: "Year",
+			accessorKey: "course_type",
+			header: "Type",
 			filterFn: (row, id, value) => {
-				return value.includes(row.getValue(id)?.toString());
+				const val = row.getValue(id) as string;
+				if (!val) return false;
+				return value.includes(val);
+			},
+			cell: ({ row }) => {
+				const val = row.getValue("course_type") as string;
+				return <Badge variant="secondary">{val}</Badge>;
 			},
 		},
 		{
-			accessorKey: "semester",
-			header: "Semester",
+			accessorKey: "course_level",
+			header: "Level",
 			filterFn: (row, id, value) => {
-				return value.includes(row.getValue(id)?.toString());
+				const val = row.getValue(id) as string;
+				if (!val) return false;
+				return value.includes(val);
 			},
-			cell: ({ row }) => (
-				<Badge variant="secondary">
-					Sem {row.getValue("semester")}
-				</Badge>
-			),
+		},
+		{
+			accessorKey: "is_active",
+			header: "Status",
+			cell: ({ row }) => {
+				const isActive = row.getValue("is_active") === 1;
+				return (
+					<Badge variant={isActive ? "default" : "destructive"}>
+						{isActive ? "Active" : "Inactive"}
+					</Badge>
+				);
+			},
 		},
 	];
 
-	const facultyOptions = Array.from(
-		new Set(courses.map((c) => c.faculty_name)),
-	)
-		.filter(Boolean)
-		.sort()
-		.map((name) => ({ label: name, value: name }));
+	// Extract unique values for filters
+	const getUniqueValues = (key: keyof AdminCourse) => {
+		return Array.from(new Set(courses.map((c) => c[key])))
+			.filter(Boolean)
+			.sort()
+			.map((val) => ({
+				label: String(val),
+				value: String(val),
+			}));
+	};
 
-	const yearOptions = Array.from(new Set(courses.map((c) => c.year)))
-		.sort()
-		.map((year) => ({ label: year.toString(), value: year.toString() }));
-
-	const semesterOptions = Array.from(new Set(courses.map((c) => c.semester)))
-		.sort((a, b) => a - b)
-		.map((sem) => ({ label: `Sem ${sem}`, value: sem.toString() }));
+	const departmentOptions = getUniqueValues("department_name");
+	const typeOptions = getUniqueValues("course_type");
+	const levelOptions = getUniqueValues("course_level");
 
 	return (
 		<div className="space-y-4">
@@ -114,21 +135,27 @@ export function CoursesView({ courses, refreshing }: CoursesViewProps) {
 			>
 				{(table) => (
 					<>
-						<DataTableFacetedFilter
-							column={table.getColumn("faculty_name")}
-							title="Faculty"
-							options={facultyOptions}
-						/>
-						<DataTableFacetedFilter
-							column={table.getColumn("year")}
-							title="Year"
-							options={yearOptions}
-						/>
-						<DataTableFacetedFilter
-							column={table.getColumn("semester")}
-							title="Semester"
-							options={semesterOptions}
-						/>
+						{table.getColumn("department_name") && (
+							<DataTableFacetedFilter
+								column={table.getColumn("department_name")}
+								title="Department"
+								options={departmentOptions}
+							/>
+						)}
+						{table.getColumn("course_type") && (
+							<DataTableFacetedFilter
+								column={table.getColumn("course_type")}
+								title="Type"
+								options={typeOptions}
+							/>
+						)}
+						{table.getColumn("course_level") && (
+							<DataTableFacetedFilter
+								column={table.getColumn("course_level")}
+								title="Level"
+								options={levelOptions}
+							/>
+						)}
 					</>
 				)}
 			</DataTable>

@@ -19,11 +19,12 @@ class TestRepository
     public function findById($id)
     {
         try {
-            // Join with course to get course_code, year, semester for filename generation
+            // Join with offering and course template
             $stmt = $this->db->prepare("
-                SELECT t.*, c.course_code, c.year, c.semester 
+                SELECT t.*, co.year, co.semester, c.course_code
                 FROM tests t
-                JOIN courses c ON t.course_id = c.course_id
+                JOIN course_offerings co ON t.offering_id = co.offering_id
+                JOIN courses c ON co.course_id = c.course_id
                 WHERE t.test_id = ?
             ");
             $stmt->execute([$id]);
@@ -32,7 +33,7 @@ class TestRepository
             if ($data) {
                 return new Test(
                     $data['test_id'],
-                    $data['course_id'],
+                    $data['offering_id'],
                     $data['test_name'],
                     $data['full_marks'],
                     $data['pass_marks'],
@@ -53,26 +54,27 @@ class TestRepository
     }
 
     /**
-     * Find tests by course ID
+     * Find tests by offering ID
      */
-    public function findByCourseId($courseId)
+    public function findByOfferingId($offeringId)
     {
         try {
-            // Join with course to get course_code, year, semester for filename generation
+            // Join with offering and course template
             $stmt = $this->db->prepare("
-                SELECT t.*, c.course_code, c.year, c.semester 
+                SELECT t.*, co.year, co.semester, c.course_code
                 FROM tests t
-                JOIN courses c ON t.course_id = c.course_id
-                WHERE t.course_id = ? 
+                JOIN course_offerings co ON t.offering_id = co.offering_id
+                JOIN courses c ON co.course_id = c.course_id
+                WHERE t.offering_id = ? 
                 ORDER BY t.test_id DESC
             ");
-            $stmt->execute([$courseId]);
+            $stmt->execute([$offeringId]);
             $tests = [];
 
             while ($data = $stmt->fetch()) {
                 $tests[] = new Test(
                     $data['test_id'],
-                    $data['course_id'],
+                    $data['offering_id'],
                     $data['test_name'],
                     $data['full_marks'],
                     $data['pass_marks'],
@@ -104,7 +106,8 @@ class TestRepository
             $stmt = $this->db->prepare("
                 SELECT COUNT(*) 
                 FROM tests t
-                JOIN courses c ON t.course_id = c.course_id
+                JOIN course_offerings co ON t.offering_id = co.offering_id
+                JOIN courses c ON co.course_id = c.course_id
                 JOIN departments d ON c.department_id = d.department_id
                 WHERE d.school_id = ?
             ");
@@ -124,9 +127,10 @@ class TestRepository
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT t.*, c.course_code, c.year, c.semester 
+                SELECT t.*, c.course_code, co.year, co.semester 
                 FROM tests t
-                JOIN courses c ON t.course_id = c.course_id
+                JOIN course_offerings co ON t.offering_id = co.offering_id
+                JOIN courses c ON co.course_id = c.course_id
                 JOIN departments d ON c.department_id = d.department_id
                 WHERE d.school_id = ?
                 ORDER BY t.test_date DESC
@@ -137,7 +141,7 @@ class TestRepository
             while ($data = $stmt->fetch()) {
                 $tests[] = new Test(
                     $data['test_id'],
-                    $data['course_id'],
+                    $data['offering_id'],
                     $data['test_name'],
                     $data['full_marks'],
                     $data['pass_marks'],
@@ -165,9 +169,9 @@ class TestRepository
         try {
             if ($test->getTestId()) {
                 // Update existing test
-                $stmt = $this->db->prepare("UPDATE tests SET course_id = ?, test_name = ?, full_marks = ?, pass_marks = ?, question_paper_pdf = ?, test_type = ?, test_date = ?, max_marks = ?, weightage = ? WHERE test_id = ?");
+                $stmt = $this->db->prepare("UPDATE tests SET offering_id = ?, test_name = ?, full_marks = ?, pass_marks = ?, question_paper_pdf = ?, test_type = ?, test_date = ?, max_marks = ?, weightage = ? WHERE test_id = ?");
                 return $stmt->execute([
-                    $test->getCourseId(),
+                    $test->getOfferingId(),
                     $test->getTestName(),
                     $test->getFullMarks(),
                     $test->getPassMarks(),
@@ -180,9 +184,9 @@ class TestRepository
                 ]);
             } else {
                 // Insert new test
-                $stmt = $this->db->prepare("INSERT INTO tests (course_id, test_name, full_marks, pass_marks, question_paper_pdf, test_type, test_date, max_marks, weightage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO tests (offering_id, test_name, full_marks, pass_marks, question_paper_pdf, test_type, test_date, max_marks, weightage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $result = $stmt->execute([
-                    $test->getCourseId(),
+                    $test->getOfferingId(),
                     $test->getTestName(),
                     $test->getFullMarks(),
                     $test->getPassMarks(),
@@ -225,9 +229,10 @@ class TestRepository
     {
         try {
             $stmt = $this->db->prepare("
-                SELECT t.*, c.course_code, c.course_name, c.year, c.semester 
+                SELECT t.*, c.course_code, c.course_name, co.year, co.semester 
                 FROM tests t 
-                JOIN courses c ON t.course_id = c.course_id 
+                JOIN course_offerings co ON t.offering_id = co.offering_id
+                JOIN courses c ON co.course_id = c.course_id 
                 ORDER BY t.test_id DESC
             ");
             $stmt->execute();
@@ -236,7 +241,7 @@ class TestRepository
             while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $tests[] = [
                     'test_id' => $data['test_id'],
-                    'course_id' => $data['course_id'],
+                    'offering_id' => $data['offering_id'],
                     'course_code' => $data['course_code'],
                     'course_name' => $data['course_name'],
                     'test_name' => $data['test_name'],

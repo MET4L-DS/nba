@@ -183,12 +183,18 @@ export interface BulkMarksSaveResponse {
 export interface Student {
 	roll_no: string;
 	student_name: string;
-	rollno?: string; // Legacy
-	name?: string; // Legacy
 	department_id: number;
-	dept?: number; // Legacy
-	department_name?: string;
-	department_code?: string;
+	batch_year: number;
+	student_status: string;
+	email: string | null;
+	phone: string | null;
+	department_name: string;
+	department_code: string;
+
+	// Legacy support
+	rollno?: string;
+	name?: string;
+	dept?: number;
 }
 
 export interface Enrollment {
@@ -235,15 +241,25 @@ export interface AdminCourse {
 	course_id: number;
 	course_code: string;
 	course_name: string;
-	id?: number; // compat
-	name?: string; // compat
 	credit: number;
-	faculty_id: number;
-	faculty_name: string;
-	year: number;
-	semester: number;
-	co_threshold: number;
-	passing_threshold: number;
+	department_id?: number | null;
+	department_code?: string | null;
+	department_name?: string | null;
+	course_type?: string;
+	course_level?: string;
+	is_active?: number;
+	created_at?: string;
+	updated_at?: string;
+
+	// Legacy/Compat fields
+	id?: number;
+	name?: string;
+	faculty_id?: number;
+	faculty_name?: string;
+	year?: number;
+	semester?: number;
+	co_threshold?: number;
+	passing_threshold?: number;
 }
 
 export interface AdminTest {

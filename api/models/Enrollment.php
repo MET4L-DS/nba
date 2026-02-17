@@ -2,89 +2,62 @@
 
 class Enrollment
 {
-    private $enrollment_id;
-    private $courseId;
-    private $studentRollno;
-    private $enrolledAt;
-    private $enrollment_status;
-    private $enrolled_date;
+    private $id;
+    private $offeringId;
+    private $rollNo;
+    private $status;
+    private $createdAt;
+    private $studentData = null;
 
     public function __construct(
-        $enrollment_id, 
-        $courseId, 
-        $studentRollno, 
-        $enrolledAt = null, 
-        $enrollment_status = 'Enrolled',
-        $enrolled_date = null
+        $id, 
+        $offeringId, 
+        $rollNo, 
+        $createdAt = null, 
+        $status = 'Enrolled'
     ) {
-        $this->enrollment_id = $enrollment_id;
-        $this->courseId = $courseId;
-        $this->studentRollno = $studentRollno;
-        $this->enrolledAt = $enrolledAt;
-        $this->enrollment_status = $enrollment_status;
-        $this->enrolled_date = $enrolled_date;
+        $this->id = $id;
+        $this->offeringId = $offeringId;
+        $this->rollNo = $rollNo;
+        $this->createdAt = $createdAt;
+        $this->status = $status;
     }
 
     // Getters
-    public function getEnrollmentId()
+    public function getId()
     {
-        return $this->enrollment_id;
+        return $this->id;
+    }
+
+    public function getOfferingId()
+    {
+        return $this->offeringId;
     }
 
     public function getCourseId()
     {
-        return $this->courseId;
+        // Compatibility
+        return $this->offeringId;
     }
 
-    public function getStudentRollno()
+    public function getRollNo()
     {
-        return $this->studentRollno;
+        return $this->rollNo;
     }
 
-    public function getEnrolledAt()
+    public function getCreatedAt()
     {
-        return $this->enrolledAt;
+        return $this->createdAt;
     }
 
-    public function getEnrollmentStatus()
+    public function getStatus()
     {
-        return $this->enrollment_status;
+        return $this->status;
     }
 
-    public function getEnrolledDate()
+    public function setStudentData($data)
     {
-        return $this->enrolled_date;
-    }
-
-    // Setters
-    public function setEnrollmentId($enrollment_id)
-    {
-        $this->enrollment_id = $enrollment_id;
-    }
-
-    public function setCourseId($courseId)
-    {
-        $this->courseId = $courseId;
-    }
-
-    public function setStudentRollno($studentRollno)
-    {
-        $this->studentRollno = $studentRollno;
-    }
-
-    public function setEnrolledAt($enrolledAt)
-    {
-        $this->enrolledAt = $enrolledAt;
-    }
-
-    public function setEnrollmentStatus($enrollment_status)
-    {
-        $this->enrollment_status = $enrollment_status;
-    }
-
-    public function setEnrolledDate($enrolled_date)
-    {
-        $this->enrolled_date = $enrolled_date;
+        $this->studentData = $data;
     }
 
     /**
@@ -93,12 +66,13 @@ class Enrollment
     public function toArray()
     {
         return [
-            'enrollment_id' => $this->enrollment_id,
-            'course_id' => $this->courseId,
-            'student_rollno' => $this->studentRollno,
-            'enrolled_at' => $this->enrolledAt,
-            'enrollment_status' => $this->enrollment_status,
-            'enrolled_date' => $this->enrolled_date
+            'id' => $this->id,
+            'offering_id' => $this->offeringId,
+            'roll_no' => $this->rollNo,
+            'status' => $this->status,
+            'created_at' => $this->createdAt,
+            'student_name' => $this->studentData['name'] ?? null,
+            'student' => $this->studentData
         ];
     }
 }

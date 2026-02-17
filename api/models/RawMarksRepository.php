@@ -22,7 +22,7 @@ class RawMarksRepository
             SELECT r.*, q.question_number, q.sub_question, q.co 
             FROM raw_marks r
             JOIN questions q ON r.question_id = q.question_id
-            WHERE r.test_id = ? AND r.student_id = ?
+            WHERE r.test_id = ? AND r.roll_no = ?
             ORDER BY q.question_number, q.sub_question
         ");
         $stmt->execute([$testId, $studentId]);
@@ -32,7 +32,7 @@ class RawMarksRepository
             $rawMarks[] = [
                 'raw_marks' => new RawMarks(
                     $row['test_id'],
-                    $row['student_id'],
+                    $row['roll_no'],
                     $row['question_id'],
                     $row['marks_obtained'],
                     $row['id']
@@ -51,7 +51,7 @@ class RawMarksRepository
     public function save(RawMarks $rawMarks)
     {
         $stmt = $this->db->prepare("
-            INSERT INTO raw_marks (test_id, student_id, question_id, marks_obtained) 
+            INSERT INTO raw_marks (test_id, roll_no, question_id, marks_obtained) 
             VALUES (?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE marks_obtained = VALUES(marks_obtained)
         ");
@@ -93,7 +93,7 @@ class RawMarksRepository
      */
     public function deleteByTestAndStudent($testId, $studentId)
     {
-        $stmt = $this->db->prepare("DELETE FROM raw_marks WHERE test_id = ? AND student_id = ?");
+        $stmt = $this->db->prepare("DELETE FROM raw_marks WHERE test_id = ? AND roll_no = ?");
         return $stmt->execute([$testId, $studentId]);
     }
 

@@ -449,14 +449,13 @@ class DepartmentRepository
                     d.created_at,
                     hod.employee_id AS hod_employee_id,
                     hod.username   AS hod_name,
-                    COALESCE(ds.faculty_count, 0)           AS faculty_count,
-                    COALESCE(ds.student_count, 0)           AS student_count,
-                    COALESCE(ds.course_count, 0)            AS course_count,
-                    COALESCE(ds.active_offerings_count, 0)  AS active_offerings_count
+                    (SELECT COUNT(*) FROM users u_fac WHERE u_fac.department_id = d.department_id AND u_fac.role = 'faculty') AS faculty_count,
+                    (SELECT COUNT(*) FROM users u_staff WHERE u_staff.department_id = d.department_id AND u_staff.role = 'staff') AS staff_count,
+                    (SELECT COUNT(*) FROM students s WHERE s.department_id = d.department_id AND s.student_status = 'Active') AS student_count,
+                    (SELECT COUNT(*) FROM courses c WHERE c.department_id = d.department_id) AS course_count
                 FROM departments d
                 LEFT JOIN hod_assignments ha ON d.department_id = ha.department_id AND ha.is_current = 1
                 LEFT JOIN users hod ON ha.employee_id = hod.employee_id
-                LEFT JOIN department_stats ds ON d.department_id = ds.department_id
                 WHERE d.school_id = ?
             ";
             $bindings = [$schoolId];
@@ -466,6 +465,15 @@ class DepartmentRepository
                 $like = '%' . $params['search'] . '%';
                 $bindings[] = $like;
                 $bindings[] = $like;
+            }
+
+            // Filter by HOD Status
+            if (isset($params['filters']['hod_status'])) {
+                if ($params['filters']['hod_status'] === 'assigned') {
+                    $sql .= " AND hod.employee_id IS NOT NULL";
+                } elseif ($params['filters']['hod_status'] === 'unassigned') {
+                    $sql .= " AND hod.employee_id IS NULL";
+                }
             }
 
             PaginationHelper::applyCursor($sql, $bindings, 'd.department_id', $params['cursor'], $params['sortDir']);
@@ -487,7 +495,13 @@ class DepartmentRepository
     public function countBySchoolPaginated(int $schoolId, array $params): int
     {
         try {
-            $sql = "SELECT COUNT(*) FROM departments d WHERE d.school_id = ?";
+            $sql = "
+                SELECT COUNT(*) 
+                FROM departments d 
+                LEFT JOIN hod_assignments ha ON d.department_id = ha.department_id AND ha.is_current = 1
+                LEFT JOIN users hod ON ha.employee_id = hod.employee_id
+                WHERE d.school_id = ?
+            ";
             $bindings = [$schoolId];
 
             if ($params['search']) {
@@ -495,6 +509,15 @@ class DepartmentRepository
                 $like = '%' . $params['search'] . '%';
                 $bindings[] = $like;
                 $bindings[] = $like;
+            }
+
+            // Filter by HOD Status
+            if (isset($params['filters']['hod_status'])) {
+                if ($params['filters']['hod_status'] === 'assigned') {
+                    $sql .= " AND hod.employee_id IS NOT NULL";
+                } elseif ($params['filters']['hod_status'] === 'unassigned') {
+                    $sql .= " AND hod.employee_id IS NULL";
+                }
             }
 
             $stmt = $this->db->prepare($sql);

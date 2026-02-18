@@ -1,12 +1,21 @@
 ﻿import { DataTable } from "@/components/shared/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, GraduationCap } from "lucide-react";
+import { ArrowUpDown, GraduationCap, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { DeanStudent } from "@/services/api";
+import type { DeanStudent, DeanDepartment } from "@/services/api";
 import { deanApi } from "@/services/api/dean";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import { useEffect, useState } from "react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export function StudentsView() {
 	const {
@@ -19,11 +28,41 @@ export function StudentsView() {
 		pageIndex,
 		search,
 		setSearch,
-	} = usePaginatedData<DeanStudent>({
+		filters,
+		setFilter,
+	} = usePaginatedData<
+		DeanStudent,
+		{ department_id: string; batch_year: string; student_status: string }
+	>({
 		fetchFn: (params) => deanApi.getAllStudents(params),
 		limit: 20,
 		defaultSort: "s.roll_no",
 	});
+
+	const { data: departments } = usePaginatedData<DeanDepartment>({
+		fetchFn: (params) => deanApi.getAllDepartments(params),
+		limit: 100,
+		defaultSort: "d.department_code",
+	});
+
+	const [batchInput, setBatchInput] = useState(
+		(filters.batch_year as string | undefined) || "",
+	);
+
+	// Debounce batch year input
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			if (batchInput !== filters.batch_year) {
+				setFilter("batch_year", batchInput || undefined);
+			}
+		}, 500);
+		return () => clearTimeout(timer);
+	}, [batchInput, filters.batch_year, setFilter]);
+
+	const hasFilters =
+		!!filters.department_id ||
+		!!filters.batch_year ||
+		!!filters.student_status;
 
 	const columns: ColumnDef<DeanStudent>[] = [
 		{
@@ -135,7 +174,76 @@ export function StudentsView() {
 						search,
 						onSearch: setSearch,
 					}}
-				/>
+				>
+					<Select
+						value={filters.department_id || "all"}
+						onValueChange={(val) =>
+							setFilter(
+								"department_id",
+								val === "all" ? undefined : val,
+							)
+						}
+					>
+						<SelectTrigger className="h-9 w-[180px]">
+							<SelectValue placeholder="All Departments" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All Departments</SelectItem>
+							{departments.map((dept) => (
+								<SelectItem
+									key={dept.department_id}
+									value={String(dept.department_id)}
+								>
+									{dept.department_code}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+
+					<Input
+						placeholder="Batch Year"
+						value={batchInput}
+						onChange={(e) => setBatchInput(e.target.value)}
+						className="h-9 w-[110px]"
+					/>
+
+					<Select
+						value={filters.student_status || "all"}
+						onValueChange={(val) =>
+							setFilter(
+								"student_status",
+								val === "all" ? undefined : val,
+							)
+						}
+					>
+						<SelectTrigger className="h-9 w-[130px]">
+							<SelectValue placeholder="All Status" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All Status</SelectItem>
+							<SelectItem value="Active">Active</SelectItem>
+							<SelectItem value="Inactive">Inactive</SelectItem>
+							<SelectItem value="Graduated">Graduated</SelectItem>
+							<SelectItem value="Dropped">Dropped</SelectItem>
+						</SelectContent>
+					</Select>
+
+					{hasFilters && (
+						<Button
+							variant="ghost"
+							className="h-9 px-2"
+							onClick={() => {
+								setBatchInput("");
+								setFilter("department_id", undefined);
+								setFilter("batch_year", undefined);
+								setFilter("student_status", undefined);
+							}}
+						>
+							Reset
+							<X className="ml-2 h-4 w-4" />
+						</Button>
+					)}
+				</DataTable>
 			</CardContent>
 		</Card>
 	);

@@ -8,6 +8,7 @@ import {
 	AlertCircle,
 	RefreshCw,
 	ArrowUpDown,
+	X,
 } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -17,8 +18,14 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -39,6 +46,8 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 		pageIndex,
 		search,
 		setSearch,
+		filters,
+		setFilter,
 	} = usePaginatedData<User>({
 		fetchFn: (params) => adminApi.getAllUsers(params),
 		limit: 20,
@@ -50,6 +59,7 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 		limit: 100,
 		defaultSort: "d.department_code",
 	});
+
 	const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 	const [isDeleteUserOpen, setIsDeleteUserOpen] = useState(false);
 	const [userToDelete, setUserToDelete] = useState<User | null>(null);
@@ -250,196 +260,22 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
 				<div>
 					<h2 className="text-2xl font-bold">Users Management</h2>
 					<p className="text-gray-500 dark:text-gray-400">
 						Manage all system users
 					</p>
 				</div>
-				<Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-					<DialogTrigger asChild>
-						<Button className="gap-2">
-							<Plus className="h-4 w-4" />
-							Add User
-						</Button>
-					</DialogTrigger>
-					<DialogContent className="sm:max-w-[500px]">
-						<DialogHeader>
-							<DialogTitle>Add New User</DialogTitle>
-							<DialogDescription>
-								Create a new user account. Fill in all required
-								fields.
-							</DialogDescription>
-						</DialogHeader>
-						<div className="grid gap-4 py-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="employee_id">
-										Employee ID *
-									</Label>
-									<Input
-										id="employee_id"
-										type="number"
-										placeholder="e.g., 5001"
-										value={newUser.employee_id || ""}
-										onChange={(e) =>
-											setNewUser({
-												...newUser,
-												employee_id:
-													parseInt(e.target.value) ||
-													0,
-											})
-										}
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="role">Role *</Label>
-									<select
-										id="role"
-										className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-										value={newUser.role}
-										onChange={(e) =>
-											setNewUser({
-												...newUser,
-												role: e.target
-													.value as CreateUserRequest["role"],
-											})
-										}
-									>
-										<option value="admin">Admin</option>
-										<option value="faculty">Faculty</option>
-										<option value="staff">Staff</option>
-									</select>
-								</div>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="username">Full Name *</Label>
-								<Input
-									id="username"
-									placeholder="e.g., Dr. John Doe"
-									value={newUser.username}
-									onChange={(e) =>
-										setNewUser({
-											...newUser,
-											username: e.target.value,
-										})
-									}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="email">Email *</Label>
-								<Input
-									id="email"
-									type="email"
-									placeholder="e.g., john@tezu.edu"
-									value={newUser.email}
-									onChange={(e) =>
-										setNewUser({
-											...newUser,
-											email: e.target.value,
-										})
-									}
-								/>
-							</div>
-							<div className="grid grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="designation">
-										Designation
-									</Label>
-									<Input
-										id="designation"
-										placeholder="e.g., Professor"
-										value={newUser.designation || ""}
-										onChange={(e) =>
-											setNewUser({
-												...newUser,
-												designation: e.target.value,
-											})
-										}
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="phone">Phone Number</Label>
-									<Input
-										id="phone"
-										placeholder="e.g., 9876543210"
-										value={newUser.phone || ""}
-										onChange={(e) =>
-											setNewUser({
-												...newUser,
-												phone: e.target.value,
-											})
-										}
-									/>
-								</div>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="password">Password *</Label>
-								<Input
-									id="password"
-									type="password"
-									placeholder="Enter password"
-									value={newUser.password}
-									onChange={(e) =>
-										setNewUser({
-											...newUser,
-											password: e.target.value,
-										})
-									}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="department">Department</Label>
-								<select
-									id="department"
-									className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-									value={newUser.department_id || ""}
-									onChange={(e) =>
-										setNewUser({
-											...newUser,
-											department_id: e.target.value
-												? parseInt(e.target.value)
-												: null,
-										})
-									}
-								>
-									<option value="">No Department</option>
-									{departments.map((dept) => (
-										<option
-											key={dept.department_id}
-											value={dept.department_id}
-										>
-											{dept.department_name} (
-											{dept.department_code})
-										</option>
-									))}
-								</select>
-							</div>
-						</div>
-						<DialogFooter>
-							<Button
-								variant="outline"
-								onClick={() => setIsAddUserOpen(false)}
-							>
-								Cancel
-							</Button>
-							<Button
-								onClick={handleCreateUser}
-								disabled={submitting}
-							>
-								{submitting ? (
-									<>
-										<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-										Creating...
-									</>
-								) : (
-									"Create User"
-								)}
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
+				<div className="flex items-center gap-2">
+					<Button
+						className="gap-2"
+						onClick={() => setIsAddUserOpen(true)}
+					>
+						<Plus className="h-4 w-4" />
+						Add User
+					</Button>
+				</div>
 			</div>
 
 			<DataTable
@@ -456,7 +292,260 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 					search,
 					onSearch: setSearch,
 				}}
-			/>
+			>
+				{() => (
+					<>
+						<Select
+							value={
+								(filters.department_id as string | undefined) ||
+								"all"
+							}
+							onValueChange={(val) =>
+								setFilter(
+									"department_id",
+									val === "all" ? undefined : val,
+								)
+							}
+						>
+							<SelectTrigger className="w-[180px]">
+								<SelectValue placeholder="All Departments" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">
+									All Departments
+								</SelectItem>
+								{departments.map((dept) => (
+									<SelectItem
+										key={dept.department_id}
+										value={dept.department_id.toString()}
+									>
+										{dept.department_code}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+
+						<Select
+							value={
+								(filters.role as string | undefined) || "all"
+							}
+							onValueChange={(val) =>
+								setFilter(
+									"role",
+									val === "all" ? undefined : val,
+								)
+							}
+						>
+							<SelectTrigger className="w-[140px]">
+								<SelectValue placeholder="All Roles" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All Roles</SelectItem>
+								<SelectItem value="admin">Admin</SelectItem>
+								<SelectItem value="faculty">Faculty</SelectItem>
+								<SelectItem value="staff">Staff</SelectItem>
+							</SelectContent>
+						</Select>
+
+						{(filters.department_id || filters.role) && (
+							<Button
+								variant="ghost"
+								onClick={() => {
+									setFilter("department_id", undefined);
+									setFilter("role", undefined);
+								}}
+								className="h-9 px-2 lg:px-3"
+							>
+								Reset
+								<X className="ml-2 h-4 w-4" />
+							</Button>
+						)}
+					</>
+				)}
+			</DataTable>
+
+			<Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+				<DialogContent className="sm:max-w-[500px]">
+					<DialogHeader>
+						<DialogTitle>Add New User</DialogTitle>
+						<DialogDescription>
+							Create a new user account. Fill in all required
+							fields.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="grid gap-4 py-4">
+						<div className="grid grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label htmlFor="employee_id">
+									Employee ID *
+								</Label>
+								<Input
+									id="employee_id"
+									type="number"
+									placeholder="e.g., 5001"
+									value={newUser.employee_id || ""}
+									onChange={(e) =>
+										setNewUser({
+											...newUser,
+											employee_id:
+												parseInt(e.target.value) || 0,
+										})
+									}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="role">Role *</Label>
+								<Select
+									value={newUser.role}
+									onValueChange={(val) =>
+										setNewUser({
+											...newUser,
+											role: val as CreateUserRequest["role"],
+										})
+									}
+								>
+									<SelectTrigger>
+										<SelectValue placeholder="Select role" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="admin">
+											Admin
+										</SelectItem>
+										<SelectItem value="faculty">
+											Faculty
+										</SelectItem>
+										<SelectItem value="staff">
+											Staff
+										</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="username">Full Name *</Label>
+							<Input
+								id="username"
+								placeholder="e.g., Dr. John Doe"
+								value={newUser.username}
+								onChange={(e) =>
+									setNewUser({
+										...newUser,
+										username: e.target.value,
+									})
+								}
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="email">Email *</Label>
+							<Input
+								id="email"
+								type="email"
+								placeholder="e.g., john@tezu.edu"
+								value={newUser.email}
+								onChange={(e) =>
+									setNewUser({
+										...newUser,
+										email: e.target.value,
+									})
+								}
+							/>
+						</div>
+						<div className="grid grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label htmlFor="designation">Designation</Label>
+								<Input
+									id="designation"
+									placeholder="e.g., Professor"
+									value={newUser.designation || ""}
+									onChange={(e) =>
+										setNewUser({
+											...newUser,
+											designation: e.target.value,
+										})
+									}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="phone">Phone Number</Label>
+								<Input
+									id="phone"
+									placeholder="e.g., 9876543210"
+									value={newUser.phone || ""}
+									onChange={(e) =>
+										setNewUser({
+											...newUser,
+											phone: e.target.value,
+										})
+									}
+								/>
+							</div>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="password">Password *</Label>
+							<Input
+								id="password"
+								type="password"
+								placeholder="Enter password"
+								value={newUser.password}
+								onChange={(e) =>
+									setNewUser({
+										...newUser,
+										password: e.target.value,
+									})
+								}
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="department">Department</Label>
+							<select
+								id="department"
+								className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+								value={newUser.department_id || ""}
+								onChange={(e) =>
+									setNewUser({
+										...newUser,
+										department_id: e.target.value
+											? parseInt(e.target.value)
+											: null,
+									})
+								}
+							>
+								<option value="">No Department</option>
+								{departments.map((dept) => (
+									<option
+										key={dept.department_id}
+										value={dept.department_id}
+									>
+										{dept.department_name} (
+										{dept.department_code})
+									</option>
+								))}
+							</select>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setIsAddUserOpen(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleCreateUser}
+							disabled={submitting}
+						>
+							{submitting ? (
+								<>
+									<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+									Creating...
+								</>
+							) : (
+								"Create User"
+							)}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<Dialog open={isDeleteUserOpen} onOpenChange={setIsDeleteUserOpen}>
 				<DialogContent>

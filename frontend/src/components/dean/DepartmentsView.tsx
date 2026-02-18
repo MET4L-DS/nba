@@ -14,6 +14,14 @@ import type { DeanDepartment } from "@/services/api";
 import { deanApi } from "@/services/api/dean";
 import { usePaginatedData } from "@/lib/usePaginatedData";
 
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+
 export function DepartmentsView() {
 	const {
 		data: departments,
@@ -25,7 +33,9 @@ export function DepartmentsView() {
 		pageIndex,
 		search,
 		setSearch,
-	} = usePaginatedData<DeanDepartment>({
+		filters,
+		setFilter,
+	} = usePaginatedData<DeanDepartment, { hod_status: string }>({
 		fetchFn: (params) => deanApi.getAllDepartments(params),
 		limit: 20,
 		defaultSort: "d.department_code",
@@ -317,7 +327,32 @@ export function DepartmentsView() {
 							search,
 							onSearch: setSearch,
 						}}
-					/>
+					>
+						<Select
+							value={filters.hod_status || "all"}
+							onValueChange={(value) =>
+								setFilter(
+									"hod_status",
+									value === "all" ? undefined : value,
+								)
+							}
+						>
+							<SelectTrigger className="h-9 w-[180px]">
+								<SelectValue placeholder="HOD Status" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">
+									All HOD Status
+								</SelectItem>
+								<SelectItem value="assigned">
+									Assigned
+								</SelectItem>
+								<SelectItem value="unassigned">
+									Unassigned
+								</SelectItem>
+							</SelectContent>
+						</Select>
+					</DataTable>
 				</CardContent>
 			</Card>
 		</div>

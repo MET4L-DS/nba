@@ -1,12 +1,19 @@
 import { DataTable } from "@/components/shared/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Users } from "lucide-react";
+import { ArrowUpDown, Users, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { DeanUser } from "@/services/api";
+import type { DeanUser, DeanDepartment } from "@/services/api";
 import { deanApi } from "@/services/api/dean";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 const getRoleBadgeColor = (role: string) => {
 	switch (role) {
@@ -36,11 +43,21 @@ export function UsersView() {
 		pageIndex,
 		search,
 		setSearch,
-	} = usePaginatedData<DeanUser>({
+		filters,
+		setFilter,
+	} = usePaginatedData<DeanUser, { role: string; department_id: string }>({
 		fetchFn: (params) => deanApi.getAllUsers(params),
 		limit: 20,
 		defaultSort: "u.employee_id",
 	});
+
+	const { data: departments } = usePaginatedData<DeanDepartment>({
+		fetchFn: (params) => deanApi.getAllDepartments(params),
+		limit: 100,
+		defaultSort: "d.department_code",
+	});
+
+	const hasFilters = !!filters.role || !!filters.department_id;
 
 	const columns: ColumnDef<DeanUser>[] = [
 		{
@@ -181,7 +198,65 @@ export function UsersView() {
 						search,
 						onSearch: setSearch,
 					}}
-				/>
+				>
+					<Select
+						value={filters.department_id || "all"}
+						onValueChange={(value) =>
+							setFilter(
+								"department_id",
+								value === "all" ? undefined : value,
+							)
+						}
+					>
+						<SelectTrigger className="h-9 w-[180px]">
+							<SelectValue placeholder="All Departments" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All Departments</SelectItem>
+							{departments.map((dept) => (
+								<SelectItem
+									key={dept.department_id}
+									value={String(dept.department_id)}
+								>
+									{dept.department_code}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+
+					<Select
+						value={filters.role || "all"}
+						onValueChange={(value) =>
+							setFilter(
+								"role",
+								value === "all" ? undefined : value,
+							)
+						}
+					>
+						<SelectTrigger className="h-9 w-[150px]">
+							<SelectValue placeholder="All Roles" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All Roles</SelectItem>
+							<SelectItem value="faculty">Faculty</SelectItem>
+							<SelectItem value="staff">Staff</SelectItem>
+						</SelectContent>
+					</Select>
+
+					{hasFilters && (
+						<Button
+							variant="ghost"
+							className="h-9 px-2"
+							onClick={() => {
+								setFilter("department_id", undefined);
+								setFilter("role", undefined);
+							}}
+						>
+							Reset
+							<X className="ml-2 h-4 w-4" />
+						</Button>
+					)}
+				</DataTable>
 			</CardContent>
 		</Card>
 	);

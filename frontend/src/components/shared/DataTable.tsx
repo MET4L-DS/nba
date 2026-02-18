@@ -14,7 +14,7 @@ import {
 	useReactTable,
 	type Table as TableType,
 } from "@tanstack/react-table";
-import { ChevronDown, RefreshCw, X } from "lucide-react";
+import { ChevronDown, RefreshCw, X, Search, Loader2 } from "lucide-react";
 
 import {
 	Table,
@@ -33,6 +33,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { PaginationMeta } from "@/services/api/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * When provided, DataTable operates in "server-side" mode:
@@ -93,6 +94,9 @@ export function DataTable<TData, TValue>({
 			columnVisibility,
 			rowSelection,
 		},
+		// When server manages pagination, prevent TanStack from slicing rows
+		// client-side (its default pageSize=10 would truncate server pages).
+		manualPagination: isServerMode,
 		enableRowSelection: true,
 		onRowSelectionChange: setRowSelection,
 		onSortingChange: setSorting,
@@ -122,29 +126,39 @@ export function DataTable<TData, TValue>({
 				<div className="flex flex-1 items-center space-x-2">
 					{/* Server-side search input */}
 					{isServerMode && (
-						<Input
-							placeholder={searchPlaceholder}
-							value={sp!.search}
-							onChange={(e) => sp!.onSearch(e.target.value)}
-							className="h-8 w-[150px] lg:w-[250px]"
-						/>
+						<div className="relative">
+							{refreshing ? (
+								<Loader2 className="absolute left-2 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+							) : (
+								<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+							)}
+							<Input
+								placeholder={searchPlaceholder}
+								value={sp!.search}
+								onChange={(e) => sp!.onSearch(e.target.value)}
+								className="pl-8 h-9 w-[150px] lg:w-[250px]"
+							/>
+						</div>
 					)}
 					{/* Client-side search input */}
 					{!isServerMode && searchKey && (
-						<Input
-							placeholder={searchPlaceholder}
-							value={
-								(table
-									.getColumn(searchKey)
-									?.getFilterValue() as string) ?? ""
-							}
-							onChange={(event) =>
-								table
-									.getColumn(searchKey)
-									?.setFilterValue(event.target.value)
-							}
-							className="h-8 w-[150px] lg:w-[250px]"
-						/>
+						<div className="relative">
+							<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+							<Input
+								placeholder={searchPlaceholder}
+								value={
+									(table
+										.getColumn(searchKey)
+										?.getFilterValue() as string) ?? ""
+								}
+								onChange={(event) =>
+									table
+										.getColumn(searchKey)
+										?.setFilterValue(event.target.value)
+								}
+								className="pl-8 h-9 w-[150px] lg:w-[250px]"
+							/>
+						</div>
 					)}
 					{typeof children === "function"
 						? children(table)
@@ -153,7 +167,7 @@ export function DataTable<TData, TValue>({
 						<Button
 							variant="ghost"
 							onClick={() => table.resetColumnFilters()}
-							className="h-8 px-2 lg:px-3"
+							className="h-9 px-2 lg:px-3"
 						>
 							Reset
 							<X className="ml-2 h-4 w-4" />
@@ -219,17 +233,17 @@ export function DataTable<TData, TValue>({
 					</TableHeader>
 					<TableBody>
 						{refreshing ? (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length}
-									className="h-24 text-center"
-								>
-									<div className="flex items-center justify-center">
-										<RefreshCw className="h-6 w-6 animate-spin text-blue-500 mr-2" />
-										<span>Loading data...</span>
-									</div>
-								</TableCell>
-							</TableRow>
+							<>
+								{Array.from({ length: 5 }).map((_, i) => (
+									<TableRow key={i}>
+										{columns.map((_, j) => (
+											<TableCell key={j}>
+												<Skeleton className="h-6 w-full" />
+											</TableCell>
+										))}
+									</TableRow>
+								))}
+							</>
 						) : table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map((row) => (
 								<TableRow

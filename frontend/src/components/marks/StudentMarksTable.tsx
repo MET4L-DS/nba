@@ -17,6 +17,7 @@ import {
 	PaginationPrevious,
 } from "@/components/ui/pagination";
 import { FileText } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StudentMarksTableProps {
 	marks: Array<{
@@ -63,8 +64,77 @@ export function StudentMarksTable({
 
 	if (loading) {
 		return (
-			<div className="text-center py-8 text-gray-500">
-				Loading marks...
+			<div className="space-y-4">
+				<div className="overflow-x-auto">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Student ID</TableHead>
+								<TableHead>Student Name</TableHead>
+								<TableHead className="text-center">
+									CO1
+								</TableHead>
+								<TableHead className="text-center">
+									CO2
+								</TableHead>
+								<TableHead className="text-center">
+									CO3
+								</TableHead>
+								<TableHead className="text-center">
+									CO4
+								</TableHead>
+								<TableHead className="text-center">
+									CO5
+								</TableHead>
+								<TableHead className="text-center">
+									CO6
+								</TableHead>
+								<TableHead className="text-center">
+									Total
+								</TableHead>
+								<TableHead className="text-center">
+									Status
+								</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{Array.from({ length: 5 }).map((_, i) => (
+								<TableRow key={i}>
+									<TableCell>
+										<Skeleton className="h-4 w-[100px]" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-[150px]" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-12 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-12 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-12 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-12 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-12 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-12 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-12 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-[60px] mx-auto" />
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</div>
 			</div>
 		);
 	}
@@ -169,7 +239,7 @@ export function StudentMarksTable({
 								<PaginationPrevious
 									onClick={() =>
 										handlePageChange(
-											Math.max(1, currentPage - 1)
+											Math.max(1, currentPage - 1),
 										)
 									}
 									className={
@@ -227,8 +297,8 @@ export function StudentMarksTable({
 										handlePageChange(
 											Math.min(
 												totalPages,
-												currentPage + 1
-											)
+												currentPage + 1,
+											),
 										)
 									}
 									className={

@@ -45,6 +45,7 @@ import { apiService } from "@/services/api";
 import type { Department, School } from "@/services/api";
 import { adminApi } from "@/services/api/admin";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import { Filter, X } from "lucide-react";
 
 export function DepartmentsView() {
 	const {
@@ -58,6 +59,8 @@ export function DepartmentsView() {
 		pageIndex,
 		search,
 		setSearch,
+		filters,
+		setFilter,
 	} = usePaginatedData<Department>({
 		fetchFn: (params) => adminApi.getAllDepartments(params),
 		limit: 20,
@@ -453,132 +456,141 @@ export function DepartmentsView() {
 							</p>
 						</div>
 					</div>
-					<Dialog
-						open={isAddDialogOpen}
-						onOpenChange={setIsAddDialogOpen}
-					>
-						<DialogTrigger asChild>
-							<Button className="gap-2 bg-blue-600 hover:bg-blue-700">
-								<Plus className="w-4 h-4" />
-								Add Department
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="sm:max-w-[450px]">
-							<DialogHeader>
-								<DialogTitle>Add New Department</DialogTitle>
-								<DialogDescription>
-									Create a new department in the system
-								</DialogDescription>
-							</DialogHeader>
-							<div className="grid gap-4 py-4">
-								<div className="space-y-2">
-									<Label htmlFor="department_name">
-										Department Name *
-									</Label>
-									<Input
-										id="department_name"
-										placeholder="e.g., Computer Science & Engineering"
-										value={formData.department_name}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												department_name: e.target.value,
-											})
-										}
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="department_code">
-										Department Code *
-									</Label>
-									<Input
-										id="department_code"
-										placeholder="e.g., CSE"
-										maxLength={10}
-										value={formData.department_code}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												department_code:
-													e.target.value.toUpperCase(),
-											})
-										}
-									/>
-									<p className="text-xs text-muted-foreground">
-										Short code (max 10 characters), will be
-										auto-capitalized
-									</p>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="school_id">School</Label>
-									<Select
-										value={formData.school_id || "none"}
-										onValueChange={(val) =>
-											setFormData({
-												...formData,
-												school_id:
-													val === "none" ? "" : val,
-											})
-										}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Select a school" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="none">
-												None
-											</SelectItem>
-											{schools.map((school) => (
-												<SelectItem
-													key={school.school_id}
-													value={school.school_id.toString()}
-												>
-													{school.school_name} (
-													{school.school_code})
+					<div className="flex items-center gap-2">
+						<Dialog
+							open={isAddDialogOpen}
+							onOpenChange={setIsAddDialogOpen}
+						>
+							<DialogTrigger asChild>
+								<Button className="gap-2 bg-blue-600 hover:bg-blue-700">
+									<Plus className="w-4 h-4" />
+									Add Department
+								</Button>
+							</DialogTrigger>
+							<DialogContent className="sm:max-w-[450px]">
+								<DialogHeader>
+									<DialogTitle>
+										Add New Department
+									</DialogTitle>
+									<DialogDescription>
+										Create a new department in the system
+									</DialogDescription>
+								</DialogHeader>
+								<div className="grid gap-4 py-4">
+									<div className="space-y-2">
+										<Label htmlFor="department_name">
+											Department Name *
+										</Label>
+										<Input
+											id="department_name"
+											placeholder="e.g., Computer Science & Engineering"
+											value={formData.department_name}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													department_name:
+														e.target.value,
+												})
+											}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="department_code">
+											Department Code *
+										</Label>
+										<Input
+											id="department_code"
+											placeholder="e.g., CSE"
+											maxLength={10}
+											value={formData.department_code}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													department_code:
+														e.target.value.toUpperCase(),
+												})
+											}
+										/>
+										<p className="text-xs text-muted-foreground">
+											Short code (max 10 characters), will
+											be auto-capitalized
+										</p>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="school_id">
+											School
+										</Label>
+										<Select
+											value={formData.school_id || "none"}
+											onValueChange={(val) =>
+												setFormData({
+													...formData,
+													school_id:
+														val === "none"
+															? ""
+															: val,
+												})
+											}
+										>
+											<SelectTrigger>
+												<SelectValue placeholder="Select a school" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="none">
+													None
 												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+												{schools.map((school) => (
+													<SelectItem
+														key={school.school_id}
+														value={school.school_id.toString()}
+													>
+														{school.school_name} (
+														{school.school_code})
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="description">
+											Description (Optional)
+										</Label>
+										<Input
+											id="description"
+											placeholder="Department description"
+											value={formData.description}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													description: e.target.value,
+												})
+											}
+										/>
+									</div>
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="description">
-										Description (Optional)
-									</Label>
-									<Input
-										id="description"
-										placeholder="Department description"
-										value={formData.description}
-										onChange={(e) =>
-											setFormData({
-												...formData,
-												description: e.target.value,
-											})
-										}
-									/>
-								</div>
-							</div>
-							<DialogFooter>
-								<Button
-									variant="outline"
-									onClick={() => {
-										setIsAddDialogOpen(false);
-										resetForm();
-									}}
-								>
-									Cancel
-								</Button>
-								<Button
-									onClick={handleCreateDepartment}
-									disabled={isSubmitting}
-									className="bg-blue-600 hover:bg-blue-700"
-								>
-									{isSubmitting
-										? "Creating..."
-										: "Create Department"}
-								</Button>
-							</DialogFooter>
-						</DialogContent>
-					</Dialog>
+								<DialogFooter>
+									<Button
+										variant="outline"
+										onClick={() => {
+											setIsAddDialogOpen(false);
+											resetForm();
+										}}
+									>
+										Cancel
+									</Button>
+									<Button
+										onClick={handleCreateDepartment}
+										disabled={isSubmitting}
+										className="bg-blue-600 hover:bg-blue-700"
+									>
+										{isSubmitting
+											? "Creating..."
+											: "Create Department"}
+									</Button>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
+					</div>
 				</div>
 			</Card>
 
@@ -596,7 +608,48 @@ export function DepartmentsView() {
 					search,
 					onSearch: setSearch,
 				}}
-			/>
+			>
+				{() => (
+					<>
+						<Select
+							value={(filters.school_id as string) || "all"}
+							onValueChange={(val) =>
+								setFilter(
+									"school_id",
+									val === "all" ? undefined : val,
+								)
+							}
+						>
+							<SelectTrigger className="w-[180px]">
+								<SelectValue placeholder="All Schools" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All Schools</SelectItem>
+								{schools.map((school) => (
+									<SelectItem
+										key={school.school_id}
+										value={school.school_id.toString()}
+									>
+										{school.school_code}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						{filters.school_id && (
+							<Button
+								variant="ghost"
+								onClick={() =>
+									setFilter("school_id", undefined)
+								}
+								className="h-9 px-2 lg:px-3"
+							>
+								Reset
+								<X className="ml-2 h-4 w-4" />
+							</Button>
+						)}
+					</>
+				)}
+			</DataTable>
 
 			{/* Edit Dialog */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

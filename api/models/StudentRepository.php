@@ -337,6 +337,10 @@ class StudentRepository
                 $sql .= " AND s.batch_year = ?";
                 $bindings[] = (int)$params['filters']['batch_year'];
             }
+            if (!empty($params['filters']['student_status'])) {
+                $sql .= " AND s.student_status = ?";
+                $bindings[] = $params['filters']['student_status'];
+            }
 
             PaginationHelper::applyCursor($sql, $bindings, 's.roll_no', $params['cursor'], $params['sortDir'], true);
 
@@ -374,6 +378,14 @@ class StudentRepository
             if (!empty($params['filters']['department_id'])) {
                 $sql .= " AND s.department_id = ?";
                 $bindings[] = (int)$params['filters']['department_id'];
+            }
+            if (!empty($params['filters']['batch_year'])) {
+                $sql .= " AND s.batch_year = ?";
+                $bindings[] = (int)$params['filters']['batch_year'];
+            }
+            if (!empty($params['filters']['student_status'])) {
+                $sql .= " AND s.student_status = ?";
+                $bindings[] = $params['filters']['student_status'];
             }
 
             $stmt = $this->db->prepare($sql);

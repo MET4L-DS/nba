@@ -107,14 +107,6 @@ const columns: ColumnDef<DepartmentAnalytics>[] = [
 ];
 
 export function AnalyticsView({ analytics, isLoading }: AnalyticsViewProps) {
-	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center h-64">
-				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-			</div>
-		);
-	}
-
 	// Calculate totals
 	const totals = analytics.reduce(
 		(acc, dept) => ({
@@ -219,8 +211,9 @@ export function AnalyticsView({ analytics, isLoading }: AnalyticsViewProps) {
 					<DataTable
 						columns={columns}
 						data={sortedAnalytics}
-						searchKey="department_code" // filtering by code seems reasonable, or I can add a code column search
-						// Actually in columns I have 'department_code' accessorey.
+						searchKey="department_code"
+						searchPlaceholder="Search departments..."
+						refreshing={isLoading}
 					/>
 				</CardContent>
 			</Card>

@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Users, Eye, EyeOff } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import type { DepartmentFaculty, HODCreateUserRequest } from "@/services/api";
@@ -427,9 +428,40 @@ export function FacultyManagement() {
 				</CardHeader>
 				<CardContent>
 					{isLoading ? (
-						<div className="flex items-center justify-center h-32">
-							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
-						</div>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Employee ID</TableHead>
+									<TableHead>Name</TableHead>
+									<TableHead>Email</TableHead>
+									<TableHead>Role</TableHead>
+									<TableHead className="text-right">
+										Actions
+									</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{Array.from({ length: 5 }).map((_, i) => (
+									<TableRow key={i}>
+										<TableCell>
+											<Skeleton className="h-4 w-[100px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-[200px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-[250px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-[100px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-8 w-16 ml-auto" />
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
 					) : facultyList.length === 0 ? (
 						<div className="text-center py-8 text-muted-foreground">
 							No faculty members found
@@ -551,9 +583,40 @@ export function FacultyManagement() {
 				</CardHeader>
 				<CardContent>
 					{isLoading ? (
-						<div className="flex items-center justify-center h-32">
-							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500" />
-						</div>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Employee ID</TableHead>
+									<TableHead>Name</TableHead>
+									<TableHead>Email</TableHead>
+									<TableHead>Role</TableHead>
+									<TableHead className="text-right">
+										Actions
+									</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{Array.from({ length: 3 }).map((_, i) => (
+									<TableRow key={i}>
+										<TableCell>
+											<Skeleton className="h-4 w-[100px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-[200px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-[250px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-[100px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-8 w-16 ml-auto" />
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
 					) : staffList.length === 0 ? (
 						<div className="text-center py-8 text-muted-foreground">
 							No staff members in this department

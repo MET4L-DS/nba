@@ -1,11 +1,20 @@
 ﻿import { DataTable } from "@/components/shared/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { AdminTest } from "@/services/api";
+import type { AdminTest, Department } from "@/services/api";
 import { adminApi } from "@/services/api/admin";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import { useEffect, useState } from "react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export function TestsView() {
 	const {
@@ -19,11 +28,37 @@ export function TestsView() {
 		pageIndex,
 		search,
 		setSearch,
+		filters,
+		setFilter,
 	} = usePaginatedData<AdminTest>({
 		fetchFn: (params) => adminApi.getAllTests(params),
 		limit: 20,
 		defaultSort: "t.test_id",
 	});
+
+	const [departments, setDepartments] = useState<Department[]>([]);
+	const [testTypeInput, setTestTypeInput] = useState(
+		(filters.test_type as string | undefined) || "",
+	);
+
+	useEffect(() => {
+		adminApi
+			.getAllDepartments({ limit: 100 })
+			.then((res) => {
+				if (res.data) setDepartments(res.data);
+			})
+			.catch(console.error);
+	}, []);
+
+	// Debounce test_type input
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			if (testTypeInput !== filters.test_type) {
+				setFilter("test_type", testTypeInput || undefined);
+			}
+		}, 500);
+		return () => clearTimeout(timer);
+	}, [testTypeInput, filters.test_type, setFilter]);
 
 	const columns: ColumnDef<AdminTest>[] = [
 		{
@@ -127,7 +162,63 @@ export function TestsView() {
 					search,
 					onSearch: setSearch,
 				}}
-			/>
+			>
+				{() => (
+					<>
+						<Select
+							value={
+								(filters.department_id as string | undefined) ||
+								"all"
+							}
+							onValueChange={(val) =>
+								setFilter(
+									"department_id",
+									val === "all" ? undefined : val,
+								)
+							}
+						>
+							<SelectTrigger className="w-[180px]">
+								<SelectValue placeholder="All Departments" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">
+									All Departments
+								</SelectItem>
+								{departments.map((dept: any) => (
+									<SelectItem
+										key={dept.department_id}
+										value={String(dept.department_id)}
+									>
+										{dept.department_name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+
+						<Input
+							placeholder="Test Type"
+							value={testTypeInput}
+							onChange={(e) => setTestTypeInput(e.target.value)}
+							className="h-8 w-[150px]"
+						/>
+
+						{(filters.department_id || filters.test_type) && (
+							<Button
+								variant="ghost"
+								onClick={() => {
+									setTestTypeInput("");
+									setFilter("department_id", undefined);
+									setFilter("test_type", undefined);
+								}}
+								className="h-9 px-2 lg:px-3"
+							>
+								Reset
+								<X className="ml-2 h-4 w-4" />
+							</Button>
+						)}
+					</>
+				)}
+			</DataTable>
 		</div>
 	);
 }

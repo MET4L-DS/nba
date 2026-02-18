@@ -39,6 +39,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import type {
@@ -398,9 +399,54 @@ export function CoursesManagement() {
 			</CardHeader>
 			<CardContent>
 				{isLoading ? (
-					<div className="flex items-center justify-center py-8">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-					</div>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Code</TableHead>
+								<TableHead>Name</TableHead>
+								<TableHead className="text-center">
+									Credits
+								</TableHead>
+								<TableHead>Faculty</TableHead>
+								<TableHead className="text-center">
+									Year
+								</TableHead>
+								<TableHead className="text-center">
+									Sem
+								</TableHead>
+								<TableHead className="text-right">
+									Actions
+								</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{Array.from({ length: 5 }).map((_, i) => (
+								<TableRow key={i}>
+									<TableCell>
+										<Skeleton className="h-4 w-[100px]" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-[250px]" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-12 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-[150px]" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-16 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-4 w-8 mx-auto" />
+									</TableCell>
+									<TableCell>
+										<Skeleton className="h-8 w-16 ml-auto" />
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
 				) : courses.length === 0 ? (
 					<div className="text-center py-8 text-muted-foreground">
 						<BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />

@@ -391,7 +391,13 @@ export function HODManagement({
 					<CardTitle>Department HOD Status</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<DataTable columns={columns} data={departments} />
+					<DataTable
+						columns={columns}
+						data={departments}
+						refreshing={isLoading}
+						searchPlaceholder="Search departments..."
+						searchKey="department_name"
+					/>
 				</CardContent>
 			</Card>
 

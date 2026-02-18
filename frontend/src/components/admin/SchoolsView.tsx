@@ -28,6 +28,7 @@ import {
 	School as SchoolIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { adminApi } from "@/services/api/admin";
 import type { School, User } from "@/services/api/types";
 import { generateAppointmentOrder } from "@/utils/appointmentUtils";
@@ -64,6 +65,18 @@ export function SchoolsView() {
 	const [isAppointDeanOpen, setIsAppointDeanOpen] = useState(false);
 	const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
 	const [submitting, setSubmitting] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+
+	// Filter schools based on search query
+	const filteredSchools = useMemo(() => {
+		if (!searchQuery) return schools;
+		const query = searchQuery.toLowerCase();
+		return schools.filter(
+			(school) =>
+				school.school_name.toLowerCase().includes(query) ||
+				school.school_code.toLowerCase().includes(query),
+		);
+	}, [schools, searchQuery]);
 
 	// Filter faculty for Dean appointment
 	const facultyUsers = useMemo(
@@ -489,19 +502,52 @@ export function SchoolsView() {
 				</DialogContent>
 			</Dialog>
 
+			<div className="flex w-full max-w-sm items-center space-x-2 pb-4">
+				<Input
+					placeholder="Search schools..."
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+					className="max-w-sm"
+				/>
+			</div>
+
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{refreshing ? (
-					<div className="col-span-full py-8 text-center text-gray-400">
-						<RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
-						Loading schools...
-					</div>
-				) : schools.length === 0 ? (
+					Array.from({ length: 6 }).map((_, i) => (
+						<Card key={i} className="overflow-hidden">
+							<CardHeader className="bg-slate-50 dark:bg-slate-900/50 pb-4">
+								<div className="flex justify-between items-start">
+									<Skeleton className="h-6 w-3/4" />
+									<div className="flex gap-1">
+										<Skeleton className="h-8 w-8 rounded-md" />
+										<Skeleton className="h-8 w-8 rounded-md" />
+									</div>
+								</div>
+								<Skeleton className="h-4 w-1/4 mt-2" />
+							</CardHeader>
+							<CardContent className="pt-4 space-y-4">
+								<div>
+									<Skeleton className="h-3 w-1/4 mb-2" />
+									<Skeleton className="h-10 w-full" />
+								</div>
+								<div>
+									<Skeleton className="h-3 w-1/4 mb-2" />
+									<Skeleton className="h-4 w-1/2" />
+								</div>
+							</CardContent>
+						</Card>
+					))
+				) : filteredSchools.length === 0 ? (
 					<div className="col-span-full py-12 text-center border rounded-lg bg-gray-50 dark:bg-gray-900/50">
 						<SchoolIcon className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-						<p className="text-gray-500">No schools found</p>
+						<p className="text-gray-500">
+							{searchQuery
+								? "No schools default your search"
+								: "No schools found"}
+						</p>
 					</div>
 				) : (
-					schools.map((school) => (
+					filteredSchools.map((school) => (
 						<Card
 							key={school.school_id}
 							className="overflow-hidden"

@@ -561,6 +561,7 @@ export interface DeanUser {
 
 export interface DeanCourse {
 	course_id: number;
+	offering_id: number;
 	course_code: string;
 	course_name: string;
 	credit: number;
@@ -582,6 +583,10 @@ export interface DeanStudent {
 	department_id: number;
 	department_name: string;
 	department_code: string;
+	batch_year: number | null;
+	student_status: string;
+	email: string | null;
+	phone: string | null;
 }
 
 export interface DeanTest {

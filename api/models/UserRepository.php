@@ -488,6 +488,10 @@ class UserRepository
                 $sql .= " AND u.role = ?";
                 $bindings[] = $params['filters']['role'];
             }
+            if (!empty($params['filters']['department_id'])) {
+                $sql .= " AND u.department_id = ?";
+                $bindings[] = (int)$params['filters']['department_id'];
+            }
 
             PaginationHelper::applyCursor($sql, $bindings, 'u.employee_id', $params['cursor'], $params['sortDir']);
 
@@ -525,6 +529,10 @@ class UserRepository
             if (!empty($params['filters']['role'])) {
                 $sql .= " AND u.role = ?";
                 $bindings[] = $params['filters']['role'];
+            }
+            if (!empty($params['filters']['department_id'])) {
+                $sql .= " AND u.department_id = ?";
+                $bindings[] = (int)$params['filters']['department_id'];
             }
 
             $stmt = $this->db->prepare($sql);

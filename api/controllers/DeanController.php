@@ -140,7 +140,7 @@ class DeanController
                 'd.department_id',
                 'd.department_id',
                 ['d.department_id', 'd.department_name', 'd.department_code'],
-                []
+                ['hod_status']
             );
 
             $total  = $this->departmentRepository->countBySchoolPaginated($schoolId, $params);
@@ -170,7 +170,7 @@ class DeanController
                 'u.employee_id',
                 'u.employee_id',
                 ['u.employee_id', 'u.username', 'u.email', 'u.role', 'u.designation'],
-                ['role']
+                ['role', 'department_id']
             );
 
             $total  = $this->userRepository->countBySchoolPaginated($schoolId, $params);
@@ -197,15 +197,15 @@ class DeanController
 
             $params = PaginationHelper::parseParams(
                 $_GET,
-                'c.course_id',
-                'c.course_id',
-                ['c.course_id', 'c.course_code', 'c.course_name', 'c.is_active'],
+                'co.offering_id',
+                'co.offering_id',
+                ['co.offering_id', 'c.course_code', 'c.course_name', 'co.year', 'co.semester', 'u.username'],
                 ['department_id', 'is_active', 'course_type']
             );
 
             $total  = $this->courseRepository->countBySchoolPaginated($schoolId, $params);
             $rows   = $this->courseRepository->findBySchoolPaginated($schoolId, $params);
-            $result = PaginationHelper::buildResponse($rows, 'course_id', $params['limit'], $total);
+            $result = PaginationHelper::buildResponse($rows, 'offering_id', $params['limit'], $total);
 
             echo json_encode(array_merge(['status' => 'success'], $result));
         } catch (Exception $e) {
@@ -232,7 +232,7 @@ class DeanController
                 's.roll_no',
                 's.roll_no',
                 ['s.roll_no', 's.student_name', 's.batch_year', 's.student_status'],
-                ['department_id', 'batch_year']
+                ['department_id', 'batch_year', 'student_status']
             );
 
             $total  = $this->studentRepository->countBySchoolPaginated($schoolId, $params);

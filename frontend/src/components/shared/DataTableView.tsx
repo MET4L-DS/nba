@@ -17,8 +17,9 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface DataColumn<T> {
 	key: keyof T | string;
@@ -64,7 +65,7 @@ export function DataTableView<T>({
 }: DataTableViewProps<T>) {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterValues, setFilterValues] = useState<Record<string, string>>(
-		filters.reduce((acc, f) => ({ ...acc, [f.key]: "all" }), {})
+		filters.reduce((acc, f) => ({ ...acc, [f.key]: "all" }), {}),
 	);
 
 	// Filter and search data
@@ -97,9 +98,42 @@ export function DataTableView<T>({
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center h-64">
-				<RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
-			</div>
+			<Card>
+				{title && (
+					<CardHeader>
+						<div className="flex items-center gap-2">
+							{titleIcon && (
+								<Skeleton className="h-6 w-6 rounded-full" />
+							)}
+							<Skeleton className="h-6 w-32" />
+						</div>
+					</CardHeader>
+				)}
+				<CardContent>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								{columns.map((column, i) => (
+									<TableHead key={i}>
+										<Skeleton className="h-4 w-20" />
+									</TableHead>
+								))}
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{Array.from({ length: 5 }).map((_, i) => (
+								<TableRow key={i}>
+									{columns.map((_, j) => (
+										<TableCell key={j}>
+											<Skeleton className="h-4 w-full" />
+										</TableCell>
+									))}
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</CardContent>
+			</Card>
 		);
 	}
 
@@ -216,8 +250,7 @@ export function getRoleBadgeColor(role: string) {
 	const colors: Record<string, string> = {
 		admin: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
 		faculty: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-		staff:
-			"bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
+		staff: "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
 	};
 	return (
 		colors[role] ||

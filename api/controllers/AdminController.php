@@ -86,7 +86,7 @@ class AdminController
                 $_GET,
                 'c.course_id',
                 'c.course_id',
-                ['c.course_id', 'c.course_code', 'c.course_name', 'c.course_type', 'c.credit'],
+                ['c.course_id', 'c.course_code', 'c.course_name', 'c.course_type', 'c.credit', 'co.year', 'co.semester', 'u.username'],
                 ['department_id', 'is_active', 'course_type']
             );
 

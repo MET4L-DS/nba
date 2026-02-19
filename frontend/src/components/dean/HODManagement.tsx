@@ -213,27 +213,6 @@ export function HODManagement({
 
 	const columns: ColumnDef<DeanDepartment>[] = [
 		{
-			accessorKey: "department_name",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}
-					>
-						Department
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
-			cell: ({ row }) => (
-				<div className="font-medium">
-					{row.getValue("department_name")}
-				</div>
-			),
-		},
-		{
 			accessorKey: "department_code",
 			header: ({ column }) => {
 				return (
@@ -249,8 +228,33 @@ export function HODManagement({
 				);
 			},
 			cell: ({ row }) => (
-				<div className="font-medium">
+				<Badge
+					variant="secondary"
+					className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+				>
 					{row.getValue("department_code")}
+				</Badge>
+			),
+		},
+		{
+			accessorKey: "department_name",
+			header: ({ column }) => {
+				return (
+					<Button
+						variant="ghost"
+						className="mr-auto"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Department
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				);
+			},
+			cell: ({ row }) => (
+				<div className="font-medium flex">
+					{row.getValue("department_name")}
 				</div>
 			),
 		},
@@ -272,6 +276,7 @@ export function HODManagement({
 				return (
 					<Button
 						variant="ghost"
+						className="mr-auto"
 						onClick={() =>
 							column.toggleSorting(column.getIsSorted() === "asc")
 						}
@@ -282,7 +287,7 @@ export function HODManagement({
 				);
 			},
 			cell: ({ row }) => (
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-2 ml-4">
 					<Users className="w-4 h-4 text-muted-foreground" />
 					{row.getValue("faculty_count")}
 				</div>

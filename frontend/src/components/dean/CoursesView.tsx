@@ -1,11 +1,19 @@
 import { DataTable } from "@/components/shared/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, BookOpen, ClipboardList, Users } from "lucide-react";
+import { ArrowUpDown, BookOpen, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { DeanCourse } from "@/services/api";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import type { DeanCourse, Department } from "@/services/api";
 import { deanApi } from "@/services/api/dean";
+import { adminApi } from "@/services/api/admin";
 import { usePaginatedData } from "@/lib/usePaginatedData";
 
 export function CoursesView() {
@@ -19,28 +27,34 @@ export function CoursesView() {
 		pageIndex,
 		search,
 		setSearch,
+		filters,
+		setFilter,
 	} = usePaginatedData<DeanCourse>({
 		fetchFn: (params) => deanApi.getAllCourses(params),
 		limit: 20,
 		defaultSort: "c.course_code",
 	});
 
+	const { data: departments } = usePaginatedData<Department>({
+		fetchFn: (params) => adminApi.getAllDepartments(params),
+		limit: 100,
+		defaultSort: "d.department_code",
+	});
+
 	const columns: ColumnDef<DeanCourse>[] = [
 		{
 			accessorKey: "course_code",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}
-					>
-						Code
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Code
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
 			cell: ({ row }) => (
 				<Badge variant="outline" className="font-mono">
 					{row.getValue("course_code")}
@@ -49,22 +63,21 @@ export function CoursesView() {
 		},
 		{
 			accessorKey: "course_name",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}
-					>
-						Course Name
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Course Name
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
 			cell: ({ row }) => (
 				<div
-					className="font-medium max-w-[200px] truncate"
+					className="font-medium max-w-[200px] truncate flex"
 					title={row.getValue("course_name")}
 				>
 					{row.getValue("course_name")}
@@ -73,40 +86,27 @@ export function CoursesView() {
 		},
 		{
 			accessorKey: "faculty_name",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}
-					>
-						Faculty
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Faculty
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
 			cell: ({ row }) => (
-				<div className="text-muted-foreground">
-					{row.getValue("faculty_name") || "N/A"}
+				<div className="text-muted-foreground flex">
+					{(row.getValue("faculty_name") as string) || "—"}
 				</div>
 			),
 		},
 		{
 			accessorKey: "department_code",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}
-					>
-						Dept
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			header: "Dept",
 			cell: ({ row }) => {
 				const dept = row.getValue("department_code") as string;
 				return dept ? (
@@ -117,145 +117,156 @@ export function CoursesView() {
 						{dept}
 					</Badge>
 				) : (
-					"N/A"
+					<span className="text-muted-foreground">—</span>
 				);
-			},
-			filterFn: (row, id, value) => {
-				return value === "all" ? true : row.getValue(id) === value;
 			},
 		},
 		{
 			accessorKey: "year",
-			header: ({ column }) => {
-				return (
-					<div className="text-center">
-						<Button
-							variant="ghost"
-							onClick={() =>
-								column.toggleSorting(
-									column.getIsSorted() === "asc",
-								)
-							}
-						>
-							Year
-							<ArrowUpDown className="ml-2 h-4 w-4" />
-						</Button>
-					</div>
-				);
-			},
-			cell: ({ row }) => (
-				<div className="text-center">{row.getValue("year")}</div>
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Year
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
 			),
-			filterFn: (row, id, value) => {
-				return value === "all"
-					? true
-					: String(row.getValue(id)) === value;
-			},
+			cell: ({ row }) => (
+				<div className="text-center">
+					{(row.getValue("year") as number) ?? "—"}
+				</div>
+			),
 		},
 		{
 			accessorKey: "semester",
-			header: ({ column }) => {
-				return (
-					<div className="text-center">
-						<Button
-							variant="ghost"
-							onClick={() =>
-								column.toggleSorting(
-									column.getIsSorted() === "asc",
-								)
-							}
-						>
-							Sem
-							<ArrowUpDown className="ml-2 h-4 w-4" />
-						</Button>
-					</div>
-				);
-			},
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Sem
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
-				<div className="text-center">{row.getValue("semester")}</div>
+				<Badge variant={"outline"}>
+					{(row.getValue("semester") as number) ?? "—"}
+				</Badge>
 			),
 		},
 		{
 			accessorKey: "credit",
-			header: ({ column }) => {
-				return (
-					<div className="text-center">
-						<Button
-							variant="ghost"
-							onClick={() =>
-								column.toggleSorting(
-									column.getIsSorted() === "asc",
-								)
-							}
-						>
-							Credit
-							<ArrowUpDown className="ml-2 h-4 w-4" />
-						</Button>
-					</div>
-				);
-			},
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Credits
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
-				<div className="text-center">{row.getValue("credit")}</div>
+				<div className="text-center">
+					<Badge variant="outline">{row.getValue("credit")}</Badge>
+				</div>
 			),
 		},
 		{
-			accessorKey: "enrollment_count",
-			header: ({ column }) => {
-				return (
-					<div className="text-center">
-						<Button
-							variant="ghost"
-							onClick={() =>
-								column.toggleSorting(
-									column.getIsSorted() === "asc",
-								)
-							}
-						>
-							<Users className="w-4 h-4 mr-2" />
-							Enrolled
-							<ArrowUpDown className="ml-2 h-4 w-4" />
-						</Button>
-					</div>
+			accessorKey: "course_type",
+			header: "Type",
+			cell: ({ row }) => {
+				const val = row.getValue("course_type") as string;
+				return val ? (
+					<Badge variant="secondary">{val}</Badge>
+				) : (
+					<span className="text-muted-foreground">—</span>
 				);
 			},
+		},
+		{
+			accessorKey: "course_level",
+			header: "Level",
+			cell: ({ row }) => (
+				<span className="text-sm">
+					{(row.getValue("course_level") as string) || "—"}
+				</span>
+			),
+		},
+		{
+			accessorKey: "is_active",
+			header: "Status",
+			cell: ({ row }) => {
+				const isActive =
+					row.getValue("is_active") === 1 ||
+					row.getValue("is_active") === true;
+				return (
+					<Badge variant={isActive ? "default" : "destructive"}>
+						{isActive ? "Active" : "Inactive"}
+					</Badge>
+				);
+			},
+		},
+		{
+			accessorKey: "enrollment_count",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Enrolled
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
 				<div className="text-center">
 					<Badge
 						variant="secondary"
 						className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
 					>
-						{row.getValue("enrollment_count")}
+						{(row.getValue("enrollment_count") as number) ?? 0}
 					</Badge>
 				</div>
 			),
 		},
 		{
 			accessorKey: "test_count",
-			header: ({ column }) => {
-				return (
-					<div className="text-center">
-						<Button
-							variant="ghost"
-							onClick={() =>
-								column.toggleSorting(
-									column.getIsSorted() === "asc",
-								)
-							}
-						>
-							<ClipboardList className="w-4 h-4 mr-2" />
-							Tests
-							<ArrowUpDown className="ml-2 h-4 w-4" />
-						</Button>
-					</div>
-				);
-			},
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Tests
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
 				<div className="text-center">
 					<Badge
 						variant="secondary"
 						className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
 					>
-						{row.getValue("test_count")}
+						{(row.getValue("test_count") as number) ?? 0}
 					</Badge>
 				</div>
 			),
@@ -285,7 +296,89 @@ export function CoursesView() {
 						search,
 						onSearch: setSearch,
 					}}
-				/>
+				>
+					{() => (
+						<>
+							<Select
+								value={
+									(filters.department_id as
+										| string
+										| undefined) || "all"
+								}
+								onValueChange={(val) =>
+									setFilter(
+										"department_id",
+										val === "all" ? undefined : val,
+									)
+								}
+							>
+								<SelectTrigger className="w-[180px]">
+									<SelectValue placeholder="All Departments" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">
+										All Departments
+									</SelectItem>
+									{departments.map((dept) => (
+										<SelectItem
+											key={dept.department_id}
+											value={String(dept.department_id)}
+										>
+											{dept.department_code}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+
+							<Select
+								value={
+									(filters.course_type as
+										| string
+										| undefined) || "all"
+								}
+								onValueChange={(val) =>
+									setFilter(
+										"course_type",
+										val === "all" ? undefined : val,
+									)
+								}
+							>
+								<SelectTrigger className="w-[140px]">
+									<SelectValue placeholder="All Types" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">
+										All Types
+									</SelectItem>
+									<SelectItem value="Theory">
+										Theory
+									</SelectItem>
+									<SelectItem value="Lab">Lab</SelectItem>
+									<SelectItem value="Project">
+										Project
+									</SelectItem>
+									<SelectItem value="Seminar">
+										Seminar
+									</SelectItem>
+								</SelectContent>
+							</Select>
+
+							{(filters.department_id || filters.course_type) && (
+								<Button
+									variant="ghost"
+									onClick={() => {
+										setFilter("department_id", undefined);
+										setFilter("course_type", undefined);
+									}}
+									className="h-9 px-2 lg:px-3"
+								>
+									Reset
+									<X className="ml-2 h-4 w-4" />
+								</Button>
+							)}
+						</>
+					)}
+				</DataTable>
 			</CardContent>
 		</Card>
 	);

@@ -74,7 +74,9 @@ export function UsersView() {
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="font-mono">{row.getValue("employee_id")}</div>
+				<Badge variant="outline" className="font-mono">
+					{row.getValue("employee_id")}
+				</Badge>
 			),
 		},
 		{
@@ -82,6 +84,7 @@ export function UsersView() {
 			header: ({ column }) => (
 				<Button
 					variant="ghost"
+					className="mr-auto"
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
@@ -91,7 +94,9 @@ export function UsersView() {
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="font-medium">{row.getValue("username")}</div>
+				<div className="font-medium flex">
+					{row.getValue("username")}
+				</div>
 			),
 		},
 		{
@@ -99,6 +104,7 @@ export function UsersView() {
 			header: ({ column }) => (
 				<Button
 					variant="ghost"
+					className="mr-auto"
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
@@ -108,7 +114,7 @@ export function UsersView() {
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="text-muted-foreground">
+				<div className="text-muted-foreground flex">
 					{row.getValue("email")}
 				</div>
 			),
@@ -130,7 +136,7 @@ export function UsersView() {
 				const role = row.getValue("role") as string;
 				const user = row.original;
 				return (
-					<div className="flex gap-1 flex-wrap">
+					<div>
 						<Badge
 							variant="secondary"
 							className={getRoleBadgeColor(role)}
@@ -167,7 +173,12 @@ export function UsersView() {
 			cell: ({ row }) => {
 				const deptCode = row.original.department_code;
 				return deptCode ? (
-					<Badge variant="outline">{deptCode}</Badge>
+					<Badge
+						variant="secondary"
+						className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+					>
+						{deptCode}
+					</Badge>
 				) : (
 					<span className="text-muted-foreground italic">N/A</span>
 				);

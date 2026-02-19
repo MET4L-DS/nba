@@ -11,7 +11,6 @@ import {
 	type FacultyPage,
 } from "@/components/faculty";
 import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiService } from "@/services/api";
 import type { User, Course, FacultyStats } from "@/services/api";
 import {
@@ -201,7 +200,7 @@ export function FacultyDashboard() {
 
 					<main className="flex-1 overflow-hidden">
 						{activeView === "dashboard" ? (
-							<ScrollArea className="h-full">
+							<div className="h-full overflow-y-auto">
 								<div className="p-6 space-y-6">
 									<FacultyStatsCards
 										stats={stats}
@@ -220,7 +219,7 @@ export function FacultyDashboard() {
 										isLoading={isLoading}
 									/>
 								</div>
-							</ScrollArea>
+							</div>
 						) : activeView === "assessments" ? (
 							<FacultyAssessments
 								selectedCourse={selectedCourse}

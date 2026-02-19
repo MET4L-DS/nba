@@ -286,16 +286,19 @@ export interface AdminCourse {
 	is_active?: number;
 	created_at?: string;
 	updated_at?: string;
-
-	// Legacy/Compat fields
+	// Offering fields (latest offering per course)
+	offering_id?: number | null;
+	year?: number | null;
+	semester?: number | null;
+	co_threshold?: number | null;
+	passing_threshold?: number | null;
+	faculty_id?: number | null;
+	faculty_name?: string | null;
+	enrollment_count?: number;
+	test_count?: number;
+	// Legacy/Compat
 	id?: number;
 	name?: string;
-	faculty_id?: number;
-	faculty_name?: string;
-	year?: number;
-	semester?: number;
-	co_threshold?: number;
-	passing_threshold?: number;
 }
 
 export interface AdminTest {
@@ -561,20 +564,25 @@ export interface DeanUser {
 
 export interface DeanCourse {
 	course_id: number;
-	offering_id: number;
 	course_code: string;
 	course_name: string;
 	credit: number;
-	faculty_id: number;
-	faculty_name: string;
-	year: number;
-	semester: number;
-	co_threshold: number;
-	passing_threshold: number;
+	department_id?: number | null;
 	department_name?: string;
 	department_code?: string;
-	enrollment_count: number;
-	test_count: number;
+	course_type?: string;
+	course_level?: string;
+	is_active?: number;
+	// Offering fields (latest offering per course)
+	offering_id?: number | null;
+	year?: number | null;
+	semester?: number | null;
+	co_threshold?: number | null;
+	passing_threshold?: number | null;
+	faculty_id?: number | null;
+	faculty_name?: string | null;
+	enrollment_count?: number;
+	test_count?: number;
 }
 
 export interface DeanStudent {

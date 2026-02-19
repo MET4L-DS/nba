@@ -1,4 +1,4 @@
-﻿import { DataTable } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, X } from "lucide-react";
@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import type { AdminCourse, Department } from "@/services/api";
 import { adminApi } from "@/services/api/admin";
 import { usePaginatedData } from "@/lib/usePaginatedData";
-import { useState, useEffect } from "react";
 import {
 	Select,
 	SelectContent,
@@ -35,14 +34,11 @@ export function CoursesView() {
 		defaultSort: "c.course_code",
 	});
 
-	const [departments, setDepartments] = useState<Department[]>([]);
-
-	useEffect(() => {
-		adminApi
-			.getAllDepartments({ limit: 100 })
-			.then((res) => setDepartments(res.data))
-			.catch(() => {});
-	}, []);
+	const { data: departments } = usePaginatedData<Department>({
+		fetchFn: (params) => adminApi.getAllDepartments(params),
+		limit: 100,
+		defaultSort: "d.department_code",
+	});
 
 	const columns: ColumnDef<AdminCourse>[] = [
 		{
@@ -60,7 +56,9 @@ export function CoursesView() {
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="font-medium">{row.getValue("course_code")}</div>
+				<Badge variant="outline" className="font-mono">
+					{row.getValue("course_code")}
+				</Badge>
 			),
 		},
 		{
@@ -73,37 +71,139 @@ export function CoursesView() {
 					}
 					className="p-0 hover:bg-transparent"
 				>
-					Name
+					Course Name
 					<ArrowUpDown className="ml-2 h-4 w-4" />
 				</Button>
+			),
+			cell: ({ row }) => (
+				<div
+					className="font-medium max-w-[200px] truncate"
+					title={row.getValue("course_name")}
+				>
+					{row.getValue("course_name")}
+				</div>
+			),
+		},
+		{
+			accessorKey: "faculty_name",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+					className="p-0 hover:bg-transparent"
+				>
+					Faculty
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<div className="text-muted-foreground">
+					{(row.getValue("faculty_name") as string) || "�"}
+				</div>
+			),
+		},
+		{
+			accessorKey: "department_code",
+			header: "Dept",
+			cell: ({ row }) => {
+				const dept = row.getValue("department_code") as string;
+				return dept ? (
+					<Badge
+						variant="secondary"
+						className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+					>
+						{dept}
+					</Badge>
+				) : (
+					<span className="text-muted-foreground">�</span>
+				);
+			},
+		},
+		{
+			accessorKey: "year",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Year
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
+			cell: ({ row }) => (
+				<div className="text-center">
+					{(row.getValue("year") as number) ?? "�"}
+				</div>
+			),
+		},
+		{
+			accessorKey: "semester",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Sem
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
+			cell: ({ row }) => (
+				<div className="text-center">
+					{(row.getValue("semester") as number) ?? "�"}
+				</div>
 			),
 		},
 		{
 			accessorKey: "credit",
-			header: "Credits",
-			cell: ({ row }) => (
-				<Badge variant="outline">{row.getValue("credit")}</Badge>
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Credits
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
 			),
-		},
-		{
-			accessorKey: "department_name",
-			header: "Department",
-			cell: ({ row }) => {
-				const name = row.getValue("department_name") as string;
-				return name || "N/A";
-			},
+			cell: ({ row }) => (
+				<div className="text-center">
+					<Badge variant="outline">{row.getValue("credit")}</Badge>
+				</div>
+			),
 		},
 		{
 			accessorKey: "course_type",
 			header: "Type",
 			cell: ({ row }) => {
 				const val = row.getValue("course_type") as string;
-				return <Badge variant="secondary">{val}</Badge>;
+				return val ? (
+					<Badge variant="secondary">{val}</Badge>
+				) : (
+					<span className="text-muted-foreground">�</span>
+				);
 			},
 		},
 		{
 			accessorKey: "course_level",
 			header: "Level",
+			cell: ({ row }) => (
+				<span className="text-sm">
+					{(row.getValue("course_level") as string) || "�"}
+				</span>
+			),
 		},
 		{
 			accessorKey: "is_active",
@@ -118,6 +218,58 @@ export function CoursesView() {
 					</Badge>
 				);
 			},
+		},
+		{
+			accessorKey: "enrollment_count",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Enrolled
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
+			cell: ({ row }) => (
+				<div className="text-center">
+					<Badge
+						variant="secondary"
+						className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+					>
+						{(row.getValue("enrollment_count") as number) ?? 0}
+					</Badge>
+				</div>
+			),
+		},
+		{
+			accessorKey: "test_count",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Tests
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
+			cell: ({ row }) => (
+				<div className="text-center">
+					<Badge
+						variant="secondary"
+						className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+					>
+						{(row.getValue("test_count") as number) ?? 0}
+					</Badge>
+				</div>
+			),
 		},
 	];
 
@@ -206,6 +358,8 @@ export function CoursesView() {
 								<SelectItem value="all">All Types</SelectItem>
 								<SelectItem value="Theory">Theory</SelectItem>
 								<SelectItem value="Lab">Lab</SelectItem>
+								<SelectItem value="Project">Project</SelectItem>
+								<SelectItem value="Seminar">Seminar</SelectItem>
 							</SelectContent>
 						</Select>
 
@@ -223,7 +377,7 @@ export function CoursesView() {
 							}
 						>
 							<SelectTrigger className="w-[130px]">
-								<SelectValue placeholder="Status" />
+								<SelectValue placeholder="All Status" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="all">All Status</SelectItem>
@@ -234,7 +388,7 @@ export function CoursesView() {
 
 						{(filters.department_id ||
 							filters.course_type ||
-							filters.is_active) && (
+							filters.is_active !== undefined) && (
 							<Button
 								variant="ghost"
 								onClick={() => {

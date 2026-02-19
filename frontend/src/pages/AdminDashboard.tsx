@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
 import type { User, AdminStats } from "@/services/api";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -165,10 +164,8 @@ export function AdminDashboard() {
 							<RefreshCw className="w-4 h-4" />
 						</Button>
 					</AppHeader>
-					<main className="flex-1 overflow-auto">
-						<ScrollArea className="h-full">
-							<div className="p-6">{renderContent()}</div>
-						</ScrollArea>
+					<main className="flex-1 overflow-y-auto">
+						<div className="p-6">{renderContent()}</div>
 					</main>
 				</div>
 			</div>

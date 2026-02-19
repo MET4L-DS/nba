@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { apiService, staffApi } from "@/services/api";
@@ -155,10 +154,8 @@ export function StaffDashboard() {
 					</AppHeader>
 
 					{/* Content */}
-					<main className="flex-1 overflow-auto">
-						<ScrollArea className="h-full">
-							<div className="p-6">{renderContent()}</div>
-						</ScrollArea>
+					<main className="flex-1 overflow-y-auto">
+						<div className="p-6">{renderContent()}</div>
 					</main>
 				</div>
 			</div>

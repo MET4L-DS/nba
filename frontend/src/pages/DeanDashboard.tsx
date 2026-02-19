@@ -7,7 +7,6 @@ import type {
 	DeanDepartment,
 	DepartmentAnalytics,
 } from "@/services/api";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -232,10 +231,8 @@ export function DeanDashboard() {
 					title={currentPage}
 					description={`Welcome back, ${currentUser?.username?.split(" ")[0] || "Dean"}!`}
 				/>
-				<main className="flex-1 overflow-auto">
-					<ScrollArea className="h-full">
-						<div className="p-6">{renderContent()}</div>
-					</ScrollArea>
+				<main className="flex-1 overflow-y-auto">
+					<div className="p-6">{renderContent()}</div>
 				</main>
 			</div>
 			<Toaster />

@@ -197,15 +197,15 @@ class DeanController
 
             $params = PaginationHelper::parseParams(
                 $_GET,
-                'co.offering_id',
-                'co.offering_id',
-                ['co.offering_id', 'c.course_code', 'c.course_name', 'co.year', 'co.semester', 'u.username'],
+                'c.course_id',
+                'c.course_id',
+                ['c.course_id', 'c.course_code', 'c.course_name', 'c.credit', 'c.course_type', 'co.year', 'co.semester', 'u.username'],
                 ['department_id', 'is_active', 'course_type']
             );
 
             $total  = $this->courseRepository->countBySchoolPaginated($schoolId, $params);
             $rows   = $this->courseRepository->findBySchoolPaginated($schoolId, $params);
-            $result = PaginationHelper::buildResponse($rows, 'offering_id', $params['limit'], $total);
+            $result = PaginationHelper::buildResponse($rows, 'course_id', $params['limit'], $total);
 
             echo json_encode(array_merge(['status' => 'success'], $result));
         } catch (Exception $e) {

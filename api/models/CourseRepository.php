@@ -254,9 +254,29 @@ class CourseRepository
                 SELECT c.course_id, c.course_code, c.course_name, c.credit,
                        c.department_id, c.course_type, c.course_level,
                        c.is_active, c.created_at, c.updated_at,
-                       d.department_name, d.department_code
+                       d.department_name, d.department_code,
+                       co.offering_id, co.year, co.semester,
+                       co.co_threshold, co.passing_threshold,
+                       u.employee_id AS faculty_id,
+                       u.username    AS faculty_name,
+                       (SELECT COUNT(*) FROM enrollments e
+                        WHERE e.offering_id = co.offering_id) AS enrollment_count,
+                       (SELECT COUNT(*) FROM tests t
+                        WHERE t.offering_id = co.offering_id) AS test_count
                 FROM courses c
                 LEFT JOIN departments d ON c.department_id = d.department_id
+                LEFT JOIN course_offerings co
+                       ON co.course_id = c.course_id
+                      AND co.offering_id = (
+                              SELECT MAX(co2.offering_id)
+                              FROM course_offerings co2
+                              WHERE co2.course_id = c.course_id
+                          )
+                LEFT JOIN course_faculty_assignments cfa
+                       ON cfa.offering_id = co.offering_id
+                      AND cfa.assignment_type = 'Primary'
+                      AND cfa.is_active = 1
+                LEFT JOIN users u ON u.employee_id = cfa.employee_id
                 WHERE 1=1
             ";
             $bindings = [];
@@ -341,20 +361,26 @@ class CourseRepository
                        d.department_name, d.department_code,
                        co.offering_id, co.year, co.semester,
                        co.co_threshold, co.passing_threshold,
-                       cfa.employee_id AS faculty_id,
-                       u.username      AS faculty_name,
+                       u.employee_id AS faculty_id,
+                       u.username    AS faculty_name,
                        (SELECT COUNT(*) FROM enrollments e
                         WHERE e.offering_id = co.offering_id) AS enrollment_count,
                        (SELECT COUNT(*) FROM tests t
                         WHERE t.offering_id = co.offering_id) AS test_count
                 FROM courses c
-                JOIN departments d        ON c.department_id    = d.department_id
-                LEFT JOIN course_offerings co ON co.course_id = c.course_id
+                JOIN departments d ON c.department_id = d.department_id
+                LEFT JOIN course_offerings co
+                       ON co.course_id = c.course_id
+                      AND co.offering_id = (
+                              SELECT MAX(co2.offering_id)
+                              FROM course_offerings co2
+                              WHERE co2.course_id = c.course_id
+                          )
                 LEFT JOIN course_faculty_assignments cfa
                        ON cfa.offering_id = co.offering_id
                       AND cfa.assignment_type = 'Primary'
                       AND cfa.is_active = 1
-                LEFT JOIN users u         ON u.employee_id      = cfa.employee_id
+                LEFT JOIN users u ON u.employee_id = cfa.employee_id
                 WHERE d.school_id = ?
             ";
             $bindings = [$schoolId];
@@ -366,7 +392,7 @@ class CourseRepository
                 $bindings[] = $like;
             }
 
-            PaginationHelper::applyCursor($sql, $bindings, 'co.offering_id', $params['cursor'], $params['sortDir']);
+            PaginationHelper::applyCursor($sql, $bindings, 'c.course_id', $params['cursor'], $params['sortDir']);
 
             $limit = (int)$params['limit'] + 1;
             $sql .= " ORDER BY {$params['sort']} {$params['sortDir']} LIMIT {$limit}";
@@ -389,7 +415,6 @@ class CourseRepository
                 SELECT COUNT(*)
                 FROM courses c
                 JOIN departments d ON c.department_id = d.department_id
-                LEFT JOIN course_offerings co ON co.course_id = c.course_id
                 WHERE d.school_id = ?
             ";
             $bindings = [$schoolId];

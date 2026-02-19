@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { AdminCourse, Department } from "@/services/api";
 import { adminApi } from "@/services/api/admin";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import { formatOrdinal } from "@/lib/utils";
 import {
 	Select,
 	SelectContent,
@@ -49,7 +50,6 @@ export function CoursesView() {
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
-					className="p-0 hover:bg-transparent"
 				>
 					Code
 					<ArrowUpDown className="ml-2 h-4 w-4" />
@@ -66,10 +66,10 @@ export function CoursesView() {
 			header: ({ column }) => (
 				<Button
 					variant="ghost"
+					className="mr-auto"
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
-					className="p-0 hover:bg-transparent"
 				>
 					Course Name
 					<ArrowUpDown className="ml-2 h-4 w-4" />
@@ -77,7 +77,7 @@ export function CoursesView() {
 			),
 			cell: ({ row }) => (
 				<div
-					className="font-medium max-w-[200px] truncate"
+					className="font-medium max-w-[200px] truncate flex"
 					title={row.getValue("course_name")}
 				>
 					{row.getValue("course_name")}
@@ -89,18 +89,18 @@ export function CoursesView() {
 			header: ({ column }) => (
 				<Button
 					variant="ghost"
+					className="mr-auto"
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
-					className="p-0 hover:bg-transparent"
 				>
 					Faculty
 					<ArrowUpDown className="ml-2 h-4 w-4" />
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="text-muted-foreground">
-					{(row.getValue("faculty_name") as string) || "�"}
+				<div className="text-muted-foreground flex">
+					{(row.getValue("faculty_name") as string) || "—"}
 				</div>
 			),
 		},
@@ -112,12 +112,12 @@ export function CoursesView() {
 				return dept ? (
 					<Badge
 						variant="secondary"
-						className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+						className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800"
 					>
 						{dept}
 					</Badge>
 				) : (
-					<span className="text-muted-foreground">�</span>
+					<span className="text-muted-foreground">—</span>
 				);
 			},
 		},
@@ -138,7 +138,7 @@ export function CoursesView() {
 			),
 			cell: ({ row }) => (
 				<div className="text-center">
-					{(row.getValue("year") as number) ?? "�"}
+					{(row.getValue("year") as number) ?? "—"}
 				</div>
 			),
 		},
@@ -158,8 +158,13 @@ export function CoursesView() {
 				</div>
 			),
 			cell: ({ row }) => (
-				<div className="text-center">
-					{(row.getValue("semester") as number) ?? "�"}
+				<div className="flex justify-center">
+					<Badge
+						variant="secondary"
+						className="text-center font-medium"
+					>
+						{formatOrdinal(row.getValue("semester"))}
+					</Badge>
 				</div>
 			),
 		},
@@ -213,7 +218,14 @@ export function CoursesView() {
 					row.getValue("is_active") === 1 ||
 					row.getValue("is_active") === true;
 				return (
-					<Badge variant={isActive ? "default" : "destructive"}>
+					<Badge
+						variant="secondary"
+						className={
+							isActive
+								? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+								: "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+						}
+					>
 						{isActive ? "Active" : "Inactive"}
 					</Badge>
 				);

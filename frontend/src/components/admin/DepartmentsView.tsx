@@ -45,7 +45,7 @@ import { apiService } from "@/services/api";
 import type { Department, School } from "@/services/api";
 import { adminApi } from "@/services/api/admin";
 import { usePaginatedData } from "@/lib/usePaginatedData";
-import { Filter, X } from "lucide-react";
+import { X } from "lucide-react";
 
 export function DepartmentsView() {
 	const {
@@ -61,7 +61,7 @@ export function DepartmentsView() {
 		setSearch,
 		filters,
 		setFilter,
-	} = usePaginatedData<Department>({
+	} = usePaginatedData<Department, { school_id: string }>({
 		fetchFn: (params) => adminApi.getAllDepartments(params),
 		limit: 20,
 		defaultSort: "d.department_code",
@@ -98,17 +98,20 @@ export function DepartmentsView() {
 			header: ({ column }) => (
 				<Button
 					variant="ghost"
+					className="mr-auto"
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
-					className="p-0 hover:bg-transparent"
 				>
 					Code
 					<ArrowUpDown className="ml-2 h-4 w-4" />
 				</Button>
 			),
 			cell: ({ row }) => (
-				<Badge variant="outline" className="font-mono">
+				<Badge
+					variant="secondary"
+					className="font-mono bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+				>
 					{row.getValue("department_code")}
 				</Badge>
 			),
@@ -118,17 +121,17 @@ export function DepartmentsView() {
 			header: ({ column }) => (
 				<Button
 					variant="ghost"
+					className="mr-auto"
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
-					className="p-0 hover:bg-transparent"
 				>
 					Name
 					<ArrowUpDown className="ml-2 h-4 w-4" />
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="font-medium text-purple-900 dark:text-purple-200">
+				<div className="font-medium flex">
 					{row.getValue("department_name")}
 				</div>
 			),
@@ -143,16 +146,14 @@ export function DepartmentsView() {
 				const schoolName = row.getValue("school_name") as string;
 				const schoolCode = row.original.school_code;
 				return schoolName ? (
-					<div className="text-sm">
-						<div className="font-medium text-gray-700 dark:text-gray-300">
-							{schoolName}
-						</div>
-						<div className="text-xs text-gray-500 font-mono">
+					<div className="text-sm flex flex-col items-start">
+						<div className="font-medium">{schoolName}</div>
+						<div className="text-xs text-muted-foreground font-mono">
 							({schoolCode})
 						</div>
 					</div>
 				) : (
-					<span className="text-gray-400">-</span>
+					<span className="text-muted-foreground">—</span>
 				);
 			},
 		},
@@ -163,40 +164,57 @@ export function DepartmentsView() {
 				const hodName = row.getValue("hod_name") as string | null;
 				const hodId = row.original.hod_employee_id;
 				return hodName ? (
-					<div className="text-sm">
-						<div className="font-medium text-gray-700 dark:text-gray-300">
+					<div className="text-sm flex flex-col items-start">
+						<Badge
+							variant="secondary"
+							className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+						>
 							{hodName}
-						</div>
+						</Badge>
 						{hodId && (
-							<div className="text-xs text-gray-500 font-mono">
+							<div className="text-[10px] text-muted-foreground font-mono mt-1 ml-1">
 								ID: {hodId}
 							</div>
 						)}
 					</div>
 				) : (
-					<span className="text-gray-400">Not Assigned</span>
+					<Badge
+						variant="outline"
+						className="text-muted-foreground border-dashed"
+					>
+						Not Assigned
+					</Badge>
 				);
 			},
 		},
 		{
 			id: "counts",
-			header: "Statistics",
+			header: () => <div className="text-center">Statistics</div>,
 			cell: ({ row }) => {
 				const dept = row.original;
 				return (
-					<div className="flex flex-wrap gap-1.5">
+					<div className="flex flex-wrap gap-1.5 justify-center max-w-[150px] mx-auto">
 						{typeof dept.faculty_count !== "undefined" && (
-							<Badge variant="outline" className="text-xs">
+							<Badge
+								variant="outline"
+								className="text-[10px] px-1.5 py-0"
+							>
 								👨‍🏫 {dept.faculty_count}
 							</Badge>
 						)}
 						{typeof dept.student_count !== "undefined" && (
-							<Badge variant="outline" className="text-xs">
+							<Badge
+								variant="outline"
+								className="text-[10px] px-1.5 py-0"
+							>
 								🎓 {dept.student_count}
 							</Badge>
 						)}
 						{typeof dept.course_count !== "undefined" && (
-							<Badge variant="outline" className="text-xs">
+							<Badge
+								variant="outline"
+								className="text-[10px] px-1.5 py-0"
+							>
 								📚 {dept.course_count}
 							</Badge>
 						)}
@@ -206,7 +224,7 @@ export function DepartmentsView() {
 		},
 		{
 			accessorKey: "active_offerings_count",
-			header: "Active Offerings",
+			header: () => <div className="text-center">Offerings</div>,
 			filterFn: (row, id, value) => {
 				const count = row.getValue(id) as number;
 				return value.includes(String(count));
@@ -215,12 +233,15 @@ export function DepartmentsView() {
 				const count = row.getValue("active_offerings_count") as number;
 				const latest = row.original.latest_offering;
 				return (
-					<div className="text-sm">
-						<Badge variant="secondary" className="font-semibold">
-							{count} courses
+					<div className="text-center flex flex-col items-center">
+						<Badge
+							variant="secondary"
+							className="font-semibold px-2"
+						>
+							{count} Courses
 						</Badge>
 						{latest && (
-							<div className="text-xs text-gray-500 mt-1">
+							<div className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider font-medium">
 								Latest: {latest}
 							</div>
 						)}
@@ -612,7 +633,7 @@ export function DepartmentsView() {
 				{() => (
 					<>
 						<Select
-							value={(filters.school_id as string) || "all"}
+							value={filters.school_id || "all"}
 							onValueChange={(val) =>
 								setFilter(
 									"school_id",

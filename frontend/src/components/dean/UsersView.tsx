@@ -16,19 +16,19 @@ import {
 } from "@/components/ui/select";
 
 const getRoleBadgeColor = (role: string) => {
-	switch (role) {
+	switch (role.toLowerCase()) {
 		case "admin":
-			return "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300";
+			return "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800";
 		case "dean":
-			return "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300";
+			return "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800";
 		case "hod":
-			return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
+			return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800";
 		case "faculty":
-			return "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
+			return "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800";
 		case "staff":
-			return "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300";
+			return "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300 border-orange-200 dark:border-orange-800";
 		default:
-			return "bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300";
+			return "bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300 border-slate-200 dark:border-slate-800";
 	}
 };
 
@@ -114,8 +114,37 @@ export function UsersView() {
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="text-muted-foreground flex">
+				<Badge variant="outline" className="flex">
 					{row.getValue("email")}
+				</Badge>
+			),
+		},
+		{
+			accessorKey: "designation",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Designation
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<Badge variant="secondary" className="flex italic">
+					{row.getValue("designation") || "—"}
+				</Badge>
+			),
+		},
+		{
+			accessorKey: "phone",
+			header: "Phone",
+			cell: ({ row }) => (
+				<div className="text-muted-foreground font-mono flex">
+					{row.getValue("phone") || "—"}
 				</div>
 			),
 		},
@@ -124,6 +153,7 @@ export function UsersView() {
 			header: ({ column }) => (
 				<Button
 					variant="ghost"
+					className="mr-auto"
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
@@ -135,21 +165,30 @@ export function UsersView() {
 			cell: ({ row }) => {
 				const role = row.getValue("role") as string;
 				const user = row.original;
+				const isHOD = Number(user.is_hod) === 1;
+				const isDean = Number(user.is_dean) === 1;
+
 				return (
-					<div>
+					<div className="flex gap-1">
 						<Badge
 							variant="secondary"
 							className={getRoleBadgeColor(role)}
 						>
 							{role.toUpperCase()}
 						</Badge>
-						{user.is_hod && (
-							<Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
+						{isHOD && (
+							<Badge
+								variant="secondary"
+								className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+							>
 								HOD
 							</Badge>
 						)}
-						{user.is_dean && (
-							<Badge className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800">
+						{isDean && (
+							<Badge
+								variant="secondary"
+								className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+							>
 								DEAN
 							</Badge>
 						)}
@@ -180,7 +219,7 @@ export function UsersView() {
 						{deptCode}
 					</Badge>
 				) : (
-					<span className="text-muted-foreground italic">N/A</span>
+					<span className="text-muted-foreground">—</span>
 				);
 			},
 		},

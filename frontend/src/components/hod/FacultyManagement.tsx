@@ -214,9 +214,14 @@ export function FacultyManagement() {
 	};
 
 	const getRoleBadge = (member: DepartmentFaculty) => {
-		if (member.is_hod) {
+		const isHOD = Number(member.is_hod) === 1;
+
+		if (isHOD) {
 			return (
-				<Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+				<Badge
+					variant="secondary"
+					className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+				>
 					HOD
 				</Badge>
 			);
@@ -224,26 +229,48 @@ export function FacultyManagement() {
 
 		switch (member.role) {
 			case "admin":
-				return <Badge variant="default">Admin</Badge>;
+				return (
+					<Badge
+						variant="secondary"
+						className="bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 border-red-200 dark:border-red-800"
+					>
+						Admin
+					</Badge>
+				);
 			case "faculty":
 				return (
-					<Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+					<Badge
+						variant="secondary"
+						className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+					>
 						Faculty
 					</Badge>
 				);
 			case "staff":
 				return (
-					<Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">
+					<Badge
+						variant="secondary"
+						className="bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300 border-orange-200 dark:border-orange-800"
+					>
 						Staff
 					</Badge>
 				);
 			default:
-				return <Badge variant="outline">{member.role}</Badge>;
+				return (
+					<Badge
+						variant="secondary"
+						className="bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300 border-gray-200 dark:border-gray-800"
+					>
+						{member.role}
+					</Badge>
+				);
 		}
 	};
 
 	// Separate faculty list into HOD/faculty and staff
-	const facultyList = faculty.filter((f) => f.role === "faculty" || f.is_hod);
+	const facultyList = faculty.filter(
+		(f) => f.role === "faculty" || Number(f.is_hod) === 1,
+	);
 	const staffList = faculty.filter((f) => f.role === "staff");
 
 	return (

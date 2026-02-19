@@ -264,9 +264,19 @@ export function HODManagement({
 			cell: ({ row }) => {
 				const hod = row.getValue("hod_name") as string;
 				return hod ? (
-					<Badge variant="default">{hod}</Badge>
+					<Badge
+						variant="secondary"
+						className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+					>
+						{hod}
+					</Badge>
 				) : (
-					<Badge variant="secondary">No HOD</Badge>
+					<Badge
+						variant="secondary"
+						className="bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300 border-gray-200 dark:border-gray-800"
+					>
+						No HOD
+					</Badge>
 				);
 			},
 		},

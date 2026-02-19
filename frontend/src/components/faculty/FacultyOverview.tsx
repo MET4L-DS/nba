@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, ClipboardList, TrendingUp } from "lucide-react";
+import { formatOrdinal } from "@/lib/utils";
 import type { Course } from "@/services/api";
 import { LoadingSpinner, EmptyState } from "@/components/shared";
 
@@ -58,13 +59,16 @@ export function FacultyOverview({ courses, isLoading }: FacultyOverviewProps) {
 											<Users className="w-4 h-4" />
 											Year {course.year}
 										</span>
-										<span>Semester {course.semester}</span>
+										<span>
+											{formatOrdinal(course.semester)}{" "}
+											Semester
+										</span>
 									</div>
 								</div>
 								<div className="flex flex-col items-end gap-2">
 									<Badge
 										variant="secondary"
-										className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+										className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
 									>
 										<ClipboardList className="w-3 h-3 mr-1" />
 										Active
@@ -100,9 +104,13 @@ export function FacultyOverview({ courses, isLoading }: FacultyOverviewProps) {
 							</p>
 							<p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
 								{courses.length > 0
-									? `Sem ${Math.max(
-											...courses.map((c) => c.semester)
-									  )}`
+									? formatOrdinal(
+											Math.max(
+												...courses.map(
+													(c) => c.semester,
+												),
+											),
+										)
 									: "N/A"}
 							</p>
 						</div>

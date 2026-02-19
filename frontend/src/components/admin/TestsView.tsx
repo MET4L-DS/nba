@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import type { AdminTest, Department } from "@/services/api";
 import { adminApi } from "@/services/api/admin";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import { formatOrdinal } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import {
 	Select,
@@ -125,7 +126,7 @@ export function TestsView() {
 			header: "Semester",
 			cell: ({ row }) => (
 				<Badge variant="secondary">
-					Sem {row.getValue("semester")}
+					{formatOrdinal(row.getValue("semester"))} Semester
 				</Badge>
 			),
 		},

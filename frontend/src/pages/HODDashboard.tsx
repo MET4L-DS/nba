@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import type { User, HODStats, Course } from "@/services/api";
+import { formatOrdinal } from "@/lib/utils";
 import {
 	HODStatsCards,
 	HODQuickAccess,
@@ -232,8 +233,10 @@ export function HODDashboard() {
 													{course.name}
 												</span>
 												<span className="text-xs text-gray-500">
-													{course.semester} Semester,
-													Year {course.year}
+													{formatOrdinal(
+														course.semester,
+													)}{" "}
+													Semester, Year {course.year}
 												</span>
 											</div>
 										</DropdownMenuItem>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
 	Table,
 	TableBody,
@@ -42,6 +43,7 @@ import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
+import { formatOrdinal } from "@/lib/utils";
 import type {
 	DepartmentCourse,
 	DepartmentFaculty,
@@ -484,14 +486,21 @@ export function CoursesManagement() {
 									</TableCell>
 									<TableCell>{course.name}</TableCell>
 									<TableCell className="text-center">
-										{course.credit}
+										<Badge variant="outline">
+											{course.credit}
+										</Badge>
 									</TableCell>
 									<TableCell>{course.faculty_name}</TableCell>
 									<TableCell className="text-center">
 										{course.year}
 									</TableCell>
 									<TableCell className="text-center">
-										{course.semester}
+										<Badge
+											variant="secondary"
+											className="font-medium"
+										>
+											{formatOrdinal(course.semester)}
+										</Badge>
 									</TableCell>
 									<TableCell className="text-right">
 										<div className="flex items-center justify-end gap-2">

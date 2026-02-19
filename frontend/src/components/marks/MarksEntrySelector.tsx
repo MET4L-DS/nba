@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { apiService } from "@/services/api";
 import type { Course, Test } from "@/services/api";
+import { formatOrdinal } from "@/lib/utils";
 import { EmptyStateCard } from "./EmptyStateCard";
 import { TestsListTable } from "./TestsListTable";
 
@@ -57,7 +58,8 @@ export function MarksEntrySelector({
 					Select Assessment for {course.course_code} - {course.name}
 				</CardTitle>
 				<p className="text-sm text-gray-500 dark:text-gray-400">
-					{course.semester} Semester, Year {course.year}
+					{formatOrdinal(course.semester)} Semester, Year{" "}
+					{course.year}
 				</p>
 			</CardHeader>
 			<CardContent>

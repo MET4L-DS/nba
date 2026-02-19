@@ -76,15 +76,19 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 	});
 
 	const getRoleBadgeColor = (role: string) => {
-		switch (role) {
+		switch (role.toLowerCase()) {
 			case "admin":
-				return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+				return "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800";
+			case "dean":
+				return "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800";
+			case "hod":
+				return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800";
 			case "faculty":
-				return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+				return "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800";
 			case "staff":
-				return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+				return "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300 border-orange-200 dark:border-orange-800";
 			default:
-				return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+				return "bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300 border-slate-200 dark:border-slate-800";
 		}
 	};
 
@@ -97,14 +101,15 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
-					className="p-0 hover:bg-transparent"
 				>
 					Employee ID
 					<ArrowUpDown className="ml-2 h-4 w-4" />
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="font-medium">{row.getValue("employee_id")}</div>
+				<Badge variant="outline" className="font-mono">
+					{row.getValue("employee_id")}
+				</Badge>
 			),
 		},
 		{
@@ -112,61 +117,108 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 			header: ({ column }) => (
 				<Button
 					variant="ghost"
+					className="mr-auto"
 					onClick={() =>
 						column.toggleSorting(column.getIsSorted() === "asc")
 					}
-					className="p-0 hover:bg-transparent"
 				>
 					Name
 					<ArrowUpDown className="ml-2 h-4 w-4" />
 				</Button>
 			),
+			cell: ({ row }) => (
+				<div className="flex">{row.getValue("username")}</div>
+			),
 		},
 		{
 			accessorKey: "email",
-			header: "Email",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Email
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
 			cell: ({ row }) => (
-				<div className="text-gray-500">{row.getValue("email")}</div>
+				<Badge variant="outline" className="flex">
+					{row.getValue("email")}
+				</Badge>
 			),
 		},
 		{
 			accessorKey: "designation",
-			header: "Designation",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Designation
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
 			cell: ({ row }) => (
-				<div className="text-gray-500 italic">
-					{row.getValue("designation") || "-"}
-				</div>
+				<Badge variant="secondary" className="flex italic">
+					{row.getValue("designation") || "—"}
+				</Badge>
 			),
 		},
 		{
 			accessorKey: "phone",
 			header: "Phone",
 			cell: ({ row }) => (
-				<div className="text-gray-500 font-mono">
-					{row.getValue("phone") || "-"}
+				<div className="text-muted-foreground font-mono flex">
+					{row.getValue("phone") || "—"}
 				</div>
 			),
 		},
 		{
 			accessorKey: "role",
-			header: "Role",
-			filterFn: (row, id, value) => {
-				return value.includes(row.getValue(id));
-			},
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Role
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
 			cell: ({ row }) => {
 				const user = row.original;
+				const isHOD = Number(user.is_hod) === 1;
+				const isDean = Number(user.is_dean) === 1;
+
 				return (
-					<div className="flex gap-1 flex-wrap justify-center">
-						<Badge className={getRoleBadgeColor(user.role)}>
+					<div className="flex gap-1">
+						<Badge
+							variant="secondary"
+							className={getRoleBadgeColor(user.role)}
+						>
 							{user.role.toUpperCase()}
 						</Badge>
-						{user.is_dean && (
-							<Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+						{isDean && (
+							<Badge
+								variant="secondary"
+								className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+							>
 								DEAN
 							</Badge>
 						)}
-						{user.is_hod && (
-							<Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+						{isHOD && (
+							<Badge
+								variant="secondary"
+								className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+							>
 								HOD
 							</Badge>
 						)}
@@ -176,11 +228,30 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 		},
 		{
 			accessorKey: "department_code",
-			header: "Department",
-			filterFn: (row, id, value) => {
-				return value.includes(row.getValue(id));
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Department
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => {
+				const deptCode = row.getValue("department_code") as string;
+				return deptCode ? (
+					<Badge
+						variant="secondary"
+						className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+					>
+						{deptCode}
+					</Badge>
+				) : (
+					<span className="text-muted-foreground">—</span>
+				);
 			},
-			cell: ({ row }) => row.getValue("department_code") || "-",
 		},
 		{
 			id: "actions",

@@ -15,6 +15,7 @@ import type { DeanCourse, Department } from "@/services/api";
 import { deanApi } from "@/services/api/dean";
 import { adminApi } from "@/services/api/admin";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import { formatOrdinal } from "@/lib/utils";
 
 export function CoursesView() {
 	const {
@@ -158,8 +159,8 @@ export function CoursesView() {
 				</div>
 			),
 			cell: ({ row }) => (
-				<Badge variant={"outline"}>
-					{(row.getValue("semester") as number) ?? "—"}
+				<Badge variant="secondary" className="text-center font-medium">
+					{formatOrdinal(row.getValue("semester"))}
 				</Badge>
 			),
 		},
@@ -213,7 +214,14 @@ export function CoursesView() {
 					row.getValue("is_active") === 1 ||
 					row.getValue("is_active") === true;
 				return (
-					<Badge variant={isActive ? "default" : "destructive"}>
+					<Badge
+						variant="secondary"
+						className={
+							isActive
+								? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+								: "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+						}
+					>
 						{isActive ? "Active" : "Inactive"}
 					</Badge>
 				);

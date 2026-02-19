@@ -379,9 +379,13 @@ class UserRepository
                 SELECT u.employee_id, u.username, u.email, u.role,
                        u.designation, u.phone, u.department_id,
                        u.created_at, u.updated_at,
-                       d.department_name, d.department_code, d.school_id
+                       d.department_name, d.department_code, d.school_id,
+                       CASE WHEN h.employee_id IS NOT NULL THEN 1 ELSE 0 END as is_hod,
+                       CASE WHEN de.employee_id IS NOT NULL THEN 1 ELSE 0 END as is_dean
                 FROM users u
                 LEFT JOIN departments d ON u.department_id = d.department_id
+                LEFT JOIN hod_assignments h ON u.employee_id = h.employee_id AND h.is_current = 1
+                LEFT JOIN dean_assignments de ON u.employee_id = de.employee_id AND de.is_current = 1
                 WHERE 1=1
             ";
             $bindings = [];
@@ -471,9 +475,13 @@ class UserRepository
                 SELECT u.employee_id, u.username, u.email, u.role,
                        u.designation, u.phone, u.department_id,
                        u.created_at, u.updated_at,
-                       d.department_name, d.department_code
+                       d.department_name, d.department_code,
+                       CASE WHEN h.employee_id IS NOT NULL THEN 1 ELSE 0 END as is_hod,
+                       CASE WHEN de.employee_id IS NOT NULL THEN 1 ELSE 0 END as is_dean
                 FROM users u
                 JOIN departments d ON u.department_id = d.department_id
+                LEFT JOIN hod_assignments h ON u.employee_id = h.employee_id AND h.is_current = 1
+                LEFT JOIN dean_assignments de ON u.employee_id = de.employee_id AND de.is_current = 1
                 WHERE d.school_id = ?
             ";
             $bindings = [$schoolId];
@@ -691,15 +699,19 @@ class UserRepository
     {
         try {
             $sql = "
-                SELECT employee_id, username, email, role,
-                       designation, phone, department_id, created_at, updated_at
-                FROM users
-                WHERE department_id = ? AND role IN ('faculty', 'staff')
+                SELECT u.employee_id, u.username, u.email, u.role,
+                       u.designation, u.phone, u.department_id, u.created_at, u.updated_at,
+                       CASE WHEN h.employee_id IS NOT NULL THEN 1 ELSE 0 END as is_hod,
+                       CASE WHEN de.employee_id IS NOT NULL THEN 1 ELSE 0 END as is_dean
+                FROM users u
+                LEFT JOIN hod_assignments h ON u.employee_id = h.employee_id AND h.is_current = 1
+                LEFT JOIN dean_assignments de ON u.employee_id = de.employee_id AND de.is_current = 1
+                WHERE u.department_id = ? AND u.role IN ('faculty', 'staff')
             ";
             $bindings = [$departmentId];
 
             if ($params['search']) {
-                $sql .= " AND (username LIKE ? OR email LIKE ? OR designation LIKE ?)";
+                $sql .= " AND (u.username LIKE ? OR u.email LIKE ? OR u.designation LIKE ?)";
                 $like = '%' . $params['search'] . '%';
                 $bindings[] = $like;
                 $bindings[] = $like;

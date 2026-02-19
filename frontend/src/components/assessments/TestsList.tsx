@@ -126,7 +126,7 @@ export function TestsList({ course, refreshTrigger }: TestsListProps) {
 
 		setLoading(true);
 		try {
-			const testsData = await apiService.getCourseTests(course.id);
+			const testsData = await apiService.getCourseTests(course.course_id);
 			console.log("Tests received in component:", testsData);
 
 			// Ensure testsData is an array
@@ -204,7 +204,7 @@ export function TestsList({ course, refreshTrigger }: TestsListProps) {
 		<Card className="border-none shadow-none bg-transparent">
 			<CardHeader className="px-0">
 				<CardTitle>
-					Assessments for {course.course_code} - {course.name}
+					Assessments for {course.course_code} - {course.course_name}
 				</CardTitle>
 				<p className="text-sm text-gray-500 dark:text-gray-400">
 					{course.semester} Semester, Year {course.year}

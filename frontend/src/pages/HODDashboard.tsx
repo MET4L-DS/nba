@@ -205,7 +205,7 @@ export function HODDashboard() {
 									>
 										<span className="truncate text-left">
 											{selectedCourse
-												? `${selectedCourse.course_code} - ${selectedCourse.name}`
+												? `${selectedCourse.course_code} - ${selectedCourse.course_name}`
 												: "All Courses"}
 										</span>
 										<ChevronDown className="w-4 h-4 ml-2 shrink-0" />
@@ -222,7 +222,7 @@ export function HODDashboard() {
 									</DropdownMenuItem>
 									{facultyCourses.map((course) => (
 										<DropdownMenuItem
-											key={course.id}
+											key={course.course_id}
 											onClick={() =>
 												setSelectedCourse(course)
 											}
@@ -230,7 +230,7 @@ export function HODDashboard() {
 											<div className="flex flex-col">
 												<span className="font-medium">
 													{course.course_code} -{" "}
-													{course.name}
+													{course.course_name}
 												</span>
 												<span className="text-xs text-gray-500">
 													{formatOrdinal(

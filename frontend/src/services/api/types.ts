@@ -66,9 +66,9 @@ export interface ApiError {
 
 // Course Types
 export interface Course {
-	id: number;
+	course_id: number;
 	course_code: string;
-	name: string;
+	course_name: string;
 	credit: number;
 	syllabus: string | null;
 	faculty_id: number;
@@ -367,16 +367,24 @@ export interface HODStats {
 }
 
 export interface DepartmentCourse {
-	id: number;
+	course_id: number;
 	course_code: string;
-	name: string;
+	course_name: string;
 	credit: number;
-	faculty_id: number;
-	faculty_name: string;
-	year: number;
-	semester: number;
-	co_threshold: number;
-	passing_threshold: number;
+	department_id?: number | null;
+	course_type?: string;
+	course_level?: string;
+	is_active?: number;
+	// Offering fields (latest offering per course)
+	offering_id?: number | null;
+	year?: number | null;
+	semester?: number | null;
+	co_threshold?: number | null;
+	passing_threshold?: number | null;
+	faculty_id?: number | null;
+	faculty_name?: string | null;
+	enrollment_count?: number;
+	test_count?: number;
 }
 
 export interface DepartmentFaculty {
@@ -510,16 +518,23 @@ export interface StaffStats {
 }
 
 export interface StaffCourse {
-	id: number;
+	course_id: number;
 	course_code: string;
-	name: string;
+	course_name: string;
 	credit: number;
-	faculty_id: string;
-	faculty_name: string;
-	year: number;
-	semester: number;
-	co_threshold: number;
-	passing_threshold: number;
+	department_id?: number | null;
+	course_type?: string;
+	course_level?: string;
+	is_active?: number;
+	offering_id?: number | null;
+	year?: number | null;
+	semester?: number | null;
+	co_threshold?: number | null;
+	passing_threshold?: number | null;
+	faculty_id?: number | null;
+	faculty_name?: string | null;
+	enrollment_count?: number;
+	test_count?: number;
 }
 
 // Dean Types (read-only views)

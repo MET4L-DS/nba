@@ -105,7 +105,7 @@ export function EnrollStudentsDialog({
 				} else {
 					setStudents(parsedStudents);
 					toast.success(
-						`Parsed ${parsedStudents.length} students from CSV`
+						`Parsed ${parsedStudents.length} students from CSV`,
 					);
 				}
 			} catch (error) {
@@ -137,16 +137,19 @@ export function EnrollStudentsDialog({
 
 		setEnrolling(true);
 		try {
-			const data = await apiService.enrollStudents(course.id, students);
+			const data = await apiService.enrollStudents(
+				course.course_id,
+				students,
+			);
 
 			if (data.failure_count > 0) {
 				toast.warning(
-					`Enrollment completed with ${data.failure_count} failures. ${data.success_count} students enrolled successfully.`
+					`Enrollment completed with ${data.failure_count} failures. ${data.success_count} students enrolled successfully.`,
 				);
 				console.warn("Failed enrollments:", data.failed);
 			} else {
 				toast.success(
-					`All ${data.success_count} students enrolled successfully!`
+					`All ${data.success_count} students enrolled successfully!`,
 				);
 			}
 
@@ -304,7 +307,7 @@ export function EnrollStudentsDialog({
 													e.preventDefault();
 													document
 														.getElementById(
-															"studentName"
+															"studentName",
 														)
 														?.focus();
 												}
@@ -390,7 +393,7 @@ export function EnrollStudentsDialog({
 														className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
 														onClick={() =>
 															handleRemoveFromList(
-																student.rollno
+																student.rollno,
 															)
 														}
 													>

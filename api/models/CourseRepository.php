@@ -613,8 +613,28 @@ class CourseRepository
             $sql = "
                 SELECT c.course_id, c.course_code, c.course_name, c.credit,
                        c.department_id, c.course_type, c.course_level,
-                       c.is_active, c.created_at, c.updated_at
+                       c.is_active, c.created_at, c.updated_at,
+                       co.offering_id, co.year, co.semester,
+                       co.co_threshold, co.passing_threshold,
+                       u.employee_id AS faculty_id,
+                       u.username    AS faculty_name,
+                       (SELECT COUNT(*) FROM enrollments e
+                        WHERE e.offering_id = co.offering_id) AS enrollment_count,
+                       (SELECT COUNT(*) FROM tests t
+                        WHERE t.offering_id = co.offering_id) AS test_count
                 FROM courses c
+                LEFT JOIN course_offerings co
+                       ON co.course_id = c.course_id
+                      AND co.offering_id = (
+                              SELECT MAX(co2.offering_id)
+                              FROM course_offerings co2
+                              WHERE co2.course_id = c.course_id
+                          )
+                LEFT JOIN course_faculty_assignments cfa
+                       ON cfa.offering_id = co.offering_id
+                      AND cfa.assignment_type = 'Primary'
+                      AND cfa.is_active = 1
+                LEFT JOIN users u ON u.employee_id = cfa.employee_id
                 WHERE c.department_id = ?
             ";
             $bindings = [$departmentId];

@@ -18,7 +18,7 @@ export function CourseInfoCard({ course }: CourseInfoCardProps) {
 				</div>
 				<div className="flex justify-between">
 					<span className="text-sm text-gray-500">Course Name</span>
-					<span className="font-medium">{course.name}</span>
+					<span className="font-medium">{course.course_name}</span>
 				</div>
 				<div className="flex justify-between">
 					<span className="text-sm text-gray-500">Semester</span>

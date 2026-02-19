@@ -32,7 +32,7 @@ export function MarksEntrySelector({
 
 		setLoading(true);
 		try {
-			const testsData = await apiService.getCourseTests(course.id);
+			const testsData = await apiService.getCourseTests(course.course_id);
 			setTests(Array.isArray(testsData) ? testsData : []);
 		} catch (error) {
 			console.error("Failed to load tests:", error);
@@ -55,7 +55,8 @@ export function MarksEntrySelector({
 		<Card>
 			<CardHeader>
 				<CardTitle>
-					Select Assessment for {course.course_code} - {course.name}
+					Select Assessment for {course.course_code} -{" "}
+					{course.course_name}
 				</CardTitle>
 				<p className="text-sm text-gray-500 dark:text-gray-400">
 					{formatOrdinal(course.semester)} Semester, Year{" "}

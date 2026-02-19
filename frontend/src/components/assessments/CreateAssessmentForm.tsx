@@ -59,7 +59,7 @@ export function CreateAssessmentForm({
 
 		if (fullMarksNum && totalMarks + 1 > fullMarksNum) {
 			toast.error(
-				`Cannot add question. Total marks (${totalMarks}) would exceed full marks (${fullMarksNum})`
+				`Cannot add question. Total marks (${totalMarks}) would exceed full marks (${fullMarksNum})`,
 			);
 			return;
 		}
@@ -85,14 +85,14 @@ export function CreateAssessmentForm({
 
 		if (fullMarksNum && totalMarks + 1 > fullMarksNum) {
 			toast.error(
-				`Cannot add sub-question. Total marks (${totalMarks}) would exceed full marks (${fullMarksNum})`
+				`Cannot add sub-question. Total marks (${totalMarks}) would exceed full marks (${fullMarksNum})`,
 			);
 			return;
 		}
 
 		// Find all questions with the same question number
 		const sameNumberQuestions = questions.filter(
-			(q) => q.question_number === questionNumber
+			(q) => q.question_number === questionNumber,
 		);
 
 		// Find the next available sub-question letter
@@ -105,7 +105,7 @@ export function CreateAssessmentForm({
 			if (existingSubQuestions.length === 0) {
 				// Convert the first question to sub-question 'a'
 				const questionIndex = questions.findIndex(
-					(q) => q.question_number === questionNumber
+					(q) => q.question_number === questionNumber,
 				);
 				const updatedQuestions = [...questions];
 				updatedQuestions[questionIndex] = {
@@ -169,7 +169,7 @@ export function CreateAssessmentForm({
 
 		// Check if this was the only question with this number and had a sub-question
 		const sameNumberQuestions = newQuestions.filter(
-			(q) => q.question_number === questionToRemove.question_number
+			(q) => q.question_number === questionToRemove.question_number,
 		);
 
 		// If only one question remains with this number and it has a sub-question, clear the sub-question
@@ -180,7 +180,7 @@ export function CreateAssessmentForm({
 			const questionIndex = newQuestions.findIndex(
 				(q) =>
 					q.question_number === questionToRemove.question_number &&
-					q.sub_question !== ""
+					q.sub_question !== "",
 			);
 			if (questionIndex !== -1) {
 				newQuestions[questionIndex] = {
@@ -224,7 +224,7 @@ export function CreateAssessmentForm({
 
 		if (totalMarks !== fullMarksNum) {
 			toast.error(
-				`Total marks (${totalMarks}) must equal full marks (${fullMarksNum})`
+				`Total marks (${totalMarks}) must equal full marks (${fullMarksNum})`,
 			);
 			return;
 		}
@@ -235,7 +235,7 @@ export function CreateAssessmentForm({
 				toast.error(
 					`Question ${q.question_number}${
 						q.sub_question || ""
-					}: Maximum marks must be at least 0.5`
+					}: Maximum marks must be at least 0.5`,
 				);
 				return;
 			}
@@ -243,7 +243,7 @@ export function CreateAssessmentForm({
 				toast.error(
 					`Question ${q.question_number}${
 						q.sub_question || ""
-					}: CO must be between 1 and 6`
+					}: CO must be between 1 and 6`,
 				);
 				return;
 			}
@@ -253,7 +253,7 @@ export function CreateAssessmentForm({
 
 		try {
 			const result = await apiService.createAssessment({
-				course_id: selectedCourse.id,
+				course_id: selectedCourse.course_id,
 				name,
 				full_marks: parseFloat(fullMarks),
 				pass_marks: parseFloat(passMarks),
@@ -261,9 +261,9 @@ export function CreateAssessmentForm({
 			});
 
 			toast.success(
-				`Assessment created successfully! Test ID: ${result.data.test.id}`
+				`Assessment created successfully! Test ID: ${result.data.test.id}`,
 			);
-			onSuccess(selectedCourse.id);
+			onSuccess(selectedCourse.course_id);
 		} catch (error) {
 			console.error("Failed to create assessment:", error);
 			if (error instanceof Error) {
@@ -315,7 +315,7 @@ export function CreateAssessmentForm({
 										className={
 											questions.reduce(
 												(sum, q) => sum + q.max_marks,
-												0
+												0,
 											) > parseFloat(fullMarks)
 												? "text-red-600 font-semibold"
 												: "text-green-600 font-semibold"
@@ -323,7 +323,7 @@ export function CreateAssessmentForm({
 									>
 										{questions.reduce(
 											(sum, q) => sum + q.max_marks,
-											0
+											0,
 										)}
 									</span>{" "}
 									/ {fullMarks}
@@ -339,8 +339,8 @@ export function CreateAssessmentForm({
 								fullMarks
 									? questions.reduce(
 											(sum, q) => sum + q.max_marks,
-											0
-									  ) >= parseFloat(fullMarks)
+											0,
+										) >= parseFloat(fullMarks)
 									: false
 							}
 						>

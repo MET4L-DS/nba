@@ -130,7 +130,7 @@ class StaffController
                 $_GET,
                 'c.course_id',
                 'c.course_id',
-                ['c.course_id', 'c.course_code', 'c.course_name', 'c.credit'],
+                ['c.course_id', 'c.course_code', 'c.course_name', 'c.credit', 'c.course_type', 'co.year', 'co.semester', 'u.username'],
                 ['is_active', 'course_type']
             );
 

@@ -2,14 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
@@ -39,22 +31,44 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Users, Eye, EyeOff } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+	ArrowUpDown,
+	Plus,
+	Pencil,
+	Trash2,
+	Users,
+	Eye,
+	EyeOff,
+	X,
+} from "lucide-react";
 import { toast } from "sonner";
-import { apiService } from "@/services/api";
-import type { DepartmentFaculty, HODCreateUserRequest } from "@/services/api";
+import type {
+	DepartmentFaculty,
+	HODCreateUserRequest,
+	HODUpdateUserRequest,
+} from "@/services/api";
 import { hodApi } from "@/services/api/hod";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import { DataTable } from "@/components/shared/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export function FacultyManagement() {
 	const {
 		data: faculty,
 		loading: isLoading,
 		refresh: onRefresh,
-	} = usePaginatedData<DepartmentFaculty>({
+		pagination,
+		goNext,
+		goPrev,
+		canPrev,
+		pageIndex,
+		search,
+		setSearch,
+		filters,
+		setFilter,
+	} = usePaginatedData<DepartmentFaculty, { role: string | undefined }>({
 		fetchFn: (params) => hodApi.getDepartmentFaculty(params),
-		limit: 100,
+		limit: 20,
 		defaultSort: "u.username",
 	});
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -73,11 +87,13 @@ export function FacultyManagement() {
 		designation: "",
 		phone: "",
 	});
-	const [editFormData, setEditFormData] = useState({
+	const [editFormData, setEditFormData] = useState<HODUpdateUserRequest>({
 		username: "",
 		email: "",
 		password: "",
 		role: "faculty" as "faculty" | "staff",
+		designation: "",
+		phone: "",
 	});
 
 	const resetForm = () => {
@@ -111,7 +127,7 @@ export function FacultyManagement() {
 
 		setIsSubmitting(true);
 		try {
-			await apiService.createDepartmentUser(formData);
+			await hodApi.createUser(formData);
 			toast.success(
 				`${
 					formData.role === "faculty" ? "Faculty" : "Staff"
@@ -146,25 +162,19 @@ export function FacultyManagement() {
 
 		setIsSubmitting(true);
 		try {
-			const updateData: {
-				username?: string;
-				email?: string;
-				password?: string;
-				role?: "faculty" | "staff";
-			} = {
+			const updateData: HODUpdateUserRequest = {
 				username: editFormData.username,
 				email: editFormData.email,
 				role: editFormData.role,
+				designation: editFormData.designation || null,
+				phone: editFormData.phone || null,
 			};
 
 			if (editFormData.password) {
 				updateData.password = editFormData.password;
 			}
 
-			await apiService.updateDepartmentUser(
-				selectedUser.employee_id,
-				updateData,
-			);
+			await hodApi.updateUser(selectedUser.employee_id, updateData);
 			toast.success("User updated successfully");
 			setIsEditDialogOpen(false);
 			setSelectedUser(null);
@@ -186,7 +196,7 @@ export function FacultyManagement() {
 		role: string,
 	) => {
 		try {
-			await apiService.deleteDepartmentUser(employeeId);
+			await hodApi.deleteUser(employeeId);
 			toast.success(
 				`${
 					role === "faculty" ? "Faculty" : "Staff"
@@ -209,6 +219,8 @@ export function FacultyManagement() {
 			email: user.email,
 			password: "",
 			role: user.role as "faculty" | "staff",
+			designation: user.designation ?? "",
+			phone: user.phone ?? "",
 		});
 		setIsEditDialogOpen(true);
 	};
@@ -267,477 +279,363 @@ export function FacultyManagement() {
 		}
 	};
 
-	// Separate faculty list into HOD/faculty and staff
-	const facultyList = faculty.filter(
-		(f) => f.role === "faculty" || Number(f.is_hod) === 1,
-	);
-	const staffList = faculty.filter((f) => f.role === "staff");
+	const columns: ColumnDef<DepartmentFaculty>[] = [
+		{
+			accessorKey: "employee_id",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Emp. ID
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<span className="font-mono font-medium">
+					{row.getValue("employee_id")}
+				</span>
+			),
+		},
+		{
+			accessorKey: "username",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Name
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<div className="font-medium">{row.getValue("username")}</div>
+			),
+		},
+		{
+			accessorKey: "email",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Email
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<div className="text-muted-foreground text-sm">
+					{row.getValue("email")}
+				</div>
+			),
+		},
+		{
+			accessorKey: "designation",
+			header: "Designation",
+			cell: ({ row }) => (
+				<div className="text-muted-foreground">
+					{(row.getValue("designation") as string) || "\u2014"}
+				</div>
+			),
+		},
+		{
+			accessorKey: "phone",
+			header: "Phone",
+			cell: ({ row }) => (
+				<div className="text-muted-foreground">
+					{(row.getValue("phone") as string) || "\u2014"}
+				</div>
+			),
+		},
+		{
+			accessorKey: "role",
+			header: "Role",
+			cell: ({ row }) => getRoleBadge(row.original),
+		},
+		{
+			id: "actions",
+			header: () => <div className="text-right">Actions</div>,
+			cell: ({ row }) => {
+				const member = row.original;
+				const isHOD = Number(member.is_hod) === 1;
+				return (
+					<div className="flex items-center justify-end gap-2">
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+							onClick={() => openEditDialog(member)}
+						>
+							<Pencil className="w-4 h-4" />
+						</Button>
+						{!isHOD && (
+							<AlertDialog>
+								<AlertDialogTrigger asChild>
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-8 w-8 text-destructive hover:text-destructive hover:bg-red-50"
+									>
+										<Trash2 className="w-4 h-4" />
+									</Button>
+								</AlertDialogTrigger>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>
+											Delete Member?
+										</AlertDialogTitle>
+										<AlertDialogDescription>
+											Are you sure you want to delete "
+											{member.username}"? This action
+											cannot be undone.
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>
+											Cancel
+										</AlertDialogCancel>
+										<AlertDialogAction
+											onClick={() =>
+												handleDeleteUser(
+													member.employee_id,
+													member.username,
+													member.role,
+												)
+											}
+											className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+										>
+											Delete
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+						)}
+					</div>
+				);
+			},
+		},
+	];
 
 	return (
-		<div className="space-y-6">
-			{/* Faculty & HOD Section */}
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between">
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-							<Users className="w-5 h-5 text-white" />
-						</div>
-						<div>
-							<CardTitle>Faculty Members</CardTitle>
-							<p className="text-sm text-muted-foreground">
-								Manage faculty in your department
-							</p>
-						</div>
+		<Card>
+			<CardHeader className="flex flex-row items-center justify-between">
+				<div className="flex items-center gap-3">
+					<div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+						<Users className="w-5 h-5 text-white" />
 					</div>
-					<Dialog
-						open={isAddDialogOpen}
-						onOpenChange={(open) => {
-							setIsAddDialogOpen(open);
-							if (!open) resetForm();
-						}}
-					>
-						<DialogTrigger asChild>
-							<Button
-								className="gap-2 bg-emerald-600 hover:bg-emerald-700"
-								onClick={() =>
-									setFormData((prev) => ({
-										...prev,
-										role: "faculty",
-									}))
-								}
-							>
-								<Plus className="w-4 h-4" />
-								Add Member
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="sm:max-w-[500px]">
-							<DialogHeader>
-								<DialogTitle>Add New Member</DialogTitle>
-								<DialogDescription>
-									Add a new faculty or staff member to your
-									department
-								</DialogDescription>
-							</DialogHeader>
-							<div className="grid gap-4 py-4">
-								<div className="grid grid-cols-2 gap-4">
-									<div className="space-y-2">
-										<Label htmlFor="employee_id">
-											Employee ID *
-										</Label>
-										<Input
-											id="employee_id"
-											type="number"
-											placeholder="e.g., 3016"
-											value={formData.employee_id || ""}
-											onChange={(e) =>
-												setFormData({
-													...formData,
-													employee_id:
-														parseInt(
-															e.target.value,
-														) || 0,
-												})
-											}
-										/>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="role">Role *</Label>
-										<Select
-											value={formData.role}
-											onValueChange={(
-												value: "faculty" | "staff",
-											) =>
-												setFormData({
-													...formData,
-													role: value,
-												})
-											}
-										>
-											<SelectTrigger>
-												<SelectValue />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="faculty">
-													Faculty
-												</SelectItem>
-												<SelectItem value="staff">
-													Staff
-												</SelectItem>
-											</SelectContent>
-										</Select>
-									</div>
-								</div>
+					<div>
+						<CardTitle>Department Members</CardTitle>
+						<p className="text-sm text-muted-foreground">
+							Manage faculty and staff in your department
+						</p>
+					</div>
+				</div>
+				<Dialog
+					open={isAddDialogOpen}
+					onOpenChange={(open) => {
+						setIsAddDialogOpen(open);
+						if (!open) resetForm();
+					}}
+				>
+					<DialogTrigger asChild>
+						<Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+							<Plus className="w-4 h-4" />
+							Add Member
+						</Button>
+					</DialogTrigger>
+					<DialogContent className="sm:max-w-[500px]">
+						<DialogHeader>
+							<DialogTitle>Add New Member</DialogTitle>
+							<DialogDescription>
+								Add a new faculty or staff member to your
+								department
+							</DialogDescription>
+						</DialogHeader>
+						<div className="grid gap-4 py-4">
+							<div className="grid grid-cols-2 gap-4">
 								<div className="space-y-2">
-									<Label htmlFor="username">
-										Full Name *
+									<Label htmlFor="employee_id">
+										Employee ID *
 									</Label>
 									<Input
-										id="username"
-										placeholder="e.g., Dr. John Doe"
-										value={formData.username}
+										id="employee_id"
+										type="number"
+										placeholder="e.g., 3016"
+										value={formData.employee_id || ""}
 										onChange={(e) =>
 											setFormData({
 												...formData,
-												username: e.target.value,
+												employee_id:
+													parseInt(e.target.value) ||
+													0,
 											})
 										}
 									/>
 								</div>
 								<div className="space-y-2">
-									<Label htmlFor="email">Email *</Label>
-									<Input
-										id="email"
-										type="email"
-										placeholder="e.g., john@tezu.ernet.in"
-										value={formData.email}
-										onChange={(e) =>
+									<Label htmlFor="role">Role *</Label>
+									<Select
+										value={formData.role}
+										onValueChange={(
+											value: "faculty" | "staff",
+										) =>
 											setFormData({
 												...formData,
-												email: e.target.value,
+												role: value,
 											})
 										}
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="password">Password *</Label>
-									<div className="relative">
-										<Input
-											id="password"
-											type={
-												showPassword
-													? "text"
-													: "password"
-											}
-											placeholder="Minimum 6 characters"
-											value={formData.password}
-											onChange={(e) =>
-												setFormData({
-													...formData,
-													password: e.target.value,
-												})
-											}
-										/>
-										<Button
-											type="button"
-											variant="ghost"
-											size="sm"
-											className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-											onClick={() =>
-												setShowPassword(!showPassword)
-											}
-										>
-											{showPassword ? (
-												<EyeOff className="h-4 w-4 text-muted-foreground" />
-											) : (
-												<Eye className="h-4 w-4 text-muted-foreground" />
-											)}
-										</Button>
-									</div>
+									>
+										<SelectTrigger>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="faculty">
+												Faculty
+											</SelectItem>
+											<SelectItem value="staff">
+												Staff
+											</SelectItem>
+										</SelectContent>
+									</Select>
 								</div>
 							</div>
-							<DialogFooter>
+							<div className="space-y-2">
+								<Label htmlFor="username">Full Name *</Label>
+								<Input
+									id="username"
+									placeholder="e.g., Dr. John Doe"
+									value={formData.username}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											username: e.target.value,
+										})
+									}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="email">Email *</Label>
+								<Input
+									id="email"
+									type="email"
+									placeholder="e.g., john@tezu.ernet.in"
+									value={formData.email}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											email: e.target.value,
+										})
+									}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="password">Password *</Label>
+								<div className="relative">
+									<Input
+										id="password"
+										type={
+											showPassword ? "text" : "password"
+										}
+										placeholder="Minimum 6 characters"
+										value={formData.password}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												password: e.target.value,
+											})
+										}
+									/>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+										onClick={() =>
+											setShowPassword(!showPassword)
+										}
+									>
+										{showPassword ? (
+											<EyeOff className="h-4 w-4 text-muted-foreground" />
+										) : (
+											<Eye className="h-4 w-4 text-muted-foreground" />
+										)}
+									</Button>
+								</div>
+							</div>
+						</div>
+						<DialogFooter>
+							<Button
+								variant="outline"
+								onClick={() => setIsAddDialogOpen(false)}
+							>
+								Cancel
+							</Button>
+							<Button
+								onClick={handleCreateUser}
+								disabled={isSubmitting}
+								className="bg-emerald-600 hover:bg-emerald-700"
+							>
+								{isSubmitting ? "Creating..." : "Create"}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
+			</CardHeader>
+			<CardContent>
+				<DataTable
+					columns={columns}
+					data={faculty}
+					refreshing={isLoading}
+					serverPagination={{
+						pagination,
+						onNext: goNext,
+						onPrev: goPrev,
+						canPrev,
+						pageIndex,
+						search,
+						onSearch: setSearch,
+					}}
+				>
+					{() => (
+						<div className="flex items-center gap-2">
+							<Select
+								value={filters.role ?? ""}
+								onValueChange={(v) =>
+									setFilter("role", v || undefined)
+								}
+							>
+								<SelectTrigger className="w-[130px]">
+									<SelectValue placeholder="All Roles" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="faculty">
+										Faculty
+									</SelectItem>
+									<SelectItem value="staff">Staff</SelectItem>
+								</SelectContent>
+							</Select>
+							{filters.role && (
 								<Button
-									variant="outline"
-									onClick={() => setIsAddDialogOpen(false)}
+									variant="ghost"
+									size="icon"
+									className="h-9 w-9"
+									onClick={() => setFilter("role", undefined)}
 								>
-									Cancel
+									<X className="h-4 w-4" />
 								</Button>
-								<Button
-									onClick={handleCreateUser}
-									disabled={isSubmitting}
-									className="bg-emerald-600 hover:bg-emerald-700"
-								>
-									{isSubmitting ? "Creating..." : "Create"}
-								</Button>
-							</DialogFooter>
-						</DialogContent>
-					</Dialog>
-				</CardHeader>
-				<CardContent>
-					{isLoading ? (
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Employee ID</TableHead>
-									<TableHead>Name</TableHead>
-									<TableHead>Email</TableHead>
-									<TableHead>Role</TableHead>
-									<TableHead className="text-right">
-										Actions
-									</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{Array.from({ length: 5 }).map((_, i) => (
-									<TableRow key={i}>
-										<TableCell>
-											<Skeleton className="h-4 w-[100px]" />
-										</TableCell>
-										<TableCell>
-											<Skeleton className="h-4 w-[200px]" />
-										</TableCell>
-										<TableCell>
-											<Skeleton className="h-4 w-[250px]" />
-										</TableCell>
-										<TableCell>
-											<Skeleton className="h-4 w-[100px]" />
-										</TableCell>
-										<TableCell>
-											<Skeleton className="h-8 w-16 ml-auto" />
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					) : facultyList.length === 0 ? (
-						<div className="text-center py-8 text-muted-foreground">
-							No faculty members found
+							)}
 						</div>
-					) : (
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Employee ID</TableHead>
-									<TableHead>Name</TableHead>
-									<TableHead>Email</TableHead>
-									<TableHead>Role</TableHead>
-									<TableHead className="text-right">
-										Actions
-									</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{facultyList.map((member) => (
-									<TableRow key={member.employee_id}>
-										<TableCell className="font-medium">
-											{member.employee_id}
-										</TableCell>
-										<TableCell>{member.username}</TableCell>
-										<TableCell>{member.email}</TableCell>
-										<TableCell>
-											{getRoleBadge(member)}
-										</TableCell>
-										<TableCell className="text-right">
-											{!member.is_hod && (
-												<div className="flex justify-end gap-2">
-													<Button
-														variant="ghost"
-														size="icon"
-														onClick={() =>
-															openEditDialog(
-																member,
-															)
-														}
-													>
-														<Pencil className="w-4 h-4" />
-													</Button>
-													<AlertDialog>
-														<AlertDialogTrigger
-															asChild
-														>
-															<Button
-																variant="ghost"
-																size="icon"
-																className="text-destructive hover:text-destructive"
-															>
-																<Trash2 className="w-4 h-4" />
-															</Button>
-														</AlertDialogTrigger>
-														<AlertDialogContent>
-															<AlertDialogHeader>
-																<AlertDialogTitle>
-																	Delete
-																	Faculty
-																	Member?
-																</AlertDialogTitle>
-																<AlertDialogDescription>
-																	Are you sure
-																	you want to
-																	delete "
-																	{
-																		member.username
-																	}
-																	"? This
-																	action
-																	cannot be
-																	undone.
-																</AlertDialogDescription>
-															</AlertDialogHeader>
-															<AlertDialogFooter>
-																<AlertDialogCancel>
-																	Cancel
-																</AlertDialogCancel>
-																<AlertDialogAction
-																	onClick={() =>
-																		handleDeleteUser(
-																			member.employee_id,
-																			member.username,
-																			member.role,
-																		)
-																	}
-																	className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-																>
-																	Delete
-																</AlertDialogAction>
-															</AlertDialogFooter>
-														</AlertDialogContent>
-													</AlertDialog>
-												</div>
-											)}
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
 					)}
-				</CardContent>
-			</Card>
-
-			{/* Staff Section */}
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between">
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-lg bg-linear-to-br from-gray-500 to-slate-600 flex items-center justify-center">
-							<Users className="w-5 h-5 text-white" />
-						</div>
-						<div>
-							<CardTitle>Staff Members</CardTitle>
-							<p className="text-sm text-muted-foreground">
-								Department staff
-							</p>
-						</div>
-					</div>
-				</CardHeader>
-				<CardContent>
-					{isLoading ? (
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Employee ID</TableHead>
-									<TableHead>Name</TableHead>
-									<TableHead>Email</TableHead>
-									<TableHead>Role</TableHead>
-									<TableHead className="text-right">
-										Actions
-									</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{Array.from({ length: 3 }).map((_, i) => (
-									<TableRow key={i}>
-										<TableCell>
-											<Skeleton className="h-4 w-[100px]" />
-										</TableCell>
-										<TableCell>
-											<Skeleton className="h-4 w-[200px]" />
-										</TableCell>
-										<TableCell>
-											<Skeleton className="h-4 w-[250px]" />
-										</TableCell>
-										<TableCell>
-											<Skeleton className="h-4 w-[100px]" />
-										</TableCell>
-										<TableCell>
-											<Skeleton className="h-8 w-16 ml-auto" />
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					) : staffList.length === 0 ? (
-						<div className="text-center py-8 text-muted-foreground">
-							No staff members in this department
-						</div>
-					) : (
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Employee ID</TableHead>
-									<TableHead>Name</TableHead>
-									<TableHead>Email</TableHead>
-									<TableHead>Role</TableHead>
-									<TableHead className="text-right">
-										Actions
-									</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{staffList.map((member) => (
-									<TableRow key={member.employee_id}>
-										<TableCell className="font-medium">
-											{member.employee_id}
-										</TableCell>
-										<TableCell>{member.username}</TableCell>
-										<TableCell>{member.email}</TableCell>
-										<TableCell>
-											{getRoleBadge(member)}
-										</TableCell>
-										<TableCell className="text-right">
-											<div className="flex justify-end gap-2">
-												<Button
-													variant="ghost"
-													size="icon"
-													onClick={() =>
-														openEditDialog(member)
-													}
-												>
-													<Pencil className="w-4 h-4" />
-												</Button>
-												<AlertDialog>
-													<AlertDialogTrigger asChild>
-														<Button
-															variant="ghost"
-															size="icon"
-															className="text-destructive hover:text-destructive"
-														>
-															<Trash2 className="w-4 h-4" />
-														</Button>
-													</AlertDialogTrigger>
-													<AlertDialogContent>
-														<AlertDialogHeader>
-															<AlertDialogTitle>
-																Delete Staff
-																Member?
-															</AlertDialogTitle>
-															<AlertDialogDescription>
-																Are you sure you
-																want to delete "
-																{
-																	member.username
-																}
-																"? This action
-																cannot be
-																undone.
-															</AlertDialogDescription>
-														</AlertDialogHeader>
-														<AlertDialogFooter>
-															<AlertDialogCancel>
-																Cancel
-															</AlertDialogCancel>
-															<AlertDialogAction
-																onClick={() =>
-																	handleDeleteUser(
-																		member.employee_id,
-																		member.username,
-																		member.role,
-																	)
-																}
-																className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-															>
-																Delete
-															</AlertDialogAction>
-														</AlertDialogFooter>
-													</AlertDialogContent>
-												</AlertDialog>
-											</div>
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					)}
-				</CardContent>
-			</Card>
+				</DataTable>
+			</CardContent>
 
 			{/* Edit Dialog */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -775,7 +673,7 @@ export function FacultyManagement() {
 							<Label htmlFor="edit_username">Full Name *</Label>
 							<Input
 								id="edit_username"
-								value={editFormData.username}
+								value={editFormData.username ?? ""}
 								onChange={(e) =>
 									setEditFormData({
 										...editFormData,
@@ -789,7 +687,7 @@ export function FacultyManagement() {
 							<Input
 								id="edit_email"
 								type="email"
-								value={editFormData.email}
+								value={editFormData.email ?? ""}
 								onChange={(e) =>
 									setEditFormData({
 										...editFormData,
@@ -797,6 +695,41 @@ export function FacultyManagement() {
 									})
 								}
 							/>
+						</div>
+						<div className="grid grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label htmlFor="edit_designation">
+									Designation
+								</Label>
+								<Input
+									id="edit_designation"
+									placeholder="e.g., Professor"
+									value={
+										(editFormData.designation as string) ??
+										""
+									}
+									onChange={(e) =>
+										setEditFormData({
+											...editFormData,
+											designation: e.target.value || null,
+										})
+									}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="edit_phone">Phone</Label>
+								<Input
+									id="edit_phone"
+									placeholder="e.g., 9876543210"
+									value={(editFormData.phone as string) ?? ""}
+									onChange={(e) =>
+										setEditFormData({
+											...editFormData,
+											phone: e.target.value || null,
+										})
+									}
+								/>
+							</div>
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="edit_password">
@@ -807,7 +740,7 @@ export function FacultyManagement() {
 									id="edit_password"
 									type={showPassword ? "text" : "password"}
 									placeholder="Enter new password"
-									value={editFormData.password}
+									value={editFormData.password ?? ""}
 									onChange={(e) =>
 										setEditFormData({
 											...editFormData,
@@ -850,6 +783,6 @@ export function FacultyManagement() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
-		</div>
+		</Card>
 	);
 }

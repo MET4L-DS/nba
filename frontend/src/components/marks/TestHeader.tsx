@@ -21,7 +21,7 @@ export function TestHeader({ test, course, onBack }: TestHeaderProps) {
 				</h2>
 				{course && (
 					<p className="text-sm text-gray-500 dark:text-gray-400">
-						{course.course_code} - {course.name}
+						{course.course_code} - {course.course_name}
 					</p>
 				)}
 			</div>

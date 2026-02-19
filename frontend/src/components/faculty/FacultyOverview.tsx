@@ -1,9 +1,12 @@
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Users, ClipboardList, TrendingUp } from "lucide-react";
+import { BookOpen, TrendingUp, ArrowUpDown } from "lucide-react";
 import { formatOrdinal } from "@/lib/utils";
 import type { Course } from "@/services/api";
-import { LoadingSpinner, EmptyState } from "@/components/shared";
+import { DataTable } from "@/components/shared/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
 
 interface FacultyOverviewProps {
 	courses: Course[];
@@ -11,19 +14,71 @@ interface FacultyOverviewProps {
 }
 
 export function FacultyOverview({ courses, isLoading }: FacultyOverviewProps) {
-	if (isLoading) {
-		return <LoadingSpinner size="lg" className="my-12" />;
-	}
-
-	if (courses.length === 0) {
-		return (
-			<EmptyState
-				title="No Courses Assigned"
-				description="You don't have any courses assigned yet. Contact your department HOD for course assignments."
-				icon={BookOpen}
-			/>
-		);
-	}
+	const columns = useMemo<ColumnDef<Course>[]>(
+		() => [
+			{
+				accessorKey: "course_code",
+				header: ({ column }) => (
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Code
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				),
+				cell: ({ row }) => (
+					<Badge variant="outline">{row.original.course_code}</Badge>
+				),
+			},
+			{
+				accessorKey: "course_name",
+				header: ({ column }) => (
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Course Name
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				),
+				cell: ({ row }) => (
+					<div
+						className="max-w-60 truncate"
+						title={row.original.course_name}
+					>
+						{row.original.course_name}
+					</div>
+				),
+			},
+			{
+				accessorKey: "credit",
+				header: "Credits",
+				cell: ({ row }) => (
+					<Badge variant="secondary">{row.original.credit} Cr</Badge>
+				),
+			},
+			{
+				accessorKey: "year",
+				header: "Year",
+				cell: ({ row }) => `Year ${row.original.year}`,
+			},
+			{
+				accessorKey: "semester",
+				header: "Semester",
+				cell: ({ row }) => (
+					<Badge variant="outline">
+						{formatOrdinal(row.original.semester)} Sem
+					</Badge>
+				),
+			},
+		],
+		[],
+	);
 
 	return (
 		<div className="space-y-6">
@@ -36,47 +91,11 @@ export function FacultyOverview({ courses, isLoading }: FacultyOverviewProps) {
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<div className="space-y-4">
-						{courses.map((course) => (
-							<div
-								key={course.id}
-								className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
-							>
-								<div className="flex-1">
-									<div className="flex items-center gap-3 mb-2">
-										<h3 className="font-semibold text-lg">
-											{course.course_code}
-										</h3>
-										<Badge variant="outline">
-											{course.credit} Credits
-										</Badge>
-									</div>
-									<p className="text-gray-600 dark:text-gray-400">
-										{course.name}
-									</p>
-									<div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-										<span className="flex items-center gap-1">
-											<Users className="w-4 h-4" />
-											Year {course.year}
-										</span>
-										<span>
-											{formatOrdinal(course.semester)}{" "}
-											Semester
-										</span>
-									</div>
-								</div>
-								<div className="flex flex-col items-end gap-2">
-									<Badge
-										variant="secondary"
-										className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-									>
-										<ClipboardList className="w-3 h-3 mr-1" />
-										Active
-									</Badge>
-								</div>
-							</div>
-						))}
-					</div>
+					<DataTable
+						columns={columns}
+						data={courses}
+						refreshing={isLoading}
+					/>
 				</CardContent>
 			</Card>
 

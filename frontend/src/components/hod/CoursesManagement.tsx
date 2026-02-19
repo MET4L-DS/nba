@@ -3,14 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
@@ -39,10 +31,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowUpDown, Plus, Pencil, Trash2, BookOpen, X } from "lucide-react";
 import { toast } from "sonner";
-import { apiService } from "@/services/api";
 import { formatOrdinal } from "@/lib/utils";
 import type {
 	DepartmentCourse,
@@ -52,6 +42,8 @@ import type {
 } from "@/services/api";
 import { hodApi } from "@/services/api/hod";
 import { usePaginatedData } from "@/lib/usePaginatedData";
+import { DataTable } from "@/components/shared/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
 
 const currentYear = new Date().getFullYear();
 const years = [currentYear - 1, currentYear, currentYear + 1];
@@ -62,9 +54,21 @@ export function CoursesManagement() {
 		data: courses,
 		loading: isLoading,
 		refresh: onRefresh,
-	} = usePaginatedData<DepartmentCourse>({
+		pagination,
+		goNext,
+		goPrev,
+		canPrev,
+		pageIndex,
+		search,
+		setSearch,
+		filters,
+		setFilter,
+	} = usePaginatedData<
+		DepartmentCourse,
+		{ year: number | undefined; semester: number | undefined }
+	>({
 		fetchFn: (params) => hodApi.getDepartmentCourses(params),
-		limit: 50,
+		limit: 20,
 		defaultSort: "c.course_code",
 	});
 
@@ -106,6 +110,197 @@ export function CoursesManagement() {
 		});
 	};
 
+	const columns: ColumnDef<DepartmentCourse>[] = [
+		{
+			accessorKey: "course_code",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Code
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<Badge variant="outline" className="font-mono">
+					{row.getValue("course_code")}
+				</Badge>
+			),
+		},
+		{
+			accessorKey: "course_name",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Course Name
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<div
+					className="font-medium max-w-[200px] truncate flex"
+					title={row.getValue("course_name")}
+				>
+					{row.getValue("course_name")}
+				</div>
+			),
+		},
+		{
+			accessorKey: "faculty_name",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					className="mr-auto"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Faculty
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<div className="text-muted-foreground flex">
+					{(row.getValue("faculty_name") as string) || "\u2014"}
+				</div>
+			),
+		},
+		{
+			accessorKey: "credit",
+			header: "Credits",
+			cell: ({ row }) => (
+				<Badge variant="outline">{row.getValue("credit")}</Badge>
+			),
+		},
+		{
+			accessorKey: "year",
+			header: "Year",
+			cell: ({ row }) => (
+				<span>{(row.getValue("year") as number) ?? "\u2014"}</span>
+			),
+		},
+		{
+			accessorKey: "semester",
+			header: "Sem",
+			cell: ({ row }) => (
+				<Badge variant="secondary" className="font-medium">
+					{formatOrdinal(row.getValue("semester"))}
+				</Badge>
+			),
+		},
+		{
+			accessorKey: "is_active",
+			header: "Status",
+			cell: ({ row }) => {
+				const active = row.getValue("is_active") === 1;
+				return (
+					<Badge
+						variant="secondary"
+						className={
+							active
+								? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+								: "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+						}
+					>
+						{active ? "Active" : "Inactive"}
+					</Badge>
+				);
+			},
+		},
+		{
+			accessorKey: "enrollment_count",
+			header: "Enrolled",
+			cell: ({ row }) => (
+				<Badge
+					variant="secondary"
+					className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+				>
+					{(row.getValue("enrollment_count") as number) ?? 0}
+				</Badge>
+			),
+		},
+		{
+			accessorKey: "test_count",
+			header: "Tests",
+			cell: ({ row }) => (
+				<Badge
+					variant="secondary"
+					className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+				>
+					{(row.getValue("test_count") as number) ?? 0}
+				</Badge>
+			),
+		},
+		{
+			id: "actions",
+			header: () => <div className="text-right">Actions</div>,
+			cell: ({ row }) => {
+				const course = row.original;
+				return (
+					<div className="flex items-center justify-end gap-2">
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+							onClick={() => openEditDialog(course)}
+						>
+							<Pencil className="w-4 h-4" />
+						</Button>
+						<AlertDialog>
+							<AlertDialogTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+								>
+									<Trash2 className="w-4 h-4" />
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>
+										Delete Course
+									</AlertDialogTitle>
+									<AlertDialogDescription>
+										Are you sure you want to delete "
+										{course.course_name}"? This will also
+										delete all associated tests, marks, and
+										enrollments. This action cannot be
+										undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>
+										Cancel
+									</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={() =>
+											handleDeleteCourse(
+												course.course_id,
+												course.course_name,
+											)
+										}
+										className="bg-red-600 hover:bg-red-700"
+									>
+										Delete
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					</div>
+				);
+			},
+		},
+	];
+
 	const handleCreateCourse = async () => {
 		if (!formData.course_code || !formData.name || !formData.faculty_id) {
 			toast.error("Please fill in all required fields");
@@ -114,7 +309,7 @@ export function CoursesManagement() {
 
 		setIsSubmitting(true);
 		try {
-			await apiService.createCourse(formData);
+			await hodApi.createCourse(formData);
 			toast.success("Course created successfully");
 			setIsAddDialogOpen(false);
 			resetForm();
@@ -132,7 +327,7 @@ export function CoursesManagement() {
 
 	const handleDeleteCourse = async (courseId: number, courseName: string) => {
 		try {
-			await apiService.deleteCourse(courseId);
+			await hodApi.deleteCourse(courseId);
 			toast.success(`Course "${courseName}" deleted successfully`);
 			onRefresh();
 		} catch (error) {
@@ -148,11 +343,11 @@ export function CoursesManagement() {
 		setSelectedCourse(course);
 		setEditFormData({
 			course_code: course.course_code,
-			name: course.name,
+			name: course.course_name,
 			credit: course.credit,
-			faculty_id: course.faculty_id,
-			year: course.year,
-			semester: course.semester,
+			faculty_id: course.faculty_id ?? 0,
+			year: course.year ?? currentYear,
+			semester: course.semester ?? 1,
 		});
 		setIsEditDialogOpen(true);
 	};
@@ -171,7 +366,7 @@ export function CoursesManagement() {
 
 		setIsSubmitting(true);
 		try {
-			await apiService.updateCourse(selectedCourse.id, editFormData);
+			await hodApi.updateCourse(selectedCourse.course_id, editFormData);
 			toast.success("Course updated successfully");
 			setIsEditDialogOpen(false);
 			setSelectedCourse(null);
@@ -400,172 +595,95 @@ export function CoursesManagement() {
 				</Dialog>
 			</CardHeader>
 			<CardContent>
-				{isLoading ? (
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Code</TableHead>
-								<TableHead>Name</TableHead>
-								<TableHead className="text-center">
-									Credits
-								</TableHead>
-								<TableHead>Faculty</TableHead>
-								<TableHead className="text-center">
-									Year
-								</TableHead>
-								<TableHead className="text-center">
-									Sem
-								</TableHead>
-								<TableHead className="text-right">
-									Actions
-								</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{Array.from({ length: 5 }).map((_, i) => (
-								<TableRow key={i}>
-									<TableCell>
-										<Skeleton className="h-4 w-[100px]" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-[250px]" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-12 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-[150px]" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-16 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-8 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-8 w-16 ml-auto" />
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				) : courses.length === 0 ? (
-					<div className="text-center py-8 text-muted-foreground">
-						<BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-						<p>No courses found in your department</p>
-						<p className="text-sm">
-							Click "Add Course" to create one
-						</p>
-					</div>
-				) : (
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Code</TableHead>
-								<TableHead>Name</TableHead>
-								<TableHead className="text-center">
-									Credits
-								</TableHead>
-								<TableHead>Faculty</TableHead>
-								<TableHead className="text-center">
-									Year
-								</TableHead>
-								<TableHead className="text-center">
-									Sem
-								</TableHead>
-								<TableHead className="text-right">
-									Actions
-								</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{courses.map((course) => (
-								<TableRow key={course.id}>
-									<TableCell className="font-medium">
-										{course.course_code}
-									</TableCell>
-									<TableCell>{course.name}</TableCell>
-									<TableCell className="text-center">
-										<Badge variant="outline">
-											{course.credit}
-										</Badge>
-									</TableCell>
-									<TableCell>{course.faculty_name}</TableCell>
-									<TableCell className="text-center">
-										{course.year}
-									</TableCell>
-									<TableCell className="text-center">
-										<Badge
-											variant="secondary"
-											className="font-medium"
-										>
-											{formatOrdinal(course.semester)}
-										</Badge>
-									</TableCell>
-									<TableCell className="text-right">
-										<div className="flex items-center justify-end gap-2">
-											<Button
-												variant="ghost"
-												size="icon"
-												className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-												onClick={() =>
-													openEditDialog(course)
-												}
-											>
-												<Pencil className="w-4 h-4" />
-											</Button>
-											<AlertDialog>
-												<AlertDialogTrigger asChild>
-													<Button
-														variant="ghost"
-														size="icon"
-														className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-													>
-														<Trash2 className="w-4 h-4" />
-													</Button>
-												</AlertDialogTrigger>
-												<AlertDialogContent>
-													<AlertDialogHeader>
-														<AlertDialogTitle>
-															Delete Course
-														</AlertDialogTitle>
-														<AlertDialogDescription>
-															Are you sure you
-															want to delete "
-															{course.name}"? This
-															will also delete all
-															associated tests,
-															marks, and
-															enrollments. This
-															action cannot be
-															undone.
-														</AlertDialogDescription>
-													</AlertDialogHeader>
-													<AlertDialogFooter>
-														<AlertDialogCancel>
-															Cancel
-														</AlertDialogCancel>
-														<AlertDialogAction
-															onClick={() =>
-																handleDeleteCourse(
-																	course.id,
-																	course.name,
-																)
-															}
-															className="bg-red-600 hover:bg-red-700"
-														>
-															Delete
-														</AlertDialogAction>
-													</AlertDialogFooter>
-												</AlertDialogContent>
-											</AlertDialog>
-										</div>
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				)}
+				<DataTable
+					columns={columns}
+					data={courses}
+					refreshing={isLoading}
+					serverPagination={{
+						pagination,
+						onNext: goNext,
+						onPrev: goPrev,
+						canPrev,
+						pageIndex,
+						search,
+						onSearch: setSearch,
+					}}
+				>
+					{() => (
+						<div className="flex items-center gap-2">
+							<Select
+								value={
+									filters.year !== undefined
+										? String(filters.year)
+										: ""
+								}
+								onValueChange={(v) =>
+									setFilter(
+										"year",
+										v ? parseInt(v) : undefined,
+									)
+								}
+							>
+								<SelectTrigger className="w-[110px]">
+									<SelectValue placeholder="Year" />
+								</SelectTrigger>
+								<SelectContent>
+									{years.map((y) => (
+										<SelectItem key={y} value={String(y)}>
+											{y}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							{filters.year !== undefined && (
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-9 w-9"
+									onClick={() => setFilter("year", undefined)}
+								>
+									<X className="h-4 w-4" />
+								</Button>
+							)}
+							<Select
+								value={
+									filters.semester !== undefined
+										? String(filters.semester)
+										: ""
+								}
+								onValueChange={(v) =>
+									setFilter(
+										"semester",
+										v ? parseInt(v) : undefined,
+									)
+								}
+							>
+								<SelectTrigger className="w-[130px]">
+									<SelectValue placeholder="Semester" />
+								</SelectTrigger>
+								<SelectContent>
+									{semesters.map((s) => (
+										<SelectItem key={s} value={String(s)}>
+											Semester {s}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							{filters.semester !== undefined && (
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-9 w-9"
+									onClick={() =>
+										setFilter("semester", undefined)
+									}
+								>
+									<X className="h-4 w-4" />
+								</Button>
+							)}
+						</div>
+					)}
+				</DataTable>
 			</CardContent>
 
 			{/* Edit Course Dialog */}

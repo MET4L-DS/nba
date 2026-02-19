@@ -1,13 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/shared/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
 	Select,
 	SelectContent,
@@ -38,7 +32,6 @@ import {
 	Users,
 	Trash2,
 	CheckCircle2,
-	AlertTriangle,
 	FileText,
 	UserPlus,
 	X,
@@ -73,19 +66,132 @@ export function StaffEnrollmentView() {
 	const [enrolling, setEnrolling] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
+	const enrollmentColumns = useMemo<ColumnDef<Enrollment>[]>(
+		() => [
+			{
+				accessorKey: "student_rollno",
+				header: "Roll No",
+				cell: ({ row }) => (
+					<Badge variant="outline">
+						{row.original.student_rollno}
+					</Badge>
+				),
+			},
+			{
+				accessorKey: "student_name",
+				header: "Name",
+			},
+			{
+				accessorKey: "enrolled_at",
+				header: "Enrolled At",
+				cell: ({ row }) => (
+					<span className="text-sm text-gray-500">
+						{new Date(
+							row.original.enrolled_at,
+						).toLocaleDateString()}
+					</span>
+				),
+			},
+			{
+				id: "actions",
+				header: "Actions",
+				cell: ({ row }) => {
+					const enrollment = row.original;
+					return (
+						<AlertDialog>
+							<AlertDialogTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+								>
+									<Trash2 className="w-4 h-4" />
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>
+										Remove Student
+									</AlertDialogTitle>
+									<AlertDialogDescription>
+										Are you sure you want to remove{" "}
+										<strong>
+											{enrollment.student_name}
+										</strong>{" "}
+										({enrollment.student_rollno}) from this
+										course? This action cannot be undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>
+										Cancel
+									</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={() =>
+											handleRemoveEnrollment(
+												enrollment.student_rollno,
+											)
+										}
+										className="bg-red-500 hover:bg-red-600"
+									>
+										Remove
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					);
+				},
+			},
+		],
+		[],
+	);
+
+	const studentColumns = useMemo<ColumnDef<StudentEntry>[]>(
+		() => [
+			{
+				accessorKey: "rollno",
+				header: "Roll No",
+				cell: ({ row }) => (
+					<span className="font-mono">{row.original.rollno}</span>
+				),
+			},
+			{
+				accessorKey: "name",
+				header: "Name",
+			},
+			{
+				id: "remove",
+				header: "Remove",
+				cell: ({ row }) => (
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+						onClick={() =>
+							handleRemoveFromList(row.original.rollno)
+						}
+					>
+						<X className="w-4 h-4" />
+					</Button>
+				),
+			},
+		],
+		[],
+	);
+
 	// Manual enrollment state
 	const [manualRollno, setManualRollno] = useState("");
 	const [manualName, setManualName] = useState("");
 
 	const handleCourseChange = async (courseId: string) => {
-		const course = courses.find((c) => c.id.toString() === courseId);
+		const course = courses.find((c) => c.course_id.toString() === courseId);
 		setSelectedCourse(course || null);
 		setEnrollments([]);
 		setFile(null);
 		setStudents([]);
 
 		if (course) {
-			await loadEnrollments(course.id);
+			await loadEnrollments(course.course_id);
 		}
 	};
 
@@ -191,7 +297,7 @@ export function StaffEnrollmentView() {
 		setEnrolling(true);
 		try {
 			const result = await staffApi.bulkEnrollStudents(
-				selectedCourse.id,
+				selectedCourse.course_id,
 				students,
 			);
 
@@ -211,7 +317,7 @@ export function StaffEnrollmentView() {
 			if (fileInputRef.current) {
 				fileInputRef.current.value = "";
 			}
-			await loadEnrollments(selectedCourse.id);
+			await loadEnrollments(selectedCourse.course_id);
 			refreshCourses();
 		} catch (error) {
 			toast.error(
@@ -228,9 +334,9 @@ export function StaffEnrollmentView() {
 		if (!selectedCourse) return;
 
 		try {
-			await staffApi.removeEnrollment(selectedCourse.id, rollno);
+			await staffApi.removeEnrollment(selectedCourse.course_id, rollno);
 			toast.success("Student removed from course successfully");
-			await loadEnrollments(selectedCourse.id);
+			await loadEnrollments(selectedCourse.course_id);
 			refreshCourses();
 		} catch (error) {
 			toast.error(
@@ -311,7 +417,7 @@ export function StaffEnrollmentView() {
 				</CardHeader>
 				<CardContent>
 					<Select
-						value={selectedCourse?.id.toString() || ""}
+						value={selectedCourse?.course_id.toString() || ""}
 						onValueChange={handleCourseChange}
 					>
 						<SelectTrigger className="w-full md:w-[400px]">
@@ -320,13 +426,13 @@ export function StaffEnrollmentView() {
 						<SelectContent>
 							{courses.map((course) => (
 								<SelectItem
-									key={course.id}
-									value={course.id.toString()}
+									key={course.course_id}
+									value={course.course_id.toString()}
 								>
 									<span className="font-mono mr-2">
 										{course.course_code}
 									</span>
-									- {course.name}
+									- {course.course_name}
 								</SelectItem>
 							))}
 						</SelectContent>
@@ -520,47 +626,10 @@ export function StaffEnrollmentView() {
 									</div>
 
 									<div className="max-h-64 overflow-y-auto rounded-md border">
-										<Table>
-											<TableHeader>
-												<TableRow>
-													<TableHead>
-														Roll No
-													</TableHead>
-													<TableHead>Name</TableHead>
-													<TableHead className="w-20">
-														Remove
-													</TableHead>
-												</TableRow>
-											</TableHeader>
-											<TableBody>
-												{students.map(
-													(student, index) => (
-														<TableRow key={index}>
-															<TableCell className="font-mono">
-																{student.rollno}
-															</TableCell>
-															<TableCell>
-																{student.name}
-															</TableCell>
-															<TableCell>
-																<Button
-																	variant="ghost"
-																	size="icon"
-																	className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-																	onClick={() =>
-																		handleRemoveFromList(
-																			student.rollno,
-																		)
-																	}
-																>
-																	<X className="w-4 h-4" />
-																</Button>
-															</TableCell>
-														</TableRow>
-													),
-												)}
-											</TableBody>
-										</Table>
+										<DataTable
+											columns={studentColumns}
+											data={students}
+										/>
 									</div>
 
 									<Button
@@ -600,7 +669,7 @@ export function StaffEnrollmentView() {
 									<p className="text-sm text-muted-foreground mt-1">
 										Students enrolled in{" "}
 										{selectedCourse.course_code} -{" "}
-										{selectedCourse.name}
+										{selectedCourse.course_name}
 									</p>
 								</div>
 								<Badge variant="secondary">
@@ -610,125 +679,11 @@ export function StaffEnrollmentView() {
 							</div>
 						</CardHeader>
 						<CardContent>
-							{loadingEnrollments ? (
-								<div className="flex items-center justify-center py-8">
-									<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-								</div>
-							) : enrollments.length === 0 ? (
-								<div className="flex flex-col items-center justify-center py-8 text-gray-500">
-									<AlertTriangle className="w-10 h-10 mb-2" />
-									<p>No students enrolled in this course</p>
-									<p className="text-sm">
-										Upload a CSV file above to enroll
-										students
-									</p>
-								</div>
-							) : (
-								<div className="rounded-md border">
-									<Table>
-										<TableHeader>
-											<TableRow>
-												<TableHead>Roll No</TableHead>
-												<TableHead>Name</TableHead>
-												<TableHead>
-													Enrolled At
-												</TableHead>
-												<TableHead className="w-[100px]">
-													Actions
-												</TableHead>
-											</TableRow>
-										</TableHeader>
-										<TableBody>
-											{enrollments.map((enrollment) => (
-												<TableRow
-													key={
-														enrollment.student_rollno
-													}
-												>
-													<TableCell className="font-mono">
-														<Badge variant="outline">
-															{
-																enrollment.student_rollno
-															}
-														</Badge>
-													</TableCell>
-													<TableCell>
-														{
-															enrollment.student_name
-														}
-													</TableCell>
-													<TableCell className="text-sm text-gray-500">
-														{new Date(
-															enrollment.enrolled_at,
-														).toLocaleDateString()}
-													</TableCell>
-													<TableCell>
-														<AlertDialog>
-															<AlertDialogTrigger
-																asChild
-															>
-																<Button
-																	variant="ghost"
-																	size="icon"
-																	className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-																>
-																	<Trash2 className="w-4 h-4" />
-																</Button>
-															</AlertDialogTrigger>
-															<AlertDialogContent>
-																<AlertDialogHeader>
-																	<AlertDialogTitle>
-																		Remove
-																		Student
-																	</AlertDialogTitle>
-																	<AlertDialogDescription>
-																		Are you
-																		sure you
-																		want to
-																		remove{" "}
-																		<strong>
-																			{
-																				enrollment.student_name
-																			}
-																		</strong>{" "}
-																		(
-																		{
-																			enrollment.student_rollno
-																		}
-																		) from
-																		this
-																		course?
-																		This
-																		action
-																		cannot
-																		be
-																		undone.
-																	</AlertDialogDescription>
-																</AlertDialogHeader>
-																<AlertDialogFooter>
-																	<AlertDialogCancel>
-																		Cancel
-																	</AlertDialogCancel>
-																	<AlertDialogAction
-																		onClick={() =>
-																			handleRemoveEnrollment(
-																				enrollment.student_rollno,
-																			)
-																		}
-																		className="bg-red-500 hover:bg-red-600"
-																	>
-																		Remove
-																	</AlertDialogAction>
-																</AlertDialogFooter>
-															</AlertDialogContent>
-														</AlertDialog>
-													</TableCell>
-												</TableRow>
-											))}
-										</TableBody>
-									</Table>
-								</div>
-							)}
+							<DataTable
+								columns={enrollmentColumns}
+								data={enrollments}
+								refreshing={loadingEnrollments}
+							/>
 						</CardContent>
 					</Card>
 				</>

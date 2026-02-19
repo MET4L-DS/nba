@@ -28,7 +28,7 @@ export function MarksEntryByQuestion({
 	const [questions, setQuestions] = useState<QuestionResponse[]>([]);
 	const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
 	const [marks, setMarks] = useState<Record<string, Record<string, string>>>(
-		{}
+		{},
 	);
 	const [originalMarks, setOriginalMarks] = useState<
 		Record<string, Record<string, string>>
@@ -50,8 +50,8 @@ export function MarksEntryByQuestion({
 		setLoading(true);
 		try {
 			const enrollmentData = await apiService.getCourseEnrollments(
-				course.id,
-				test.id
+				course.course_id,
+				test.id,
 			);
 
 			setEnrollments(enrollmentData.enrollments || []);
@@ -78,7 +78,7 @@ export function MarksEntryByQuestion({
 				try {
 					const studentMarks = await apiService.getStudentMarks(
 						test.id,
-						enrollment.student_rollno
+						enrollment.student_rollno,
 					);
 
 					// Fill in existing marks
@@ -127,10 +127,10 @@ export function MarksEntryByQuestion({
 			processCSV(text);
 		};
 		reader.readAsText(file);
-		
+
 		// Reset input
 		if (fileInputRef.current) {
-			fileInputRef.current.value = '';
+			fileInputRef.current.value = "";
 		}
 	};
 
@@ -145,22 +145,27 @@ export function MarksEntryByQuestion({
 
 		// Header analysis
 		const headerLine = lines[0];
-		const headers = headerLine.split(",").map(h => h.trim().toLowerCase());
-		
+		const headers = headerLine
+			.split(",")
+			.map((h) => h.trim().toLowerCase());
+
 		// Determine columns
 		// Expected: Roll No, [Name?], Q1, Q2...
 		// If 2nd column is 'name', skip it
 		let marksStartIndex = 1;
-		if (headers.length > 1 && (headers[1].includes("name") || headers[1] === "student name")) {
+		if (
+			headers.length > 1 &&
+			(headers[1].includes("name") || headers[1] === "student name")
+		) {
 			marksStartIndex = 2;
 		} else {
-            // Heuristic check on first data row
-            const firstData = lines[1].split(",");
-            if (firstData.length > 1 && isNaN(parseFloat(firstData[1]))) {
-                 // Likely a name
-                 marksStartIndex = 2;
-            }
-        }
+			// Heuristic check on first data row
+			const firstData = lines[1].split(",");
+			if (firstData.length > 1 && isNaN(parseFloat(firstData[1]))) {
+				// Likely a name
+				marksStartIndex = 2;
+			}
+		}
 
 		setMarks((prevMarks) => {
 			const newMarks = { ...prevMarks };
@@ -168,16 +173,16 @@ export function MarksEntryByQuestion({
 			let updatedCount = 0;
 
 			// Map visible questions to verify count
-			const questionIds = questions.map(q => q.question_identifier);
+			const questionIds = questions.map((q) => q.question_identifier);
 
 			lines.slice(1).forEach((line) => {
-				const values = line.split(",").map(v => v.trim());
+				const values = line.split(",").map((v) => v.trim());
 				if (values.length < 2) return; // Skip invalid lines
 
 				const rollNo = values[0]; // First col is Roll No
-				
+
 				// Ensure student exists in our list (enrolled)
-				if (!enrollments.some(e => e.student_rollno === rollNo)) {
+				if (!enrollments.some((e) => e.student_rollno === rollNo)) {
 					// Optionally warn or skip
 					return;
 				}
@@ -203,9 +208,11 @@ export function MarksEntryByQuestion({
 			});
 
 			setDirtyRows(newDirtyRows);
-			
+
 			if (updatedCount > 0) {
-				toast.success(`Imported marks for ${updatedCount} students. Review and click Save.`);
+				toast.success(
+					`Imported marks for ${updatedCount} students. Review and click Save.`,
+				);
 			} else {
 				toast.warning("No matching students found in CSV.");
 			}
@@ -217,7 +224,7 @@ export function MarksEntryByQuestion({
 	const handleMarkChange = (
 		studentRollno: string,
 		questionId: string,
-		value: string
+		value: string,
 	) => {
 		setMarks((prev) => ({
 			...prev,
@@ -241,7 +248,7 @@ export function MarksEntryByQuestion({
 			} else {
 				// Check if all other questions for this student are unchanged
 				const allQuestionsUnchanged = Object.keys(
-					marks[studentRollno] || {}
+					marks[studentRollno] || {},
 				).every((qId) => {
 					if (qId === questionId) return value === originalValue;
 					return (
@@ -281,13 +288,13 @@ export function MarksEntryByQuestion({
 			const studentMarks = marks[studentRollno];
 			if (!studentMarks) continue;
 			for (const [questionIdentifier, markValue] of Object.entries(
-				studentMarks
+				studentMarks,
 			)) {
 				if (markValue.trim() !== "") {
 					const mark = parseFloat(markValue);
 					if (isNaN(mark) || mark < 0) {
 						toast.error(
-							`Invalid mark for ${studentRollno} - Question ${questionIdentifier}`
+							`Invalid mark for ${studentRollno} - Question ${questionIdentifier}`,
 						);
 						return;
 					}
@@ -295,7 +302,7 @@ export function MarksEntryByQuestion({
 					const match = questionIdentifier.match(/^(\d+)([a-h]?)$/);
 					if (!match) {
 						toast.error(
-							`Invalid question identifier: ${questionIdentifier}`
+							`Invalid question identifier: ${questionIdentifier}`,
 						);
 						return;
 					}
@@ -327,12 +334,12 @@ export function MarksEntryByQuestion({
 
 			if (result.data.failure_count > 0) {
 				toast.warning(
-					`Marks saved with ${result.data.failure_count} failures. ${result.data.success_count} successful.`
+					`Marks saved with ${result.data.failure_count} failures. ${result.data.success_count} successful.`,
 				);
 				console.error("Failed entries:", result.data.failed);
 			} else {
 				toast.success(
-					`All marks saved successfully! (${result.data.success_count} entries)`
+					`All marks saved successfully! (${result.data.success_count} entries)`,
 				);
 			}
 

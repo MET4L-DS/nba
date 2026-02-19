@@ -22,7 +22,6 @@ import {
 import {
 	Plus,
 	Trash2,
-	RefreshCw,
 	UserPlus,
 	Pencil,
 	School as SchoolIcon,

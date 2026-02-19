@@ -1,14 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/shared/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
 	Dialog,
 	DialogContent,
@@ -38,7 +33,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, ArrowUpDown, X } from "lucide-react";
+import { formatOrdinal } from "@/lib/utils";
 import { toast } from "sonner";
 import { staffApi, type StaffCourse } from "@/services/api";
 import { usePaginatedData } from "@/lib/usePaginatedData";
@@ -70,7 +66,16 @@ export function CourseManagement() {
 		data: courses,
 		loading: isLoading,
 		refresh: onRefresh,
-	} = usePaginatedData<StaffCourse>({
+		pagination,
+		goNext,
+		goPrev,
+		canPrev,
+		pageIndex,
+		search,
+		setSearch,
+		filters,
+		setFilter,
+	} = usePaginatedData<StaffCourse, { year?: number; semester?: number }>({
 		fetchFn: (params) => staffApi.getDepartmentCourses(params),
 		limit: 50,
 		defaultSort: "c.course_code",
@@ -104,6 +109,155 @@ export function CourseManagement() {
 		year: currentYear,
 		semester: 1,
 	});
+
+	const columns = useMemo<ColumnDef<StaffCourse>[]>(
+		() => [
+			{
+				accessorKey: "course_code",
+				header: ({ column }) => (
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Code
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				),
+				cell: ({ row }) => (
+					<Badge variant="outline" className="font-mono">
+						{row.original.course_code}
+					</Badge>
+				),
+			},
+			{
+				accessorKey: "course_name",
+				header: ({ column }) => (
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Course Name
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				),
+				cell: ({ row }) => (
+					<div
+						className="font-medium max-w-[200px] truncate"
+						title={row.original.course_name}
+					>
+						{row.original.course_name}
+					</div>
+				),
+			},
+			{
+				accessorKey: "credit",
+				header: "Credits",
+				cell: ({ row }) => (
+					<Badge variant="outline">{row.original.credit}</Badge>
+				),
+			},
+			{
+				accessorKey: "faculty_name",
+				header: "Faculty",
+				cell: ({ row }) => (
+					<div className="text-muted-foreground">
+						{row.original.faculty_name || "\u2014"}
+					</div>
+				),
+			},
+			{
+				accessorKey: "year",
+				header: "Year",
+				cell: ({ row }) => row.original.year ?? "\u2014",
+			},
+			{
+				accessorKey: "semester",
+				header: "Semester",
+				cell: ({ row }) => (
+					<Badge variant="secondary" className="font-medium">
+						{formatOrdinal(row.original.semester)}
+					</Badge>
+				),
+			},
+			{
+				accessorKey: "enrollment_count",
+				header: "Enrolled",
+				cell: ({ row }) => (
+					<Badge
+						variant="secondary"
+						className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+					>
+						{row.original.enrollment_count ?? 0}
+					</Badge>
+				),
+			},
+			{
+				id: "actions",
+				header: () => <div className="text-right">Actions</div>,
+				cell: ({ row }) => {
+					const course = row.original;
+					return (
+						<div className="flex items-center justify-end gap-2">
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+								onClick={() => openEditDialog(course)}
+							>
+								<Pencil className="w-4 h-4" />
+							</Button>
+							<AlertDialog>
+								<AlertDialogTrigger asChild>
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+									>
+										<Trash2 className="w-4 h-4" />
+									</Button>
+								</AlertDialogTrigger>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>
+											Delete Course
+										</AlertDialogTitle>
+										<AlertDialogDescription>
+											Are you sure you want to delete "
+											{course.course_name}"? This will
+											also delete all associated tests,
+											marks, and enrollments. This action
+											cannot be undone.
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>
+											Cancel
+										</AlertDialogCancel>
+										<AlertDialogAction
+											onClick={() =>
+												handleDeleteCourse(
+													course.course_id,
+													course.course_name,
+												)
+											}
+											className="bg-red-600 hover:bg-red-700"
+										>
+											Delete
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
+						</div>
+					);
+				},
+			},
+		],
+		[],
+	);
 
 	const resetForm = () => {
 		setFormData({
@@ -161,11 +315,11 @@ export function CourseManagement() {
 		setSelectedCourse(course);
 		setEditFormData({
 			course_code: course.course_code,
-			name: course.name,
+			name: course.course_name,
 			credit: course.credit,
-			faculty_id: course.faculty_id,
-			year: course.year,
-			semester: course.semester,
+			faculty_id: course.faculty_id ? String(course.faculty_id) : "",
+			year: course.year ?? currentYear,
+			semester: course.semester ?? 1,
 		});
 		setIsEditDialogOpen(true);
 	};
@@ -184,7 +338,7 @@ export function CourseManagement() {
 
 		setIsSubmitting(true);
 		try {
-			await staffApi.updateCourse(selectedCourse.id, {
+			await staffApi.updateCourse(selectedCourse.course_id, {
 				...editFormData,
 				semester: String(editFormData.semester),
 			});
@@ -417,120 +571,92 @@ export function CourseManagement() {
 				</Dialog>
 			</CardHeader>
 			<CardContent>
-				{isLoading ? (
-					<div className="flex items-center justify-center py-8">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-					</div>
-				) : courses.length === 0 ? (
-					<div className="text-center py-8 text-muted-foreground">
-						<BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-						<p>No courses found in your department</p>
-						<p className="text-sm">
-							Click "Add Course" to create one
-						</p>
-					</div>
-				) : (
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Code</TableHead>
-								<TableHead>Name</TableHead>
-								<TableHead className="text-center">
-									Credits
-								</TableHead>
-								<TableHead>Faculty</TableHead>
-								<TableHead className="text-center">
-									Year
-								</TableHead>
-								<TableHead className="text-center">
-									Sem
-								</TableHead>
-								<TableHead className="text-right">
-									Actions
-								</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{courses.map((course) => (
-								<TableRow key={course.id}>
-									<TableCell className="font-medium">
-										{course.course_code}
-									</TableCell>
-									<TableCell>{course.name}</TableCell>
-									<TableCell className="text-center">
-										{course.credit}
-									</TableCell>
-									<TableCell>{course.faculty_name}</TableCell>
-									<TableCell className="text-center">
-										{course.year}
-									</TableCell>
-									<TableCell className="text-center">
-										{course.semester}
-									</TableCell>
-									<TableCell className="text-right">
-										<div className="flex items-center justify-end gap-2">
-											<Button
-												variant="ghost"
-												size="icon"
-												className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-												onClick={() =>
-													openEditDialog(course)
-												}
-											>
-												<Pencil className="w-4 h-4" />
-											</Button>
-											<AlertDialog>
-												<AlertDialogTrigger asChild>
-													<Button
-														variant="ghost"
-														size="icon"
-														className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-													>
-														<Trash2 className="w-4 h-4" />
-													</Button>
-												</AlertDialogTrigger>
-												<AlertDialogContent>
-													<AlertDialogHeader>
-														<AlertDialogTitle>
-															Delete Course
-														</AlertDialogTitle>
-														<AlertDialogDescription>
-															Are you sure you
-															want to delete "
-															{course.name}"? This
-															will also delete all
-															associated tests,
-															marks, and
-															enrollments. This
-															action cannot be
-															undone.
-														</AlertDialogDescription>
-													</AlertDialogHeader>
-													<AlertDialogFooter>
-														<AlertDialogCancel>
-															Cancel
-														</AlertDialogCancel>
-														<AlertDialogAction
-															onClick={() =>
-																handleDeleteCourse(
-																	course.id,
-																	course.name,
-																)
-															}
-															className="bg-red-600 hover:bg-red-700"
-														>
-															Delete
-														</AlertDialogAction>
-													</AlertDialogFooter>
-												</AlertDialogContent>
-											</AlertDialog>
-										</div>
-									</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				)}
+				<DataTable
+					columns={columns}
+					data={courses}
+					refreshing={isLoading}
+					serverPagination={{
+						pagination,
+						onNext: goNext,
+						onPrev: goPrev,
+						canPrev,
+						pageIndex,
+						search,
+						onSearch: setSearch,
+					}}
+				>
+					{() => (
+						<div className="flex items-center gap-2 flex-wrap">
+							<Select
+								value={
+									filters.year !== undefined
+										? String(filters.year)
+										: ""
+								}
+								onValueChange={(v) =>
+									setFilter("year", v ? Number(v) : undefined)
+								}
+							>
+								<SelectTrigger className="w-[120px]">
+									<SelectValue placeholder="All Years" />
+								</SelectTrigger>
+								<SelectContent>
+									{years.map((y) => (
+										<SelectItem key={y} value={String(y)}>
+											{y}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							{filters.year !== undefined && (
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8"
+									onClick={() => setFilter("year", undefined)}
+								>
+									<X className="h-4 w-4" />
+								</Button>
+							)}
+							<Select
+								value={
+									filters.semester !== undefined
+										? String(filters.semester)
+										: ""
+								}
+								onValueChange={(v) =>
+									setFilter(
+										"semester",
+										v ? Number(v) : undefined,
+									)
+								}
+							>
+								<SelectTrigger className="w-[140px]">
+									<SelectValue placeholder="All Semesters" />
+								</SelectTrigger>
+								<SelectContent>
+									{semesters.map((s) => (
+										<SelectItem key={s} value={String(s)}>
+											Semester {s}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							{filters.semester !== undefined && (
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8"
+									onClick={() =>
+										setFilter("semester", undefined)
+									}
+								>
+									<X className="h-4 w-4" />
+								</Button>
+							)}
+						</div>
+					)}
+				</DataTable>
 			</CardContent>
 
 			{/* Edit Course Dialog */}

@@ -45,10 +45,10 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 			processCSV(text);
 		};
 		reader.readAsText(file);
-		
+
 		// Reset input
 		if (fileInputRef.current) {
-			fileInputRef.current.value = '';
+			fileInputRef.current.value = "";
 		}
 	};
 
@@ -60,30 +60,33 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 		}
 
 		// Heuristic to detect name column
-		const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+		const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
 		let marksStartIndex = 1;
-		if (headers.length > 1 && (headers[1].includes("name") || headers[1] === "student name")) {
+		if (
+			headers.length > 1 &&
+			(headers[1].includes("name") || headers[1] === "student name")
+		) {
 			marksStartIndex = 2;
 		} else {
-             const firstData = lines[1].split(",");
-             if (firstData.length > 1 && isNaN(parseFloat(firstData[1]))) {
-                  marksStartIndex = 2;
-             }
-        }
+			const firstData = lines[1].split(",");
+			if (firstData.length > 1 && isNaN(parseFloat(firstData[1]))) {
+				marksStartIndex = 2;
+			}
+		}
 
 		setImporting(true);
-		
+
 		let successCount = 0;
 		let failCount = 0;
 		const failures: string[] = [];
 
 		for (const line of lines.slice(1)) {
-			const values = line.split(",").map(v => v.trim());
+			const values = line.split(",").map((v) => v.trim());
 			if (values.length < 2) continue;
 
 			const rollNo = values[0];
 			const coValues = values.slice(marksStartIndex);
-			
+
 			// CO1 to CO6
 			const marksData: any = {
 				test_id: test.id,
@@ -93,7 +96,7 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 				CO3: parseFloat(coValues[2] || "0") || 0,
 				CO4: parseFloat(coValues[3] || "0") || 0,
 				CO5: parseFloat(coValues[4] || "0") || 0,
-				CO6: parseFloat(coValues[5] || "0") || 0
+				CO6: parseFloat(coValues[5] || "0") || 0,
 			};
 
 			try {
@@ -106,10 +109,14 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 		}
 
 		setImporting(false);
-		toast.success(`Import complete: ${successCount} successful, ${failCount} failed.`);
+		toast.success(
+			`Import complete: ${successCount} successful, ${failCount} failed.`,
+		);
 		if (failCount > 0) {
 			console.error("Failed students:", failures);
-			toast.error(`Failed to separate marks for: ${failures.slice(0, 5).join(", ")}...`);
+			toast.error(
+				`Failed to separate marks for: ${failures.slice(0, 5).join(", ")}...`,
+			);
 		}
 	};
 
@@ -188,7 +195,7 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 						</h2>
 						{course && (
 							<p className="text-sm text-gray-500 dark:text-gray-400">
-								{course.course_code} - {course.name}
+								{course.course_code} - {course.course_name}
 							</p>
 						)}
 					</div>
@@ -201,8 +208,8 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 						accept=".csv"
 						onChange={handleFileUpload}
 					/>
-					<Button 
-						variant="outline" 
+					<Button
+						variant="outline"
 						onClick={() => fileInputRef.current?.click()}
 						disabled={importing}
 						className="gap-2"
@@ -258,7 +265,7 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 										onChange={(e) =>
 											handleCoMarkChange(
 												co,
-												e.target.value
+												e.target.value,
 											)
 										}
 										placeholder="0"

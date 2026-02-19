@@ -12,6 +12,8 @@ import {
 } from "@/components/faculty";
 import { AppSidebar, AppHeader, type NavItem } from "@/components/layout";
 import { apiService } from "@/services/api";
+import { facultyApi } from "@/services/api/faculty";
+import { usePaginatedData } from "@/lib/usePaginatedData";
 import type { User, Course, FacultyStats } from "@/services/api";
 import {
 	LayoutDashboard,
@@ -39,7 +41,14 @@ const facultyNavItems: NavItem[] = [
 export function FacultyDashboard() {
 	const [user, setUser] = useState<User | null>(null);
 	const [sidebarOpen, setSidebarOpen] = useState(true);
-	const [courses, setCourses] = useState<Course[]>([]);
+	const {
+		data: courses,
+		loading: isLoadingCourses,
+		refresh: refreshCourses,
+	} = usePaginatedData<Course>({
+		fetchFn: facultyApi.getCourses,
+		limit: 100,
+	});
 	const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 	const [activeView, setActiveView] = useState<FacultyPage>("dashboard");
 	const [isLoading, setIsLoading] = useState(false);
@@ -72,22 +81,15 @@ export function FacultyDashboard() {
 			}
 		}
 		setUser(storedUser);
-		loadCourses();
 		loadStats();
 	}, [navigate]);
 
-	const loadCourses = async () => {
-		try {
-			const coursesData = await apiService.getCourses();
-			setCourses(coursesData);
-			// Auto-select first course if available and none selected
-			if (coursesData.length > 0 && !selectedCourse) {
-				setSelectedCourse(coursesData[0]);
-			}
-		} catch (error) {
-			console.error("Failed to load courses:", error);
+	// Auto-select first course when courses load
+	useEffect(() => {
+		if (courses.length > 0 && !selectedCourse) {
+			setSelectedCourse(courses[0]);
 		}
-	};
+	}, [courses]);
 
 	const loadStats = async () => {
 		setIsLoading(true);
@@ -110,7 +112,7 @@ export function FacultyDashboard() {
 
 	const handleRefresh = () => {
 		loadStats();
-		loadCourses();
+		refreshCourses();
 	};
 
 	const handleNavigate = (page: FacultyPage) => {
@@ -160,7 +162,7 @@ export function FacultyDashboard() {
 										>
 											<span className="truncate text-left">
 												{selectedCourse
-													? `${selectedCourse.course_code} - ${selectedCourse.name}`
+													? `${selectedCourse.course_code} - ${selectedCourse.course_name}`
 													: "Select Course"}
 											</span>
 											<ChevronDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
@@ -169,13 +171,13 @@ export function FacultyDashboard() {
 									<DropdownMenuContent className="w-[250px]">
 										{courses.map((course) => (
 											<DropdownMenuItem
-												key={course.id}
+												key={course.course_id}
 												onSelect={() =>
 													setSelectedCourse(course)
 												}
 											>
 												{course.course_code} -{" "}
-												{course.name}
+												{course.course_name}
 											</DropdownMenuItem>
 										))}
 									</DropdownMenuContent>
@@ -186,11 +188,13 @@ export function FacultyDashboard() {
 									variant="outline"
 									size="icon"
 									onClick={handleRefresh}
-									disabled={isLoading}
+									disabled={isLoading || isLoadingCourses}
 								>
 									<RefreshCw
 										className={`h-4 w-4 ${
-											isLoading ? "animate-spin" : ""
+											isLoading || isLoadingCourses
+												? "animate-spin"
+												: ""
 										}`}
 									/>
 								</Button>

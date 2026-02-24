@@ -50,7 +50,7 @@ export function MarksEntryByQuestion({
 		setLoading(true);
 		try {
 			const enrollmentData = await apiService.getCourseEnrollments(
-				course.course_id,
+				course.offering_id ?? course.course_id,
 				test.id,
 			);
 

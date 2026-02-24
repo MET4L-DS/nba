@@ -67,6 +67,7 @@ export interface ApiError {
 // Course Types
 export interface Course {
 	course_id: number;
+	offering_id?: number; // offering_id from the database; use this as the identifier for API calls
 	course_code: string;
 	course_name: string;
 	credit: number;

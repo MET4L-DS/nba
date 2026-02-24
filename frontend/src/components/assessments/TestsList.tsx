@@ -126,7 +126,9 @@ export function TestsList({ course, refreshTrigger }: TestsListProps) {
 
 		setLoading(true);
 		try {
-			const testsData = await apiService.getCourseTests(course.course_id);
+			const testsData = await apiService.getCourseTests(
+				course.offering_id ?? course.course_id,
+			);
 			console.log("Tests received in component:", testsData);
 
 			// Ensure testsData is an array

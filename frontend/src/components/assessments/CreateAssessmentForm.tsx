@@ -253,7 +253,8 @@ export function CreateAssessmentForm({
 
 		try {
 			const result = await apiService.createAssessment({
-				course_id: selectedCourse.course_id,
+				course_id:
+					selectedCourse.offering_id ?? selectedCourse.course_id,
 				name,
 				full_marks: parseFloat(fullMarks),
 				pass_marks: parseFloat(passMarks),
@@ -263,7 +264,7 @@ export function CreateAssessmentForm({
 			toast.success(
 				`Assessment created successfully! Test ID: ${result.data.test.id}`,
 			);
-			onSuccess(selectedCourse.course_id);
+			onSuccess(selectedCourse.offering_id ?? selectedCourse.course_id);
 		} catch (error) {
 			console.error("Failed to create assessment:", error);
 			if (error instanceof Error) {

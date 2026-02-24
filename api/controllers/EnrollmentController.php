@@ -29,6 +29,31 @@ class EnrollmentController
     }
 
     /**
+     * Check whether a user can operate on a course offering.
+     * Faculty: must be directly assigned. HOD: direct assignment OR the
+     * offering's course belongs to their department.
+     */
+    private function isOfferingAccessAllowed($offeringId, $userId): bool
+    {
+        // 1. Direct faculty/HOD assignment
+        if ($this->assignmentRepo->isFacultyAssignedToOffering($offeringId, $userId)) {
+            return true;
+        }
+        // 2. HOD department fallback
+        $user = $this->userRepo->findByEmployeeId($userId);
+        if ($user && strtolower($user->getRole() ?? '') === 'hod') {
+            $offering = $this->offeringRepo->findById($offeringId);
+            if ($offering) {
+                $course = $this->courseRepo->findById($offering->getCourseId());
+                if ($course && $course->getDepartmentId() == $user->getDepartmentId()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * POST /offerings/{offeringId}/enroll
      * Bulk enroll students in a course offering
      * 
@@ -76,8 +101,8 @@ class EnrollmentController
                 return;
             }
 
-            // Check if the authenticated user is assigned to this offering
-            if (!$this->assignmentRepo->isFacultyAssignedToOffering($offeringId, $userId)) {
+            // Check if the authenticated user is authorized for this offering
+            if (!$this->isOfferingAccessAllowed($offeringId, $userId)) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -184,8 +209,8 @@ class EnrollmentController
                 return;
             }
 
-            // Check if the authenticated user is assigned to this offering
-            if (!$this->assignmentRepo->isFacultyAssignedToOffering($offeringId, $userId)) {
+            // Check if the authenticated user is authorized for this offering
+            if (!$this->isOfferingAccessAllowed($offeringId, $userId)) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -291,8 +316,8 @@ class EnrollmentController
                 return;
             }
 
-            // Check if the authenticated user is assigned to this offering
-            if (!$this->assignmentRepo->isFacultyAssignedToOffering($offeringId, $userId)) {
+            // Check if the authenticated user is authorized for this offering
+            if (!$this->isOfferingAccessAllowed($offeringId, $userId)) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,

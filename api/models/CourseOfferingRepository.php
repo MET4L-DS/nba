@@ -43,8 +43,8 @@ class CourseOfferingRepository
                 );
             }
             return null;
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception("Database error in findById: " . $e->getMessage());
         }
     }
 
@@ -125,7 +125,7 @@ class CourseOfferingRepository
                     'semester' => $data['semester'],
                     'co_threshold' => $data['co_threshold'],
                     'passing_threshold' => $data['passing_threshold'],
-                    'is_active' => $data['is_active'],
+                    'is_active' => $data['is_active'] ?? 1,
                     'created_at' => $data['created_at'],
                     'updated_at' => $data['updated_at']
                 ];
@@ -167,7 +167,7 @@ class CourseOfferingRepository
                     'co_threshold' => $data['co_threshold'],
                     'passing_threshold' => $data['passing_threshold'],
                     'assignment_type' => $data['assignment_type'],
-                    'is_active' => $data['is_active']
+                    'is_active' => $data['is_active'] ?? 1
                 ];
             }
 
@@ -208,7 +208,7 @@ class CourseOfferingRepository
                     'co_threshold' => $data['co_threshold'],
                     'passing_threshold' => $data['passing_threshold'],
                     'assignment_type' => $data['assignment_type'],
-                    'is_active' => $data['is_active']
+                    'is_active' => $data['is_active'] ?? 1
                 ];
             }
 
@@ -254,7 +254,7 @@ class CourseOfferingRepository
                     'passing_threshold' => $data['passing_threshold'],
                     'primary_faculty_id' => $data['primary_faculty_id'],
                     'primary_faculty_name' => $data['primary_faculty_name'],
-                    'is_active' => $data['is_active'],
+                    'is_active' => $data['is_active'] ?? 1,
                     'created_at' => $data['created_at'],
                     'updated_at' => $data['updated_at']
                 ];
@@ -306,7 +306,7 @@ class CourseOfferingRepository
                     'passing_threshold' => $data['passing_threshold'],
                     'primary_faculty_id' => $data['primary_faculty_id'],
                     'primary_faculty_name' => $data['primary_faculty_name'],
-                    'is_active' => $data['is_active']
+                    'is_active' => $data['is_active'] ?? 1
                 ];
             }
 
@@ -348,7 +348,7 @@ class CourseOfferingRepository
                     UPDATE course_offerings 
                     SET course_id = ?, year = ?, semester = ?, 
                         co_threshold = ?, passing_threshold = ?, 
-                        syllabus_pdf = ?, is_active = ?
+                        syllabus_pdf = ?
                     WHERE offering_id = ?
                 ");
                 return $stmt->execute([
@@ -358,15 +358,14 @@ class CourseOfferingRepository
                     $offering->getCoThreshold(),
                     $offering->getPassingThreshold(),
                     $offering->getSyllabusPdf(),
-                    $offering->getIsActive(),
                     $offering->getOfferingId()
                 ]);
             } else {
                 // Insert new offering
                 $stmt = $this->db->prepare("
                     INSERT INTO course_offerings 
-                    (course_id, year, semester, co_threshold, passing_threshold, syllabus_pdf, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    (course_id, year, semester, co_threshold, passing_threshold, syllabus_pdf)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 ");
                 $result = $stmt->execute([
                     $offering->getCourseId(),
@@ -374,8 +373,7 @@ class CourseOfferingRepository
                     $offering->getSemester(),
                     $offering->getCoThreshold(),
                     $offering->getPassingThreshold(),
-                    $offering->getSyllabusPdf(),
-                    $offering->getIsActive()
+                    $offering->getSyllabusPdf()
                 ]);
 
                 if ($result) {
@@ -384,8 +382,8 @@ class CourseOfferingRepository
 
                 return $result;
             }
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception("Database error in save: " . $e->getMessage());
         }
     }
 
@@ -445,7 +443,7 @@ class CourseOfferingRepository
                     'passing_threshold' => $data['passing_threshold'],
                     'primary_faculty_id' => $data['primary_faculty_id'],
                     'primary_faculty_name' => $data['primary_faculty_name'],
-                    'is_active' => $data['is_active'],
+                    'is_active' => $data['is_active'] ?? 1,
                     'created_at' => $data['created_at'],
                     'updated_at' => $data['updated_at']
                 ];
@@ -491,7 +489,7 @@ class CourseOfferingRepository
                     'passing_threshold' => $data['passing_threshold'],
                     'primary_faculty_id' => $data['primary_faculty_id'],
                     'primary_faculty_name' => $data['primary_faculty_name'],
-                    'is_active' => $data['is_active']
+                    'is_active' => $data['is_active'] ?? 1
                 ];
             }
 

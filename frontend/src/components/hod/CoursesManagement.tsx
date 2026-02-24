@@ -169,29 +169,69 @@ export function CoursesManagement() {
 			),
 			cell: ({ row }) => (
 				<div className="text-muted-foreground flex">
-					{(row.getValue("faculty_name") as string) || "\u2014"}
+					{(row.getValue("faculty_name") as string) || "—"}
 				</div>
 			),
 		},
 		{
 			accessorKey: "credit",
-			header: "Credits",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Credits
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
-				<Badge variant="outline">{row.getValue("credit")}</Badge>
+				<div className="text-center">
+					<Badge variant="outline">{row.getValue("credit")}</Badge>
+				</div>
 			),
 		},
 		{
 			accessorKey: "year",
-			header: "Year",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Year
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
-				<span>{(row.getValue("year") as number) ?? "\u2014"}</span>
+				<div className="text-center">
+					{(row.getValue("year") as number) ?? "—"}
+				</div>
 			),
 		},
 		{
 			accessorKey: "semester",
-			header: "Sem",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Sem
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
-				<Badge variant="secondary" className="font-medium">
+				<Badge variant="secondary" className="text-center font-medium">
 					{formatOrdinal(row.getValue("semester"))}
 				</Badge>
 			),
@@ -217,26 +257,54 @@ export function CoursesManagement() {
 		},
 		{
 			accessorKey: "enrollment_count",
-			header: "Enrolled",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Enrolled
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
-				<Badge
-					variant="secondary"
-					className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-				>
-					{(row.getValue("enrollment_count") as number) ?? 0}
-				</Badge>
+				<div className="text-center">
+					<Badge
+						variant="secondary"
+						className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+					>
+						{(row.getValue("enrollment_count") as number) ?? 0}
+					</Badge>
+				</div>
 			),
 		},
 		{
 			accessorKey: "test_count",
-			header: "Tests",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Tests
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
 			cell: ({ row }) => (
-				<Badge
-					variant="secondary"
-					className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-				>
-					{(row.getValue("test_count") as number) ?? 0}
-				</Badge>
+				<div className="text-center">
+					<Badge
+						variant="secondary"
+						className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+					>
+						{(row.getValue("test_count") as number) ?? 0}
+					</Badge>
+				</div>
 			),
 		},
 		{
@@ -284,7 +352,7 @@ export function CoursesManagement() {
 									<AlertDialogAction
 										onClick={() =>
 											handleDeleteCourse(
-												course.course_id,
+												course.offering_id!,
 												course.course_name,
 											)
 										}
@@ -366,7 +434,10 @@ export function CoursesManagement() {
 
 		setIsSubmitting(true);
 		try {
-			await hodApi.updateCourse(selectedCourse.course_id, editFormData);
+			await hodApi.updateCourse(
+				selectedCourse.offering_id!,
+				editFormData,
+			);
 			toast.success("Course updated successfully");
 			setIsEditDialogOpen(false);
 			setSelectedCourse(null);

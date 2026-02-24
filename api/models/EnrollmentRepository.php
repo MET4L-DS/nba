@@ -17,7 +17,7 @@ class EnrollmentRepository
      */
     public function enrollStudent($offeringId, $rollNo)
     {
-        $sql = "INSERT INTO enrollments (offering_id, roll_no) VALUES (?, ?)";
+        $sql = "INSERT INTO enrollments (offering_id, student_rollno) VALUES (?, ?)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$offeringId, $rollNo]);
 
@@ -93,7 +93,7 @@ class EnrollmentRepository
      */
     public function findById($id)
     {
-        $sql = "SELECT * FROM enrollments WHERE id = ?";
+        $sql = "SELECT * FROM enrollments WHERE enrollment_id = ?";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -101,11 +101,11 @@ class EnrollmentRepository
         if (!$row) return null;
 
         return new Enrollment(
-            $row['id'],
+            $row['enrollment_id'],
             $row['offering_id'],
-            $row['roll_no'],
-            $row['enrollment_date'],
-            $row['is_active']
+            $row['student_rollno'],
+            $row['enrolled_at'],
+            $row['enrollment_status']
         );
     }
 
@@ -126,11 +126,11 @@ class EnrollmentRepository
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $results[] = new Enrollment(
-                $row['id'],
+                $row['enrollment_id'],
                 $row['offering_id'],
-                $row['roll_no'],
-                $row['enrollment_date'],
-                $row['is_active']
+                $row['student_rollno'],
+                $row['enrolled_at'],
+                $row['enrollment_status']
             );
         }
 
@@ -144,7 +144,7 @@ class EnrollmentRepository
     {
         $sql = "SELECT e.*, s.student_name as student_name 
                 FROM enrollments e 
-                JOIN students s ON e.roll_no = s.roll_no 
+                JOIN students s ON e.student_rollno = s.roll_no 
                 WHERE e.offering_id = ? 
                 ORDER BY s.roll_no";
         $stmt = $this->pdo->prepare($sql);
@@ -153,11 +153,11 @@ class EnrollmentRepository
         $enrollments = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $enrollment = new Enrollment(
-                $row['id'],
+                $row['enrollment_id'],
                 $row['offering_id'],
-                $row['roll_no'],
-                $row['created_at'],
-                $row['status'] ?? 'Enrolled'
+                $row['student_rollno'],
+                $row['enrolled_at'],
+                $row['enrollment_status'] ?? 'Enrolled'
             );
 
             // Add student name to the array representation
@@ -178,7 +178,7 @@ class EnrollmentRepository
                 FROM enrollments e 
                 JOIN course_offerings co ON e.offering_id = co.offering_id
                 JOIN courses c ON co.course_id = c.course_id 
-                WHERE e.roll_no = ? 
+                WHERE e.student_rollno = ? 
                 ORDER BY co.year DESC, co.semester DESC, c.course_code";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$rollno]);
@@ -186,11 +186,11 @@ class EnrollmentRepository
         $enrollments = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $enrollment = new Enrollment(
-                $row['id'],
+                $row['enrollment_id'],
                 $row['offering_id'],
-                $row['roll_no'],
-                $row['created_at'],
-                $row['status'] ?? 'Enrolled'
+                $row['student_rollno'],
+                $row['enrolled_at'],
+                $row['enrollment_status'] ?? 'Enrolled'
             );
 
             // Add course info to the array representation
@@ -210,7 +210,7 @@ class EnrollmentRepository
      */
     public function removeEnrollment($offeringId, $rollNo)
     {
-        $sql = "DELETE FROM enrollments WHERE offering_id = ? AND roll_no = ?";
+        $sql = "DELETE FROM enrollments WHERE offering_id = ? AND student_rollno = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$offeringId, $rollNo]);
     }
@@ -220,7 +220,7 @@ class EnrollmentRepository
      */
     public function isEnrolled($offeringId, $rollNo)
     {
-        $sql = "SELECT COUNT(*) FROM enrollments WHERE offering_id = ? AND roll_no = ?";
+        $sql = "SELECT COUNT(*) FROM enrollments WHERE offering_id = ? AND student_rollno = ?";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$offeringId, $rollNo]);
         return $stmt->fetchColumn() > 0;
@@ -263,7 +263,7 @@ class EnrollmentRepository
      */
     public function countByDepartment($departmentId)
     {
-        $sql = "SELECT COUNT(DISTINCT e.id) FROM enrollments e
+        $sql = "SELECT COUNT(DISTINCT e.enrollment_id) FROM enrollments e
                 INNER JOIN course_offerings co ON e.offering_id = co.offering_id
                 INNER JOIN courses c ON co.course_id = c.course_id
                 WHERE c.department_id = ?";

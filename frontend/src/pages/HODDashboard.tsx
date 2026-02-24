@@ -222,7 +222,10 @@ export function HODDashboard() {
 									</DropdownMenuItem>
 									{facultyCourses.map((course) => (
 										<DropdownMenuItem
-											key={course.course_id}
+											key={
+												course.offering_id ??
+												course.course_id
+											}
 											onClick={() =>
 												setSelectedCourse(course)
 											}

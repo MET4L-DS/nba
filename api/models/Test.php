@@ -196,9 +196,9 @@ class Test
         }
 
         return [
-            'test_id' => $this->test_id,
+            'id' => $this->test_id,
             'course_id' => $this->offeringId,
-            'test_name' => $this->test_name,
+            'name' => $this->test_name,
             'full_marks' => $this->fullMarks,
             'pass_marks' => $this->passMarks,
             'test_type' => $this->test_type,

@@ -38,8 +38,8 @@ class CourseRepository
                 );
             }
             return null;
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception("Database error in findById: " . $e->getMessage());
         }
     }
 
@@ -168,8 +168,8 @@ class CourseRepository
 
                 return $result;
             }
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception("Database error in save: " . $e->getMessage());
         }
     }
 
@@ -461,8 +461,8 @@ class CourseRepository
                 );
             }
             return null;
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception("Database error in findByCourseCode: " . $e->getMessage());
         }
     }
 

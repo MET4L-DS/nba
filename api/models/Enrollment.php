@@ -68,9 +68,9 @@ class Enrollment
         return [
             'id' => $this->id,
             'offering_id' => $this->offeringId,
-            'roll_no' => $this->rollNo,
+            'student_rollno' => $this->rollNo,
             'status' => $this->status,
-            'created_at' => $this->createdAt,
+            'enrolled_at' => $this->createdAt,
             'student_name' => $this->studentData['name'] ?? null,
             'student' => $this->studentData
         ];

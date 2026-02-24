@@ -138,13 +138,16 @@ export function EnrollStudentsDialog({
 		setEnrolling(true);
 		try {
 			const data = await apiService.enrollStudents(
-				course.course_id,
+				course.offering_id ?? course.course_id,
 				students,
 			);
 
 			if (data.failure_count > 0) {
+				const failureDetails = data.failed
+					.map((f) => `${f.rollno}: ${f.reason}`)
+					.join("\n");
 				toast.warning(
-					`Enrollment completed with ${data.failure_count} failures. ${data.success_count} students enrolled successfully.`,
+					`Enrolled ${data.success_count} student(s). ${data.failure_count} failed:\n${failureDetails}`,
 				);
 				console.warn("Failed enrollments:", data.failed);
 			} else {

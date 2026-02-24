@@ -26,6 +26,36 @@ class AttainmentController
     }
 
     /**
+     * Resolve an incoming id to a course_id.
+     * Accepts either a template course_id or an offering_id.
+     * Returns ['course_id' => int, 'offering_id' => int|null, 'course' => Course]
+     * or null when not found.
+     */
+    private function resolveCourseId(int $id): ?array
+    {
+        // Try as a direct course_id first
+        $course = $this->courseRepo->findById($id);
+        if ($course) {
+            return ['course_id' => $id, 'offering_id' => null, 'course' => $course];
+        }
+        // Try as an offering_id
+        if ($this->offeringRepo) {
+            $offering = $this->offeringRepo->findById($id);
+            if ($offering) {
+                $course = $this->courseRepo->findById($offering->getCourseId());
+                if ($course) {
+                    return [
+                        'course_id'   => $offering->getCourseId(),
+                        'offering_id' => $id,
+                        'course'      => $course,
+                    ];
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Get CO-PO Matrix
      * GET /courses/{courseId}/copo-matrix
      */
@@ -38,18 +68,14 @@ class AttainmentController
                 return;
             }
 
-            // Check course access
-            $course = $this->courseRepo->findById($courseId);
-            if (!$course) {
+            $resolved = $this->resolveCourseId($courseId);
+            if (!$resolved) {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Course not found']);
                 return;
             }
 
-            $rows = $this->coPoRepo->getMatrix($courseId);
-
-            // Transform sparse data into structured matrix if needed
-            // Currently returning generic list, frontend can map it
+            $rows = $this->coPoRepo->getMatrix($resolved['course_id']);
 
             http_response_code(200);
             echo json_encode([
@@ -83,14 +109,14 @@ class AttainmentController
                 return;
             }
 
-            $course = $this->courseRepo->findById($courseId);
-            if (!$course) {
+            $resolved = $this->resolveCourseId($courseId);
+            if (!$resolved) {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Course not found']);
                 return;
             }
 
-            $this->coPoRepo->saveMatrix($courseId, $input['mappings']);
+            $this->coPoRepo->saveMatrix($resolved['course_id'], $input['mappings']);
 
             http_response_code(200);
             echo json_encode([
@@ -110,27 +136,36 @@ class AttainmentController
     public function getConfig(int $courseId): void
     {
         try {
-            // Check if course exists and user has access
-            $course = $this->courseRepo->findById((int)$courseId);
-            if (!$course) {
+            $resolved = $this->resolveCourseId($courseId);
+            if (!$resolved) {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Course not found']);
                 return;
             }
+            $resolvedCourseId = $resolved['course_id'];
 
-            // Get the latest offering for this course to get thresholds
-            $offerings = $this->offeringRepo->findByCourseId($courseId);
-            $latestOffering = !empty($offerings) ? $offerings[0] : null;
+            // Use the specific offering when available, otherwise fall back to latest
+            if ($resolved['offering_id'] !== null) {
+                $offering = $this->offeringRepo->findById($resolved['offering_id']);
+                $offeringData = $offering ? [
+                    'co_threshold'      => $offering->getCoThreshold(),
+                    'passing_threshold' => $offering->getPassingThreshold(),
+                    'offering_id'       => $offering->getOfferingId(),
+                ] : null;
+            } else {
+                $offerings = $this->offeringRepo->findByCourseId($resolvedCourseId);
+                $offeringData = !empty($offerings) ? $offerings[0] : null;
+            }
 
             // Get attainment thresholds
-            $scales = $this->scaleRepo->getByCourseId((int)$courseId);
+            $scales = $this->scaleRepo->getByCourseId($resolvedCourseId);
 
             $response = [
                 'success' => true,
                 'data' => [
-                    'course_id' => $course->getCourseId(),
-                    'co_threshold' => $latestOffering ? (float)$latestOffering['co_threshold'] : 40.00,
-                    'passing_threshold' => $latestOffering ? (float)$latestOffering['passing_threshold'] : 60.00,
+                    'course_id' => $resolvedCourseId,
+                    'co_threshold' => $offeringData ? (float)($offeringData['co_threshold'] ?? 40) : 40.00,
+                    'passing_threshold' => $offeringData ? (float)($offeringData['passing_threshold'] ?? 60) : 60.00,
                     'attainment_thresholds' => array_map(function ($scale) {
                         return [
                             'id' => $scale->id,
@@ -202,18 +237,23 @@ class AttainmentController
 
         try {
             // Check if course exists and user has access
-            $course = $this->courseRepo->findById($courseId);
-            if (!$course) {
+            $resolved = $this->resolveCourseId($courseId);
+            if (!$resolved) {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Course not found']);
                 return;
             }
+            $resolvedCourseId = $resolved['course_id'];
 
-            // Update latest offering thresholds if one exists
-            $offerings = $this->offeringRepo->findByCourseId($courseId);
-            if (!empty($offerings)) {
-                $latestOfferingId = $offerings[0]['offering_id'];
-                $this->offeringRepo->updateThresholds($latestOfferingId, $coThreshold, $passingThreshold);
+            // Update specific offering thresholds
+            if ($resolved['offering_id'] !== null) {
+                $this->offeringRepo->updateThresholds($resolved['offering_id'], $coThreshold, $passingThreshold);
+            } else {
+                $offerings = $this->offeringRepo->findByCourseId($resolvedCourseId);
+                if (!empty($offerings)) {
+                    $latestOfferingId = $offerings[0]['offering_id'];
+                    $this->offeringRepo->updateThresholds($latestOfferingId, $coThreshold, $passingThreshold);
+                }
             }
 
             // Prepare scale data with proper levels
@@ -231,14 +271,14 @@ class AttainmentController
             }
 
             // Save attainment scales
-            $this->scaleRepo->saveBulk($courseId, $scaleData);
+            $this->scaleRepo->saveBulk($resolvedCourseId, $scaleData);
 
             http_response_code(200);
             echo json_encode([
                 'success' => true,
                 'message' => 'Attainment configuration saved successfully',
                 'data' => [
-                    'course_id' => $courseId,
+                    'course_id' => $resolvedCourseId,
                     'co_threshold' => $coThreshold,
                     'passing_threshold' => $passingThreshold,
                     'attainment_thresholds_saved' => count($scaleData)

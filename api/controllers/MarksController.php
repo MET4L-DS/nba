@@ -51,6 +51,32 @@ class MarksController
     }
 
     /**
+     * Check whether a user is allowed to operate on a course offering.
+     * Faculty: must be directly assigned. HOD: direct assignment OR the
+     * offering's course belongs to their department.
+     */
+    private function isOfferingAccessAllowed($userData, $offeringId): bool
+    {
+        // 1. Direct faculty/HOD assignment
+        if ($this->assignmentRepository &&
+            $this->assignmentRepository->isFacultyAssignedToOffering($offeringId, $userData['employee_id'])) {
+            return true;
+        }
+        // 2. HOD department fallback
+        if (strtolower($userData['role'] ?? '') === 'hod' &&
+            $this->courseOfferingRepository && $this->courseRepository) {
+            $offering = $this->courseOfferingRepository->findById($offeringId);
+            if ($offering) {
+                $course = $this->courseRepository->findById($offering->getCourseId());
+                if ($course && $course->getDepartmentId() == $userData['department_id']) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Save marks per question (auto-calculates CO totals)
      * POST /marks/by-question
      * Body: {
@@ -334,13 +360,8 @@ class MarksController
                 return;
             }
 
-            // Check if user is faculty for this course offering
-            if (!$this->assignmentRepository) {
-                $this->sendError("Authorization not available", 500);
-                return;
-            }
-
-            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $user['employee_id'])) {
+            // Check if user is faculty/HOD for this course offering
+            if (!$this->isOfferingAccessAllowed($user, $test->getOfferingId())) {
                 $this->sendError("You are not authorized to view marks for this test", 403);
                 return;
             }
@@ -715,12 +736,7 @@ class MarksController
                 return;
             }
 
-            if (!$this->assignmentRepository) {
-                $this->sendError("Authorization not available", 500);
-                return;
-            }
-
-            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $userData['employee_id'])) {
+            if (!$this->isOfferingAccessAllowed($userData, $test->getOfferingId())) {
                 $this->sendError("Unauthorized to update marks for this test", 403);
                 return;
             }
@@ -800,12 +816,7 @@ class MarksController
                 return;
             }
 
-            if (!$this->assignmentRepository) {
-                $this->sendError("Authorization not available", 500);
-                return;
-            }
-
-            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $userData['employee_id'])) {
+            if (!$this->isOfferingAccessAllowed($userData, $test->getOfferingId())) {
                 $this->sendError("Unauthorized to delete marks for this test", 403);
                 return;
             }
@@ -858,12 +869,7 @@ class MarksController
                 return;
             }
 
-            if (!$this->assignmentRepository) {
-                $this->sendError("Authorization not available", 500);
-                return;
-            }
-
-            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $userData['employee_id'])) {
+            if (!$this->isOfferingAccessAllowed($userData, $test->getOfferingId())) {
                 $this->sendError("Unauthorized to delete marks for this test", 403);
                 return;
             }

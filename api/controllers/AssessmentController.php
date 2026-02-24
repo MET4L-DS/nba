@@ -33,6 +33,51 @@ class AssessmentController
     }
 
     /**
+     * Check if a user can access a course offering.
+     * Faculty: must be assigned; HOD: must own the department.
+     * Returns an array with 'allowed' (bool) and course metadata, or false.
+     */
+    private function checkOfferingAccess($userData, $offeringId)
+    {
+        $role = $userData['role'];
+
+        // Try faculty assignment (works for both faculty and HOD who is also assigned)
+        $assignments = $this->courseOfferingRepository->findByFacultyId($userData['employee_id']);
+        foreach ($assignments as $a) {
+            if ($a['offering_id'] == $offeringId) {
+                return [
+                    'allowed'     => true,
+                    'course_code' => $a['course_code'],
+                    'course_name' => $a['course_name'],
+                    'credit'      => $a['credit'],
+                    'year'        => $a['year'],
+                    'semester'    => $a['semester'],
+                ];
+            }
+        }
+
+        // HOD fallback: course belongs to their department
+        if ($role === 'hod') {
+            $offering = $this->courseOfferingRepository->findById($offeringId);
+            if ($offering) {
+                $course = $this->courseRepository->findById($offering->getCourseId());
+                if ($course && $course->getDepartmentId() == $userData['department_id']) {
+                    return [
+                        'allowed'     => true,
+                        'course_code' => $course->getCourseCode(),
+                        'course_name' => $course->getCourseName(),
+                        'credit'      => $course->getCredit(),
+                        'year'        => $offering->getYear(),
+                        'semester'    => $offering->getSemester(),
+                    ];
+                }
+            }
+        }
+
+        return ['allowed' => false];
+    }
+
+    /**
      * Get courses (offerings) for faculty
      */
     public function getFacultyCourses()
@@ -51,7 +96,13 @@ class AssessmentController
             }
 
             $facultyId = $userData['employee_id'];
-            $offerings = $this->courseOfferingRepository->findByFacultyId($facultyId);
+
+            if ($userData['role'] === 'hod') {
+                // HOD sees all offerings in their department
+                $offerings = $this->courseOfferingRepository->findByDepartment($userData['department_id']);
+            } else {
+                $offerings = $this->courseOfferingRepository->findByFacultyId($facultyId);
+            }
 
             http_response_code(200);
             echo json_encode([
@@ -77,11 +128,11 @@ class AssessmentController
         try {
             $userData = $_REQUEST['authenticated_user'];
 
-            if ($userData['role'] !== 'faculty') {
+            if ($userData['role'] !== 'faculty' && $userData['role'] !== 'hod') {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Access denied. Only faculty can create assessments.'
+                    'message' => 'Access denied. Only faculty or HOD can create assessments.'
                 ]);
                 return;
             }
@@ -118,20 +169,9 @@ class AssessmentController
                 return;
             }
 
-            // Verify assignment
-            $isAssigned = false;
-            $assignments = $this->courseOfferingRepository->findByFacultyId($userData['employee_id']);
-            foreach ($assignments as $a) {
-                if ($a['offering_id'] == $data['course_id']) {
-                    $isAssigned = true;
-                    $courseCode = $a['course_code'];
-                    $year = $a['year'];
-                    $semester = $a['semester'];
-                    break;
-                }
-            }
-
-            if (!$isAssigned) {
+            // Verify access (faculty assignment or HOD department ownership)
+            $access = $this->checkOfferingAccess($userData, $data['course_id']);
+            if (!$access['allowed']) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -139,6 +179,9 @@ class AssessmentController
                 ]);
                 return;
             }
+            $courseCode = $access['course_code'];
+            $year = $access['year'];
+            $semester = $access['semester'];
 
             // Validate questions array
             if (!is_array($data['questions']) || count($data['questions']) === 0) {
@@ -251,11 +294,11 @@ class AssessmentController
         try {
             $userData = $_REQUEST['authenticated_user'];
 
-            if ($userData['role'] !== 'faculty') {
+            if ($userData['role'] !== 'faculty' && $userData['role'] !== 'hod') {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Access denied. Only faculty can access assessments.'
+                    'message' => 'Access denied. Only faculty or HOD can access assessments.'
                 ]);
                 return;
             }
@@ -293,27 +336,9 @@ class AssessmentController
                 return;
             }
 
-            // Verify faculty assignment
-            $isAssigned = false;
-            $assignments = $this->courseOfferingRepository->findByFacultyId($userData['employee_id']);
-            foreach ($assignments as $a) {
-                if ($a['offering_id'] == $offering->getOfferingId()) {
-                    $isAssigned = true;
-                    // For UI compatibility, convert offering to associative array resembling "Course"
-                    $courseData = [
-                        'id' => $offering->getOfferingId(),
-                        'course_id' => $offering->getCourseId(),
-                        'course_code' => $a['course_code'],
-                        'course_name' => $a['course_name'],
-                        'credit' => $a['credit'],
-                        'year' => $offering->getYear(),
-                        'semester' => $offering->getSemester()
-                    ];
-                    break;
-                }
-            }
-
-            if (!$isAssigned) {
+            // Verify access (faculty assignment or HOD department ownership)
+            $access = $this->checkOfferingAccess($userData, $offering->getOfferingId());
+            if (!$access['allowed']) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -321,6 +346,15 @@ class AssessmentController
                 ]);
                 return;
             }
+            $courseData = [
+                'id'          => $offering->getOfferingId(),
+                'course_id'   => $offering->getCourseId(),
+                'course_code' => $access['course_code'],
+                'course_name' => $access['course_name'],
+                'credit'      => $access['credit'],
+                'year'        => $offering->getYear(),
+                'semester'    => $offering->getSemester(),
+            ];
 
             $questions = $this->questionRepository->findByTestId($testId);
 
@@ -372,19 +406,9 @@ class AssessmentController
                 return;
             }
 
-            // Verify assignment
-            $isAssigned = false;
-            $assignments = $this->courseOfferingRepository->findByFacultyId($userData['employee_id']);
-            $offeringData = null;
-            foreach ($assignments as $a) {
-                if ($a['offering_id'] == $offeringId) {
-                    $isAssigned = true;
-                    $offeringData = $a;
-                    break;
-                }
-            }
-
-            if (!$isAssigned) {
+            // Verify access (faculty assignment or HOD department ownership)
+            $access = $this->checkOfferingAccess($userData, $offeringId);
+            if (!$access['allowed']) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -392,6 +416,7 @@ class AssessmentController
                 ]);
                 return;
             }
+            $offeringData = $access;
 
             $tests = $this->testRepository->findByOfferingId($offeringId);
 
@@ -423,11 +448,11 @@ class AssessmentController
         try {
             $userData = $_REQUEST['authenticated_user'];
 
-            if ($userData['role'] !== 'faculty') {
+            if ($userData['role'] !== 'faculty' && $userData['role'] !== 'hod') {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Access denied. Only faculty can update questions.'
+                    'message' => 'Access denied. Only faculty or HOD can update questions.'
                 ]);
                 return;
             }
@@ -459,17 +484,9 @@ class AssessmentController
                 return;
             }
 
-            // Verify assignment
-            $isAssigned = false;
-            $assignments = $this->courseOfferingRepository->findByFacultyId($userData['employee_id']);
-            foreach ($assignments as $a) {
-                if ($a['offering_id'] == $test->getOfferingId()) {
-                    $isAssigned = true;
-                    break;
-                }
-            }
-
-            if (!$isAssigned) {
+            // Verify access (faculty assignment or HOD department ownership)
+            $access = $this->checkOfferingAccess($userData, $test->getOfferingId());
+            if (!$access['allowed']) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
@@ -516,11 +533,11 @@ class AssessmentController
         try {
             $userData = $_REQUEST['authenticated_user'];
 
-            if ($userData['role'] !== 'faculty') {
+            if ($userData['role'] !== 'faculty' && $userData['role'] !== 'hod') {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,
-                    'message' => 'Access denied. Only faculty can delete questions.'
+                    'message' => 'Access denied. Only faculty or HOD can delete questions.'
                 ]);
                 return;
             }
@@ -547,16 +564,8 @@ class AssessmentController
                 return;
             }
 
-            if (!$this->assignmentRepository) {
-                http_response_code(500);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Authorization not available'
-                ]);
-                return;
-            }
-
-            if (!$this->assignmentRepository->isFacultyAssignedToOffering($test->getOfferingId(), $userData['employee_id'])) {
+            $access = $this->checkOfferingAccess($userData, $test->getOfferingId());
+            if (!$access['allowed']) {
                 http_response_code(403);
                 echo json_encode([
                     'success' => false,

@@ -328,39 +328,47 @@ class HODController
             if (isset($input['semester'])) $offering->setSemester(intval($input['semester']));
             if (isset($input['co_threshold'])) $offering->setCoThreshold(floatval($input['co_threshold']));
             if (isset($input['passing_threshold'])) $offering->setPassingThreshold(floatval($input['passing_threshold']));
+
+            // Check for year/semester conflict with another offering of the same course
+            $conflictingOffering = $this->courseOfferingRepository->findByCourseYearSem(
+                $offering->getCourseId(),
+                $offering->getYear(),
+                $offering->getSemester()
+            );
+            if ($conflictingOffering && $conflictingOffering->getOfferingId() != $offeringId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'A course offering already exists for this year and semester']);
+                return;
+            }
             
             $this->courseOfferingRepository->save($offering);
 
             // 5. Update Faculty Assignment (if provided)
-            if (isset($input['faculty_id'])) {
+            if (isset($input['faculty_id']) && intval($input['faculty_id']) > 0) {
                 // Verify new faculty belongs to department
                 $newFaculty = $this->userRepository->findByEmployeeId($input['faculty_id']);
-                if (!$newFaculty || ($newFaculty->getDepartmentId() != $departmentId && $newFaculty->getRole() !== 'HOD')) {
+                if (!$newFaculty || ($newFaculty->getDepartmentId() != $departmentId && strtolower($newFaculty->getRole()) !== 'hod')) {
                     http_response_code(400);
                     echo json_encode(['success' => false, 'message' => 'Faculty must belong to your department']);
                     return;
                 }
 
-                // Get current primary assignment
-                $assignments = $this->courseFacultyAssignmentRepository->getAssignmentsByOffering($offeringId);
-                $primaryAssignment = null;
-                foreach ($assignments as $a) {
-                    if ($a['assignment_type'] === 'Primary') {
-                        $primaryAssignment = $a;
-                        break;
-                    }
-                }
+                // Get current primary assignment (search all, including inactive, to avoid UNIQUE KEY violation on re-insert)
+                $stmt = $this->courseOfferingRepository->getDb()->prepare(
+                    "SELECT * FROM course_faculty_assignments WHERE offering_id = ? AND assignment_type = 'Primary' ORDER BY is_active DESC LIMIT 1"
+                );
+                $stmt->execute([$offeringId]);
+                $primaryAssignment = $stmt->fetch();
 
                 if ($primaryAssignment) {
-                    // Update existing assignment (in a real app, maybe end previous and start new)
-                    // For now, simplicity: update employee_id
-                    $stmt = $this->courseOfferingRepository->getDb()->prepare(
-                        "UPDATE course_faculty_assignments SET employee_id = ? WHERE id = ?"
+                    // Update existing primary assignment's employee
+                    $updateStmt = $this->courseOfferingRepository->getDb()->prepare(
+                        "UPDATE course_faculty_assignments SET employee_id = ?, is_active = 1 WHERE id = ?"
                     );
-                    $stmt->execute([$input['faculty_id'], $primaryAssignment['id']]);
+                    $updateStmt->execute([intval($input['faculty_id']), $primaryAssignment['id']]);
                 } else {
                     // Create new primary assignment
-                    $newAssign = new CourseFacultyAssignment(null, $offeringId, $input['faculty_id'], 'Primary');
+                    $newAssign = new CourseFacultyAssignment(null, $offeringId, intval($input['faculty_id']), 'Primary');
                     $this->courseFacultyAssignmentRepository->save($newAssign);
                 }
             }
@@ -373,13 +381,13 @@ class HODController
             echo json_encode([
                 'success' => true,
                 'message' => 'Course updated successfully',
-                'data' => $updatedOffering
+                'data' => $updatedOffering ? $updatedOffering->toArray() : null
             ]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Failed to update course',
+                'message' => 'Failed to update course: ' . $e->getMessage(),
                 'error' => $e->getMessage()
             ]);
         }

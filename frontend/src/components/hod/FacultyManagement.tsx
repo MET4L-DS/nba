@@ -39,7 +39,6 @@ import {
 	Users,
 	Eye,
 	EyeOff,
-	X,
 } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -294,9 +293,9 @@ export function FacultyManagement() {
 				</Button>
 			),
 			cell: ({ row }) => (
-				<span className="font-mono font-medium">
+				<Badge variant="outline" className="font-mono">
 					{row.getValue("employee_id")}
-				</span>
+				</Badge>
 			),
 		},
 		{
@@ -314,7 +313,9 @@ export function FacultyManagement() {
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="font-medium">{row.getValue("username")}</div>
+				<div className="font-medium flex">
+					{row.getValue("username")}
+				</div>
 			),
 		},
 		{
@@ -342,7 +343,7 @@ export function FacultyManagement() {
 			header: "Designation",
 			cell: ({ row }) => (
 				<div className="text-muted-foreground">
-					{(row.getValue("designation") as string) || "\u2014"}
+					{(row.getValue("designation") as string) || "—"}
 				</div>
 			),
 		},
@@ -351,7 +352,7 @@ export function FacultyManagement() {
 			header: "Phone",
 			cell: ({ row }) => (
 				<div className="text-muted-foreground">
-					{(row.getValue("phone") as string) || "\u2014"}
+					{(row.getValue("phone") as string) || "—"}
 				</div>
 			),
 		},
@@ -537,6 +538,20 @@ export function FacultyManagement() {
 								/>
 							</div>
 							<div className="space-y-2">
+								<Label htmlFor="designation">Designation</Label>
+								<Input
+									id="designation"
+									placeholder="e.g., Professor"
+									value={formData.designation ?? ""}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											designation: e.target.value,
+										})
+									}
+								/>
+							</div>
+							<div className="space-y-2">
 								<Label htmlFor="password">Password *</Label>
 								<div className="relative">
 									<Input
@@ -605,34 +620,21 @@ export function FacultyManagement() {
 					}}
 				>
 					{() => (
-						<div className="flex items-center gap-2">
-							<Select
-								value={filters.role ?? ""}
-								onValueChange={(v) =>
-									setFilter("role", v || undefined)
-								}
-							>
-								<SelectTrigger className="w-[130px]">
-									<SelectValue placeholder="All Roles" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="faculty">
-										Faculty
-									</SelectItem>
-									<SelectItem value="staff">Staff</SelectItem>
-								</SelectContent>
-							</Select>
-							{filters.role && (
-								<Button
-									variant="ghost"
-									size="icon"
-									className="h-9 w-9"
-									onClick={() => setFilter("role", undefined)}
-								>
-									<X className="h-4 w-4" />
-								</Button>
-							)}
-						</div>
+						<Select
+							value={filters.role || "all"}
+							onValueChange={(v) =>
+								setFilter("role", v === "all" ? undefined : v)
+							}
+						>
+							<SelectTrigger className="w-[130px]">
+								<SelectValue placeholder="All Roles" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All Roles</SelectItem>
+								<SelectItem value="faculty">Faculty</SelectItem>
+								<SelectItem value="staff">Staff</SelectItem>
+							</SelectContent>
+						</Select>
 					)}
 				</DataTable>
 			</CardContent>

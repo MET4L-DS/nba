@@ -32,7 +32,9 @@ export function MarksEntrySelector({
 
 		setLoading(true);
 		try {
-			const testsData = await apiService.getCourseTests(course.course_id);
+			const testsData = await apiService.getCourseTests(
+				course.offering_id ?? course.course_id,
+			);
 			setTests(Array.isArray(testsData) ? testsData : []);
 		} catch (error) {
 			console.error("Failed to load tests:", error);

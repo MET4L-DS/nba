@@ -18,13 +18,13 @@ class MarksRepository
      */
     public function findByTestAndStudent($testId, $studentId)
     {
-        $stmt = $this->db->prepare("SELECT * FROM marks WHERE test_id = ? AND roll_no = ?");
+        $stmt = $this->db->prepare("SELECT * FROM marks WHERE test_id = ? AND student_roll_no = ?");
         $stmt->execute([$testId, $studentId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($row) {
             return new Marks(
-                $row['roll_no'],
+                $row['student_roll_no'],
                 $row['test_id'],
                 $row['CO1'],
                 $row['CO2'],
@@ -46,16 +46,16 @@ class MarksRepository
         $stmt = $this->db->prepare("
             SELECT m.*, s.student_name as student_name 
             FROM marks m
-            JOIN students s ON m.roll_no = s.roll_no
+            JOIN students s ON m.student_roll_no = s.roll_no
             WHERE m.test_id = ?
-            ORDER BY m.roll_no
+            ORDER BY m.student_roll_no
         ");
         $stmt->execute([$testId]);
 
         $marksList = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $marks = new Marks(
-                $row['roll_no'],
+                $row['student_roll_no'],
                 $row['test_id'],
                 $row['CO1'],
                 $row['CO2'],
@@ -79,7 +79,7 @@ class MarksRepository
     public function save(Marks $marks)
     {
         $stmt = $this->db->prepare("
-            INSERT INTO marks (roll_no, test_id, CO1, CO2, CO3, CO4, CO5, CO6) 
+            INSERT INTO marks (student_roll_no, test_id, CO1, CO2, CO3, CO4, CO5, CO6) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
                 CO1 = VALUES(CO1),

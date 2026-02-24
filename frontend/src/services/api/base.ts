@@ -105,7 +105,7 @@ export async function apiPut<T, R>(endpoint: string, body: T): Promise<R> {
 		throw new Error(
 			data.errors
 				? data.errors.join(", ")
-				: data.message || "Request failed",
+				: data.message || data.error || "Request failed",
 		);
 	}
 

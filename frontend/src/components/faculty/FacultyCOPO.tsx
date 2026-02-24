@@ -28,7 +28,9 @@ export function FacultyCOPO({ selectedCourse, user }: FacultyCOPOProps) {
 			<COPOMapping
 				courseCode={selectedCourse.course_code}
 				courseName={selectedCourse.course_name}
-				courseId={selectedCourse.course_id}
+				courseId={
+					selectedCourse.offering_id ?? selectedCourse.course_id
+				}
 				facultyName={user.username}
 				departmentName={user.department_name || "Not Assigned"}
 				year={selectedCourse.year}

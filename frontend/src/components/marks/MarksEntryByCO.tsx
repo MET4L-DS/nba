@@ -55,6 +55,7 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 	const [invalidCells, setInvalidCells] = useState<Set<string>>(new Set());
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [searchTerm, setSearchTerm] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const ITEMS_PER_PAGE = 10;
@@ -322,9 +323,14 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 		});
 	};
 
-	// Pagination
-	const totalPages = Math.ceil(enrollments.length / ITEMS_PER_PAGE);
-	const paginated = enrollments.slice(
+	// Filtering + Pagination
+	const filteredEnrollments = enrollments.filter(
+		(e) =>
+			e.student_rollno.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			e.student_name.toLowerCase().includes(searchTerm.toLowerCase()),
+	);
+	const totalPages = Math.ceil(filteredEnrollments.length / ITEMS_PER_PAGE);
+	const paginated = filteredEnrollments.slice(
 		(currentPage - 1) * ITEMS_PER_PAGE,
 		currentPage * ITEMS_PER_PAGE,
 	);
@@ -342,6 +348,12 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 				onSave={handleSubmit}
 				isSaving={submitting}
 				isDisabled={enrollments.length === 0}
+				searchTerm={searchTerm}
+				onSearch={(v) => {
+					setSearchTerm(v);
+					setCurrentPage(1);
+				}}
+				searchPlaceholder="Search by roll no or name..."
 				extraActions={
 					<>
 						<input
@@ -423,7 +435,7 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 													</div>
 												</TableHead>
 											))}
-											<TableHead className="text-center min-w-[80px] sticky top-0 bg-background z-40 shadow-sm">
+											<TableHead className="text-center min-w-20 sticky top-0 bg-background z-40 shadow-sm">
 												Total
 											</TableHead>
 										</TableRow>
@@ -455,9 +467,14 @@ export function MarksEntryByCO({ test, course, onBack }: MarksEntryByCOProps) {
 													}
 												>
 													<TableCell className="text-left font-medium sticky left-0 bg-inherit z-30 border-r">
-														{
-															enrollment.student_rollno
-														}
+														<Badge
+															variant="outline"
+															className="font-mono"
+														>
+															{
+																enrollment.student_rollno
+															}
+														</Badge>
 													</TableCell>
 													<TableCell className="text-left sticky left-[120px] bg-inherit z-30 border-r">
 														{

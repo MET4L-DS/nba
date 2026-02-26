@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,6 +28,7 @@ interface BulkMarksTableProps {
 		questionId: string,
 		value: string,
 	) => void;
+	emptyMessage?: string;
 }
 
 export function BulkMarksTable({
@@ -36,15 +37,19 @@ export function BulkMarksTable({
 	marks,
 	dirtyRows,
 	onMarkChange,
+	emptyMessage = "No students enrolled in this course",
 }: BulkMarksTableProps) {
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 10;
 
+	// Reset to page 1 whenever the visible enrollments list changes (e.g. search filter applied)
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [enrollments]);
+
 	if (enrollments.length === 0) {
 		return (
-			<div className="text-center py-8 text-gray-500">
-				No students enrolled in this course
-			</div>
+			<div className="text-center py-8 text-gray-500">{emptyMessage}</div>
 		);
 	}
 
@@ -140,7 +145,12 @@ export function BulkMarksTable({
 										}
 									>
 										<TableCell className="text-left font-medium sticky left-0 bg-inherit z-30 border-r">
-											{enrollment.student_rollno}
+											<Badge
+												variant="outline"
+												className="font-mono"
+											>
+												{enrollment.student_rollno}
+											</Badge>
 										</TableCell>
 										<TableCell className="text-left sticky left-[120px] bg-inherit z-30 border-r">
 											{enrollment.student_name}

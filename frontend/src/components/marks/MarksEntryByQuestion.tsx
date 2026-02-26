@@ -36,6 +36,7 @@ export function MarksEntryByQuestion({
 	const [dirtyRows, setDirtyRows] = useState<Set<string>>(new Set());
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [searchTerm, setSearchTerm] = useState("");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -60,51 +61,51 @@ export function MarksEntryByQuestion({
 			// Initialize marks structure
 			const initialMarks: Record<string, Record<string, string>> = {};
 
-			// Load existing marks for each student
+			// Initialize all question slots for every enrolled student
 			const enrollments = enrollmentData.enrollments || [];
 			const questions = enrollmentData.test_info?.questions || [];
 
-			for (const enrollment of enrollments) {
+			enrollments.forEach((enrollment) => {
 				initialMarks[enrollment.student_rollno] = {};
-
-				// Initialize all questions with empty string
 				questions.forEach((q) => {
 					initialMarks[enrollment.student_rollno][
 						q.question_identifier
 					] = "";
 				});
+			});
 
-				// Try to load existing marks for this student
-				try {
-					const studentMarks = await apiService.getStudentMarks(
-						test.id,
-						enrollment.student_rollno,
-					);
-
-					// Fill in existing marks
-					if (
-						studentMarks.raw_marks &&
-						studentMarks.raw_marks.length > 0
-					) {
-						studentMarks.raw_marks.forEach((rawMark) => {
-							const questionIdentifier =
-								rawMark.question_identifier;
-							if (
-								initialMarks[enrollment.student_rollno][
-									questionIdentifier
-								] !== undefined
-							) {
-								initialMarks[enrollment.student_rollno][
-									questionIdentifier
-								] = rawMark.marks.toString();
-							}
-						});
+			// Fetch all students' marks in parallel (fixes N+1 sequential loading)
+			const marksResults = await Promise.all(
+				enrollments.map(async (enrollment) => {
+					try {
+						return await apiService.getStudentMarks(
+							test.id,
+							enrollment.student_rollno,
+						);
+					} catch {
+						return null; // student has no marks yet
 					}
-				} catch (error) {
-					// If student has no marks yet, continue with empty values
-					// console.log(`No existing marks for student ${enrollment.student_rollno}`);
+				}),
+			);
+
+			// Fill in existing marks from parallel results
+			enrollments.forEach((enrollment, idx) => {
+				const studentMarks = marksResults[idx];
+				if (studentMarks?.raw_marks?.length) {
+					studentMarks.raw_marks.forEach((rawMark) => {
+						const questionIdentifier = rawMark.question_identifier;
+						if (
+							initialMarks[enrollment.student_rollno][
+								questionIdentifier
+							] !== undefined
+						) {
+							initialMarks[enrollment.student_rollno][
+								questionIdentifier
+							] = rawMark.marks.toString();
+						}
+					});
 				}
-			}
+			});
 
 			setMarks(initialMarks);
 			setOriginalMarks(JSON.parse(JSON.stringify(initialMarks))); // Deep copy
@@ -357,6 +358,12 @@ export function MarksEntryByQuestion({
 		}
 	};
 
+	const filteredEnrollments = enrollments.filter(
+		(e) =>
+			e.student_rollno.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			e.student_name.toLowerCase().includes(searchTerm.toLowerCase()),
+	);
+
 	return (
 		<div className="space-y-2 w-full min-w-0">
 			<MarksEntryHeader
@@ -370,6 +377,9 @@ export function MarksEntryByQuestion({
 				onSave={handleSubmit}
 				isSaving={submitting}
 				isDisabled={enrollments.length === 0}
+				searchTerm={searchTerm}
+				onSearch={setSearchTerm}
+				searchPlaceholder="Search by roll no or name..."
 				extraActions={
 					<>
 						<input
@@ -397,10 +407,15 @@ export function MarksEntryByQuestion({
 				) : (
 					<BulkMarksTable
 						questions={questions}
-						enrollments={enrollments}
+						enrollments={filteredEnrollments}
 						marks={marks}
 						dirtyRows={dirtyRows}
 						onMarkChange={handleMarkChange}
+						emptyMessage={
+							searchTerm
+								? `No students match "${searchTerm}"`
+								: "No students enrolled in this course"
+						}
 					/>
 				)}
 			</TestInfoCard>

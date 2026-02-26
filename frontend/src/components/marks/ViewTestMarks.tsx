@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiService } from "@/services/api";
 import type { Course, Test } from "@/services/api";
+import { BarChart2 } from "lucide-react";
 import { TestHeader } from "./TestHeader";
 import { StudentMarksTable } from "./StudentMarksTable";
 
@@ -48,10 +49,17 @@ export function ViewTestMarks({ test, course, onBack }: ViewTestMarksProps) {
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Student Marks Summary</CardTitle>
-					<p className="text-sm text-gray-500 dark:text-gray-400">
-						CO-aggregated marks for all students
-					</p>
+					<div className="flex flex-row items-center gap-3">
+						<div className="w-10 h-10 rounded-lg bg-linear-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
+							<BarChart2 className="w-5 h-5 text-white" />
+						</div>
+						<div>
+							<CardTitle>Student Marks Summary</CardTitle>
+							<p className="text-sm text-muted-foreground mt-0.5">
+								CO-aggregated marks for all students
+							</p>
+						</div>
+					</div>
 				</CardHeader>
 				<CardContent>
 					<StudentMarksTable

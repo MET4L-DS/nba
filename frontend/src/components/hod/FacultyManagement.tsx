@@ -333,9 +333,9 @@ export function FacultyManagement() {
 				</Button>
 			),
 			cell: ({ row }) => (
-				<div className="text-muted-foreground text-sm">
+				<Badge variant="outline" className="flex">
 					{row.getValue("email")}
-				</div>
+				</Badge>
 			),
 		},
 		{

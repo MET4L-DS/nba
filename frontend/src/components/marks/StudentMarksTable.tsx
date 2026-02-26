@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-	Table,
 	TableBody,
 	TableCell,
 	TableHead,
@@ -8,6 +7,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
 	Pagination,
 	PaginationContent,
@@ -16,22 +16,30 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
-import { FileText } from "lucide-react";
+import { FileText, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface StudentMark {
+	student_id: string;
+	student_name: string;
+	CO1: string | number;
+	CO2: string | number;
+	CO3: string | number;
+	CO4: string | number;
+	CO5: string | number;
+	CO6: string | number;
+}
+
 interface StudentMarksTableProps {
-	marks: Array<{
-		student_id: string;
-		student_name: string;
-		CO1: string | number;
-		CO2: string | number;
-		CO3: string | number;
-		CO4: string | number;
-		CO5: string | number;
-		CO6: string | number;
-	}>;
+	marks: StudentMark[];
 	passMarks: number;
 	loading: boolean;
+}
+
+const CO_KEYS = ["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"] as const;
+
+function calculateTotal(mark: StudentMark): number {
+	return CO_KEYS.reduce((sum, co) => sum + Number(mark[co]), 0);
 }
 
 export function StudentMarksTable({
@@ -40,277 +48,301 @@ export function StudentMarksTable({
 	loading,
 }: StudentMarksTableProps) {
 	const [currentPage, setCurrentPage] = useState(1);
+	const [searchTerm, setSearchTerm] = useState("");
 	const itemsPerPage = 10;
 
-	const calculateTotal = (markData: {
-		student_id: string;
-		student_name: string;
-		CO1: string | number;
-		CO2: string | number;
-		CO3: string | number;
-		CO4: string | number;
-		CO5: string | number;
-		CO6: string | number;
-	}) => {
-		return (
-			Number(markData.CO1) +
-			Number(markData.CO2) +
-			Number(markData.CO3) +
-			Number(markData.CO4) +
-			Number(markData.CO5) +
-			Number(markData.CO6)
-		);
-	};
+	// Reset page when marks list or search changes
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [marks, searchTerm]);
 
 	if (loading) {
 		return (
-			<div className="space-y-4">
-				<div className="overflow-x-auto">
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Student ID</TableHead>
-								<TableHead>Student Name</TableHead>
-								<TableHead className="text-center">
-									CO1
-								</TableHead>
-								<TableHead className="text-center">
-									CO2
-								</TableHead>
-								<TableHead className="text-center">
-									CO3
-								</TableHead>
-								<TableHead className="text-center">
-									CO4
-								</TableHead>
-								<TableHead className="text-center">
-									CO5
-								</TableHead>
-								<TableHead className="text-center">
-									CO6
-								</TableHead>
-								<TableHead className="text-center">
-									Total
-								</TableHead>
-								<TableHead className="text-center">
-									Status
-								</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{Array.from({ length: 5 }).map((_, i) => (
-								<TableRow key={i}>
-									<TableCell>
-										<Skeleton className="h-4 w-[100px]" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-[150px]" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-12 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-12 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-12 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-12 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-12 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-12 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-12 mx-auto" />
-									</TableCell>
-									<TableCell>
-										<Skeleton className="h-4 w-[60px] mx-auto" />
-									</TableCell>
+			<div className="space-y-3">
+				<Skeleton className="h-9 w-64" />
+				<div className="relative border rounded-md overflow-hidden">
+					<div className="overflow-x-auto">
+						<table className="w-full caption-bottom text-sm min-w-max">
+							<TableHeader className="bg-background">
+								<TableRow className="hover:bg-transparent">
+									<TableHead className="w-[120px] min-w-[120px]">
+										Student ID
+									</TableHead>
+									<TableHead className="w-[200px] min-w-[200px]">
+										Student Name
+									</TableHead>
+									{CO_KEYS.map((co) => (
+										<TableHead
+											key={co}
+											className="text-center min-w-20"
+										>
+											{co}
+										</TableHead>
+									))}
+									<TableHead className="text-center min-w-20">
+										Total
+									</TableHead>
+									<TableHead className="text-center min-w-[90px]">
+										Status
+									</TableHead>
 								</TableRow>
-							))}
-						</TableBody>
-					</Table>
+							</TableHeader>
+							<tbody>
+								{Array.from({ length: 5 }).map((_, i) => (
+									<TableRow key={i}>
+										<TableCell>
+											<Skeleton className="h-4 w-[100px]" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-4 w-[150px]" />
+										</TableCell>
+										{CO_KEYS.map((co) => (
+											<TableCell key={co}>
+												<Skeleton className="h-4 w-10 mx-auto" />
+											</TableCell>
+										))}
+										<TableCell>
+											<Skeleton className="h-4 w-10 mx-auto" />
+										</TableCell>
+										<TableCell>
+											<Skeleton className="h-5 w-14 mx-auto rounded-full" />
+										</TableCell>
+									</TableRow>
+								))}
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 		);
 	}
 
-	if (marks.length === 0) {
-		return (
-			<div className="text-center py-12">
-				<FileText className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-				<p className="text-gray-500 dark:text-gray-400">
-					No marks entered yet for this assessment
-				</p>
-			</div>
-		);
-	}
+	const filteredMarks = marks.filter(
+		(m) =>
+			m.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			m.student_name.toLowerCase().includes(searchTerm.toLowerCase()),
+	);
 
-	// Calculate pagination
-	const totalPages = Math.ceil(marks.length / itemsPerPage);
+	const totalPages = Math.ceil(filteredMarks.length / itemsPerPage);
 	const startIndex = (currentPage - 1) * itemsPerPage;
-	const endIndex = startIndex + itemsPerPage;
-	const currentMarks = marks.slice(startIndex, endIndex);
-
-	const handlePageChange = (page: number) => {
-		setCurrentPage(page);
-	};
+	const currentMarks = filteredMarks.slice(
+		startIndex,
+		startIndex + itemsPerPage,
+	);
 
 	return (
 		<div className="space-y-4">
-			<div className="overflow-x-auto">
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead>Student ID</TableHead>
-							<TableHead>Student Name</TableHead>
-							<TableHead className="text-center">CO1</TableHead>
-							<TableHead className="text-center">CO2</TableHead>
-							<TableHead className="text-center">CO3</TableHead>
-							<TableHead className="text-center">CO4</TableHead>
-							<TableHead className="text-center">CO5</TableHead>
-							<TableHead className="text-center">CO6</TableHead>
-							<TableHead className="text-center">Total</TableHead>
-							<TableHead className="text-center">
-								Status
-							</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{currentMarks.map((mark) => {
-							const total = calculateTotal(mark);
-							const passed = total >= passMarks;
-							return (
-								<TableRow key={mark.student_id}>
-									<TableCell className="text-left font-medium">
-										{mark.student_id}
-									</TableCell>
-									<TableCell className="text-left">
-										{mark.student_name}
-									</TableCell>
-									<TableCell className="text-center">
-										{mark.CO1}
-									</TableCell>
-									<TableCell className="text-center">
-										{mark.CO2}
-									</TableCell>
-									<TableCell className="text-center">
-										{mark.CO3}
-									</TableCell>
-									<TableCell className="text-center">
-										{mark.CO4}
-									</TableCell>
-									<TableCell className="text-center">
-										{mark.CO5}
-									</TableCell>
-									<TableCell className="text-center">
-										{mark.CO6}
-									</TableCell>
-									<TableCell className="text-center font-semibold">
-										{total}
-									</TableCell>
-									<TableCell className="text-center">
-										<Badge
-											variant={
-												passed
-													? "default"
-													: "destructive"
-											}
-										>
-											{passed ? "Pass" : "Fail"}
-										</Badge>
-									</TableCell>
-								</TableRow>
-							);
-						})}
-					</TableBody>
-				</Table>
+			{/* Search + count row */}
+			<div className="flex items-center justify-between gap-4">
+				<div className="relative">
+					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+					<Input
+						placeholder="Search by roll no or name..."
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						className="pl-9 w-64"
+					/>
+				</div>
+				{marks.length > 0 && (
+					<p className="text-sm text-muted-foreground shrink-0">
+						{searchTerm
+							? `${filteredMarks.length} of ${marks.length} students`
+							: `${marks.length} student${marks.length !== 1 ? "s" : ""}`}
+					</p>
+				)}
 			</div>
 
-			{totalPages > 1 && (
-				<div className="flex justify-center">
-					<Pagination>
-						<PaginationContent>
-							<PaginationItem>
-								<PaginationPrevious
-									onClick={() =>
-										handlePageChange(
-											Math.max(1, currentPage - 1),
-										)
-									}
-									className={
-										currentPage === 1
-											? "pointer-events-none opacity-50"
-											: "cursor-pointer"
-									}
-								/>
-							</PaginationItem>
-							{Array.from({ length: totalPages }, (_, i) => i + 1)
-								.filter((page) => {
-									// Show first page, last page, current page, and pages around current
-									return (
-										page === 1 ||
-										page === totalPages ||
-										Math.abs(page - currentPage) <= 1
-									);
-								})
-								.map((page, index, array) => {
-									// Add ellipsis
-									const prevPage = array[index - 1];
-									const showEllipsis =
-										prevPage && page - prevPage > 1;
-
-									return (
-										<>
-											{showEllipsis && (
-												<PaginationItem
-													key={`ellipsis-${page}`}
-												>
-													<span className="px-4">
-														...
-													</span>
-												</PaginationItem>
-											)}
-											<PaginationItem key={page}>
-												<PaginationLink
-													onClick={() =>
-														handlePageChange(page)
-													}
-													isActive={
-														currentPage === page
-													}
-													className="cursor-pointer"
-												>
-													{page}
-												</PaginationLink>
-											</PaginationItem>
-										</>
-									);
-								})}
-							<PaginationItem>
-								<PaginationNext
-									onClick={() =>
-										handlePageChange(
-											Math.min(
-												totalPages,
-												currentPage + 1,
-											),
-										)
-									}
-									className={
-										currentPage === totalPages
-											? "pointer-events-none opacity-50"
-											: "cursor-pointer"
-									}
-								/>
-							</PaginationItem>
-						</PaginationContent>
-					</Pagination>
+			{marks.length === 0 ? (
+				<div className="text-center py-12">
+					<FileText className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+					<p className="text-muted-foreground">
+						No marks entered yet for this assessment
+					</p>
 				</div>
+			) : filteredMarks.length === 0 ? (
+				<div className="text-center py-12">
+					<Search className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+					<p className="text-muted-foreground">
+						No students match &ldquo;{searchTerm}&rdquo;
+					</p>
+				</div>
+			) : (
+				<>
+					<div className="relative border rounded-md overflow-hidden">
+						<div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-360px)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full">
+							<table className="w-full caption-bottom text-sm min-w-max">
+								<TableHeader className="bg-background">
+									<TableRow className="hover:bg-transparent">
+										<TableHead className="text-left w-[120px] min-w-[120px] sticky left-0 top-0 bg-background z-50 border-r shadow-sm">
+											Student ID
+										</TableHead>
+										<TableHead className="text-left w-[200px] min-w-[200px] sticky left-[120px] top-0 bg-background z-50 border-r shadow-sm">
+											Student Name
+										</TableHead>
+										{CO_KEYS.map((co) => (
+											<TableHead
+												key={co}
+												className="text-center min-w-20 sticky top-0 bg-background z-40 shadow-sm"
+											>
+												<div className="flex justify-center py-1">
+													<Badge
+														variant="outline"
+														className="text-xs"
+													>
+														{co}
+													</Badge>
+												</div>
+											</TableHead>
+										))}
+										<TableHead className="text-center min-w-20 sticky top-0 bg-background z-40 shadow-sm font-semibold">
+											Total
+										</TableHead>
+										<TableHead className="text-center min-w-[90px] sticky top-0 bg-background z-40 shadow-sm">
+											Status
+										</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{currentMarks.map((mark) => {
+										const total = calculateTotal(mark);
+										const passed = total >= passMarks;
+										return (
+											<TableRow
+												key={mark.student_id}
+												className="bg-background hover:bg-muted/50"
+											>
+												<TableCell className="text-left font-medium sticky left-0 bg-inherit z-30 border-r">
+													<Badge
+														variant="outline"
+														className="font-mono"
+													>
+														{mark.student_id}
+													</Badge>
+												</TableCell>
+												<TableCell className="text-left sticky left-[120px] bg-inherit z-30 border-r">
+													{mark.student_name}
+												</TableCell>
+												{CO_KEYS.map((co) => (
+													<TableCell
+														key={co}
+														className="text-center tabular-nums"
+													>
+														{Number(mark[co]) !==
+														0 ? (
+															mark[co]
+														) : (
+															<span className="text-muted-foreground/40">
+																—
+															</span>
+														)}
+													</TableCell>
+												))}
+												<TableCell className="text-center font-semibold tabular-nums">
+													{total}
+												</TableCell>
+												<TableCell className="text-center">
+													<Badge
+														variant={
+															passed
+																? "default"
+																: "destructive"
+														}
+													>
+														{passed
+															? "Pass"
+															: "Fail"}
+													</Badge>
+												</TableCell>
+											</TableRow>
+										);
+									})}
+								</TableBody>
+							</table>
+						</div>
+					</div>
+
+					{totalPages > 1 && (
+						<div className="flex justify-center">
+							<Pagination>
+								<PaginationContent>
+									<PaginationItem>
+										<PaginationPrevious
+											onClick={() =>
+												setCurrentPage((p) =>
+													Math.max(1, p - 1),
+												)
+											}
+											className={
+												currentPage === 1
+													? "pointer-events-none opacity-50"
+													: "cursor-pointer"
+											}
+										/>
+									</PaginationItem>
+									{Array.from(
+										{ length: totalPages },
+										(_, i) => i + 1,
+									)
+										.filter(
+											(page) =>
+												page === 1 ||
+												page === totalPages ||
+												Math.abs(page - currentPage) <=
+													1,
+										)
+										.map((page, index, array) => {
+											const prevPage = array[index - 1];
+											const showEllipsis =
+												prevPage && page - prevPage > 1;
+											return (
+												<>
+													{showEllipsis && (
+														<PaginationItem
+															key={`ellipsis-${page}`}
+														>
+															<span className="px-4">
+																...
+															</span>
+														</PaginationItem>
+													)}
+													<PaginationItem key={page}>
+														<PaginationLink
+															onClick={() =>
+																setCurrentPage(
+																	page,
+																)
+															}
+															isActive={
+																currentPage ===
+																page
+															}
+															className="cursor-pointer"
+														>
+															{page}
+														</PaginationLink>
+													</PaginationItem>
+												</>
+											);
+										})}
+									<PaginationItem>
+										<PaginationNext
+											onClick={() =>
+												setCurrentPage((p) =>
+													Math.min(totalPages, p + 1),
+												)
+											}
+											className={
+												currentPage === totalPages
+													? "pointer-events-none opacity-50"
+													: "cursor-pointer"
+											}
+										/>
+									</PaginationItem>
+								</PaginationContent>
+							</Pagination>
+						</div>
+					)}
+				</>
 			)}
 		</div>
 	);

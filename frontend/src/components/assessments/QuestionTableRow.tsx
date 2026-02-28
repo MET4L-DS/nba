@@ -1,156 +1,130 @@
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { TableCell, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trash2, Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import type { Question } from "@/services/api";
 
 interface QuestionTableRowProps {
 	question: Question;
 	index: number;
-	onUpdate: (index: number, updates: Partial<Question>) => void;
-	onRemove: (index: number) => void;
-	onAddSubQuestion: (questionNumber: number) => void;
+	onUpdate: (updates: Partial<Question>) => void;
+	onRemove: () => void;
+	onAddSubQuestion: () => void;
 }
 
 export function QuestionTableRow({
 	question,
-	index,
 	onUpdate,
 	onRemove,
 	onAddSubQuestion,
 }: QuestionTableRowProps) {
+	const questionLabel = question.sub_question
+		? `Q${question.question_number}${question.sub_question}`
+		: `Q${question.question_number}`;
+
 	return (
-		<TableRow>
-			{/* Question Number */}
-			<TableCell className="text-left">
-				<Input
-					type="number"
-					min="1"
-					max="20"
-					value={question.question_number}
-					onChange={(e) =>
-						onUpdate(index, {
-							question_number: parseInt(e.target.value) || 1,
-						})
-					}
-					onFocus={(e) => e.target.select()}
-					className="w-20"
-					required
-				/>
-			</TableCell>
+		<tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+			{/* Q. No. */}
+			<td className="px-4 py-3 border-b">
+				<span className="font-mono text-xs font-semibold text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+					{questionLabel}
+				</span>
+			</td>
 
-			{/* Sub-Question */}
-			<TableCell>
+			{/* Sub-Q */}
+			<td className="px-4 py-3 border-b">
 				<Input
-					maxLength={1}
+					type="text"
 					value={question.sub_question}
-					onChange={(e) => {
-						const value = e.target.value.toLowerCase();
-						if (value === "" || (value >= "a" && value <= "h")) {
-							onUpdate(index, {
-								sub_question: value,
-							});
-						}
-					}}
-					className="w-16"
-					placeholder="a-h"
+					onChange={(e) => onUpdate({ sub_question: e.target.value })}
+					className="w-16 h-8 text-xs"
+					placeholder="-"
+					maxLength={2}
 				/>
-			</TableCell>
+			</td>
 
-			{/* CO Selection */}
-			<TableCell>
+			{/* CO */}
+			<td className="px-4 py-3 border-b">
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button
+						<button
 							type="button"
-							variant="outline"
-							className="w-24 justify-between"
-							size="sm"
+							className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
 						>
 							CO{question.co}
-							<ChevronDown className="w-4 h-4" />
-						</Button>
+							<Plus className="w-2.5 h-2.5 rotate-45 opacity-60" />
+						</button>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent>
+					<DropdownMenuContent align="start">
 						{[1, 2, 3, 4, 5, 6].map((co) => (
 							<DropdownMenuItem
 								key={co}
-								onClick={() => onUpdate(index, { co })}
+								onSelect={() => onUpdate({ co })}
 							>
-								CO{co}
+								<span className="font-semibold text-xs mr-2">
+									CO{co}
+								</span>
+								<span className="text-xs text-muted-foreground">
+									Course Outcome {co}
+								</span>
 							</DropdownMenuItem>
 						))}
 					</DropdownMenuContent>
 				</DropdownMenu>
-			</TableCell>
+			</td>
 
 			{/* Max Marks */}
-			<TableCell>
+			<td className="px-4 py-3 border-b">
 				<Input
 					type="number"
 					step="0.5"
 					min="0.5"
 					value={question.max_marks}
 					onChange={(e) =>
-						onUpdate(index, {
-							max_marks: parseFloat(e.target.value) || 1,
-						})
+						onUpdate({ max_marks: parseFloat(e.target.value) || 0 })
 					}
 					onFocus={(e) => e.target.select()}
-					className="w-24"
+					className="w-24 h-8 text-xs"
 					required
 				/>
-			</TableCell>
+			</td>
 
-			{/* Optional Checkbox */}
-			<TableCell className="text-center">
-				<input
-					type="checkbox"
-					id={`optional-${index}`}
+			{/* Optional */}
+			<td className="px-4 py-3 border-b">
+				<Checkbox
 					checked={question.is_optional}
-					onChange={(e) =>
-						onUpdate(index, {
-							is_optional: e.target.checked,
-						})
+					onCheckedChange={(checked) =>
+						onUpdate({ is_optional: !!checked })
 					}
-					className="w-4 h-4 cursor-pointer"
 				/>
-			</TableCell>
+			</td>
 
-			{/* Action Buttons */}
-			<TableCell className="text-center">
-				<div className="flex items-center justify-center gap-2">
-					<Button
+			{/* Actions */}
+			<td className="px-4 py-3 border-b">
+				<div className="flex items-center gap-1">
+					<button
 						type="button"
-						variant="outline"
-						size="sm"
-						onClick={() =>
-							onAddSubQuestion(question.question_number)
-						}
-						className="gap-1"
-						title="Add Sub-Question"
+						onClick={onAddSubQuestion}
+						title="Add sub-question"
+						className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-muted-foreground hover:text-primary transition-colors"
 					>
-						<Plus className="w-3 h-3" />
-						Sub-Q
-					</Button>
-					<Button
+						<Plus className="w-3.5 h-3.5" />
+					</button>
+					<button
 						type="button"
-						variant="ghost"
-						size="icon"
-						onClick={() => onRemove(index)}
-						className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-						title="Delete Question"
+						onClick={onRemove}
+						title="Remove question"
+						className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-950/30 text-muted-foreground hover:text-destructive transition-colors"
 					>
-						<Trash2 className="w-4 h-4" />
-					</Button>
+						<Trash2 className="w-3.5 h-3.5" />
+					</button>
 				</div>
-			</TableCell>
-		</TableRow>
+			</td>
+		</tr>
 	);
 }

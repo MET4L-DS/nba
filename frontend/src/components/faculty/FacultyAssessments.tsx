@@ -101,140 +101,153 @@ export function FacultyAssessments({
 	return (
 		<div className="h-full flex flex-col">
 			{/* ── Page header + toolbar ─────────────────────────────────── */}
-			<div className="px-6 pt-5 pb-4 border-b bg-background shrink-0 space-y-4">
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-					<div>
-						<h3 className="text-base font-semibold">Assessments</h3>
-						{selectedCourse ? (
-							<p className="text-sm text-muted-foreground mt-0.5">
-								{selectedCourse.course_code} —{" "}
-								{selectedCourse.course_name} &bull;{" "}
-								{selectedCourse.semester} Semester{" "}
-								{selectedCourse.year}
-							</p>
-						) : (
-							<p className="text-sm text-muted-foreground mt-0.5">
-								Select a course to manage its assessments
-							</p>
-						)}
+			{!showCreateForm && (
+				<div className="px-6 pt-5 pb-4 border-b bg-background shrink-0 space-y-4">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+						<div>
+							<h3 className="text-base font-semibold">
+								Assessments
+							</h3>
+							{selectedCourse ? (
+								<p className="text-sm text-muted-foreground mt-0.5">
+									{selectedCourse.course_code} —{" "}
+									{selectedCourse.course_name} &bull;{" "}
+									{selectedCourse.semester} Semester{" "}
+									{selectedCourse.year}
+								</p>
+							) : (
+								<p className="text-sm text-muted-foreground mt-0.5">
+									Select a course to manage its assessments
+								</p>
+							)}
+						</div>
+						<div className="flex gap-2 shrink-0">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setShowEnrollDialog(true)}
+								disabled={!selectedCourse}
+							>
+								<Users className="w-4 h-4 mr-2" />
+								Enroll Students
+							</Button>
+							<Button
+								size="sm"
+								onClick={() => setShowCreateForm(true)}
+								disabled={!selectedCourse}
+							>
+								<Plus className="w-4 h-4 mr-2" />
+								Create Assessment
+							</Button>
+						</div>
 					</div>
-					<div className="flex gap-2 shrink-0">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setShowEnrollDialog(true)}
-							disabled={!selectedCourse}
-						>
-							<Users className="w-4 h-4 mr-2" />
-							Enroll Students
-						</Button>
-						<Button
-							size="sm"
-							onClick={() => setShowCreateForm(true)}
-							disabled={!selectedCourse}
-						>
-							<Plus className="w-4 h-4 mr-2" />
-							Create Assessment
-						</Button>
-					</div>
-				</div>
 
-				{/* Stat cards */}
-				{selectedCourse && !showCreateForm && (
-					<div className="grid grid-cols-3 gap-3">
-						{/* Total Assessments */}
-						<div className="rounded-xl border bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30 p-3 flex items-center gap-3">
-							<div className="h-9 w-9 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-								<ClipboardList className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
-							</div>
-							<div className="min-w-0">
-								<p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium truncate">
-									Total Assessments
-								</p>
-								{statsLoading ? (
-									<Skeleton className="h-5 w-8 mt-0.5" />
-								) : (
-									<p className="text-lg font-bold text-blue-700 dark:text-blue-300 leading-tight">
-										{courseStats?.totalAssessments ??
-											testsCount}
+					{/* Stat cards */}
+					{selectedCourse && (
+						<div className="grid grid-cols-3 gap-3">
+							{/* Total Assessments */}
+							<div className="rounded-xl border bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30 p-3 flex items-center gap-3">
+								<div className="h-9 w-9 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+									<ClipboardList className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
+								</div>
+								<div className="min-w-0">
+									<p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium truncate">
+										Total Assessments
 									</p>
-								)}
-							</div>
-						</div>
-						{/* Avg. Performance */}
-						<div className="rounded-xl border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/30 p-3 flex items-center gap-3">
-							<div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
-								<TrendingUp className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
-							</div>
-							<div className="min-w-0">
-								<p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 font-medium truncate">
-									Avg. Performance
-								</p>
-								{statsLoading ? (
-									<Skeleton className="h-5 w-12 mt-0.5" />
-								) : courseStats?.avgPerformance != null ? (
-									<p className="text-lg font-bold text-emerald-700 dark:text-emerald-300 leading-tight">
-										{courseStats.avgPerformance}%
-									</p>
-								) : (
-									<div>
-										<p className="text-sm font-bold text-emerald-700/60 dark:text-emerald-300/60 leading-tight">
-											No marks yet
+									{statsLoading ? (
+										<Skeleton className="h-5 w-8 mt-0.5" />
+									) : (
+										<p className="text-lg font-bold text-blue-700 dark:text-blue-300 leading-tight">
+											{courseStats?.totalAssessments ??
+												testsCount}
 										</p>
-										{courseStats &&
-											courseStats.marksCount === 0 &&
-											courseStats.totalAssessments >
-												0 && (
-												<p className="text-[10px] text-emerald-600/50 dark:text-emerald-400/50 leading-tight mt-0.5">
-													Enter marks to track
-												</p>
-											)}
-									</div>
-								)}
+									)}
+								</div>
 							</div>
-						</div>
-						{/* Active Students */}
-						<div className="rounded-xl border bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/30 p-3 flex items-center gap-3">
-							<div className="h-9 w-9 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
-								<GraduationCap className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
-							</div>
-							<div className="min-w-0">
-								<p className="text-xs text-amber-600/80 dark:text-amber-400/80 font-medium truncate">
-									Active Students
-								</p>
-								{statsLoading ? (
-									<Skeleton className="h-5 w-8 mt-0.5" />
-								) : (
-									<p className="text-lg font-bold text-amber-700 dark:text-amber-300 leading-tight">
-										{courseStats?.activeStudents ?? "—"}
+							{/* Avg. Performance */}
+							<div className="rounded-xl border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/30 p-3 flex items-center gap-3">
+								<div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+									<TrendingUp className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
+								</div>
+								<div className="min-w-0">
+									<p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 font-medium truncate">
+										Avg. Performance
 									</p>
-								)}
+									{statsLoading ? (
+										<Skeleton className="h-5 w-12 mt-0.5" />
+									) : courseStats?.avgPerformance != null ? (
+										<p className="text-lg font-bold text-emerald-700 dark:text-emerald-300 leading-tight">
+											{courseStats.avgPerformance}%
+										</p>
+									) : (
+										<div>
+											<p className="text-sm font-bold text-emerald-700/60 dark:text-emerald-300/60 leading-tight">
+												No marks yet
+											</p>
+											{courseStats &&
+												courseStats.marksCount === 0 &&
+												courseStats.totalAssessments >
+													0 && (
+													<p className="text-[10px] text-emerald-600/50 dark:text-emerald-400/50 leading-tight mt-0.5">
+														Enter marks to track
+													</p>
+												)}
+										</div>
+									)}
+								</div>
+							</div>
+							{/* Active Students */}
+							<div className="rounded-xl border bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/30 p-3 flex items-center gap-3">
+								<div className="h-9 w-9 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+									<GraduationCap className="w-4.5 h-4.5 text-amber-600 dark:text-amber-400" />
+								</div>
+								<div className="min-w-0">
+									<p className="text-xs text-amber-600/80 dark:text-amber-400/80 font-medium truncate">
+										Active Students
+									</p>
+									{statsLoading ? (
+										<Skeleton className="h-5 w-8 mt-0.5" />
+									) : (
+										<p className="text-lg font-bold text-amber-700 dark:text-amber-300 leading-tight">
+											{courseStats?.activeStudents ?? "—"}
+										</p>
+									)}
+								</div>
 							</div>
 						</div>
-					</div>
-				)}
-			</div>
+					)}
+				</div>
+			)}
 
 			{/* ── Main content ─────────────────────────────────────────── */}
 			<div className="flex-1 overflow-hidden">
-				<ScrollArea className="h-full">
-					<div className="p-6">
-						{showCreateForm ? (
-							<CreateAssessmentForm
-								selectedCourse={selectedCourse}
-								onSuccess={handleAssessmentCreated}
-								onCancel={() => setShowCreateForm(false)}
-							/>
-						) : (
+				{showCreateForm ? (
+					<CreateAssessmentForm
+						selectedCourse={selectedCourse}
+						onSuccess={handleAssessmentCreated}
+						onCancel={() => setShowCreateForm(false)}
+						contextStats={
+							courseStats
+								? {
+										assessments:
+											courseStats.totalAssessments,
+										students: courseStats.activeStudents,
+									}
+								: null
+						}
+					/>
+				) : (
+					<ScrollArea className="h-full">
+						<div className="p-6">
 							<TestsList
 								course={selectedCourse}
 								refreshTrigger={refreshTrigger}
 								onGoToMarks={handleGoToMarks}
 								onCountChange={setTestsCount}
 							/>
-						)}
-					</div>
-				</ScrollArea>
+						</div>
+					</ScrollArea>
+				)}
 			</div>
 
 			{/* ── Enroll Students Dialog ────────────────────────────────── */}

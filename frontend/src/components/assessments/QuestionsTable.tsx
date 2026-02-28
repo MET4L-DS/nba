@@ -1,10 +1,4 @@
-import {
-	Table,
-	TableBody,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
+import { ClipboardList } from "lucide-react";
 import { QuestionTableRow } from "./QuestionTableRow";
 import type { Question } from "@/services/api";
 
@@ -23,38 +17,62 @@ export function QuestionsTable({
 }: QuestionsTableProps) {
 	if (questions.length === 0) {
 		return (
-			<div className="text-center py-8 text-gray-500 dark:text-gray-400">
-				No questions added yet. Click "Add Question" to start.
+			<div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+				<div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+					<ClipboardList className="w-6 h-6 text-muted-foreground" />
+				</div>
+				<p className="text-sm font-semibold text-muted-foreground mb-1">
+					No questions added yet
+				</p>
+				<p className="text-xs text-muted-foreground/70">
+					Use the button below to add your first question
+				</p>
 			</div>
 		);
 	}
 
 	return (
 		<div className="overflow-x-auto">
-			<Table>
-				<TableHeader>
-					<TableRow>
-						<TableHead>Q.No</TableHead>
-						<TableHead className="text-center">Sub-Q</TableHead>
-						<TableHead className="text-center">CO</TableHead>
-						<TableHead className="text-center">Max Marks</TableHead>
-						<TableHead className="text-center">Optional</TableHead>
-						<TableHead className="text-center">Actions</TableHead>
-					</TableRow>
-				</TableHeader>
-				<TableBody>
+			<table className="w-full text-left border-collapse">
+				<thead>
+					<tr className="bg-slate-50 dark:bg-gray-800/50">
+						<th className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 px-4 w-24 border-b">
+							Q. No.
+						</th>
+						<th className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 px-4 w-20 border-b">
+							Sub-Q
+						</th>
+						<th className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 px-4 w-28 border-b">
+							CO
+						</th>
+						<th className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 px-4 w-32 border-b">
+							Max Marks
+						</th>
+						<th className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 px-4 w-24 border-b">
+							Optional
+						</th>
+						<th className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground py-3 px-4 border-b w-full">
+							Actions
+						</th>
+					</tr>
+				</thead>
+				<tbody>
 					{questions.map((question, index) => (
 						<QuestionTableRow
-							key={index}
+							key={`${question.question_number}-${question.sub_question}-${index}`}
 							question={question}
 							index={index}
-							onUpdate={onUpdateQuestion}
-							onRemove={onRemoveQuestion}
-							onAddSubQuestion={onAddSubQuestion}
+							onUpdate={(updates) =>
+								onUpdateQuestion(index, updates)
+							}
+							onRemove={() => onRemoveQuestion(index)}
+							onAddSubQuestion={() =>
+								onAddSubQuestion(question.question_number)
+							}
 						/>
 					))}
-				</TableBody>
-			</Table>
+				</tbody>
+			</table>
 		</div>
 	);
 }

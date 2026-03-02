@@ -38,10 +38,6 @@ interface StudentMarksTableProps {
 
 const CO_KEYS = ["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"] as const;
 
-function calculateTotal(mark: StudentMark): number {
-	return CO_KEYS.reduce((sum, co) => sum + Number(mark[co]), 0);
-}
-
 export function StudentMarksTable({
 	marks,
 	passMarks,

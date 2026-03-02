@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, FileText, Trash2, ClipboardList } from "lucide-react";
+import { Eye, Trash2, ClipboardList } from "lucide-react";
 import { ViewAssessmentDialog } from "./ViewAssessmentDialog";
 import { apiService } from "@/services/api";
 import { assessmentsApi } from "@/services/api/assessments";

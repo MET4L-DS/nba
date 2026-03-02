@@ -2,7 +2,7 @@ import { GraduationCap, BookOpen, Award, Users } from "lucide-react";
 
 export function LoginHero() {
 	return (
-		<div className="relative hidden md:block bg-gradient-to-br from-sky-600 via-blue-700 to-indigo-800">
+		<div className="relative hidden md:block bg-linear-to-br from-sky-600 via-blue-700 to-indigo-800">
 			<div className="absolute inset-0 bg-black/10"></div>
 			{/* Decorative pattern */}
 			<div className="absolute inset-0 opacity-5">

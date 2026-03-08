@@ -623,17 +623,10 @@ class CourseRepository
                        (SELECT COUNT(*) FROM tests t
                         WHERE t.offering_id = co.offering_id) AS test_count
                 FROM courses c
-                LEFT JOIN course_offerings co
-                       ON co.course_id = c.course_id
-                      AND co.offering_id = (
-                              SELECT MAX(co2.offering_id)
-                              FROM course_offerings co2
-                              WHERE co2.course_id = c.course_id
-                          )
+                INNER JOIN course_offerings co ON co.course_id = c.course_id
                 LEFT JOIN course_faculty_assignments cfa
                        ON cfa.offering_id = co.offering_id
                       AND cfa.assignment_type = 'Primary'
-                      AND cfa.is_active = 1
                 LEFT JOIN users u ON u.employee_id = cfa.employee_id
                 WHERE c.department_id = ?
             ";
@@ -653,8 +646,16 @@ class CourseRepository
                 $sql .= " AND c.course_type = ?";
                 $bindings[] = $params['filters']['course_type'];
             }
+            if (!empty($params['filters']['year'])) {
+                $sql .= " AND co.year = ?";
+                $bindings[] = (int)$params['filters']['year'];
+            }
+            if (!empty($params['filters']['semester'])) {
+                $sql .= " AND co.semester = ?";
+                $bindings[] = $params['filters']['semester'];
+            }
 
-            PaginationHelper::applyCursor($sql, $bindings, 'c.course_id', $params['cursor'], $params['sortDir']);
+            PaginationHelper::applyCursor($sql, $bindings, 'co.offering_id', $params['cursor'], $params['sortDir']);
 
             $limit = (int)$params['limit'] + 1;
             $sql .= " ORDER BY {$params['sort']} {$params['sortDir']} LIMIT {$limit}";
@@ -673,7 +674,7 @@ class CourseRepository
     public function countByDepartmentPaginated(int $departmentId, array $params): int
     {
         try {
-            $sql = "SELECT COUNT(*) FROM courses c WHERE c.department_id = ?";
+            $sql = "SELECT COUNT(*) FROM courses c INNER JOIN course_offerings co ON co.course_id = c.course_id WHERE c.department_id = ?";
             $bindings = [$departmentId];
 
             if ($params['search']) {
@@ -689,6 +690,14 @@ class CourseRepository
             if (!empty($params['filters']['course_type'])) {
                 $sql .= " AND c.course_type = ?";
                 $bindings[] = $params['filters']['course_type'];
+            }
+            if (!empty($params['filters']['year'])) {
+                $sql .= " AND co.year = ?";
+                $bindings[] = (int)$params['filters']['year'];
+            }
+            if (!empty($params['filters']['semester'])) {
+                $sql .= " AND co.semester = ?";
+                $bindings[] = $params['filters']['semester'];
             }
 
             $stmt = $this->db->prepare($sql);

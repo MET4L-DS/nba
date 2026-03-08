@@ -106,15 +106,15 @@ class HODController
 
             $params = PaginationHelper::parseParams(
                 $_GET,
-                'c.course_id',
-                'c.course_id',
-                ['c.course_id', 'c.course_code', 'c.course_name', 'c.credit', 'c.course_type', 'co.year', 'co.semester', 'u.username'],
-                ['is_active', 'course_type']
+                'co.offering_id',
+                'co.offering_id',
+                ['co.offering_id', 'c.course_id', 'c.course_code', 'c.course_name', 'c.credit', 'c.course_type', 'co.year', 'co.semester', 'u.username'],
+                ['is_active', 'course_type', 'year', 'semester']
             );
 
             $total  = $this->courseRepository->countByDepartmentPaginated($departmentId, $params);
             $rows   = $this->courseRepository->findByDepartmentPaginated($departmentId, $params);
-            $result = PaginationHelper::buildResponse($rows, 'course_id', $params['limit'], $total);
+            $result = PaginationHelper::buildResponse($rows, 'offering_id', $params['limit'], $total);
 
             http_response_code(200);
             header('Content-Type: application/json');
@@ -236,7 +236,7 @@ class HODController
             $offering = new CourseOffering(
                 $course->getCourseId(),
                 intval($input['year']),
-                intval($input['semester']),
+                $input['semester'],
                 $input['co_threshold'] ?? 40.00,
                 $input['passing_threshold'] ?? 60.00
             );
@@ -328,7 +328,7 @@ class HODController
 
             // 4. Update Offering Fields
             if (isset($input['year'])) $offering->setYear(intval($input['year']));
-            if (isset($input['semester'])) $offering->setSemester(intval($input['semester']));
+            if (isset($input['semester'])) $offering->setSemester($input['semester']);
             if (isset($input['co_threshold'])) $offering->setCoThreshold(floatval($input['co_threshold']));
             if (isset($input['passing_threshold'])) $offering->setPassingThreshold(floatval($input['passing_threshold']));
 

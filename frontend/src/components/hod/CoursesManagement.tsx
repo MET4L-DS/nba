@@ -31,9 +31,18 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown, Plus, Pencil, Trash2, BookOpen, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	ArrowUpDown,
+	Plus,
+	Pencil,
+	Trash2,
+	BookOpen,
+	X,
+	CalendarDays,
+	History,
+} from "lucide-react";
 import { toast } from "sonner";
-import { formatOrdinal } from "@/lib/utils";
 import type {
 	DepartmentCourse,
 	DepartmentFaculty,
@@ -47,36 +56,59 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 const currentYear = new Date().getFullYear();
 const years = [currentYear - 1, currentYear, currentYear + 1];
-const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
+const semesters = ["Spring", "Autumn"] as const;
+// Jan–Jun → Spring, Jul–Dec → Autumn
+const currentSemester: string = new Date().getMonth() < 6 ? "Spring" : "Autumn";
 
 export function CoursesManagement() {
+	// ── Current semester data (locked to currentYear + currentSemester) ─────
 	const {
-		data: courses,
-		loading: isLoading,
-		refresh: onRefresh,
-		pagination,
-		goNext,
-		goPrev,
-		canPrev,
-		pageIndex,
-		search,
-		setSearch,
+		data: currentCourses,
+		loading: isLoadingCurrent,
+		refresh: refreshCurrent,
+		pagination: currentPagination,
+		goNext: currentGoNext,
+		goPrev: currentGoPrev,
+		canPrev: currentCanPrev,
+		pageIndex: currentPageIndex,
+		search: currentSearch,
+		setSearch: setCurrentSearch,
+	} = usePaginatedData<DepartmentCourse, { year: number; semester: string }>({
+		fetchFn: (params) => hodApi.getDepartmentCourses(params),
+		limit: 20,
+		defaultSort: "c.course_code",
+		initialFilters: { year: currentYear, semester: currentSemester },
+	});
+
+	// ── All offerings data (user-filtered) ──────────────────────────────────
+	const {
+		data: allCourses,
+		loading: isLoadingAll,
+		refresh: refreshAll,
+		pagination: allPagination,
+		goNext: allGoNext,
+		goPrev: allGoPrev,
+		canPrev: allCanPrev,
+		pageIndex: allPageIndex,
+		search: allSearch,
+		setSearch: setAllSearch,
 		filters,
 		setFilter,
 	} = usePaginatedData<
 		DepartmentCourse,
-		{ year: number | undefined; semester: number | undefined }
+		{ year: number | undefined; semester: string | undefined }
 	>({
 		fetchFn: (params) => hodApi.getDepartmentCourses(params),
 		limit: 20,
 		defaultSort: "c.course_code",
 	});
 
-	const { data: faculty } = usePaginatedData<DepartmentFaculty>({
-		fetchFn: (params) => hodApi.getDepartmentFaculty(params),
-		limit: 100,
-		defaultSort: "u.username",
-	});
+	const { data: faculty, loading: isLoadingFaculty } =
+		usePaginatedData<DepartmentFaculty>({
+			fetchFn: (params) => hodApi.getDepartmentFaculty(params),
+			limit: 100,
+			defaultSort: "u.username",
+		});
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,7 +120,7 @@ export function CoursesManagement() {
 		credit: 3,
 		faculty_id: 0,
 		year: currentYear,
-		semester: 1,
+		semester: currentSemester,
 	});
 	const [editFormData, setEditFormData] = useState<UpdateCourseRequest>({
 		course_code: "",
@@ -96,7 +128,7 @@ export function CoursesManagement() {
 		credit: 3,
 		faculty_id: 0,
 		year: currentYear,
-		semester: 1,
+		semester: currentSemester,
 	});
 
 	const resetForm = () => {
@@ -106,7 +138,7 @@ export function CoursesManagement() {
 			credit: 3,
 			faculty_id: 0,
 			year: currentYear,
-			semester: 1,
+			semester: currentSemester,
 		});
 	};
 
@@ -230,27 +262,50 @@ export function CoursesManagement() {
 					</Button>
 				</div>
 			),
-			cell: ({ row }) => (
-				<Badge variant="secondary" className="text-center font-medium">
-					{formatOrdinal(row.getValue("semester"))}
-				</Badge>
-			),
+			cell: ({ row }) => {
+				const sem = row.getValue("semester") as string;
+				return (
+					<div className="text-center">
+						<Badge
+							variant="secondary"
+							className={
+								sem === "Spring"
+									? "bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800"
+									: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+							}
+						>
+							{sem}
+						</Badge>
+					</div>
+				);
+			},
 		},
 		{
-			accessorKey: "is_active",
+			id: "offering_status",
 			header: "Status",
 			cell: ({ row }) => {
-				const active = row.getValue("is_active") === 1;
+				const year = row.original.year ?? 0;
+				const semester = row.original.semester ?? "";
+				const isCurrentYear = year === currentYear;
+				const isFuture =
+					year > currentYear ||
+					(isCurrentYear &&
+						semester === "Autumn" &&
+						currentSemester === "Spring");
+				const isActive = isCurrentYear && semester === currentSemester;
+				const label = isActive
+					? "Active"
+					: isFuture
+						? "Scheduled"
+						: "Completed";
+				const cls = isActive
+					? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+					: isFuture
+						? "bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800"
+						: "bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400 border-gray-200 dark:border-gray-700";
 				return (
-					<Badge
-						variant="secondary"
-						className={
-							active
-								? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-								: "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800"
-						}
-					>
-						{active ? "Active" : "Inactive"}
+					<Badge variant="secondary" className={cls}>
+						{label}
 					</Badge>
 				);
 			},
@@ -381,7 +436,8 @@ export function CoursesManagement() {
 			toast.success("Course created successfully");
 			setIsAddDialogOpen(false);
 			resetForm();
-			onRefresh();
+			refreshCurrent();
+			refreshAll();
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -397,7 +453,8 @@ export function CoursesManagement() {
 		try {
 			await hodApi.deleteCourse(courseId);
 			toast.success(`Course "${courseName}" deleted successfully`);
-			onRefresh();
+			refreshCurrent();
+			refreshAll();
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -415,7 +472,7 @@ export function CoursesManagement() {
 			credit: course.credit,
 			faculty_id: course.faculty_id ?? 0,
 			year: course.year ?? currentYear,
-			semester: course.semester ?? 1,
+			semester: course.semester ?? currentSemester,
 		});
 		setIsEditDialogOpen(true);
 	};
@@ -441,7 +498,8 @@ export function CoursesManagement() {
 			toast.success("Course updated successfully");
 			setIsEditDialogOpen(false);
 			setSelectedCourse(null);
-			onRefresh();
+			refreshCurrent();
+			refreshAll();
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -467,6 +525,7 @@ export function CoursesManagement() {
 						</p>
 					</div>
 				</div>
+				{/* Add Course Dialog */}
 				<Dialog
 					open={isAddDialogOpen}
 					onOpenChange={setIsAddDialogOpen}
@@ -481,7 +540,7 @@ export function CoursesManagement() {
 						<DialogHeader>
 							<DialogTitle>Add New Course</DialogTitle>
 							<DialogDescription>
-								Create a new course for your department
+								Create a new course offering for your department
 							</DialogDescription>
 						</DialogHeader>
 						<div className="grid gap-4 py-4">
@@ -562,9 +621,16 @@ export function CoursesManagement() {
 											faculty_id: parseInt(value),
 										})
 									}
+									disabled={isLoadingFaculty}
 								>
 									<SelectTrigger>
-										<SelectValue placeholder="Select faculty member" />
+										<SelectValue
+											placeholder={
+												isLoadingFaculty
+													? "Loading..."
+													: "Select faculty member"
+											}
+										/>
 									</SelectTrigger>
 									<SelectContent>
 										{faculty
@@ -619,11 +685,11 @@ export function CoursesManagement() {
 								<div className="space-y-2">
 									<Label htmlFor="semester">Semester *</Label>
 									<Select
-										value={String(formData.semester)}
+										value={formData.semester}
 										onValueChange={(value) =>
 											setFormData({
 												...formData,
-												semester: parseInt(value),
+												semester: value,
 											})
 										}
 									>
@@ -632,11 +698,8 @@ export function CoursesManagement() {
 										</SelectTrigger>
 										<SelectContent>
 											{semesters.map((s) => (
-												<SelectItem
-													key={s}
-													value={String(s)}
-												>
-													Semester {s}
+												<SelectItem key={s} value={s}>
+													{s} Semester
 												</SelectItem>
 											))}
 										</SelectContent>
@@ -665,99 +728,154 @@ export function CoursesManagement() {
 					</DialogContent>
 				</Dialog>
 			</CardHeader>
+
 			<CardContent>
-				<DataTable
-					columns={columns}
-					data={courses}
-					refreshing={isLoading}
-					serverPagination={{
-						pagination,
-						onNext: goNext,
-						onPrev: goPrev,
-						canPrev,
-						pageIndex,
-						search,
-						onSearch: setSearch,
-					}}
-				>
-					{() => (
-						<div className="flex items-center gap-2">
-							<Select
-								value={
-									filters.year !== undefined
-										? String(filters.year)
-										: ""
-								}
-								onValueChange={(v) =>
-									setFilter(
-										"year",
-										v ? parseInt(v) : undefined,
-									)
-								}
-							>
-								<SelectTrigger className="w-[110px]">
-									<SelectValue placeholder="Year" />
-								</SelectTrigger>
-								<SelectContent>
-									{years.map((y) => (
-										<SelectItem key={y} value={String(y)}>
-											{y}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							{filters.year !== undefined && (
-								<Button
-									variant="ghost"
-									size="icon"
-									className="h-9 w-9"
-									onClick={() => setFilter("year", undefined)}
-								>
-									<X className="h-4 w-4" />
-								</Button>
+				<Tabs defaultValue="current">
+					<TabsList className="mb-4">
+						<TabsTrigger
+							value="current"
+							className="flex items-center gap-2"
+						>
+							<CalendarDays className="w-4 h-4" />
+							{currentSemester} {currentYear}
+						</TabsTrigger>
+						<TabsTrigger
+							value="all"
+							className="flex items-center gap-2"
+						>
+							<History className="w-4 h-4" />
+							All Offerings
+						</TabsTrigger>
+					</TabsList>
+
+					{/* ── Current Semester Tab ─────────────────────────── */}
+					<TabsContent value="current">
+						<DataTable
+							columns={columns}
+							data={currentCourses}
+							refreshing={isLoadingCurrent}
+							serverPagination={{
+								pagination: currentPagination,
+								onNext: currentGoNext,
+								onPrev: currentGoPrev,
+								canPrev: currentCanPrev,
+								pageIndex: currentPageIndex,
+								search: currentSearch,
+								onSearch: setCurrentSearch,
+							}}
+						>
+							{() => (
+								<div className="flex items-center gap-2">
+									<Badge
+										variant="outline"
+										className="bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border-sky-200 px-3 py-1"
+									>
+										{currentSemester} {currentYear}
+									</Badge>
+								</div>
 							)}
-							<Select
-								value={
-									filters.semester !== undefined
-										? String(filters.semester)
-										: ""
-								}
-								onValueChange={(v) =>
-									setFilter(
-										"semester",
-										v ? parseInt(v) : undefined,
-									)
-								}
-							>
-								<SelectTrigger className="w-[130px]">
-									<SelectValue placeholder="Semester" />
-								</SelectTrigger>
-								<SelectContent>
-									{semesters.map((s) => (
-										<SelectItem key={s} value={String(s)}>
-											Semester {s}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							{filters.semester !== undefined && (
-								<Button
-									variant="ghost"
-									size="icon"
-									className="h-9 w-9"
-									onClick={() =>
-										setFilter("semester", undefined)
-									}
-								>
-									<X className="h-4 w-4" />
-								</Button>
+						</DataTable>
+					</TabsContent>
+
+					{/* ── All Offerings Tab ────────────────────────────── */}
+					<TabsContent value="all">
+						<DataTable
+							columns={columns}
+							data={allCourses}
+							refreshing={isLoadingAll}
+							serverPagination={{
+								pagination: allPagination,
+								onNext: allGoNext,
+								onPrev: allGoPrev,
+								canPrev: allCanPrev,
+								pageIndex: allPageIndex,
+								search: allSearch,
+								onSearch: setAllSearch,
+							}}
+						>
+							{() => (
+								<div className="flex items-center gap-2 flex-wrap">
+									{/* Year filter */}
+									<Select
+										value={
+											filters.year !== undefined
+												? String(filters.year)
+												: ""
+										}
+										onValueChange={(v) =>
+											setFilter(
+												"year",
+												v ? parseInt(v) : undefined,
+											)
+										}
+									>
+										<SelectTrigger className="w-[110px]">
+											<SelectValue placeholder="All Years" />
+										</SelectTrigger>
+										<SelectContent>
+											{years.map((y) => (
+												<SelectItem
+													key={y}
+													value={String(y)}
+												>
+													{y}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+									{filters.year !== undefined && (
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-8 w-8"
+											onClick={() =>
+												setFilter("year", undefined)
+											}
+										>
+											<X className="h-4 w-4" />
+										</Button>
+									)}
+									{/* Semester filter */}
+									<Select
+										value={filters.semester ?? ""}
+										onValueChange={(v) =>
+											setFilter(
+												"semester",
+												v || undefined,
+											)
+										}
+									>
+										<SelectTrigger className="w-[150px]">
+											<SelectValue placeholder="All Semesters" />
+										</SelectTrigger>
+										<SelectContent>
+											{semesters.map((s) => (
+												<SelectItem key={s} value={s}>
+													{s} Semester
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+									{filters.semester !== undefined && (
+										<Button
+											variant="ghost"
+											size="icon"
+											className="h-8 w-8"
+											onClick={() =>
+												setFilter("semester", undefined)
+											}
+										>
+											<X className="h-4 w-4" />
+										</Button>
+									)}
+								</div>
 							)}
-						</div>
-					)}
-				</DataTable>
+						</DataTable>
+					</TabsContent>
+				</Tabs>
 			</CardContent>
 
-			{/* Edit Course Dialog */}
+			{/* ── Edit Course Dialog ───────────────────────────────────── */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
 				<DialogContent className="sm:max-w-[500px]">
 					<DialogHeader>
@@ -842,9 +960,16 @@ export function CoursesManagement() {
 										faculty_id: parseInt(value),
 									})
 								}
+								disabled={isLoadingFaculty}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder="Select faculty member" />
+									<SelectValue
+										placeholder={
+											isLoadingFaculty
+												? "Loading..."
+												: "Select faculty member"
+										}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									{faculty
@@ -899,11 +1024,13 @@ export function CoursesManagement() {
 									Semester *
 								</Label>
 								<Select
-									value={String(editFormData.semester)}
+									value={
+										editFormData.semester ?? currentSemester
+									}
 									onValueChange={(value) =>
 										setEditFormData({
 											...editFormData,
-											semester: parseInt(value),
+											semester: value,
 										})
 									}
 								>
@@ -912,11 +1039,8 @@ export function CoursesManagement() {
 									</SelectTrigger>
 									<SelectContent>
 										{semesters.map((s) => (
-											<SelectItem
-												key={s}
-												value={String(s)}
-											>
-												Semester {s}
+											<SelectItem key={s} value={s}>
+												{s} Semester
 											</SelectItem>
 										))}
 									</SelectContent>

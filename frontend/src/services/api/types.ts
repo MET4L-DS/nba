@@ -74,7 +74,7 @@ export interface Course {
 	syllabus: string | null;
 	faculty_id: number;
 	year: number;
-	semester: number;
+	semester: string;
 }
 
 export interface CoursesResponse {
@@ -302,7 +302,7 @@ export interface AdminCourse {
 	// Offering fields (latest offering per course)
 	offering_id?: number | null;
 	year?: number | null;
-	semester?: number | null;
+	semester?: string | null;
 	co_threshold?: number | null;
 	passing_threshold?: number | null;
 	faculty_id?: number | null;
@@ -325,7 +325,7 @@ export interface AdminTest {
 	full_marks: number;
 	pass_marks: number;
 	year: number;
-	semester: number;
+	semester: string;
 }
 
 export interface CreateUserRequest {
@@ -391,7 +391,7 @@ export interface DepartmentCourse {
 	// Offering fields (latest offering per course)
 	offering_id?: number | null;
 	year?: number | null;
-	semester?: number | null;
+	semester?: string | null;
 	co_threshold?: number | null;
 	passing_threshold?: number | null;
 	faculty_id?: number | null;
@@ -417,7 +417,7 @@ export interface CreateCourseRequest {
 	credit: number;
 	faculty_id: number;
 	year: number;
-	semester: number;
+	semester: string;
 	co_threshold?: number;
 	passing_threshold?: number;
 }
@@ -428,7 +428,7 @@ export interface UpdateCourseRequest {
 	credit?: number;
 	faculty_id?: number;
 	year?: number;
-	semester?: number;
+	semester?: string;
 }
 
 export interface AppointHODRequest {
@@ -556,7 +556,7 @@ export interface StaffCourse {
 	is_active?: number;
 	offering_id?: number | null;
 	year?: number | null;
-	semester?: number | null;
+	semester?: string | null;
 	co_threshold?: number | null;
 	passing_threshold?: number | null;
 	faculty_id?: number | null;
@@ -619,7 +619,7 @@ export interface DeanCourse {
 	// Offering fields (latest offering per course)
 	offering_id?: number | null;
 	year?: number | null;
-	semester?: number | null;
+	semester?: string | null;
 	co_threshold?: number | null;
 	passing_threshold?: number | null;
 	faculty_id?: number | null;
@@ -650,7 +650,7 @@ export interface DeanTest {
 	course_code: string;
 	course_name: string;
 	year?: number | null;
-	semester?: number | null;
+	semester?: string | null;
 	faculty_name?: string | null;
 	department_name?: string | null;
 	department_code?: string | null;

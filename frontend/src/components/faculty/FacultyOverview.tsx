@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, TrendingUp, ArrowUpDown } from "lucide-react";
-import { formatOrdinal } from "@/lib/utils";
 import type { Course } from "@/services/api";
 import { DataTable } from "@/components/shared/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -71,9 +70,7 @@ export function FacultyOverview({ courses, isLoading }: FacultyOverviewProps) {
 				accessorKey: "semester",
 				header: "Semester",
 				cell: ({ row }) => (
-					<Badge variant="outline">
-						{formatOrdinal(row.original.semester)} Sem
-					</Badge>
+					<Badge variant="outline">{row.original.semester}</Badge>
 				),
 			},
 		],
@@ -122,15 +119,7 @@ export function FacultyOverview({ courses, isLoading }: FacultyOverviewProps) {
 								Active Semester
 							</p>
 							<p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-								{courses.length > 0
-									? formatOrdinal(
-											Math.max(
-												...courses.map(
-													(c) => c.semester,
-												),
-											),
-										)
-									: "N/A"}
+								{courses[0]?.semester ?? "N/A"}
 							</p>
 						</div>
 						<div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg">

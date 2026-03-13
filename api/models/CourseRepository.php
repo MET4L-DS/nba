@@ -708,6 +708,7 @@ class CourseRepository
                        co.co_threshold, co.passing_threshold,
                        u.employee_id AS faculty_id,
                        u.username    AS faculty_name,
+                       cfa.is_active AS cfa_is_active,
                        (SELECT COUNT(*) FROM enrollments e
                         WHERE e.offering_id = co.offering_id) AS enrollment_count,
                        (SELECT COUNT(*) FROM tests t

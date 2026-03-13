@@ -156,6 +156,14 @@ class Router
 
         // Check for dynamic routes before switch
 
+        // POST /faculty/courses/{offeringId}/conclude
+        if (preg_match('#^faculty/courses/(\d+)/conclude$#', $path, $matches) && $method === 'POST') {
+            $user = $this->authMiddleware->requireAuth();
+            $_REQUEST['authenticated_user'] = $user;
+            $this->facultyController->concludeCourse($user['employee_id'], intval($matches[1]));
+            return;
+        }
+
         // GET /faculty/courses/{offeringId}/stats
         if (preg_match('#^faculty/courses/(\d+)/stats$#', $path, $matches) && $method === 'GET') {
             $user = $this->authMiddleware->requireAuth();

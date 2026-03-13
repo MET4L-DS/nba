@@ -667,7 +667,8 @@ export function CoursesManagement() {
 					(isCurrentYear &&
 						semester === "Autumn" &&
 						currentSemester === "Spring");
-				const isActive = isCurrentYear && semester === currentSemester;
+				const isConcluded = row.original.cfa_is_active === 0;
+				const isActive = !isConcluded && isCurrentYear && semester === currentSemester;
 				const label = isActive
 					? "Active"
 					: isFuture

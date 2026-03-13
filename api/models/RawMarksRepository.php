@@ -178,4 +178,18 @@ class RawMarksRepository
         $stmt = $this->db->prepare("DELETE FROM raw_marks WHERE id = ?");
         return $stmt->execute([$id]);
     }
+
+    /**
+     * Delete all raw marks for a specific course offering
+     */
+    public function deleteByOfferingId($offeringId)
+    {
+        $stmt = $this->db->prepare("
+            DELETE rm FROM raw_marks rm
+            INNER JOIN questions q ON rm.question_id = q.question_id
+            INNER JOIN tests t ON q.test_id = t.test_id
+            WHERE t.offering_id = ?
+        ");
+        return $stmt->execute([$offeringId]);
+    }
 }

@@ -1,5 +1,6 @@
 import { apiGet, apiPost, apiDelete, apiPut, apiGetPaginated } from "./base";
 import type {
+	BaseCourse,
 	HODStats,
 	DepartmentCourse,
 	DepartmentFaculty,
@@ -15,11 +16,27 @@ import type {
 } from "./types";
 
 export const hodApi = {
+	async getBaseCourses(params?: PaginationParams) {
+		return apiGetPaginated<BaseCourse>("/hod/base-courses", params);
+	},
+	async getAllBaseCourses() {
+		return apiGet<BaseCourse[]>("/hod/base-courses/all");
+	},
+	async createBaseCourse(data: any): Promise<BaseCourse> {
+		return apiPost<any, BaseCourse>("/hod/base-courses", data);
+	},
+
 	async getStats(): Promise<HODStats> {
 		return apiGet<HODStats>("/hod/stats");
 	},
 
-	async getDepartmentCourses(
+		async updateBaseCourse(courseId: number, data: any): Promise<void> {
+		return apiPut(`/hod/base-courses/${courseId}`, data);
+	},
+	async deleteBaseCourse(courseId: number): Promise<void> {
+		return apiDelete(`/hod/base-courses/${courseId}`);
+	},
+async getDepartmentCourses(
 		params?: PaginationParams,
 	): Promise<PaginatedResponse<DepartmentCourse>> {
 		return apiGetPaginated<DepartmentCourse>("/hod/courses", params);

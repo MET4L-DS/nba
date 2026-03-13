@@ -379,6 +379,17 @@ export interface HODStats {
 	totalAssessments: number;
 }
 
+export interface BaseCourse {
+	course_id: number;
+	course_code: string;
+	course_name: string;
+	credit: number;
+	department_id?: number | null;
+	course_type?: string;
+	course_level?: string;
+	is_active?: number;
+}
+
 export interface DepartmentCourse {
 	course_id: number;
 	course_code: string;

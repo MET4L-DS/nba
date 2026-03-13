@@ -601,6 +601,96 @@ class CourseRepository
     }
 
     /**
+     * Count basic courses by department for pagination
+     * @param int $departmentId
+     * @param array $params
+     * @return int
+     */
+    public function countBaseCoursesByDepartmentPaginated(int $departmentId, array $params): int
+    {
+        try {
+            $sql = "SELECT COUNT(DISTINCT c.course_id) FROM courses c WHERE c.department_id = ?";
+            $bindings = [$departmentId];
+
+            if (!empty($params['search'])) {
+                $sql .= " AND (c.course_code LIKE ? OR c.course_name LIKE ?)";
+                $like = '%' . $params['search'] . '%';
+                $bindings[] = $like;
+                $bindings[] = $like;
+            }
+
+            if (isset($params['filters']['is_active']) && $params['filters']['is_active'] !== '') {
+                $sql .= " AND c.is_active = ?";
+                $bindings[] = (int)$params['filters']['is_active'];
+            }
+            if (!empty($params['filters']['course_type'])) {
+                $sql .= " AND c.course_type = ?";
+                $bindings[] = $params['filters']['course_type'];
+            }
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($bindings);
+            return (int)$stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Paginated base courses scoped to a department (HOD view).
+     *
+     * @param int   $departmentId
+     * @param array $params Result of PaginationHelper::parseParams()
+     * @return array raw rows
+     */
+    public function findBaseCoursesByDepartmentPaginated(int $departmentId, array $params): array
+    {
+        try {
+            $sql = "
+                SELECT c.course_id, c.course_code, c.course_name, c.credit,
+                       c.department_id, c.course_type, c.course_level,
+                       c.is_active, c.created_at, c.updated_at
+                FROM courses c
+                WHERE c.department_id = ?
+            ";
+            $bindings = [$departmentId];
+
+            if (!empty($params['search'])) {
+                $sql .= " AND (c.course_code LIKE ? OR c.course_name LIKE ?)";
+                $like = '%' . $params['search'] . '%';
+                $bindings[] = $like;
+                $bindings[] = $like;
+            }
+
+            if (isset($params['filters']['is_active']) && $params['filters']['is_active'] !== '') {
+                $sql .= " AND c.is_active = ?";
+                $bindings[] = (int)$params['filters']['is_active'];
+            }
+            if (!empty($params['filters']['course_type'])) {
+                $sql .= " AND c.course_type = ?";
+                $bindings[] = $params['filters']['course_type'];
+            }
+
+            PaginationHelper::applyCursor($sql, $bindings, 'c.course_id', $params['cursor'] ?? null, $params['sortDir'] ?? 'ASC');
+
+            $limit = (int)($params['limit'] ?? 20) + 1;
+            $sortDir = $params['sortDir'] ?? 'ASC';
+            
+            // Valid columns for sorting
+            $validSorts = ['course_code', 'course_name', 'credit', 'course_type', 'course_level'];
+            $sortField = in_array($params['sort'] ?? '', $validSorts) ? "c.{$params['sort']}" : 'c.course_id';
+
+            $sql .= " ORDER BY {$sortField} {$sortDir} LIMIT {$limit}";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($bindings);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Paginated courses scoped to a department (HOD / Staff view).
      *
      * @param int   $departmentId

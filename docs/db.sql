@@ -153,7 +153,7 @@ CREATE TABLE `courses` (
     `department_id` INT(11) NULL,
     `course_name` VARCHAR(255) NOT NULL,
     `course_type` ENUM('Theory', 'Lab', 'Project', 'Seminar') DEFAULT 'Theory',
-    `course_level` ENUM('Undergraduate', 'Postgraduate') DEFAULT 'Undergraduate',
+    `course_level` ENUM('Undergraduate', 'Postgraduate', 'UG & PG') DEFAULT 'Undergraduate',
     `is_active` TINYINT(1) DEFAULT 1,
     `credit` SMALLINT NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

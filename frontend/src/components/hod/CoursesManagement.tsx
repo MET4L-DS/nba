@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type {
+	BaseCourse,
 	DepartmentCourse,
 	DepartmentFaculty,
 	TestAverage,
@@ -172,6 +173,30 @@ function OfferingTestAverages({ offeringId }: { offeringId: number }) {
 }
 
 export function CoursesManagement() {
+	// --- Base Courses Tab Data ---
+	const {
+		data: baseCourses,
+		loading: isLoadingBase,
+		refresh: refreshBase,
+		pagination: basePagination,
+		goNext: baseGoNext,
+		goPrev: baseGoPrev,
+		canPrev: baseCanPrev,
+		pageIndex: basePageIndex,
+		search: baseSearch,
+		setSearch: setBaseSearch,
+	} = usePaginatedData<BaseCourse>({
+		fetchFn: (params) => hodApi.getBaseCourses(params),
+		limit: 20,
+		defaultSort: "course_code",
+	});
+
+	// For the dropdown in "Offer Course"
+	const [allBaseCourses, setAllBaseCourses] = useState<BaseCourse[]>([]);
+	useEffect(() => {
+		hodApi.getAllBaseCourses().then(setAllBaseCourses).catch(console.error);
+	}, []);
+
 	// ── Current semester data (locked to currentYear + currentSemester) ─────
 	const {
 		data: currentCourses,
@@ -221,6 +246,28 @@ export function CoursesManagement() {
 			defaultSort: "u.username",
 		});
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+	const [isAddTemplateDialogOpen, setIsAddTemplateDialogOpen] =
+		useState(false);
+	const [templateFormData, setTemplateFormData] = useState({
+		course_code: "",
+		course_name: "",
+		credit: 3,
+		course_type: "Theory",
+		course_level: "Undergraduate",
+		is_active: 1,
+	});
+	const [isEditTemplateDialogOpen, setIsEditTemplateDialogOpen] =
+		useState(false);
+	const [selectedBaseCourse, setSelectedBaseCourse] =
+		useState<BaseCourse | null>(null);
+	const [editTemplateFormData, setEditTemplateFormData] = useState({
+		course_code: "",
+		course_name: "",
+		credit: 3,
+		course_type: "Theory",
+		course_level: "Undergraduate",
+		is_active: 1,
+	});
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [selectedCourse, setSelectedCourse] =
@@ -242,6 +289,18 @@ export function CoursesManagement() {
 		semester: currentSemester,
 	});
 
+	const handleSelectBaseCourse = (code: string) => {
+		const base = allBaseCourses.find((b) => b.course_code === code);
+		if (base) {
+			setFormData({
+				...formData,
+				course_code: base.course_code,
+				name: base.course_name,
+				credit: base.credit,
+			});
+		}
+	};
+
 	const resetForm = () => {
 		setFormData({
 			course_code: "",
@@ -252,6 +311,189 @@ export function CoursesManagement() {
 			semester: currentSemester,
 		});
 	};
+
+	const baseColumns: ColumnDef<BaseCourse>[] = [
+		{
+			accessorKey: "course_code",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Code
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<Badge variant="outline" className="font-mono">
+					{row.getValue("course_code")}
+				</Badge>
+			),
+		},
+		{
+			accessorKey: "course_name",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Course Name
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<div className="font-medium">{row.getValue("course_name")}</div>
+			),
+		},
+		{
+			accessorKey: "course_type",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Type
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<div className="text-muted-foreground">
+					{row.getValue("course_type") || "—"}
+				</div>
+			),
+		},
+		{
+			accessorKey: "course_level",
+			header: ({ column }) => (
+				<Button
+					variant="ghost"
+					onClick={() =>
+						column.toggleSorting(column.getIsSorted() === "asc")
+					}
+				>
+					Level
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			),
+			cell: ({ row }) => (
+				<div className="text-muted-foreground">
+					{row.getValue("course_level") || "—"}
+				</div>
+			),
+		},
+		{
+			accessorKey: "credit",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Credits
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
+			cell: ({ row }) => (
+				<div className="text-center">
+					<Badge variant="outline">{row.getValue("credit")}</Badge>
+				</div>
+			),
+		},
+		{
+			accessorKey: "is_active",
+			header: ({ column }) => (
+				<div className="text-center">
+					<Button
+						variant="ghost"
+						onClick={() =>
+							column.toggleSorting(column.getIsSorted() === "asc")
+						}
+					>
+						Status
+						<ArrowUpDown className="ml-2 h-4 w-4" />
+					</Button>
+				</div>
+			),
+			cell: ({ row }) => (
+				<div className="text-center">
+					<Badge
+						variant={
+							row.getValue("is_active") ? "default" : "secondary"
+						}
+					>
+						{row.getValue("is_active") ? "Active" : "Inactive"}
+					</Badge>
+				</div>
+			),
+		},
+		{
+			id: "actions",
+			header: () => <div className="text-right">Actions</div>,
+			cell: ({ row }) => {
+				const course = row.original;
+				return (
+					<div className="flex items-center justify-end gap-2">
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+							onClick={() => openEditBaseCourseDialog(course)}
+						>
+							<Pencil className="w-4 h-4" />
+						</Button>
+						<AlertDialog>
+							<AlertDialogTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+								>
+									<Trash2 className="w-4 h-4" />
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>
+										Delete Base Course
+									</AlertDialogTitle>
+									<AlertDialogDescription>
+										Are you sure you want to delete "
+										{course.course_name}"? This action
+										cannot be undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>
+										Cancel
+									</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={() =>
+											handleDeleteBaseCourse(
+												course.course_id,
+												course.course_name,
+											)
+										}
+										className="bg-red-600 hover:bg-red-700"
+									>
+										Delete
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					</div>
+				);
+			},
+		},
+	];
 
 	const columns: ColumnDef<DepartmentCourse>[] = [
 		// ── Expand toggle ──────────────────────────────────────────────────
@@ -621,6 +863,74 @@ export function CoursesManagement() {
 		}
 	};
 
+	const openEditBaseCourseDialog = (course: BaseCourse) => {
+		setSelectedBaseCourse(course);
+		setEditTemplateFormData({
+			course_code: course.course_code,
+			course_name: course.course_name,
+			credit: course.credit,
+			course_type: course.course_type ?? "Theory",
+			course_level: course.course_level ?? "Undergraduate",
+			is_active: course.is_active ?? 1,
+		});
+		setIsEditTemplateDialogOpen(true);
+	};
+
+	const handleUpdateBaseCourse = async () => {
+		if (!selectedBaseCourse) return;
+		if (
+			!editTemplateFormData.course_code ||
+			!editTemplateFormData.course_name
+		) {
+			toast.error("Please fill in required fields");
+			return;
+		}
+
+		setIsSubmitting(true);
+		try {
+			await hodApi.updateBaseCourse(
+				selectedBaseCourse.course_id,
+				editTemplateFormData,
+			);
+			toast.success("Base course updated successfully");
+			setIsEditTemplateDialogOpen(false);
+			setSelectedBaseCourse(null);
+			refreshBase();
+			hodApi
+				.getAllBaseCourses()
+				.then(setAllBaseCourses)
+				.catch(console.error);
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to update base course",
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const handleDeleteBaseCourse = async (
+		courseId: number,
+		courseName: string,
+	) => {
+		try {
+			await hodApi.deleteBaseCourse(courseId);
+			toast.success(`Base course "${courseName}" deleted successfully`);
+			refreshBase();
+			hodApi
+				.getAllBaseCourses()
+				.then(setAllBaseCourses)
+				.catch(console.error);
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to delete base course",
+			);
+		}
+	};
 	const handleDeleteCourse = async (courseId: number, courseName: string) => {
 		try {
 			await hodApi.deleteCourse(courseId);
@@ -725,10 +1035,43 @@ export function CoursesManagement() {
 							<div className="grid grid-cols-2 gap-4">
 								<div className="space-y-2">
 									<Label htmlFor="course_code">
+										Select Base Course
+									</Label>
+									<Select
+										value={formData.course_code}
+										onValueChange={handleSelectBaseCourse}
+									>
+										<SelectTrigger
+											id="course_code"
+											className="w-full"
+										>
+											<SelectValue placeholder="Select course..." />
+										</SelectTrigger>
+										<SelectContent className="max-w-[400px]">
+											{allBaseCourses
+												.filter(
+													(c) => c.is_active !== 0,
+												)
+												.map((c) => (
+													<SelectItem
+														key={c.course_id}
+														value={c.course_code}
+													>
+														<span className="truncate block">
+															{c.course_code} -{" "}
+															{c.course_name}
+														</span>
+													</SelectItem>
+												))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="course_code_input">
 										Course Code *
 									</Label>
 									<Input
-										id="course_code"
+										id="course_code_input"
 										placeholder="e.g., CS301"
 										value={formData.course_code}
 										onChange={(e) =>
@@ -739,6 +1082,8 @@ export function CoursesManagement() {
 										}
 									/>
 								</div>
+							</div>
+							<div className="grid grid-cols-2 gap-4">
 								<div className="space-y-2">
 									<Label htmlFor="credit">Credits *</Label>
 									<Select
@@ -924,7 +1269,262 @@ export function CoursesManagement() {
 							<History className="w-4 h-4" />
 							All Offerings
 						</TabsTrigger>
+						<TabsTrigger
+							value="base"
+							className="flex items-center gap-2"
+						>
+							<BookOpen className="w-4 h-4" />
+							Base Courses
+						</TabsTrigger>
 					</TabsList>
+
+					<TabsContent value="base">
+						<DataTable
+							columns={baseColumns}
+							data={baseCourses}
+							refreshing={isLoadingBase}
+							serverPagination={{
+								pagination: basePagination,
+								onNext: baseGoNext,
+								onPrev: baseGoPrev,
+								canPrev: baseCanPrev,
+								pageIndex: basePageIndex,
+								search: baseSearch,
+								onSearch: setBaseSearch,
+							}}
+						>
+							{() => (
+								<Dialog
+									open={isAddTemplateDialogOpen}
+									onOpenChange={setIsAddTemplateDialogOpen}
+								>
+									<DialogTrigger asChild>
+										<Button className="h-9 gap-2">
+											<Plus className="mr-2 h-4 w-4" />
+											Add Course Template
+										</Button>
+									</DialogTrigger>
+									<DialogContent>
+										<DialogHeader>
+											<DialogTitle>
+												Add Course Template
+											</DialogTitle>
+											<DialogDescription>
+												Create a new base course.
+											</DialogDescription>
+										</DialogHeader>
+										<div className="grid gap-4 py-4">
+											<div className="space-y-2">
+												<Label>Course Code</Label>
+												<Input
+													placeholder="e.g. CS101"
+													value={
+														templateFormData.course_code
+													}
+													onChange={(e) =>
+														setTemplateFormData({
+															...templateFormData,
+															course_code:
+																e.target.value,
+														})
+													}
+												/>
+											</div>
+											<div className="space-y-2">
+												<Label>Course Name</Label>
+												<Input
+													placeholder="e.g. Intro to CS"
+													value={
+														templateFormData.course_name
+													}
+													onChange={(e) =>
+														setTemplateFormData({
+															...templateFormData,
+															course_name:
+																e.target.value,
+														})
+													}
+												/>
+											</div>
+											<div className="space-y-2">
+												<Label>Credits</Label>
+												<Input
+													type="number"
+													min={1}
+													max={10}
+													value={
+														templateFormData.credit
+													}
+													onChange={(e) =>
+														setTemplateFormData({
+															...templateFormData,
+															credit:
+																parseInt(
+																	e.target
+																		.value,
+																) || 3,
+														})
+													}
+												/>
+											</div>
+
+											<div className="space-y-2">
+												<Label>Course Type</Label>
+												<Select
+													value={
+														templateFormData.course_type
+													}
+													onValueChange={(v) =>
+														setTemplateFormData({
+															...templateFormData,
+															course_type: v,
+														})
+													}
+												>
+													<SelectTrigger>
+														<SelectValue placeholder="Select type" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="Theory">
+															Theory
+														</SelectItem>
+														<SelectItem value="Lab">
+															Lab
+														</SelectItem>
+														<SelectItem value="Project">
+															Project
+														</SelectItem>
+														<SelectItem value="Seminar">
+															Seminar
+														</SelectItem>
+													</SelectContent>
+												</Select>
+											</div>
+											<div className="space-y-2">
+												<Label>Course Level</Label>
+												<Select
+													value={
+														templateFormData.course_level
+													}
+													onValueChange={(v) =>
+														setTemplateFormData({
+															...templateFormData,
+															course_level: v,
+														})
+													}
+												>
+													<SelectTrigger>
+														<SelectValue placeholder="Select level" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="Undergraduate">
+															Undergraduate
+														</SelectItem>
+														<SelectItem value="Postgraduate">
+															Postgraduate
+														</SelectItem>
+														<SelectItem value="Both UG and PG">
+															Both UG and PG
+														</SelectItem>
+													</SelectContent>
+												</Select>
+											</div>
+											<div className="space-y-2">
+												<Label>Status</Label>
+												<Select
+													value={templateFormData.is_active.toString()}
+													onValueChange={(v) =>
+														setTemplateFormData({
+															...templateFormData,
+															is_active:
+																parseInt(v),
+														})
+													}
+												>
+													<SelectTrigger>
+														<SelectValue placeholder="Select status" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="1">
+															Active
+														</SelectItem>
+														<SelectItem value="0">
+															Inactive
+														</SelectItem>
+													</SelectContent>
+												</Select>
+											</div>
+										</div>
+										<DialogFooter>
+											<Button
+												variant="outline"
+												onClick={() => {
+													setIsAddTemplateDialogOpen(
+														false,
+													);
+													setTemplateFormData({
+														course_code: "",
+														course_name: "",
+														credit: 3,
+														course_type: "Theory",
+														course_level:
+															"Undergraduate",
+														is_active: 1,
+													});
+												}}
+											>
+												Cancel
+											</Button>
+											<Button
+												disabled={isSubmitting}
+												onClick={async () => {
+													try {
+														setIsSubmitting(true);
+														await hodApi.createBaseCourse(
+															templateFormData,
+														);
+														toast.success(
+															"Template created",
+														);
+														setIsAddTemplateDialogOpen(
+															false,
+														);
+														setTemplateFormData({
+															course_code: "",
+															course_name: "",
+															credit: 3,
+															course_type:
+																"Theory",
+															course_level:
+																"Undergraduate",
+															is_active: 1,
+														});
+														refreshBase();
+														hodApi
+															.getAllBaseCourses()
+															.then(
+																setAllBaseCourses,
+															)
+															.catch(
+																console.error,
+															);
+													} catch (e) {
+														toast.error(
+															"Failed to create template",
+														);
+													} finally {
+														setIsSubmitting(false);
+													}
+												}}
+											>
+												Save Template
+											</Button>
+										</DialogFooter>
+									</DialogContent>
+								</Dialog>
+							)}
+						</DataTable>
+					</TabsContent>
 
 					{/* ── Current Semester Tab ─────────────────────────── */}
 					<TabsContent value="current">
@@ -1054,6 +1654,156 @@ export function CoursesManagement() {
 					</TabsContent>
 				</Tabs>
 			</CardContent>
+
+			{/* ── Edit Base Course Dialog ──────────────────────────────── */}
+			<Dialog
+				open={isEditTemplateDialogOpen}
+				onOpenChange={setIsEditTemplateDialogOpen}
+			>
+				<DialogContent className="sm:max-w-[500px]">
+					<DialogHeader>
+						<DialogTitle>Edit Course Template</DialogTitle>
+						<DialogDescription>
+							Update an existing base course.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="grid gap-4 py-4">
+						<div className="space-y-2">
+							<Label>Course Code</Label>
+							<Input
+								placeholder="e.g. CS101"
+								value={editTemplateFormData.course_code}
+								onChange={(e) =>
+									setEditTemplateFormData({
+										...editTemplateFormData,
+										course_code: e.target.value,
+									})
+								}
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label>Course Name</Label>
+							<Input
+								placeholder="e.g. Intro to CS"
+								value={editTemplateFormData.course_name}
+								onChange={(e) =>
+									setEditTemplateFormData({
+										...editTemplateFormData,
+										course_name: e.target.value,
+									})
+								}
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label>Credits</Label>
+							<Input
+								type="number"
+								min={1}
+								max={10}
+								value={editTemplateFormData.credit}
+								onChange={(e) =>
+									setEditTemplateFormData({
+										...editTemplateFormData,
+										credit: parseInt(e.target.value) || 3,
+									})
+								}
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label>Course Type</Label>
+							<Select
+								value={editTemplateFormData.course_type}
+								onValueChange={(v) =>
+									setEditTemplateFormData({
+										...editTemplateFormData,
+										course_type: v,
+									})
+								}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder="Select type" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="Theory">
+										Theory
+									</SelectItem>
+									<SelectItem value="Lab">Lab</SelectItem>
+									<SelectItem value="Project">
+										Project
+									</SelectItem>
+									<SelectItem value="Seminar">
+										Seminar
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						<div className="space-y-2">
+							<Label>Course Level</Label>
+							<Select
+								value={editTemplateFormData.course_level}
+								onValueChange={(v) =>
+									setEditTemplateFormData({
+										...editTemplateFormData,
+										course_level: v,
+									})
+								}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder="Select level" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="Undergraduate">
+										Undergraduate
+									</SelectItem>
+									<SelectItem value="Postgraduate">
+										Postgraduate
+									</SelectItem>
+									<SelectItem value="UG & PG">
+										UG & PG
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						<div className="space-y-2">
+							<Label>Status</Label>
+							<Select
+								value={editTemplateFormData.is_active.toString()}
+								onValueChange={(v) =>
+									setEditTemplateFormData({
+										...editTemplateFormData,
+										is_active: parseInt(v),
+									})
+								}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder="Select status" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="1">Active</SelectItem>
+									<SelectItem value="0">Inactive</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setIsEditTemplateDialogOpen(false);
+								setSelectedBaseCourse(null);
+							}}
+						>
+							Cancel
+						</Button>
+						<Button
+							disabled={isSubmitting}
+							onClick={handleUpdateBaseCourse}
+						>
+							Save Changes
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			{/* ── Edit Course Dialog ───────────────────────────────────── */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

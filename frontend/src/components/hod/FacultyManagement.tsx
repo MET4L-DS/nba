@@ -124,6 +124,11 @@ export function FacultyManagement() {
 			return;
 		}
 
+		if (formData.phone && !/^\d{10}$/.test(String(formData.phone))) {
+			toast.error("Phone number must be exactly 10 digits");
+			return;
+		}
+
 		setIsSubmitting(true);
 		try {
 			await hodApi.createUser(formData);
@@ -156,6 +161,14 @@ export function FacultyManagement() {
 
 		if (editFormData.password && editFormData.password.length < 6) {
 			toast.error("Password must be at least 6 characters");
+			return;
+		}
+
+		if (
+			editFormData.phone &&
+			!/^\d{10}$/.test(String(editFormData.phone))
+		) {
+			toast.error("Phone number must be exactly 10 digits");
 			return;
 		}
 
@@ -537,19 +550,44 @@ export function FacultyManagement() {
 									}
 								/>
 							</div>
-							<div className="space-y-2">
-								<Label htmlFor="designation">Designation</Label>
-								<Input
-									id="designation"
-									placeholder="e.g., Professor"
-									value={formData.designation ?? ""}
-									onChange={(e) =>
-										setFormData({
-											...formData,
-											designation: e.target.value,
-										})
-									}
-								/>
+							<div className="grid grid-cols-2 gap-4">
+								<div className="space-y-2">
+									<Label htmlFor="designation">
+										Designation
+									</Label>
+									<Input
+										id="designation"
+										placeholder="e.g., Professor"
+										value={formData.designation ?? ""}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												designation: e.target.value,
+											})
+										}
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="phone">Phone</Label>
+									<Input
+										id="phone"
+										type="tel"
+										maxLength={10}
+										pattern="\d{10}"
+										placeholder="e.g., 9876543210"
+										value={formData.phone ?? ""}
+										onChange={(e) => {
+											const val = e.target.value.replace(
+												/\D/g,
+												"",
+											);
+											setFormData({
+												...formData,
+												phone: val,
+											});
+										}}
+									/>
+								</div>
 							</div>
 							<div className="space-y-2">
 								<Label htmlFor="password">Password *</Label>
@@ -722,14 +760,21 @@ export function FacultyManagement() {
 								<Label htmlFor="edit_phone">Phone</Label>
 								<Input
 									id="edit_phone"
+									type="tel"
+									maxLength={10}
+									pattern="\d{10}"
 									placeholder="e.g., 9876543210"
 									value={(editFormData.phone as string) ?? ""}
-									onChange={(e) =>
+									onChange={(e) => {
+										const val = e.target.value.replace(
+											/\D/g,
+											"",
+										);
 										setEditFormData({
 											...editFormData,
-											phone: e.target.value || null,
-										})
-									}
+											phone: val || null,
+										});
+									}}
 								/>
 							</div>
 						</div>

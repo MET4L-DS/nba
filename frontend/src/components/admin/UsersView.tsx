@@ -289,6 +289,12 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 			return;
 		}
 
+		// Phone validation
+		if (newUser.phone && !/^\d{10}$/.test(String(newUser.phone))) {
+			toast.error("Phone number must be exactly 10 digits");
+			return;
+		}
+
 		setSubmitting(true);
 		try {
 			await apiService.createUser(newUser);
@@ -551,14 +557,22 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 								<Label htmlFor="phone">Phone Number</Label>
 								<Input
 									id="phone"
+									type="tel"
+									maxLength={10}
+									pattern="\d{10}"
 									placeholder="e.g., 9876543210"
 									value={newUser.phone || ""}
-									onChange={(e) =>
+									onChange={(e) => {
+										// Only allow digits constraint directly on input
+										const val = e.target.value.replace(
+											/\D/g,
+											"",
+										);
 										setNewUser({
 											...newUser,
-											phone: e.target.value,
-										})
-									}
+											phone: val,
+										});
+									}}
 								/>
 							</div>
 						</div>

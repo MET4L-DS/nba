@@ -106,6 +106,12 @@ export function HODStudents() {
 
 	const handleEditSave = async () => {
 		if (!editTarget) return;
+
+		if (editForm.phone && !/^\d{10}$/.test(String(editForm.phone))) {
+			toast.error("Phone number must be exactly 10 digits");
+			return;
+		}
+
 		setEditSaving(true);
 		try {
 			await hodApi.updateStudent(editTarget.roll_no, editForm);
@@ -401,13 +407,20 @@ export function HODStudents() {
 							<div className="space-y-1.5">
 								<Label>Phone</Label>
 								<Input
+									type="tel"
+									maxLength={10}
+									pattern="\d{10}"
 									value={editForm.phone ?? ""}
-									onChange={(e) =>
+									onChange={(e) => {
+										const val = e.target.value.replace(
+											/\D/g,
+											"",
+										);
 										setEditForm((f) => ({
 											...f,
-											phone: e.target.value || null,
-										}))
-									}
+											phone: val || null,
+										}));
+									}}
 								/>
 							</div>
 						</div>

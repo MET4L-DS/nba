@@ -6,6 +6,8 @@
  */
 class AdminController
 {
+    protected $auditService;
+
     private $userRepository;
     private $courseRepository;
     private $studentRepository;
@@ -22,7 +24,9 @@ class AdminController
         DepartmentRepository $departmentRepository,
         ?DeanAssignmentRepository $deanAssignmentRepository = null,
         ?SchoolRepository $schoolRepository = null
-    ) {
+    , ?AuditService $auditService = null) {
+        $this->auditService = $auditService;
+
         $this->userRepository = $userRepository;
         $this->courseRepository = $courseRepository;
         $this->studentRepository = $studentRepository;
@@ -328,7 +332,15 @@ class AdminController
                 }
 
                 http_response_code(201);
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'School', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AdminController', 'CREATE operation successful in createSchool');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'School and Dean account created successfully',
                     'data' => $school->toArray()
@@ -357,6 +369,7 @@ class AdminController
             $input = json_decode(file_get_contents('php://input'), true);
             
             $existingSchool = $this->schoolRepository->findById($schoolId);
+            $GLOBALS['audit_old_state'] = (isset($existingSchool) && is_object($existingSchool) && method_exists($existingSchool, 'toArray')) ? $existingSchool->toArray() : (isset($existingSchool) ? clone $existingSchool : null);
             if (!$existingSchool) {
                 http_response_code(404);
                 echo json_encode([
@@ -378,7 +391,15 @@ class AdminController
 
             if ($this->schoolRepository->update($existingSchool)) {
                 http_response_code(200);
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'School', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AdminController', 'UPDATE operation successful in updateSchool');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'School updated successfully',
                     'data' => $existingSchool->toArray()
@@ -386,7 +407,15 @@ class AdminController
             } else {
                 // If no rows updated, it might mean no changes were made, but distinct from failure
                 http_response_code(200);
-                 echo json_encode([
+                 
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'School', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AdminController', 'UPDATE operation successful in updateSchool');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'School updated successfully (no changes detected)',
                     'data' => $existingSchool->toArray()
@@ -412,6 +441,7 @@ class AdminController
 
             // Check if school exists
             $school = $this->schoolRepository->findById($schoolId);
+            $GLOBALS['audit_old_state'] = (isset($school) && is_object($school) && method_exists($school, 'toArray')) ? $school->toArray() : (isset($school) ? clone $school : null);
             if (!$school) {
                 http_response_code(404);
                 echo json_encode([
@@ -433,7 +463,15 @@ class AdminController
                 }
 
                 http_response_code(200);
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'School', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AdminController', 'DELETE operation successful in deleteSchool');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'School deleted successfully'
                 ]);
@@ -538,7 +576,15 @@ class AdminController
 
                 http_response_code(201);
                 header('Content-Type: application/json');
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'Department', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AdminController', 'CREATE operation successful in createDepartment');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'Department and HOD account created successfully',
                     'data' => [
@@ -572,6 +618,7 @@ class AdminController
 
             // Find existing department
             $department = $this->departmentRepository->findById($departmentId);
+            $GLOBALS['audit_old_state'] = (isset($department) && is_object($department) && method_exists($department, 'toArray')) ? $department->toArray() : (isset($department) ? clone $department : null);
             if (!$department) {
                 http_response_code(404);
                 echo json_encode([
@@ -642,7 +689,15 @@ class AdminController
             if ($result) {
                 http_response_code(200);
                 header('Content-Type: application/json');
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'Department', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AdminController', 'UPDATE operation successful in updateDepartment');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'Department updated successfully',
                     'data' => [
@@ -674,6 +729,7 @@ class AdminController
 
             // Find existing department
             $department = $this->departmentRepository->findById($departmentId);
+            $GLOBALS['audit_old_state'] = (isset($department) && is_object($department) && method_exists($department, 'toArray')) ? $department->toArray() : (isset($department) ? clone $department : null);
             if (!$department) {
                 http_response_code(404);
                 echo json_encode([
@@ -707,7 +763,15 @@ class AdminController
 
                 http_response_code(200);
                 header('Content-Type: application/json');
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'Department', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AdminController', 'DELETE operation successful in deleteDepartment');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'Department deleted successfully'
                 ]);

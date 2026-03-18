@@ -8,6 +8,7 @@ import { AdminSchools } from "./pages/admin/AdminSchools";
 import { AdminDepartments } from "./pages/admin/AdminDepartments";
 import { AdminStudents } from "./pages/admin/AdminStudents";
 import { AdminCourses } from "./pages/admin/AdminCourses";
+import { AdminLogs } from "./pages/admin/AdminLogs";
 import { HODHome } from "./pages/hod/HODHome";
 import { HODFaculty } from "./pages/hod/HODFaculty";
 import { HODStudents } from "./pages/hod/HODStudents";
@@ -56,6 +57,7 @@ function App() {
 						path="/dashboard/courses"
 						element={<AdminCourses />}
 					/>
+					<Route path="/dashboard/logs" element={<AdminLogs />} />
 					<Route path="/hod" element={<HODHome />} />
 					<Route path="/hod/faculty" element={<HODFaculty />} />
 					<Route path="/hod/students" element={<HODStudents />} />

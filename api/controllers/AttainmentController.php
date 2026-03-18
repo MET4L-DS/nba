@@ -8,6 +8,8 @@ require_once __DIR__ . '/../models/CoPoRepository.php';
 
 class AttainmentController
 {
+    protected $auditService;
+
     private ?CourseRepository $courseRepo;
     private ?CourseOfferingRepository $offeringRepo;
     private ?AttainmentScaleRepository $scaleRepo;
@@ -18,7 +20,9 @@ class AttainmentController
         ?CourseOfferingRepository $offeringRepo = null,
         ?AttainmentScaleRepository $scaleRepo = null, 
         ?CoPoRepository $coPoRepo = null
-    ) {
+    , ?AuditService $auditService = null) {
+        $this->auditService = $auditService;
+
         $this->courseRepo = $courseRepo;
         $this->offeringRepo = $offeringRepo;
         $this->scaleRepo = $scaleRepo;
@@ -119,6 +123,14 @@ class AttainmentController
             $this->coPoRepo->saveMatrix($resolved['course_id'], $input['mappings']);
 
             http_response_code(200);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'CoPoMatrix', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AttainmentController', 'UPDATE operation successful in saveCoPoMatrix');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'CO-PO Matrix saved successfully'
@@ -274,6 +286,14 @@ class AttainmentController
             $this->scaleRepo->saveBulk($resolvedCourseId, $scaleData);
 
             http_response_code(200);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'Config', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AttainmentController', 'UPDATE operation successful in saveConfig');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Attainment configuration saved successfully',
@@ -309,6 +329,14 @@ class AttainmentController
             $this->scaleRepo->deleteByCourseId($courseId);
 
             http_response_code(200);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'Config', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AttainmentController', 'DELETE operation successful in deleteConfig');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Attainment configuration deleted successfully'

@@ -7,6 +7,8 @@
  */
 class DeanController
 {
+    protected $auditService;
+
     private $userRepository;
     private $courseRepository;
     private $courseOfferingRepository;
@@ -29,7 +31,9 @@ class DeanController
         MarksRepository $marksRepository,
         $hodAssignmentRepository = null,
         ?CourseFacultyAssignmentRepository $assignmentRepository = null
-    ) {
+    , ?AuditService $auditService = null) {
+        $this->auditService = $auditService;
+
         $this->userRepository = $userRepository;
         $this->courseRepository = $courseRepository;
         $this->courseOfferingRepository = $courseOfferingRepository;

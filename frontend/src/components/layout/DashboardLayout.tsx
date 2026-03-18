@@ -16,6 +16,7 @@ import {
 	Building2,
 	UserCog,
 	BarChart3,
+	History,
 } from "lucide-react";
 
 export function DashboardLayout() {
@@ -77,6 +78,7 @@ export function DashboardLayout() {
 					{ id: "courses", label: "Courses", icon: BookOpen },
 					{ id: "schools", label: "Schools", icon: ShieldCheck },
 					{ id: "departments", label: "Departments", icon: BookOpen },
+					{ id: "logs", label: "Audit Logs", icon: History },
 				];
 			case "hod":
 				return [

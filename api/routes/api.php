@@ -38,6 +38,9 @@ require_once __DIR__ . '/../models/HODAssignment.php';
 require_once __DIR__ . '/../models/HODAssignmentRepository.php';
 require_once __DIR__ . '/../models/DeanAssignment.php';
 require_once __DIR__ . '/../models/DeanAssignmentRepository.php';
+require_once __DIR__ . '/../models/AuditLog.php';
+require_once __DIR__ . '/../models/AuditLogRepository.php';
+require_once __DIR__ . '/../utils/AuditService.php';
 require_once __DIR__ . '/../utils/JWTService.php';
 require_once __DIR__ . '/../utils/AuthService.php';
 require_once __DIR__ . '/../utils/PaginationHelper.php';
@@ -54,6 +57,7 @@ require_once __DIR__ . '/../controllers/HODController.php';
 require_once __DIR__ . '/../controllers/FacultyController.php';
 require_once __DIR__ . '/../controllers/StaffController.php';
 require_once __DIR__ . '/../controllers/DeanController.php';
+require_once __DIR__ . '/../controllers/AuditLogController.php';
 
 /**
  * Router Class
@@ -73,6 +77,7 @@ class Router
     private $facultyController;
     private $staffController;
     private $deanController;
+    private $auditLogController;
 
     public function __construct()
     {
@@ -106,24 +111,29 @@ class Router
         // Initialize validation middleware
         $validationMiddleware = new ValidationMiddleware();
 
+        // Initialize Audit components
+        $auditLogRepository = new AuditLogRepository($db);
+        $auditService = new AuditService($auditLogRepository);
+        $this->auditLogController = new AuditLogController($auditLogRepository);
+
         // Initialize controllers
-        $this->userController = new UserController($authService, $userRepository, $departmentRepository, $validationMiddleware);
-        $this->assessmentController = new AssessmentController($courseRepository, $courseOfferingRepository, $testRepository, $questionRepository, $validationMiddleware, $db, $courseFacultyAssignmentRepository);
-        $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository);
-        $this->enrollmentController = new EnrollmentController($db);
-        $this->attainmentController = new AttainmentController($courseRepository, $courseOfferingRepository, $attainmentScaleRepository, $coPoRepository);
-        $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $deanAssignmentRepository, $schoolRepository);
-        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware, $studentRepository);
+        $this->userController = new UserController($authService, $userRepository, $departmentRepository, $validationMiddleware, $auditService);
+        $this->assessmentController = new AssessmentController($courseRepository, $courseOfferingRepository, $testRepository, $questionRepository, $validationMiddleware, $db, $courseFacultyAssignmentRepository, $auditService);
+        $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $auditService);
+        $this->enrollmentController = new EnrollmentController($db, $auditService);
+        $this->attainmentController = new AttainmentController($courseRepository, $courseOfferingRepository, $attainmentScaleRepository, $coPoRepository, $auditService);
+        $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $deanAssignmentRepository, $schoolRepository, $auditService);
+        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware, $studentRepository, $auditService);
 
         // Initialize enrollment repository for staff controller
         $enrollmentRepository = new EnrollmentRepository($db);
-        $this->staffController = new StaffController($userRepository, $courseRepository, $departmentRepository, $enrollmentRepository, $studentRepository, $validationMiddleware, $db, $courseOfferingRepository, $courseFacultyAssignmentRepository);
+        $this->staffController = new StaffController($userRepository, $courseRepository, $departmentRepository, $enrollmentRepository, $studentRepository, $validationMiddleware, $db, $courseOfferingRepository, $courseFacultyAssignmentRepository, $auditService);
 
         // Initialize faculty controller
-        $this->facultyController = new FacultyController($courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $testRepository, $enrollmentRepository, $marksRepository, $db);
+        $this->facultyController = new FacultyController($courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $testRepository, $enrollmentRepository, $marksRepository, $db, $auditService);
 
         // Initialize dean controller
-        $this->deanController = new DeanController($userRepository, $courseRepository, $courseOfferingRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository, $hodAssignmentRepository, $courseFacultyAssignmentRepository);
+        $this->deanController = new DeanController($userRepository, $courseRepository, $courseOfferingRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository, $hodAssignmentRepository, $courseFacultyAssignmentRepository, $auditService);
     }
 
     /**
@@ -302,6 +312,21 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->adminController->getStats();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'admin/logs':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    if ($user['role'] !== 'admin') {
+                        http_response_code(403);
+                        echo json_encode(['success' => false, 'message' => 'Access denied']);
+                        return;
+                    }
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->auditLogController->getLogs($_GET);
                 } else {
                     $this->sendMethodNotAllowed();
                 }

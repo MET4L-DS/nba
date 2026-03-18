@@ -6,6 +6,8 @@
  */
 class StaffController
 {
+    protected $auditService;
+
     private $userRepository;
     private $courseRepository;
     private $departmentRepository;
@@ -26,7 +28,9 @@ class StaffController
         $pdo = null,
         ?CourseOfferingRepository $courseOfferingRepository = null,
         ?CourseFacultyAssignmentRepository $courseFacultyAssignmentRepository = null
-    ) {
+    , ?AuditService $auditService = null) {
+        $this->auditService = $auditService;
+
         $this->userRepository = $userRepository;
         $this->courseRepository = $courseRepository;
         $this->departmentRepository = $departmentRepository;
@@ -228,6 +232,7 @@ class StaffController
 
             // Verify faculty belongs to the same department
             $faculty = $this->userRepository->findByEmployeeId($input['faculty_id']);
+            $GLOBALS['audit_old_state'] = (isset($faculty) && is_object($faculty) && method_exists($faculty, 'toArray')) ? $faculty->toArray() : (isset($faculty) ? clone $faculty : null);
             if (!$faculty || $faculty->getDepartmentId() != $departmentId) {
                 http_response_code(400);
                 echo json_encode([
@@ -285,6 +290,14 @@ class StaffController
 
             http_response_code(201);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'Course', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'StaffController', 'CREATE operation successful in createCourse');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Course created successfully',
@@ -322,6 +335,7 @@ class StaffController
 
             // Get existing course
             $existingCourse = $this->courseRepository->findById($courseId);
+            $GLOBALS['audit_old_state'] = (isset($existingCourse) && is_object($existingCourse) && method_exists($existingCourse, 'toArray')) ? $existingCourse->toArray() : (isset($existingCourse) ? clone $existingCourse : null);
             if (!$existingCourse) {
                 http_response_code(404);
                 echo json_encode([
@@ -382,6 +396,14 @@ class StaffController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'Course', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'StaffController', 'UPDATE operation successful in updateCourse');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Course updated successfully',
@@ -419,6 +441,7 @@ class StaffController
 
             // Get existing course
             $existingCourse = $this->courseRepository->findById($courseId);
+            $GLOBALS['audit_old_state'] = (isset($existingCourse) && is_object($existingCourse) && method_exists($existingCourse, 'toArray')) ? $existingCourse->toArray() : (isset($existingCourse) ? clone $existingCourse : null);
             if (!$existingCourse) {
                 http_response_code(404);
                 echo json_encode([
@@ -442,6 +465,14 @@ class StaffController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'Course', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'StaffController', 'DELETE operation successful in deleteCourse');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Course deleted successfully'
@@ -469,6 +500,7 @@ class StaffController
 
             // Verify offering exists
             $offering = $this->courseOfferingRepository->findById($offeringId);
+            $GLOBALS['audit_old_state'] = (isset($offering) && is_object($offering) && method_exists($offering, 'toArray')) ? $offering->toArray() : (isset($offering) ? clone $offering : null);
             if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
@@ -494,6 +526,14 @@ class StaffController
             $count = count($enrollments);
 
             http_response_code(200);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'getCourseEnrollments', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'StaffController', 'CREATE operation successful in getCourseEnrollments');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => "Found $count enrolled students",
@@ -550,6 +590,7 @@ class StaffController
 
             // Verify offering exists
             $offering = $this->courseOfferingRepository->findById($offeringId);
+            $GLOBALS['audit_old_state'] = (isset($offering) && is_object($offering) && method_exists($offering, 'toArray')) ? $offering->toArray() : (isset($offering) ? clone $offering : null);
             if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
@@ -613,6 +654,14 @@ class StaffController
 
             // Return results
             http_response_code(200);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'bulkEnroll', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'StaffController', 'CREATE operation successful in bulkEnroll');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => "Enrollment completed: {$results['success_count']} successful, {$results['failure_count']} failed",
@@ -640,6 +689,7 @@ class StaffController
 
             // Verify offering exists
             $offering = $this->courseOfferingRepository->findById($offeringId);
+            $GLOBALS['audit_old_state'] = (isset($offering) && is_object($offering) && method_exists($offering, 'toArray')) ? $offering->toArray() : (isset($offering) ? clone $offering : null);
             if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
@@ -674,6 +724,14 @@ class StaffController
             $this->enrollmentRepository->removeEnrollment($offeringId, $rollno);
 
             http_response_code(200);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'removeEnrollment', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'StaffController', 'CREATE operation successful in removeEnrollment');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Student removed from offering successfully'

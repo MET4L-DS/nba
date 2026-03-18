@@ -7,13 +7,17 @@
  */
 class UserController
 {
+    protected $auditService;
+
     private $authService;
     private $userRepository;
     private $departmentRepository;
     private $validationMiddleware;
 
-    public function __construct(AuthService $authService, UserRepository $userRepository, DepartmentRepository $departmentRepository, ValidationMiddleware $validationMiddleware)
+    public function __construct(AuthService $authService, UserRepository $userRepository, DepartmentRepository $departmentRepository, ValidationMiddleware $validationMiddleware, ?AuditService $auditService = null)
     {
+        $this->auditService = $auditService;
+
         $this->authService = $authService;
         $this->userRepository = $userRepository;
         $this->departmentRepository = $departmentRepository;
@@ -124,6 +128,7 @@ class UserController
 
             // Get current user
             $user = $this->userRepository->findByEmployeeId($userData['employee_id']);
+            $GLOBALS['audit_old_state'] = (isset($user) && is_object($user) && method_exists($user, 'toArray')) ? $user->toArray() : (isset($user) ? clone $user : null);
             if (!$user) {
                 http_response_code(404);
                 echo json_encode([
@@ -178,7 +183,15 @@ class UserController
             // Save updated user
             if ($this->userRepository->save($user)) {
                 http_response_code(200);
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'Profile', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'UserController', 'UPDATE operation successful in updateProfile');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'Profile updated successfully',
                     'data' => $user->toArray()
@@ -434,7 +447,15 @@ class UserController
                     'role' => $data['role']
                 ]);
                 http_response_code(201);
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'User', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'UserController', 'CREATE operation successful in createUser');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'User created successfully',
                     'data' => $newUser->toArray()
@@ -504,6 +525,7 @@ class UserController
 
             // Check if user exists
             $user = $this->userRepository->findByEmployeeId($employeeId);
+            $GLOBALS['audit_old_state'] = (isset($user) && is_object($user) && method_exists($user, 'toArray')) ? $user->toArray() : (isset($user) ? clone $user : null);
             if (!$user) {
                 if ($fileLogger) $fileLogger->error('UserController', 'UPDATE USER: User not found', [
                     'employee_id' => $employeeId
@@ -602,7 +624,15 @@ class UserController
                     'fields_updated' => array_keys($data)
                 ]);
                 http_response_code(200);
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'User', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'UserController', 'UPDATE operation successful in updateUser');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'User updated successfully',
                     'data' => $user->toArray()
@@ -668,6 +698,7 @@ class UserController
 
             // Check if user exists
             $user = $this->userRepository->findByEmployeeId($employeeId);
+            $GLOBALS['audit_old_state'] = (isset($user) && is_object($user) && method_exists($user, 'toArray')) ? $user->toArray() : (isset($user) ? clone $user : null);
             if (!$user) {
                 if ($fileLogger) $fileLogger->error('UserController', 'DELETE USER: User not found', [
                     'employee_id' => $employeeId
@@ -687,7 +718,15 @@ class UserController
                     'deleted_by' => $userData['employee_id']
                 ]);
                 http_response_code(200);
-                echo json_encode([
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'User', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'UserController', 'DELETE operation successful in deleteUser');
+            }
+            echo json_encode([
                     'success' => true,
                     'message' => 'User deleted successfully'
                 ]);

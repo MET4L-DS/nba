@@ -6,6 +6,8 @@
  */
 class HODController
 {
+    protected $auditService;
+
     private $userRepository;
     private $courseRepository;
     private $courseOfferingRepository;
@@ -22,7 +24,9 @@ class HODController
         ?DepartmentRepository $departmentRepository = null,
         ?ValidationMiddleware $validationMiddleware = null,
         ?StudentRepository $studentRepository = null
-    ) {
+    , ?AuditService $auditService = null) {
+        $this->auditService = $auditService;
+
         $this->userRepository = $userRepository;
         $this->courseRepository = $courseRepository;
         $this->courseOfferingRepository = $courseOfferingRepository;
@@ -203,6 +207,14 @@ class HODController
 
             http_response_code(201);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'BaseCourse', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'CREATE operation successful in createBaseCourse');
+            }
             echo json_encode(['success' => true, 'message' => 'Base course created successfully', 'data' => $createdCourse]);
 
         } catch (Exception $e) {
@@ -225,6 +237,7 @@ class HODController
             
             $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
             $course = $this->courseRepository->findById($courseId);
+            $GLOBALS['audit_old_state'] = (isset($course) && is_object($course) && method_exists($course, 'toArray')) ? $course->toArray() : (isset($course) ? clone $course : null);
             if (!$course) {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Course not found']);
@@ -267,6 +280,14 @@ class HODController
             
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'BaseCourse', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'UPDATE operation successful in updateBaseCourse');
+            }
             echo json_encode(['success' => true, 'message' => 'Course updated successfully']);
         } catch (Exception $e) {
             error_log("HODController::updateBaseCourse error: " . $e->getMessage());
@@ -284,6 +305,7 @@ class HODController
             
             $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
             $course = $this->courseRepository->findById($courseId);
+            $GLOBALS['audit_old_state'] = (isset($course) && is_object($course) && method_exists($course, 'toArray')) ? $course->toArray() : (isset($course) ? clone $course : null);
             if (!$course) {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Course not found']);
@@ -300,7 +322,15 @@ class HODController
             if ($success) {
                 http_response_code(200);
                 header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'message' => 'Course deleted successfully']);
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'BaseCourse', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'DELETE operation successful in deleteBaseCourse');
+            }
+            echo json_encode(['success' => true, 'message' => 'Course deleted successfully']);
             } else {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Cannot delete course (it may have active offerings or marks)']);
@@ -416,6 +446,7 @@ class HODController
 
             // Verify faculty belongs to the same department
             $faculty = $this->userRepository->findByEmployeeId($input['faculty_id']);
+            $GLOBALS['audit_old_state'] = (isset($faculty) && is_object($faculty) && method_exists($faculty, 'toArray')) ? $faculty->toArray() : (isset($faculty) ? clone $faculty : null);
             if (!$faculty || ($faculty->getDepartmentId() != $departmentId && $faculty->getRole() !== 'HOD')) {
                 http_response_code(400);
                 echo json_encode([
@@ -476,6 +507,14 @@ class HODController
 
             http_response_code(201);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'Course', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'CREATE operation successful in createCourse');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Course offering created successfully',
@@ -504,6 +543,7 @@ class HODController
 
             // 1. Get existing offering
             $offering = $this->courseOfferingRepository->findById($offeringId);
+            $GLOBALS['audit_old_state'] = (isset($offering) && is_object($offering) && method_exists($offering, 'toArray')) ? $offering->toArray() : (isset($offering) ? clone $offering : null);
             if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
@@ -601,6 +641,14 @@ class HODController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'Course', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'UPDATE operation successful in updateCourse');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Course updated successfully',
@@ -629,6 +677,7 @@ class HODController
 
             // 1. Get existing offering
             $offering = $this->courseOfferingRepository->findById($offeringId);
+            $GLOBALS['audit_old_state'] = (isset($offering) && is_object($offering) && method_exists($offering, 'toArray')) ? $offering->toArray() : (isset($offering) ? clone $offering : null);
             if (!$offering) {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Course offering not found']);
@@ -651,6 +700,14 @@ class HODController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'Course', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'DELETE operation successful in deleteCourse');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Course offering deleted successfully'
@@ -710,6 +767,7 @@ class HODController
 
             // Check if employee_id already exists
             $existingUser = $this->userRepository->findByEmployeeId($input['employee_id']);
+            $GLOBALS['audit_old_state'] = (isset($existingUser) && is_object($existingUser) && method_exists($existingUser, 'toArray')) ? $existingUser->toArray() : (isset($existingUser) ? clone $existingUser : null);
             if ($existingUser) {
                 http_response_code(400);
                 echo json_encode([
@@ -749,6 +807,14 @@ class HODController
 
             http_response_code(201);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'User', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'CREATE operation successful in createUser');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => ucfirst($input['role']) . ' created successfully',
@@ -777,6 +843,7 @@ class HODController
 
             // Get existing user
             $existingUser = $this->userRepository->findByEmployeeId($employeeId);
+            $GLOBALS['audit_old_state'] = (isset($existingUser) && is_object($existingUser) && method_exists($existingUser, 'toArray')) ? $existingUser->toArray() : (isset($existingUser) ? clone $existingUser : null);
             if (!$existingUser) {
                 http_response_code(404);
                 echo json_encode([
@@ -859,6 +926,14 @@ class HODController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'User', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'UPDATE operation successful in updateUser');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'User updated successfully',
@@ -964,6 +1039,14 @@ class HODController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'Student', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'UPDATE operation successful in updateStudent');
+            }
             echo json_encode(['success' => true, 'message' => 'Student updated successfully']);
         } catch (Exception $e) {
             http_response_code(500);
@@ -981,6 +1064,7 @@ class HODController
 
             // Get existing user
             $existingUser = $this->userRepository->findByEmployeeId($employeeId);
+            $GLOBALS['audit_old_state'] = (isset($existingUser) && is_object($existingUser) && method_exists($existingUser, 'toArray')) ? $existingUser->toArray() : (isset($existingUser) ? clone $existingUser : null);
             if (!$existingUser) {
                 http_response_code(404);
                 echo json_encode([
@@ -1014,6 +1098,14 @@ class HODController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'User', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'HODController', 'DELETE operation successful in deleteUser');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'User deleted successfully'

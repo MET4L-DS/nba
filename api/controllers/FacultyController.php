@@ -6,6 +6,8 @@
  */
 class FacultyController
 {
+    protected $auditService;
+
     private $courseRepository;
     private $courseOfferingRepository;
     private $courseFacultyAssignmentRepository;
@@ -22,7 +24,9 @@ class FacultyController
         EnrollmentRepository $enrollmentRepository,
         MarksRepository $marksRepository,
         $db
-    ) {
+    , ?AuditService $auditService = null) {
+        $this->auditService = $auditService;
+
         $this->courseRepository = $courseRepository;
         $this->courseOfferingRepository = $courseOfferingRepository;
         $this->courseFacultyAssignmentRepository = $courseFacultyAssignmentRepository;
@@ -121,7 +125,15 @@ class FacultyController
             if (empty($assignments)) {
                 http_response_code(200);
                 header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'data' => []]);
+                
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'getEnrolledStudents', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'FacultyController', 'CREATE operation successful in getEnrolledStudents');
+            }
+            echo json_encode(['success' => true, 'data' => []]);
                 return;
             }
 
@@ -154,6 +166,14 @@ class FacultyController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'getEnrolledStudents', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'FacultyController', 'CREATE operation successful in getEnrolledStudents');
+            }
             echo json_encode(['success' => true, 'data' => $students]);
         } catch (Exception $e) {
             error_log("Error getting enrolled students: " . $e->getMessage());
@@ -224,6 +244,14 @@ class FacultyController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'Student', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'FacultyController', 'UPDATE operation successful in updateStudent');
+            }
             echo json_encode(['success' => true, 'message' => 'Student updated successfully']);
         } catch (Exception $e) {
             error_log("Error updating student: " . $e->getMessage());
@@ -267,6 +295,14 @@ class FacultyController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'removeStudentFromCourses', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'FacultyController', 'DELETE operation successful in removeStudentFromCourses');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => "Student removed from $deleted course enrollment(s)"
@@ -325,6 +361,14 @@ class FacultyController
 
             http_response_code(200);
             header('Content-Type: application/json');
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'Test', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'FacultyController', 'DELETE operation successful in deleteTest');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Test deleted successfully',

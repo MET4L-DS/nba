@@ -6,6 +6,8 @@
  */
 class AssessmentController
 {
+    protected $auditService;
+
     private $courseRepository;
     private $courseOfferingRepository;
     private $assignmentRepository;
@@ -22,7 +24,9 @@ class AssessmentController
         ValidationMiddleware $validationMiddleware,
         $db = null,
         ?CourseFacultyAssignmentRepository $assignmentRepository = null
-    ) {
+    , ?AuditService $auditService = null) {
+        $this->auditService = $auditService;
+
         $this->courseRepository = $courseRepository;
         $this->courseOfferingRepository = $courseOfferingRepository;
         $this->testRepository = $testRepository;
@@ -159,7 +163,8 @@ class AssessmentController
             }
 
             // Verify offering belongs to faculty
-            $offering = $this->courseOfferingRepository->findById($data['course_id']); // course_id from legacy frontend is offering_id
+            $offering = $this->courseOfferingRepository->findById($data['course_id']);
+            $GLOBALS['audit_old_state'] = (isset($offering) && is_object($offering) && method_exists($offering, 'toArray')) ? $offering->toArray() : (isset($offering) ? clone $offering : null); // course_id from legacy frontend is offering_id
             if (!$offering) {
                 http_response_code(404);
                 echo json_encode([
@@ -268,6 +273,14 @@ class AssessmentController
             $savedQuestions = $this->questionRepository->findByTestId($testId);
 
             http_response_code(201);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('CREATE', 'Assessment', null, null, $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AssessmentController', 'CREATE operation successful in createAssessment');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Assessment created successfully',
@@ -464,6 +477,7 @@ class AssessmentController
 
             // Find existing question
             $question = $this->questionRepository->findById($questionId);
+            $GLOBALS['audit_old_state'] = (isset($question) && is_object($question) && method_exists($question, 'toArray')) ? $question->toArray() : (isset($question) ? clone $question : null);
             if (!$question) {
                 http_response_code(404);
                 echo json_encode([
@@ -510,6 +524,14 @@ class AssessmentController
             $this->questionRepository->save($question);
 
             http_response_code(200);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'Question', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AssessmentController', 'UPDATE operation successful in updateQuestion');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Question updated successfully',
@@ -544,6 +566,7 @@ class AssessmentController
 
             // Find existing question
             $question = $this->questionRepository->findById($questionId);
+            $GLOBALS['audit_old_state'] = (isset($question) && is_object($question) && method_exists($question, 'toArray')) ? $question->toArray() : (isset($question) ? clone $question : null);
             if (!$question) {
                 http_response_code(404);
                 echo json_encode([
@@ -578,6 +601,14 @@ class AssessmentController
             $this->questionRepository->delete($questionId);
 
             http_response_code(200);
+            
+            $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
+            if (isset($this->auditService)) {
+                $this->auditService->log('DELETE', 'Question', null, ($GLOBALS['audit_old_state'] ?? $auditPayload), null);
+            }
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->log('INFO', 'AssessmentController', 'DELETE operation successful in deleteQuestion');
+            }
             echo json_encode([
                 'success' => true,
                 'message' => 'Question deleted successfully'

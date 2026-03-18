@@ -15,6 +15,7 @@ USE `nba_db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `raw_marks`;
 DROP TABLE IF EXISTS `marks`;
 DROP TABLE IF EXISTS `enrollments`;
@@ -316,6 +317,28 @@ CREATE TABLE `marks` (
     FOREIGN KEY (`student_roll_no`) REFERENCES `students`(`roll_no`) ON DELETE CASCADE,
     FOREIGN KEY (`test_id`) REFERENCES `tests`(`test_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- AUDIT LOGS
+-- =============================================
+
+CREATE TABLE `audit_logs` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `user_id` INT(11) NULL,
+    `action` ENUM('CREATE', 'UPDATE', 'DELETE', 'LOGIN') NOT NULL,
+    `entity_type` VARCHAR(50) NOT NULL,
+    `entity_id` VARCHAR(50) NOT NULL,
+    `old_values` JSON NULL,
+    `new_values` JSON NULL,
+    `ip_address` VARCHAR(45) NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_entity` (`entity_type`, `entity_id`),
+    INDEX `idx_user` (`user_id`),
+    INDEX `idx_action` (`action`),
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`employee_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- =============================================
 -- VIEWS
@@ -688,7 +711,8 @@ UNION ALL SELECT 'tests', COUNT(*) FROM `tests`
 UNION ALL SELECT 'questions', COUNT(*) FROM `questions`
 UNION ALL SELECT 'raw_marks', COUNT(*) FROM `raw_marks`
 UNION ALL SELECT 'co_po_mapping', COUNT(*) FROM `co_po_mapping`
-UNION ALL SELECT 'attainment_scale', COUNT(*) FROM `attainment_scale`;
+UNION ALL SELECT 'attainment_scale', COUNT(*) FROM `attainment_scale`
+UNION ALL SELECT 'audit_logs', COUNT(*) FROM `audit_logs`;
 
 -- =============================================
 -- END OF SCHEMA

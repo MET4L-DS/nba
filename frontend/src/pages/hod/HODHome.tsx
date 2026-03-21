@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
 import type { HODStats } from "@/services/api";
 import { RefreshCw } from "lucide-react";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Users, GraduationCap, History } from "lucide-react";
 
 export function HODHome() {
+	const navigate = useNavigate();
 	const { sidebarOpen, setSidebarOpen } = useOutletContext<{
 		sidebarOpen: boolean;
 		setSidebarOpen: (open: boolean) => void;
@@ -130,9 +131,7 @@ export function HODHome() {
 									},
 								] as QuickAccessItem[]
 							}
-							onItemClick={(nav) =>
-								(window.location.href = `/hod/${nav}`)
-							}
+							onItemClick={(nav) => navigate(`/hod/${nav}`)}
 							variant="elevated"
 							columns={4}
 						/>

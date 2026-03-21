@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
 import type { AdminStats } from "@/services/api";
 import { RefreshCw } from "lucide-react";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Users, BookOpen, GraduationCap } from "lucide-react";
 
 export function AdminHome() {
+	const navigate = useNavigate();
 	const { sidebarOpen, setSidebarOpen } = useOutletContext<{
 		sidebarOpen: boolean;
 		setSidebarOpen: (open: boolean) => void;
@@ -124,9 +125,7 @@ export function AdminHome() {
 									},
 								] as QuickAccessItem[]
 							}
-							onItemClick={(nav) =>
-								(window.location.href = `/dashboard/${nav}`)
-							}
+							onItemClick={(nav) => navigate(`/dashboard/${nav}`)}
 						/>
 					</>
 				)}

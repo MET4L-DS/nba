@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
 import { facultyApi } from "@/services/api/faculty";
 import type { User, FacultyStats, Course } from "@/services/api";
@@ -23,6 +23,7 @@ import {
 import { ChevronDown, History } from "lucide-react";
 
 export function FacultyHome() {
+	const navigate = useNavigate();
 	const { user, sidebarOpen, setSidebarOpen } = useOutletContext<{
 		user: User;
 		sidebarOpen: boolean;
@@ -191,9 +192,7 @@ export function FacultyHome() {
 							},
 						] as QuickAccessItem[]
 					}
-					onItemClick={(nav) =>
-						(window.location.href = `/faculty/${nav}`)
-					}
+					onItemClick={(nav) => navigate(`/faculty/${nav}`)}
 					variant="elevated"
 					columns={4}
 				/>

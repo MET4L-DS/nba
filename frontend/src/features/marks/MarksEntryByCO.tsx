@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef, Fragment } from "react";
 import { toast } from "sonner";
-import { Upload, Save, Search, AlertCircle } from "lucide-react";
+import {
+	Upload,
+	Save,
+	Search,
+	AlertCircle,
+	BarChart2,
+	CheckCircle,
+} from "lucide-react";
 import { apiService } from "@/services/api";
 import type {
 	Course,
@@ -42,6 +49,8 @@ interface MarksEntryByCOProps {
 	onBack: () => void;
 	/** When true, suppresses the back-header and renders content only */
 	embedded?: boolean;
+	/** Custom content injected into the left side of the embedded sub-toolbar */
+	headerContent?: React.ReactNode;
 }
 
 const emptyRow = (): CORow =>
@@ -52,6 +61,7 @@ export function MarksEntryByCO({
 	course,
 	onBack,
 	embedded = false,
+	headerContent,
 }: MarksEntryByCOProps) {
 	const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
 	const [marks, setMarks] = useState<Record<string, CORow>>({});
@@ -347,6 +357,30 @@ export function MarksEntryByCO({
 		currentPage * ITEMS_PER_PAGE,
 	);
 
+	const enteredCount = enrollments.filter((e) =>
+		CO_KEYS.some((co) => (marks[e.student_rollno]?.[co] || "") !== ""),
+	).length;
+
+	const rowTotal = (rollno: string) =>
+		CO_KEYS.reduce((sum, co) => {
+			const v = parseFloat(marks[rollno]?.[co] || "");
+			return isNaN(v) ? sum : sum + v;
+		}, 0);
+
+	const rowsWithAnyMark = enrollments.filter((e) =>
+		CO_KEYS.some((co) => (marks[e.student_rollno]?.[co] || "") !== ""),
+	);
+
+	const averageTotal =
+		rowsWithAnyMark.length > 0
+			? (
+					rowsWithAnyMark.reduce(
+						(sum, e) => sum + rowTotal(e.student_rollno),
+						0,
+					) / rowsWithAnyMark.length
+				).toFixed(1)
+			: "–";
+
 	const CO_COLORS: Record<string, string> = {
 		CO1: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
 		CO2: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
@@ -599,59 +633,85 @@ export function MarksEntryByCO({
 
 			{embedded ? (
 				// ── Flat embedded layout matching FacultyMarks by-question style ──
-				<div className="flex flex-col h-full">
+				<div className="flex flex-col h-full bg-background -mt-px">
 					{/* Sub-toolbar */}
-					<div className="shrink-0 border-b bg-background px-6 py-3 flex items-center justify-end gap-2 border-border">
-						<div className="flex items-center space-x-2 mr-2">
-							<Switch
-								id="validate-marks-co-embedded"
-								checked={validateMarks}
-								onCheckedChange={setValidateMarks}
+					<div className="shrink-0 border-b bg-background px-6 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-border">
+						<div className="flex items-center gap-3 flex-wrap">
+							{headerContent}
+							{/* Stats chip */}
+							{enrollments.length > 0 && (
+								<div className="flex items-center gap-2">
+									<Badge
+										variant="outline"
+										className="gap-1 font-normal text-xs py-1.5 px-3 rounded-lg"
+									>
+										<BarChart2 className="w-3.5 h-3.5 text-blue-500" />
+										Avg: {averageTotal}
+									</Badge>
+									<Badge
+										variant="outline"
+										className="gap-1 font-normal text-xs py-1.5 px-3 rounded-lg"
+									>
+										<CheckCircle className="w-3.5 h-3.5 text-green-500" />
+										{enteredCount}/{enrollments.length}{" "}
+										Entered
+									</Badge>
+								</div>
+							)}
+						</div>
+
+						<div className="flex items-center gap-2">
+							<div className="flex items-center space-x-2 mr-2">
+								<Switch
+									id="validate-marks-co-embedded"
+									checked={validateMarks}
+									onCheckedChange={setValidateMarks}
+								/>
+								<Label
+									htmlFor="validate-marks-co-embedded"
+									className="whitespace-nowrap flex text-sm items-center h-full"
+								>
+									Validate Marks
+								</Label>
+							</div>
+							<div className="relative">
+								<Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+								<Input
+									placeholder="Search Student…"
+									value={searchTerm}
+									onChange={(e) => {
+										setSearchTerm(e.target.value);
+										setCurrentPage(1);
+									}}
+									className="pl-9 h-8 text-sm w-56 bg-background"
+								/>
+							</div>
+							<input
+								type="file"
+								ref={fileInputRef}
+								className="hidden"
+								accept=".csv"
+								onChange={handleFileUpload}
 							/>
-							<Label
-								htmlFor="validate-marks-co-embedded"
-								className="whitespace-nowrap"
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => fileInputRef.current?.click()}
+								className="gap-1.5 text-xs h-8"
 							>
-								Validate Marks
-							</Label>
+								<Upload className="w-3.5 h-3.5" />
+								Import
+							</Button>
+							<Button
+								size="sm"
+								onClick={handleSubmit}
+								disabled={submitting || dirtyRows.size === 0}
+								className="gap-1.5 text-xs h-8"
+							>
+								<Save className="w-3.5 h-3.5" />
+								{submitting ? "Saving…" : "Save"}
+							</Button>
 						</div>
-						<div className="relative">
-							<Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-							<Input
-								placeholder="Search Student…"
-								value={searchTerm}
-								onChange={(e) => {
-									setSearchTerm(e.target.value);
-									setCurrentPage(1);
-								}}
-								className="pl-9 h-8 text-sm w-56 bg-background"
-							/>
-						</div>
-						<input
-							type="file"
-							ref={fileInputRef}
-							className="hidden"
-							accept=".csv"
-							onChange={handleFileUpload}
-						/>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => fileInputRef.current?.click()}
-							className="gap-1.5 text-xs h-8"
-						>
-							<Upload className="w-3.5 h-3.5" />
-							Import
-						</Button>
-						<Button
-							size="sm"
-							onClick={handleSubmit}
-							disabled={submitting || dirtyRows.size === 0}
-							className="gap-1.5 text-xs h-8"
-						>
-							<Save className="w-3.5 h-3.5" />
-							{submitting ? "Saving…" : "Save"}
-						</Button>
 					</div>
 
 					{/* Banners */}

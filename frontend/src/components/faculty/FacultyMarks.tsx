@@ -541,8 +541,8 @@ export function FacultyMarks({ selectedCourse }: FacultyMarksProps) {
 				</div>
 
 				{/* ── Toolbar ────────────────────────────────────── */}
-				{selectedTest && (
-					<div className="px-6 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+				{selectedTest && viewMode === "by-question" && (
+					<div className="px-6 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-border">
 						<div className="flex items-center gap-3 flex-wrap">
 							{/* Mode toggle */}
 							<Tabs
@@ -822,16 +822,78 @@ export function FacultyMarks({ selectedCourse }: FacultyMarksProps) {
 							course={selectedCourse}
 							onBack={() => setViewMode("by-question")}
 							embedded
+							headerContent={
+								<Tabs
+									value={viewMode}
+									onValueChange={(v) =>
+										setViewMode(v as ViewMode)
+									}
+								>
+									<TabsList className="h-auto p-1">
+										<TabsTrigger
+											value="by-question"
+											className="text-xs px-4 py-1.5 font-semibold"
+										>
+											By Question
+										</TabsTrigger>
+										<TabsTrigger
+											value="by-co"
+											className="text-xs px-4 py-1.5 font-semibold"
+										>
+											By CO
+										</TabsTrigger>
+										<TabsTrigger
+											value="bulk"
+											className="text-xs px-4 py-1.5 font-semibold"
+										>
+											Bulk View
+										</TabsTrigger>
+									</TabsList>
+								</Tabs>
+							}
 						/>
 					</div>
 				) : (
-					<div className="flex-1 overflow-auto">
-						<ViewTestMarks
-							test={selectedTest}
-							course={selectedCourse}
-							onBack={() => setViewMode("by-question")}
-							embedded
-						/>
+					<div className="flex-1 overflow-auto flex flex-col min-h-0 bg-background">
+						<div className="px-6 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-border shrink-0">
+							<div className="flex items-center gap-3 flex-wrap">
+								<Tabs
+									value={viewMode}
+									onValueChange={(v) =>
+										setViewMode(v as ViewMode)
+									}
+								>
+									<TabsList className="h-auto p-1">
+										<TabsTrigger
+											value="by-question"
+											className="text-xs px-4 py-1.5 font-semibold"
+										>
+											By Question
+										</TabsTrigger>
+										<TabsTrigger
+											value="by-co"
+											className="text-xs px-4 py-1.5 font-semibold"
+										>
+											By CO
+										</TabsTrigger>
+										<TabsTrigger
+											value="bulk"
+											className="text-xs px-4 py-1.5 font-semibold"
+										>
+											Bulk View
+										</TabsTrigger>
+									</TabsList>
+								</Tabs>
+							</div>
+						</div>
+						<div className="flex-1 overflow-auto">
+							<ViewTestMarks
+								test={selectedTest}
+								course={selectedCourse}
+								onBack={() => setViewMode("by-question")}
+								embedded
+							/>
+						</div>
 					</div>
 				)}
 			</div>

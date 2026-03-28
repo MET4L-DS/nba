@@ -31,6 +31,7 @@ DROP TABLE IF EXISTS `students`;
 DROP TABLE IF EXISTS `hod_assignments`;
 DROP TABLE IF EXISTS `dean_assignments`;
 DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `department_stats`;
 DROP TABLE IF EXISTS `departments`;
 DROP TABLE IF EXISTS `schools`;
 
@@ -69,6 +70,18 @@ CREATE TABLE `departments` (
     UNIQUE KEY (`department_code`),
     INDEX (`school_id`),
     FOREIGN KEY (`school_id`) REFERENCES `schools`(`school_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Department Statistics (Materialized summary view)
+CREATE TABLE `department_stats` (
+    `department_id` INT(11) NOT NULL,
+    `faculty_count` INT(11) NOT NULL DEFAULT 0,
+    `student_count` INT(11) NOT NULL DEFAULT 0,
+    `course_count` INT(11) NOT NULL DEFAULT 0,
+    `active_offerings_count` INT(11) NOT NULL DEFAULT 0,
+    `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`department_id`),
+    FOREIGN KEY (`department_id`) REFERENCES `departments`(`department_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Users (Admin, Faculty, HOD, Dean, Staff)
@@ -424,6 +437,12 @@ VALUES
     (1, 'Computer Science & Engineering', 'CSE', 'Department of Computer Science & Engineering'),
     (1, 'Electronics & Communication Engineering', 'ECE', 'Department of Electronics & Communication Engineering');
 
+-- Department Stats
+INSERT INTO `department_stats` (`department_id`, `faculty_count`, `student_count`, `course_count`, `active_offerings_count`)
+VALUES
+    (1, 8, 70, 8, 7),
+    (2, 4, 5, 2, 2);
+
 -- Users (password: password123, bcrypt hash)
 INSERT INTO `users` (`employee_id`, `username`, `email`, `password_hash`, `role`, `department_id`, `school_id`, `designation`)
 VALUES 
@@ -722,8 +741,11 @@ VALUES
 
 SELECT 'schools' AS `table`, COUNT(*) AS `rows` FROM `schools`
 UNION ALL SELECT 'departments', COUNT(*) FROM `departments`
+UNION ALL SELECT 'department_stats', COUNT(*) FROM `department_stats`
 UNION ALL SELECT 'users', COUNT(*) FROM `users`
-UNION ALL SELECT 'hod_assignments', COUNT(*) FROM `hod_assignments`UNION ALL SELECT 'dean_assignments', COUNT(*) FROM `dean_assignments`UNION ALL SELECT 'students', COUNT(*) FROM `students`
+UNION ALL SELECT 'hod_assignments', COUNT(*) FROM `hod_assignments`
+UNION ALL SELECT 'dean_assignments', COUNT(*) FROM `dean_assignments`
+UNION ALL SELECT 'students', COUNT(*) FROM `students`
 UNION ALL SELECT 'courses', COUNT(*) FROM `courses`
 UNION ALL SELECT 'course_offerings', COUNT(*) FROM `course_offerings`
 UNION ALL SELECT 'faculty_assignments', COUNT(*) FROM `course_faculty_assignments`

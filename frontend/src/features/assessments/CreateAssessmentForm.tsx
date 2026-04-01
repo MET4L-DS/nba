@@ -164,7 +164,7 @@ export function CreateAssessmentForm({
 		setQuestions((prev) => {
 			const removed = prev[index];
 			if (!removed) return prev;
-			const remaining = prev.filter((_, i) => i !== index);
+			let remaining = prev.filter((_, i) => i !== index);
 			const sameNum = remaining.filter(
 				(q) => q.question_number === removed.question_number,
 			);
@@ -174,7 +174,29 @@ export function CreateAssessmentForm({
 				);
 				remaining[idx] = { ...remaining[idx], sub_question: "" };
 			}
-			return remaining;
+
+			// Renumber main questions sequentially (1, 2, 3...)
+			const uniqueNums = Array.from(
+				new Set(remaining.map((q) => q.question_number)),
+			).sort((a, b) => a - b);
+			const numMap = new Map(uniqueNums.map((num, i) => [num, i + 1]));
+
+			// Renumber sub-questions sequentially (a, b, c...)
+			const subQMap = new Map<number, number>();
+
+			return remaining.map((q) => {
+				const newNum =
+					numMap.get(q.question_number) || q.question_number;
+				let newSub = q.sub_question;
+
+				if (newSub !== "") {
+					const offset = subQMap.get(newNum) || 0;
+					newSub = String.fromCharCode("a".charCodeAt(0) + offset);
+					subQMap.set(newNum, offset + 1);
+				}
+
+				return { ...q, question_number: newNum, sub_question: newSub };
+			});
 		});
 	};
 
@@ -520,7 +542,7 @@ export function CreateAssessmentForm({
 
 					{/* Scrollable questions area */}
 					<div className="flex-1 overflow-y-auto p-6 lg:p-8">
-						<div className="max-w-7xl mx-auto w-full">
+						<div className="max-w-7xl mx-auto w-full pb-4">
 							<div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border overflow-hidden">
 								<QuestionsTable
 									questions={questions}
@@ -528,24 +550,25 @@ export function CreateAssessmentForm({
 									onRemoveQuestion={removeQuestion}
 									onAddSubQuestion={addSubQuestion}
 								/>
-								<div className="p-5 border-t bg-slate-50/50 dark:bg-gray-800/30 text-center flex justify-center">
-									<Button
-										type="button"
-										variant="outline"
-										size="sm"
-										onClick={addQuestion}
-										disabled={
-											fullMarksNum > 0 &&
-											totalMarks >= fullMarksNum
-										}
-										className="gap-2 rounded-full h-10 px-8 shadow-sm hover:-translate-y-px transition-all"
-									>
-										<Plus className="w-4 h-4" />
-										Add Main Question
-									</Button>
-								</div>
 							</div>
 						</div>
+					</div>
+
+					{/* True Sticky Add Button Footer */}
+					<div className="shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-t p-4 flex justify-center relative z-10 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)]">
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={addQuestion}
+							disabled={
+								fullMarksNum > 0 && totalMarks >= fullMarksNum
+							}
+							className="gap-2 rounded-full h-10 px-8 shadow-sm hover:shadow-md hover:-translate-y-px transition-all bg-white dark:bg-gray-900 border border-primary/20 hover:border-primary text-primary font-bold"
+						>
+							<Plus className="w-5 h-5" />
+							Add Main Question
+						</Button>
 					</div>
 				</section>
 			</div>

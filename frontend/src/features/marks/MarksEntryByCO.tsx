@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment, useMemo } from "react";
 import { toast } from "sonner";
 import {
 	Upload,
@@ -72,7 +72,7 @@ export function MarksEntryByCO({
 	const [coMaxMarks, setCoMaxMarks] = useState<Record<COKey, number>>(
 		Object.fromEntries(CO_KEYS.map((k) => [k, 0])) as Record<COKey, number>,
 	);
-	const [invalidCells, setInvalidCells] = useState<Set<string>>(new Set());
+
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [searchTerm, setSearchTerm] = useState("");
@@ -80,6 +80,27 @@ export function MarksEntryByCO({
 	const [validateMarks, setValidateMarks] = useState(true);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const ITEMS_PER_PAGE = 10;
+
+	const invalidCells = useMemo(() => {
+		const next = new Set<string>();
+		if (!validateMarks) return next;
+
+		Object.entries(marks).forEach(([rollno, row]) => {
+			CO_KEYS.forEach((co) => {
+				const value = row[co];
+				if (value.trim() === "") return;
+				const num = parseFloat(value);
+				if (
+					isNaN(num) ||
+					num < 0 ||
+					(coMaxMarks[co] > 0 && num > coMaxMarks[co])
+				) {
+					next.add(`${rollno}:${co}`);
+				}
+			});
+		});
+		return next;
+	}, [marks, validateMarks, coMaxMarks]);
 
 	useEffect(() => {
 		if (test && course) {
@@ -150,7 +171,6 @@ export function MarksEntryByCO({
 			setMarks(initial);
 			setOriginalMarks(JSON.parse(JSON.stringify(initial)));
 			setDirtyRows(new Set());
-			setInvalidCells(new Set());
 			setCurrentPage(1);
 		} catch (error) {
 			console.error("Failed to load data:", error);
@@ -160,32 +180,11 @@ export function MarksEntryByCO({
 		}
 	};
 
-	const isCellInvalid = (co: COKey, value: string): boolean => {
-		if (!validateMarks) return false;
-		if (value.trim() === "") return false;
-		const num = parseFloat(value);
-		if (isNaN(num)) return true;
-		if (num < 0) return true;
-		if (coMaxMarks[co] > 0 && num > coMaxMarks[co]) return true;
-		return false;
-	};
-
 	const handleMarkChange = (rollno: string, co: COKey, value: string) => {
 		setMarks((prev) => ({
 			...prev,
 			[rollno]: { ...prev[rollno], [co]: value },
 		}));
-
-		const cellKey = `${rollno}:${co}`;
-		setInvalidCells((prev) => {
-			const next = new Set(prev);
-			if (isCellInvalid(co, value)) {
-				next.add(cellKey);
-			} else {
-				next.delete(cellKey);
-			}
-			return next;
-		});
 
 		setDirtyRows((prev) => {
 			const next = new Set(prev);
@@ -231,6 +230,7 @@ export function MarksEntryByCO({
 					CO4: row.CO4.trim() !== "" ? parseFloat(row.CO4) || 0 : 0,
 					CO5: row.CO5.trim() !== "" ? parseFloat(row.CO5) || 0 : 0,
 					CO6: row.CO6.trim() !== "" ? parseFloat(row.CO6) || 0 : 0,
+					validate_marks: validateMarks,
 				});
 				successCount++;
 			} catch {
@@ -315,16 +315,6 @@ export function MarksEntryByCO({
 				newDirty.add(rollno);
 				updatedCount++;
 			});
-
-			// Recompute invalid cells from the updated marks
-			const newInvalid = new Set<string>();
-			Object.entries(newMarks).forEach(([rollno, row]) => {
-				CO_KEYS.forEach((co) => {
-					if (isCellInvalid(co, row[co]))
-						newInvalid.add(`${rollno}:${co}`);
-				});
-			});
-			setInvalidCells(newInvalid);
 
 			setDirtyRows(newDirty);
 

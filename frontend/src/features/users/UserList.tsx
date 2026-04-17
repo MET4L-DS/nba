@@ -1,21 +1,4 @@
-export const getRoleBadgeColor = (role: string) => {
-	switch (role.toLowerCase()) {
-		case "admin":
-			return "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800";
-		case "dean":
-			return "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800";
-		case "hod":
-			return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800";
-		case "faculty":
-			return "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800";
-		case "staff":
-			return "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300 border-orange-200 dark:border-orange-800";
-		default:
-			return "bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300 border-slate-200 dark:border-slate-800";
-	}
-};
-
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { debugLogger } from "@/lib/debugLogger";
 import { usePaginatedData } from "@/lib/usePaginatedData";
@@ -32,16 +15,7 @@ import { DataTable } from "@/features/shared/DataTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-	Users,
-	Plus,
-	X,
-	Pencil,
-	Trash2,
-	ChevronRight,
-	ChevronDown as ChevronDownIcon,
-	Phone,
-} from "lucide-react";
+import { Users, Plus, X } from "lucide-react";
 import {
 	Select,
 	SelectContent,
@@ -49,16 +23,15 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import type { ColumnDef } from "@tanstack/react-table";
 import { UserFormDialog } from "./UserFormDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { UserPhonesRow } from "./UserPhonesRow";
-import { sortableHeader } from "../shared/tableUtils";
 
 /**
  * @file UserList.tsx
  */
+
+import { useUserColumns } from "./userTableColumns";
 
 export interface UserListProps {
 	// Data source
@@ -273,205 +246,19 @@ export function UserList({
 		[refresh, setDeleteDialogOpen],
 	);
 
-	const columns: ColumnDef<User | DeanUser>[] = useMemo(() => {
-		const cols: ColumnDef<User | DeanUser>[] = [
-			{
-				id: "expander",
-				header: () => <div className="w-8" />,
-				cell: ({ row }) => (
-					<Button
-						variant="ghost"
-						size="sm"
-						className="h-8 w-8 p-0"
-						onClick={() => row.toggleExpanded()}
-					>
-						{row.getIsExpanded() ? (
-							<ChevronDownIcon className="h-4 w-4" />
-						) : (
-							<ChevronRight className="h-4 w-4" />
-						)}
-					</Button>
-				),
-			},
-			{
-				accessorKey: "employee_id",
-				header: sortableHeader("Employee ID"),
-				cell: ({ row }) => (
-					<Badge variant="outline" className="font-mono">
-						{row.getValue("employee_id")}
-					</Badge>
-				),
-			},
-			{
-				accessorKey: "username",
-				header: sortableHeader("Name"),
-				cell: ({ row }) => (
-					<div className="font-medium flex">
-						{row.getValue("username")}
-					</div>
-				),
-			},
-		];
-
-		if (showEmail) {
-			cols.push({
-				accessorKey: "email",
-				header: sortableHeader("Email"),
-				cell: ({ row }) => (
-					<Badge variant="outline" className="flex">
-						{row.getValue("email")}
-					</Badge>
-				),
-			});
-		}
-
-		if (showDesignation) {
-			cols.push({
-				accessorKey: "designation",
-				header: sortableHeader("Designation"),
-				cell: ({ row }) => (
-					<Badge variant="secondary" className="flex italic">
-						{row.getValue("designation") || "—"}
-					</Badge>
-				),
-			});
-		}
-
-		if (showPhone) {
-			cols.push({
-				id: "phone_action",
-				header: "Phones",
-				cell: ({ row }) => (
-					<Button
-						variant="outline"
-						size="sm"
-						className="h-8 gap-2 font-mono text-xs"
-						onClick={() => row.toggleExpanded()}
-					>
-						<Phone className="h-3 w-3" />
-						View
-					</Button>
-				),
-			});
-		}
-
-		if (showRole) {
-			cols.push({
-				accessorKey: "role",
-				header: sortableHeader("Role"),
-				cell: ({ row }) => {
-					const user = row.original as any;
-					return (
-						<div className="flex gap-1">
-							<Badge
-								variant="secondary"
-								className={getRoleBadgeColor(user.role)}
-							>
-								{user.role.toUpperCase()}
-							</Badge>
-							{user.role !== "dean" &&
-								showDeanStatus &&
-								!!user.is_dean && (
-									<Badge
-										variant="secondary"
-										className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800"
-									>
-										DEAN
-									</Badge>
-								)}
-							{user.role !== "hod" &&
-								showDeanStatus &&
-								!!user.is_hod && (
-									<Badge
-										variant="secondary"
-										className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-									>
-										HOD
-									</Badge>
-								)}
-						</div>
-					);
-				},
-			});
-		}
-
-		if (effectiveShowDepartment) {
-			cols.push({
-				accessorKey: "department_code",
-				header: sortableHeader("Department"),
-				cell: ({ row }) => {
-					const deptCode = row.getValue("department_code") as string;
-					return deptCode ? (
-						<Badge
-							variant="secondary"
-							className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
-						>
-							{deptCode}
-						</Badge>
-					) : (
-						<span className="text-muted-foreground">—</span>
-					);
-				},
-			});
-		}
-
-		// Add actions column if permissions allow
-		if (permissions.canEdit || permissions.canDelete) {
-			cols.push({
-				id: "actions",
-				header: "Actions",
-				cell: ({ row }) => {
-					const user = row.original as User | DeanUser;
-					return (
-						<div className="flex gap-2">
-							{permissions.canEdit && (
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => {
-										setSelectedUser(user);
-										setEditDialogOpen(true);
-									}}
-									disabled={isLoading}
-								>
-									<Pencil className="h-4 w-4" />
-								</Button>
-							)}
-							{permissions.canDelete && (
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => {
-										setSelectedUser(user);
-										setDeleteDialogOpen(true);
-									}}
-									disabled={isLoading}
-									className="text-destructive hover:text-destructive"
-								>
-									<Trash2 className="h-4 w-4" />
-								</Button>
-							)}
-						</div>
-					);
-				},
-			});
-		}
-
-		return cols;
-	}, [
-		showRole,
-		effectiveShowDepartment,
-		showPhone,
-		showDesignation,
+	const columns = useUserColumns({
 		showEmail,
+		showDesignation,
+		showPhone,
+		showRole,
 		showDeanStatus,
-		permissions.canEdit,
-		permissions.canDelete,
+		effectiveShowDepartment,
+		permissions,
 		isLoading,
 		setSelectedUser,
 		setEditDialogOpen,
 		setDeleteDialogOpen,
-	]);
+	});
 
 	return (
 		<Card>

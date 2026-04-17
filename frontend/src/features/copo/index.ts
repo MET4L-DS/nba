@@ -7,3 +7,4 @@ export * from "./StudentMarksTable";
 export * from "./COAttainmentTable";
 export * from "./COPOMatrixTable";
 export * from "./COPOMapping";
+export * from "./BaseAttainmentTable";

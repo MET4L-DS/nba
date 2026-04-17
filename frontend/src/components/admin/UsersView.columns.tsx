@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { sortableHeader } from "@/features/shared/tableUtils";
 import { getBaseUserColumns } from "@/features/shared";
-import { getRoleBadgeColor } from "@/features/users/UserList";
+import { getRoleBadgeColor } from "@/features/users/utils";
 
 import type { User } from "@/services/api";
 

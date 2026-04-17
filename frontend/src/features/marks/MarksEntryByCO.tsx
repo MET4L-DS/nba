@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, Fragment, useMemo } from "react";
+import { useState, useEffect, Fragment, useMemo } from "react";
+import { useCSVParser } from "@/lib/useCSVParser";
 import { toast } from "sonner";
 import {
 	Upload,
@@ -78,8 +79,7 @@ export function MarksEntryByCO({
 	const [searchTerm, setSearchTerm] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
 	const [validateMarks, setValidateMarks] = useState(true);
-	const fileInputRef = useRef<HTMLInputElement>(null);
-	const ITEMS_PER_PAGE = 10;
+		const ITEMS_PER_PAGE = 10;
 
 	const invalidCells = useMemo(() => {
 		const next = new Set<string>();
@@ -253,87 +253,54 @@ export function MarksEntryByCO({
 		await loadData();
 	};
 
-	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const file = event.target.files?.[0];
-		if (!file) return;
-		const reader = new FileReader();
-		reader.onload = (e) => processCSV(e.target?.result as string);
-		reader.readAsText(file);
-		if (fileInputRef.current) fileInputRef.current.value = "";
-	};
+	const { fileInputRef, handleFileUpload} = useCSVParser({
+		onParseSuccess: ({ originalLines, dataStartCol }) => {
+			setMarks((prevMarks) => {
+				const newMarks = { ...prevMarks };
+				const newDirty = new Set(dirtyRows);
+				let updatedCount = 0;
+				let csvInvalidCount = 0;
 
-	const processCSV = (text: string) => {
-		const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
-		if (lines.length < 2) {
-			toast.error("CSV file is empty or missing header");
-			return;
-		}
+				originalLines.forEach((values) => {
+					const rollno = values[0];
+					if (newMarks[rollno] === undefined) return; // not enrolled
 
-		const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-		let marksStartIndex = 1;
-		if (headers.length > 1 && headers[1].includes("name")) {
-			marksStartIndex = 2;
-		} else if (lines.length > 1) {
-			const firstData = lines[1].split(",");
-			if (firstData.length > 1 && isNaN(parseFloat(firstData[1]))) {
-				marksStartIndex = 2;
-			}
-		}
+					const coValues = values.slice(dataStartCol);
+					const updated = { ...newMarks[rollno] } as CORow;
 
-		setMarks((prevMarks) => {
-			const newMarks = { ...prevMarks };
-			const newDirty = new Set(dirtyRows);
-			let updatedCount = 0;
+					CO_KEYS.forEach((co, idx) => {
+						const val = coValues[idx];
+						if (val === undefined || val === "") return;
+						const num = parseFloat(val);
+						if (isNaN(num)) return;
+						if (num < 0 || (coMaxMarks[co] > 0 && num > coMaxMarks[co])) {
+							csvInvalidCount++;
+						}
+						updated[co] = val;
+					});
 
-			let csvInvalidCount = 0;
-			lines.slice(1).forEach((line) => {
-				const values = line.split(",").map((v) => v.trim());
-				if (values.length < 2) return;
-
-				const rollno = values[0];
-				if (newMarks[rollno] === undefined) return; // not enrolled
-
-				const coValues = values.slice(marksStartIndex);
-				const updated: CORow = { ...newMarks[rollno] };
-
-				CO_KEYS.forEach((co, idx) => {
-					const val = coValues[idx];
-					if (val === undefined || val === "") return;
-					const num = parseFloat(val);
-					if (isNaN(num)) return;
-					// Clamp to valid range — warn but still import
-					if (
-						num < 0 ||
-						(coMaxMarks[co] > 0 && num > coMaxMarks[co])
-					) {
-						csvInvalidCount++;
-					}
-					updated[co] = val;
+					newMarks[rollno] = updated;
+					newDirty.add(rollno);
+					updatedCount++;
 				});
 
-				newMarks[rollno] = updated;
-				newDirty.add(rollno);
-				updatedCount++;
-			});
+				setDirtyRows(newDirty);
 
-			setDirtyRows(newDirty);
-
-			if (updatedCount > 0) {
-				const msg = `Imported marks for ${updatedCount} student(s). Review and click Save.`;
-				if (csvInvalidCount > 0) {
-					toast.warning(
-						`${msg} ${csvInvalidCount} value(s) exceed max marks — highlighted in red.`,
-					);
+				if (updatedCount > 0) {
+					const msg = "Imported marks for " + updatedCount + " student(s). Review and click Save.";
+					if (csvInvalidCount > 0) {
+						toast.warning(msg + " " + csvInvalidCount + " value(s) exceed max marks — highlighted in red.");
+					} else {
+						toast.success(msg);
+					}
 				} else {
-					toast.success(msg);
+					toast.warning("No matching enrolled students found in CSV.");
 				}
-			} else {
-				toast.warning("No matching enrolled students found in CSV.");
-			}
 
-			return newMarks;
-		});
-	};
+				return newMarks;
+			});
+		}
+	});
 
 	// Filtering + Pagination
 	const filteredEnrollments = enrollments.filter(

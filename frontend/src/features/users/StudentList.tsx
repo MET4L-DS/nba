@@ -19,7 +19,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { EditStudentDialog } from "./EditStudentDialog";
 import { DeleteStudentDialog } from "./DeleteStudentDialog";
 import { createStudentColumns, type StudentListColumnConfig } from "./utils";
 import { toast } from "sonner";
@@ -81,15 +80,13 @@ export function StudentList({
 	paginationMode = fetchFn ? "server" : "client",
 	pageSize = 20,
 	availableFilters = ["batch", "status"],
-	onStudentUpdate,
+	
 	onStudentDelete,
 	onRefresh,
 	department_id,
 }: StudentListProps) {
 	// Dialog state
-	const [editTarget, setEditTarget] = useState<Student | null>(null);
-	const [editSaving, setEditSaving] = useState(false);
-	const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
+			const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
 	const [deleteSaving, setDeleteSaving] = useState(false);
 
 	// Filter state
@@ -191,26 +188,7 @@ export function StudentList({
 	};
 
 	// Handle edit
-	const handleEditSave = async (
-		rollNo: string,
-		data: UpdateStudentRequest,
-	) => {
-		if (!onStudentUpdate) return;
-
-		setEditSaving(true);
-		try {
-			await onStudentUpdate(rollNo, data);
-			toast.success("Student updated successfully");
-			setEditTarget(null);
-			onRefresh?.();
-		} catch (err) {
-			toast.error("Failed to update student");
-			console.error(err);
-		} finally {
-			setEditSaving(false);
-		}
-	};
-
+	
 	// Handle delete
 	const handleDelete = async (rollNo: string) => {
 		if (!onStudentDelete) return;
@@ -232,7 +210,7 @@ export function StudentList({
 	// Create columns
 	const columns = useMemo(
 		() =>
-			createStudentColumns(columnConfig, setEditTarget, (rollNo) => {
+			createStudentColumns(columnConfig, ()=>{}, (rollNo) => {
 				const student = students.find((s) => s.roll_no === rollNo);
 				if (student) setDeleteTarget(student);
 			}),
@@ -440,13 +418,7 @@ export function StudentList({
 			</Card>
 
 			{/* Dialogs */}
-			<EditStudentDialog
-				open={!!editTarget}
-				student={editTarget}
-				onOpenChange={(open) => !open && setEditTarget(null)}
-				onSave={handleEditSave}
-				isLoading={editSaving}
-			/>
+			
 
 			<DeleteStudentDialog
 				open={!!deleteTarget}

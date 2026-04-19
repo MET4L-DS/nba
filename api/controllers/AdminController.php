@@ -92,8 +92,8 @@ class AdminController
                 $_GET,
                 'c.course_id',
                 'c.course_id',
-                ['c.course_id', 'c.course_code', 'c.course_name', 'c.course_type', 'c.credit', 'co.year', 'co.semester', 'u.username'],
-                ['department_id', 'is_active', 'course_type']
+                ['c.course_id', 'c.course_code', 'c.course_name', 'c.course_type', 'c.credit', 'co.year', 'co.semester', 'faculty_name', 'department_code'],
+                ['department_id', 'is_active', 'course_type', 'year', 'semester']
             );
 
             $total = $this->courseRepository->countPaginated($params);

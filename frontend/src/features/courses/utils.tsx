@@ -1,3 +1,4 @@
+import { sortableHeader } from "../shared/tableUtils";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -97,7 +98,7 @@ export function createCourseColumns(
 	columns.push(
 		{
 			accessorKey: "course_code",
-			header: createSortableHeader("Code"),
+			header: sortableHeader("Code"),
 			cell: ({ row }) => (
 				<Badge variant="outline" className="font-mono text-xs">
 					{row.getValue("course_code")}
@@ -106,7 +107,7 @@ export function createCourseColumns(
 		},
 		{
 			accessorKey: "course_name",
-			header: createSortableHeader("Course Name"),
+			header: sortableHeader("Course Name"),
 			cell: ({ row }) => (
 				<div className="font-medium max-w-[200px] truncate">
 					{row.getValue("course_name")}
@@ -118,7 +119,7 @@ export function createCourseColumns(
 	if (config.showFaculty) {
 		columns.push({
 			accessorKey: "faculty_name",
-			header: "Faculty",
+			header: sortableHeader("Faculty"),
 			cell: ({ row }) => (
 				<span className="text-muted-foreground text-sm">
 					{(row.getValue("faculty_name") as string) ?? "—"}
@@ -130,7 +131,7 @@ export function createCourseColumns(
 	if (config.showDepartment) {
 		columns.push({
 			accessorKey: "department_code",
-			header: "Department",
+			header: sortableHeader("Department"),
 			cell: ({ row }) => (
 				<Badge variant="outline">
 					{(row.getValue("department_code") as string) ?? "—"}
@@ -142,7 +143,7 @@ export function createCourseColumns(
 	if (config.showYear) {
 		columns.push({
 			accessorKey: "year",
-			header: "Year",
+			header: sortableHeader("Year"),
 			cell: ({ row }) => (
 				<div className="text-center">
 					{(row.getValue("year") as number) ?? "—"}
@@ -154,7 +155,7 @@ export function createCourseColumns(
 	if (config.showSemester) {
 		columns.push({
 			accessorKey: "semester",
-			header: "Semester",
+			header: sortableHeader("Semester"),
 			cell: ({ row }) => (
 				<Badge variant="secondary" className="text-xs">
 					{getSemesterName(
@@ -168,7 +169,7 @@ export function createCourseColumns(
 	if (config.showCredits) {
 		columns.push({
 			accessorKey: "credit",
-			header: "Credits",
+			header: sortableHeader("Credits"),
 			cell: ({ row }) => (
 				<div className="text-center">
 					<Badge variant="outline">

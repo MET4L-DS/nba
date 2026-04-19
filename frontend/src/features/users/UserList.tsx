@@ -14,7 +14,6 @@ import { adminApi } from "@/services/api";
 import { DataTable } from "@/features/shared/DataTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Users, Plus, X } from "lucide-react";
 import {
 	Select,
@@ -106,6 +105,9 @@ export function UserList({
 		filters,
 		setFilter,
 		refresh,
+		sort,
+		sortDir,
+		setSort,
 	} = usePaginatedData<User | DeanUser>({
 		fetchFn,
 		limit: pageSize,
@@ -285,50 +287,6 @@ export function UserList({
 				</CardHeader>
 			)}
 			<CardContent className="space-y-4">
-				{/* Search and filters */}
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-					<Input
-						placeholder="Search by name, email, or ID..."
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-						className="sm:max-w-xs"
-					/>
-					{availableFilters.includes("role") && (
-						<Select
-							value={filters.role || ""}
-							onValueChange={(value) =>
-								setFilter("role", value || undefined)
-							}
-						>
-							<SelectTrigger className="sm:max-w-xs">
-								<SelectValue placeholder="Filter by role" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="admin">Admin</SelectItem>
-								<SelectItem value="dean">Dean</SelectItem>
-								<SelectItem value="hod">HOD</SelectItem>
-								<SelectItem value="faculty">Faculty</SelectItem>
-								<SelectItem value="staff">Staff</SelectItem>
-							</SelectContent>
-						</Select>
-					)}
-					{(filters.role || search) && (
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => {
-								setSearch("");
-								Object.keys(filters).forEach((key) =>
-									setFilter(key, undefined),
-								);
-							}}
-						>
-							<X className="h-4 w-4 mr-2" />
-							Clear
-						</Button>
-					)}
-				</div>
-
 				{/* Data table */}
 				<DataTable
 					columns={columns}
@@ -348,9 +306,111 @@ export function UserList({
 							onPrev: goPrev,
 							canPrev: canPrev && pageIndex > 0,
 							pagination: pagination,
+							filters,
+							setFilter,
+							sort,
+							sortDir,
+							setSort,
 						},
 					})}
-				/>
+				>
+					{(_, currentFilters, currentSetFilter) => (
+						<>
+							{availableFilters.includes("role") && (
+								<Select
+									value={
+										(currentFilters?.role as unknown as string) ||
+										"all"
+									}
+									onValueChange={(val) =>
+										currentSetFilter?.(
+											"role",
+											val === "all" ? undefined : val,
+										)
+									}
+								>
+									<SelectTrigger className="w-[140px]">
+										<SelectValue placeholder="All Roles" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">
+											All Roles
+										</SelectItem>
+										<SelectItem value="admin">
+											Admin
+										</SelectItem>
+										<SelectItem value="dean">
+											Dean
+										</SelectItem>
+										<SelectItem value="hod">HOD</SelectItem>
+										<SelectItem value="faculty">
+											Faculty
+										</SelectItem>
+										<SelectItem value="staff">
+											Staff
+										</SelectItem>
+									</SelectContent>
+								</Select>
+							)}
+
+							{effectiveShowDepartment &&
+								availableFilters.includes("department") && (
+									<Select
+										value={
+											(currentFilters?.department_id as unknown as string) ||
+											"all"
+										}
+										onValueChange={(val) =>
+											currentSetFilter?.(
+												"department_id",
+												val === "all" ? undefined : val,
+											)
+										}
+									>
+										<SelectTrigger className="w-[180px]">
+											<SelectValue placeholder="All Departments" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="all">
+												All Departments
+											</SelectItem>
+											{departments.map((dept) => (
+												<SelectItem
+													key={dept.department_id}
+													value={dept.department_id.toString()}
+												>
+													{dept.department_code}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+
+							{Object.keys(currentFilters || {}).some(
+								(k) => currentFilters?.[k] !== undefined,
+							) && (
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => {
+										Object.keys(
+											currentFilters || {},
+										).forEach((key) =>
+											currentSetFilter?.(
+												key as keyof typeof currentFilters,
+												undefined,
+											),
+										);
+									}}
+									className="h-9 px-2 lg:px-3 shrink-0"
+								>
+									<X className="h-4 w-4 mr-2" />
+									Clear
+								</Button>
+							)}
+						</>
+					)}
+				</DataTable>
 
 				{/* Dialogs */}
 				<UserFormDialog

@@ -182,17 +182,20 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 					pageIndex,
 					search,
 					onSearch: setSearch,
+					filters,
+					setFilter,
 				}}
 			>
-				{() => (
+				{(_, currentFilters, currentSetFilter) => (
 					<>
 						<Select
 							value={
-								(filters.department_id as string | undefined) ||
-								"all"
+								(currentFilters?.department_id as
+									| string
+									| undefined) || "all"
 							}
 							onValueChange={(val) =>
-								setFilter(
+								currentSetFilter?.(
 									"department_id",
 									val === "all" ? undefined : val,
 								)
@@ -218,10 +221,11 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 
 						<Select
 							value={
-								(filters.role as string | undefined) || "all"
+								(currentFilters?.role as string | undefined) ||
+								"all"
 							}
 							onValueChange={(val) =>
-								setFilter(
+								currentSetFilter?.(
 									"role",
 									val === "all" ? undefined : val,
 								)
@@ -238,12 +242,16 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 							</SelectContent>
 						</Select>
 
-						{(filters.department_id || filters.role) && (
+						{(currentFilters?.department_id ||
+							currentFilters?.role) && (
 							<Button
 								variant="ghost"
 								onClick={() => {
-									setFilter("department_id", undefined);
-									setFilter("role", undefined);
+									currentSetFilter?.(
+										"department_id",
+										undefined,
+									);
+									currentSetFilter?.("role", undefined);
 								}}
 								className="h-9 px-2 lg:px-3"
 							>

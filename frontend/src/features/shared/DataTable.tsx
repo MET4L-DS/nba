@@ -53,7 +53,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  * When provided, DataTable operates in "server-side" mode:
  * pagination, sorting and search are all controlled externally.
  */
-export interface ServerPaginationProps {
+export interface ServerPaginationProps<F extends Record<string, any> = any> {
 	/** Metadata from the last server response */
 	pagination: PaginationMeta | null;
 	/** Navigate to next page */
@@ -68,22 +68,38 @@ export interface ServerPaginationProps {
 	search: string;
 	/** Called whenever search input changes */
 	onSearch: (value: string) => void;
+	/** Current filter state */
+	filters?: Partial<F>;
+	/** Method to update filters */
+	setFilter?: (key: keyof F, value: any) => void;
+	/** Current sort field */
+	sort?: string;
+	/** Current sort direction */
+	sortDir?: "ASC" | "DESC";
+	/** Method to update sorting */
+	setSort?: (field: string, dir?: "ASC" | "DESC") => void;
 }
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData, TValue, F extends Record<string, any> = any> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 	searchKey?: string;
 	searchPlaceholder?: string;
 	refreshing?: boolean;
-	children?: React.ReactNode | ((table: TableType<TData>) => React.ReactNode);
+	children?:
+		| React.ReactNode
+		| ((
+				table: TableType<TData>,
+				filters?: Partial<F>,
+				setFilter?: (key: keyof F, value: any) => void,
+		  ) => React.ReactNode);
 	/** Pass to enable server-side pagination mode */
-	serverPagination?: ServerPaginationProps;
+	serverPagination?: ServerPaginationProps<F>;
 	/** Optional renderer for an expanded sub-row beneath each data row */
 	renderSubRow?: (row: Row<TData>) => React.ReactNode;
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 	columns,
 	data,
 	searchKey,
@@ -92,7 +108,7 @@ export function DataTable<TData, TValue>({
 	children,
 	serverPagination,
 	renderSubRow,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData, TValue, F>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] =
 		React.useState<ColumnFiltersState>([]);
@@ -103,11 +119,24 @@ export function DataTable<TData, TValue>({
 
 	const isServerMode = !!serverPagination;
 
+	// Merge server sorting state or use local
+	const tableSorting: SortingState = React.useMemo(() => {
+		if (serverPagination?.sort) {
+			return [
+				{
+					id: serverPagination.sort,
+					desc: serverPagination.sortDir === "DESC",
+				},
+			];
+		}
+		return sorting;
+	}, [serverPagination?.sort, serverPagination?.sortDir, sorting]);
+
 	const table = useReactTable({
 		data,
 		columns,
 		state: {
-			sorting,
+			sorting: tableSorting,
 			columnFilters,
 			columnVisibility,
 			rowSelection,
@@ -116,10 +145,27 @@ export function DataTable<TData, TValue>({
 		// When server manages pagination, prevent TanStack from slicing rows
 		// client-side (its default pageSize=10 would truncate server pages).
 		manualPagination: isServerMode,
+		manualSorting: isServerMode,
 		enableRowSelection: true,
 		getRowCanExpand: () => true,
 		onRowSelectionChange: setRowSelection,
-		onSortingChange: setSorting,
+		onSortingChange: (updaterOrValue) => {
+			if (isServerMode && serverPagination?.setSort) {
+				const newValue =
+					typeof updaterOrValue === "function"
+						? updaterOrValue(tableSorting)
+						: updaterOrValue;
+				if (newValue.length > 0) {
+					serverPagination.setSort(
+						newValue[0].id,
+						newValue[0].desc ? "DESC" : "ASC",
+					);
+				} else {
+					serverPagination.setSort("");
+				}
+			}
+			setSorting(updaterOrValue);
+		},
 		onColumnFiltersChange: setColumnFilters,
 		onColumnVisibilityChange: setColumnVisibility,
 		onExpandedChange: setExpanded,
@@ -183,7 +229,7 @@ export function DataTable<TData, TValue>({
 						</div>
 					)}
 					{typeof children === "function"
-						? children(table)
+						? children(table, sp?.filters, sp?.setFilter as any)
 						: children}
 					{!isServerMode && isFiltered && (
 						<Button

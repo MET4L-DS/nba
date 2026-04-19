@@ -362,14 +362,18 @@ export function DepartmentsView() {
 					pageIndex,
 					search,
 					onSearch: setSearch,
+					filters,
+					setFilter,
 				}}
 			>
-				{() => (
+				{(_, currentFilters, currentSetFilter) => (
 					<>
 						<Select
-							value={filters.school_id || "all"}
+							value={
+								(currentFilters?.school_id as string) || "all"
+							}
 							onValueChange={(val) =>
-								setFilter(
+								currentSetFilter?.(
 									"school_id",
 									val === "all" ? undefined : val,
 								)
@@ -390,11 +394,11 @@ export function DepartmentsView() {
 								))}
 							</SelectContent>
 						</Select>
-						{filters.school_id && (
+						{currentFilters?.school_id && (
 							<Button
 								variant="ghost"
 								onClick={() =>
-									setFilter("school_id", undefined)
+									currentSetFilter?.("school_id", undefined)
 								}
 								className="h-9 px-2 lg:px-3"
 							>

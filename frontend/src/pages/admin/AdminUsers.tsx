@@ -29,9 +29,9 @@ export function AdminUsers() {
 						canCreate: true,
 						canEdit: true,
 						canDelete: true,
-						canViewDepartment: true,
+						canViewDepartment: true, allowDepartmentFilter: true,
 					}}
-					availableFilters={["role"]}
+					availableFilters={["role", "department"]}
 					showRole={true}
 					showDepartment={true}
 					showPhone={true}
@@ -43,3 +43,4 @@ export function AdminUsers() {
 		</div>
 	);
 }
+

@@ -293,7 +293,7 @@ class UserController
                 $_GET,
                 'u.employee_id',
                 'u.employee_id',
-                ['u.employee_id', 'u.username', 'u.email', 'u.role', 'u.designation'],
+                ['u.employee_id', 'u.username', 'u.email', 'u.role', 'u.designation', 'department_code'],
                 ['role', 'department_id']
             );
 

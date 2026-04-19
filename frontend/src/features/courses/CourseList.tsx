@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { usePaginatedData } from "@/lib/usePaginatedData";
 import type {
 	AdminCourse,
 	PaginationParams,
 	PaginatedResponse,
+	Department,
 } from "@/services/api";
 import { DataTable } from "@/features/shared/DataTable";
 import type { Row } from "@tanstack/react-table";
@@ -65,7 +66,14 @@ export interface CourseListProps {
 	pageSize?: number;
 
 	// Filters
-	availableFilters?: ("department" | "year" | "semester" | "status")[];
+	availableFilters?: (
+		| "department"
+		| "year"
+		| "semester"
+		| "status"
+		| "type"
+	)[];
+	departments?: Department[];
 
 	// Events
 	onCourseUpdate?: (courseId: number, data: any) => Promise<void>;
@@ -103,6 +111,7 @@ export function CourseList({
 	paginationMode = fetchFn ? "server" : "client",
 	pageSize = 20,
 	availableFilters = ["year", "semester"],
+	departments = [],
 	onCourseUpdate,
 	onCourseDelete,
 	onCourseCreate,
@@ -118,19 +127,12 @@ export function CourseList({
 	const [deleteTarget, setDeleteTarget] = useState<AdminCourse | null>(null);
 	const [deleteSaving, setDeleteSaving] = useState(false);
 
-	// Filter state
-	const [yearFilter, setYearFilter] = useState("");
-	const [semesterFilter, setSemesterFilter] = useState("all");
-	const [statusFilter, setStatusFilter] = useState("all");
-	const [departmentFilter, setDepartmentFilter] = useState(
-		department_id?.toString() || "all",
-	);
-
 	// Data fetching
 	const {
 		data: serverCourses,
 		loading: serverLoading,
 		error,
+		pagination,
 		goNext,
 		goPrev,
 		canPrev,
@@ -138,6 +140,10 @@ export function CourseList({
 		search,
 		setSearch,
 		setFilter,
+		filters,
+		sort,
+		sortDir,
+		setSort,
 	} = usePaginatedData<
 		AdminCourse,
 		Record<string, string | number | undefined>
@@ -152,7 +158,10 @@ export function CourseList({
 					message: "",
 				})),
 		limit: pageSize,
-		initialFilters,
+		initialFilters: {
+			department_id: department_id || undefined,
+			...initialFilters,
+		},
 		defaultSort: "-course_code",
 	});
 
@@ -162,9 +171,11 @@ export function CourseList({
 
 		return clientData.filter((course) => {
 			const matchesYear =
-				!yearFilter || course.year?.toString() === yearFilter;
+				!filters.year ||
+				course.year?.toString() === filters.year?.toString();
+			const semesterFilter = filters.semester as string | undefined;
 			const matchesSemester =
-				semesterFilter === "all" ||
+				!semesterFilter ||
 				(semesterFilter === "Autumn" &&
 					(String(course.semester).toLowerCase() === "autumn" ||
 						Number(course.semester) % 2 === 1)) ||
@@ -179,37 +190,7 @@ export function CourseList({
 				course.course_name.toLowerCase().includes(search.toLowerCase());
 			return matchesYear && matchesSemester && matchesSearch;
 		});
-	}, [clientData, yearFilter, semesterFilter, search]);
-
-	// Server-side filtering sync
-	useEffect(() => {
-		if (paginationMode === "server") {
-			setFilter("year", yearFilter || undefined);
-			setFilter(
-				"semester",
-				semesterFilter === "all" ? undefined : semesterFilter,
-			);
-			setFilter(
-				"is_active",
-				statusFilter === "all"
-					? undefined
-					: statusFilter === "1"
-						? 1
-						: 0,
-			);
-			setFilter(
-				"department_id",
-				departmentFilter === "all" ? undefined : departmentFilter,
-			);
-		}
-	}, [
-		yearFilter,
-		semesterFilter,
-		statusFilter,
-		departmentFilter,
-		paginationMode,
-		setFilter,
-	]);
+	}, [clientData, filters, search]);
 
 	// Determine which data to display
 	const courses =
@@ -315,10 +296,10 @@ export function CourseList({
 	}
 
 	const hasActiveFilters =
-		!!yearFilter ||
-		semesterFilter !== "all" ||
-		statusFilter !== "all" ||
-		departmentFilter !== (department_id?.toString() || "all") ||
+		!!filters.year ||
+		!!filters.semester ||
+		filters.is_active !== undefined ||
+		filters.department_id !== undefined ||
 		!!search;
 
 	return (
@@ -379,114 +360,263 @@ export function CourseList({
 								onNext: goNext,
 								onPrev: goPrev,
 								canPrev: canPrev && pageIndex > 0,
-								pagination: null,
+								pagination: pagination,
+								filters,
+								setFilter,
+								sort,
+								sortDir,
+								setSort,
 							},
 						})}
 					>
-						{/* Additional filters next to the Search box inside DataTable */}
-						{paginationMode === "client" && (
-							<div className="relative">
-								<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-								<Input
-									placeholder="Search..."
-									value={search}
-									onChange={(e) => setSearch(e.target.value)}
-									className="pl-8 h-9 w-[150px] lg:w-[250px]"
-									disabled={isLoading}
-								/>
-							</div>
-						)}
+						{(_, currentFilters, currentSetFilter) => {
+							// For client mode, fallback to our hook state since serverPagination isn't passed
+							const actualFilters =
+								paginationMode === "server" && currentFilters
+									? currentFilters
+									: filters;
+							const actualSetFilter =
+								paginationMode === "server" && currentSetFilter
+									? currentSetFilter
+									: setFilter;
 
-						{availableFilters.includes("year") && (
-							<Input
-								placeholder="Year"
-								value={yearFilter}
-								onChange={(e) => setYearFilter(e.target.value)}
-								disabled={isLoading}
-								type="number"
-								className="h-9 w-[100px]"
-							/>
-						)}
+							return (
+								<>
+									{/* Additional filters next to the Search box inside DataTable */}
+									{paginationMode === "client" && (
+										<div className="relative">
+											<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+											<Input
+												placeholder="Search..."
+												value={search}
+												onChange={(e) =>
+													setSearch(e.target.value)
+												}
+												className="pl-8 h-9 w-[150px] lg:w-[250px]"
+												disabled={isLoading}
+											/>
+										</div>
+									)}
 
-						{availableFilters.includes("semester") && (
-							<Select
-								value={semesterFilter}
-								onValueChange={setSemesterFilter}
-								disabled={isLoading}
-							>
-								<SelectTrigger className="h-9 w-[130px]">
-									<SelectValue placeholder="Semester" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">
-										All Semesters
-									</SelectItem>
-									<SelectItem value="Spring">
-										Spring
-									</SelectItem>
-									<SelectItem value="Autumn">
-										Autumn
-									</SelectItem>
-								</SelectContent>
-							</Select>
-						)}
+									{availableFilters.includes("year") && (
+										<Select
+											value={
+												(actualFilters?.year as string) ||
+												"all"
+											}
+											onValueChange={(val) =>
+												actualSetFilter(
+													"year",
+													val === "all"
+														? undefined
+														: val,
+												)
+											}
+											disabled={isLoading}
+										>
+											<SelectTrigger className="h-9 w-[120px]">
+												<SelectValue placeholder="Year" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">
+													All Years
+												</SelectItem>
+												{[...Array(5)].map((_, i) => {
+													const year =
+														new Date().getFullYear() -
+														i;
+													return (
+														<SelectItem
+															key={year}
+															value={year.toString()}
+														>
+															{year}
+														</SelectItem>
+													);
+												})}
+											</SelectContent>
+										</Select>
+									)}
 
-						{availableFilters.includes("department") &&
-							permissions.allowDepartmentFilter && (
-								<Input
-									placeholder="Dept ID"
-									value={departmentFilter}
-									onChange={(e) =>
-										setDepartmentFilter(e.target.value)
-									}
-									disabled={isLoading}
-									className="h-9 w-[100px]"
-								/>
-							)}
+									{availableFilters.includes("semester") && (
+										<Select
+											value={
+												(actualFilters?.semester as string) ||
+												"all"
+											}
+											onValueChange={(val) =>
+												actualSetFilter(
+													"semester",
+													val === "all"
+														? undefined
+														: val,
+												)
+											}
+											disabled={isLoading}
+										>
+											<SelectTrigger className="h-9 w-[130px]">
+												<SelectValue placeholder="Semester" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">
+													All Semesters
+												</SelectItem>
+												<SelectItem value="Spring">
+													Spring
+												</SelectItem>
+												<SelectItem value="Autumn">
+													Autumn
+												</SelectItem>
+											</SelectContent>
+										</Select>
+									)}
 
-						{availableFilters.includes("status") && (
-							<Select
-								value={statusFilter}
-								onValueChange={setStatusFilter}
-								disabled={isLoading}
-							>
-								<SelectTrigger className="h-9 w-[130px]">
-									<SelectValue placeholder="Status" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">
-										All Statuses
-									</SelectItem>
-									<SelectItem value="1">Active</SelectItem>
-									<SelectItem value="0">Inactive</SelectItem>
-								</SelectContent>
-							</Select>
-						)}
+									{availableFilters.includes("department") &&
+										permissions.allowDepartmentFilter && (
+											<Select
+												value={
+													(actualFilters?.department_id as unknown as string) ||
+													"all"
+												}
+												onValueChange={(val) =>
+													actualSetFilter(
+														"department_id",
+														val === "all"
+															? undefined
+															: val,
+													)
+												}
+												disabled={isLoading}
+											>
+												<SelectTrigger className="h-9 w-[160px]">
+													<SelectValue placeholder="All Departments" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="all">
+														All Departments
+													</SelectItem>
+													{departments.map((dept) => (
+														<SelectItem
+															key={
+																dept.department_id
+															}
+															value={dept.department_id.toString()}
+														>
+															{
+																dept.department_code
+															}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										)}
 
-						{hasActiveFilters && (
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => {
-									setSearch("");
-									setYearFilter("");
-									setSemesterFilter("all");
-									setStatusFilter("all");
-									setDepartmentFilter(
-										department_id?.toString() || "all",
-									);
-									setFilter("year", undefined);
-									setFilter("semester", undefined);
-									setFilter("department_id", undefined);
-									setFilter("is_active", undefined);
-								}}
-								disabled={isLoading}
-								className="h-9 px-2"
-							>
-								Clear
-								<X className="ml-2 h-4 w-4" />
-							</Button>
-						)}
+									{availableFilters.includes("type") && (
+										<Select
+											value={
+												(actualFilters?.course_type as unknown as string) ||
+												"all"
+											}
+											onValueChange={(val) =>
+												actualSetFilter(
+													"course_type",
+													val === "all"
+														? undefined
+														: val,
+												)
+											}
+											disabled={isLoading}
+										>
+											<SelectTrigger className="h-9 w-[130px]">
+												<SelectValue placeholder="All Types" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">
+													All Types
+												</SelectItem>
+												<SelectItem value="Theory">
+													Theory
+												</SelectItem>
+												<SelectItem value="Practical">
+													Practical
+												</SelectItem>
+											</SelectContent>
+										</Select>
+									)}
+
+									{availableFilters.includes("status") && (
+										<Select
+											value={
+												actualFilters?.is_active ===
+												undefined
+													? "all"
+													: String(
+															actualFilters.is_active,
+														)
+											}
+											onValueChange={(val) =>
+												actualSetFilter(
+													"is_active",
+													val === "all"
+														? undefined
+														: val === "1"
+															? 1
+															: 0,
+												)
+											}
+											disabled={isLoading}
+										>
+											<SelectTrigger className="h-9 w-[130px]">
+												<SelectValue placeholder="Status" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">
+													All Statuses
+												</SelectItem>
+												<SelectItem value="1">
+													Active
+												</SelectItem>
+												<SelectItem value="0">
+													Inactive
+												</SelectItem>
+											</SelectContent>
+										</Select>
+									)}
+
+									{hasActiveFilters && (
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => {
+												setSearch("");
+												actualSetFilter(
+													"year",
+													undefined,
+												);
+												actualSetFilter(
+													"semester",
+													undefined,
+												);
+												actualSetFilter(
+													"department_id",
+													department_id?.toString() ||
+														undefined,
+												);
+												actualSetFilter(
+													"is_active",
+													undefined,
+												);
+											}}
+											disabled={isLoading}
+											className="h-9 px-2"
+										>
+											Clear
+											<X className="ml-2 h-4 w-4" />
+										</Button>
+									)}
+								</>
+							);
+						}}
 					</DataTable>
 				</CardContent>
 			</Card>

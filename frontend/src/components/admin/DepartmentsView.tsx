@@ -74,6 +74,33 @@ export function DepartmentsView() {
 		description: "",
 	});
 
+	const openEditDialog = (department: Department) => {
+		setSelectedDepartment(department);
+		setEditFormData({
+			department_name: department.department_name,
+			department_code: department.department_code,
+			school_id: department.school_id
+				? department.school_id.toString()
+				: "",
+			description: department.description || "",
+		});
+		setIsEditDialogOpen(true);
+	};
+
+	const handleDeleteDepartment = async (department: Department) => {
+		try {
+			await apiService.deleteDepartment(department.department_id);
+			toast.success(`Department "${department.department_name}" deleted`);
+			onDataRefresh();
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to delete department",
+			);
+		}
+	};
+
 	const columns = useMemo(
 		() =>
 			getDepartmentColumns({
@@ -128,19 +155,6 @@ export function DepartmentsView() {
 		}
 	};
 
-	const openEditDialog = (department: Department) => {
-		setSelectedDepartment(department);
-		setEditFormData({
-			department_name: department.department_name,
-			department_code: department.department_code,
-			school_id: department.school_id
-				? department.school_id.toString()
-				: "",
-			description: department.description || "",
-		});
-		setIsEditDialogOpen(true);
-	};
-
 	const handleUpdateDepartment = async () => {
 		if (!selectedDepartment) return;
 
@@ -179,20 +193,6 @@ export function DepartmentsView() {
 			);
 		} finally {
 			setIsSubmitting(false);
-		}
-	};
-
-	const handleDeleteDepartment = async (department: Department) => {
-		try {
-			await apiService.deleteDepartment(department.department_id);
-			toast.success(`Department "${department.department_name}" deleted`);
-			onDataRefresh();
-		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Failed to delete department",
-			);
 		}
 	};
 

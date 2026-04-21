@@ -107,9 +107,9 @@ export function createCourseColumns(
 		},
 		{
 			accessorKey: "course_name",
-			header: sortableHeader("Course Name"),
+			header: sortableHeader("Course Name", "text-left"),
 			cell: ({ row }) => (
-				<div className="font-medium max-w-[200px] truncate">
+				<div className="font-medium max-w-[220px] truncate text-left">
 					{row.getValue("course_name")}
 				</div>
 			),
@@ -119,9 +119,9 @@ export function createCourseColumns(
 	if (config.showFaculty) {
 		columns.push({
 			accessorKey: "faculty_name",
-			header: sortableHeader("Faculty"),
+			header: sortableHeader("Faculty", "text-left"),
 			cell: ({ row }) => (
-				<span className="text-muted-foreground text-sm">
+				<span className="text-muted-foreground text-sm text-left block max-w-[160px] truncate">
 					{(row.getValue("faculty_name") as string) ?? "—"}
 				</span>
 			),

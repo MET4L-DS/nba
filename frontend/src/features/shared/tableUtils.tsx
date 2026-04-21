@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import type { Column } from "@tanstack/react-table";
 
-export function sortableHeader<TData, TValue>(title: string) {
+export function sortableHeader<TData, TValue>(title: string, className?: string) {
 	return ({ column }: { column: Column<TData, TValue> }) => {
 		return (
 			<Button
@@ -10,6 +10,7 @@ export function sortableHeader<TData, TValue>(title: string) {
 				onClick={() =>
 					column.toggleSorting(column.getIsSorted() === "asc")
 				}
+				className={className}
 			>
 				{title}
 				<ArrowUpDown className="ml-2 h-4 w-4" />

@@ -206,7 +206,7 @@ class DeanController
                 'c.course_id',
                 'c.course_id',
                 ['c.course_id', 'c.course_code', 'c.course_name', 'c.credit', 'c.course_type', 'co.year', 'co.semester', 'u.username'],
-                ['department_id', 'is_active', 'course_type']
+                ['department_id', 'is_active', 'course_type', 'year', 'semester']
             );
 
             $total  = $this->courseRepository->countBySchoolPaginated($schoolId, $params);

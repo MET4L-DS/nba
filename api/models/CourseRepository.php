@@ -417,6 +417,18 @@ class CourseRepository
                 $bindings[] = $like;
                 $bindings[] = $like;
             }
+            if (!empty($params['filters']['department_id'])) {
+                $sql .= " AND c.department_id = ?";
+                $bindings[] = (int)$params['filters']['department_id'];
+            }
+            if (isset($params['filters']['is_active'])) {
+                $sql .= " AND c.is_active = ?";
+                $bindings[] = (int)$params['filters']['is_active'];
+            }
+            if (!empty($params['filters']['course_type'])) {
+                $sql .= " AND c.course_type = ?";
+                $bindings[] = $params['filters']['course_type'];
+            }
             if (!empty($params['filters']['year']) || !empty($params['filters']['semester'])) {
                 $sql .= " AND co.offering_id IS NOT NULL";
             }

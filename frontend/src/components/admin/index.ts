@@ -7,4 +7,6 @@ export { TestsView } from "./TestsView";
 export { DepartmentsView } from "./DepartmentsView";
 export { SchoolsView } from "./SchoolsView";
 export { DeanHistoryView } from "./DeanHistoryView";
+export { ProgrammesView } from "./ProgrammesView";
+
 

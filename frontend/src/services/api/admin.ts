@@ -4,6 +4,7 @@ import type {
 	User,
 	Student,
 	Department,
+	Programme,
 	AdminStats,
 	AdminCourse,
 	AdminTest,
@@ -11,6 +12,9 @@ import type {
 	AdminUpdateUserRequest,
 	CreateDepartmentRequest,
 	UpdateDepartmentRequest,
+	CreateProgrammeRequest,
+	UpdateProgrammeRequest,
+	ProgrammeBulkEnrollRequest,
 	School,
 	CreateSchoolRequest,
 	UpdateSchoolRequest,
@@ -135,6 +139,44 @@ export const adminApi = {
 	async deleteDepartment(departmentId: number): Promise<void> {
 		debugLogger.info("adminApi", "deleteDepartment called");
 		return apiDelete(`/admin/departments/${departmentId}`);
+	},
+
+	async getAllProgrammes(
+		params?: PaginationParams,
+	): Promise<PaginatedResponse<Programme>> {
+		return apiGetPaginated<Programme>("/admin/programmes", params);
+	},
+
+	async createProgramme(data: CreateProgrammeRequest): Promise<Programme> {
+		debugLogger.info("adminApi", "createProgramme called");
+		return apiPost<CreateProgrammeRequest, Programme>("/admin/programmes", data);
+	},
+
+	async updateProgramme(
+		programmeId: number,
+		data: UpdateProgrammeRequest,
+	): Promise<Programme> {
+		debugLogger.info("adminApi", "updateProgramme called");
+		return apiPut<UpdateProgrammeRequest, Programme>(
+			`/admin/programmes/${programmeId}`,
+			data,
+		);
+	},
+
+	async deleteProgramme(programmeId: number): Promise<void> {
+		debugLogger.info("adminApi", "deleteProgramme called");
+		return apiDelete(`/admin/programmes/${programmeId}`);
+	},
+
+	async bulkEnrollStudentsToProgramme(
+		programmeId: number,
+		data: ProgrammeBulkEnrollRequest,
+	): Promise<any> {
+		debugLogger.info("adminApi", "bulkEnrollStudentsToProgramme called");
+		return apiPost<ProgrammeBulkEnrollRequest, any>(
+			`/admin/programmes/${programmeId}/students/bulk`,
+			data,
+		);
 	},
 
 	async getAllCourses(

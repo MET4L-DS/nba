@@ -279,6 +279,8 @@ export function useCOPOMappingData({
 						studentMap.set(studentId, {
 							rollNo: studentId,
 							name: studentName,
+							programmeId: markRecord.programme_id,
+							programmeName: markRecord.programme_name,
 							absentee: "",
 							tests: {},
 							total: 0,
@@ -587,6 +589,7 @@ export function useCOPOMappingData({
 
 	const handleExportAttainment = async (headerOverrides?: {
 		programme?: string;
+		programme_id?: number;
 		year?: string;
 		semester?: string;
 		session?: string;
@@ -618,6 +621,7 @@ export function useCOPOMappingData({
 					sNo: index + 1,
 					rollNo: student.rollNo,
 					name: student.name,
+					programmeName: student.programmeName,
 					absentee: student.absentee,
 					assessmentMarks,
 					coTotals: {

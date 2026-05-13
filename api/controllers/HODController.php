@@ -16,6 +16,7 @@ class HODController
     private $departmentRepository;
     private $validationMiddleware;
     private $studentRepository;
+    private $programmeRepository;
 
     public function __construct(
         ?UserRepository $userRepository = null,
@@ -25,7 +26,7 @@ class HODController
         ?DepartmentRepository $departmentRepository = null,
         ?ValidationMiddleware $validationMiddleware = null,
         ?StudentRepository $studentRepository = null
-    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null) {
+    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null, ?ProgrammeRepository $programmeRepository = null) {
         $this->auditService = $auditService;
         $this->auditLogRepository = $auditLogRepository;
 
@@ -36,6 +37,7 @@ class HODController
         $this->departmentRepository = $departmentRepository;
         $this->validationMiddleware = $validationMiddleware;
         $this->studentRepository = $studentRepository;
+        $this->programmeRepository = $programmeRepository;
     }
 
     /**
@@ -149,6 +151,40 @@ class HODController
                 "message" => "An error occurred while fetching audit logs for HOD.",
                 "error" => $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Get programmes for the HOD's department - paginated
+     */
+    public function getDepartmentProgrammes()
+    {
+        try {
+            if (!$this->requireHOD()) return;
+
+            $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
+
+            $params = PaginationHelper::parseParams(
+                $_GET,
+                'p.programme_id',
+                'p.programme_id',
+                ['p.programme_id', 'p.programme_code', 'p.programme_name', 'd.department_name', 'd.department_code'],
+                ['degree_level']
+            );
+
+            // Override department_id filter to restrict to HOD's own department
+            $params['department_id'] = $departmentId;
+
+            $total = $this->programmeRepository->countEnrichedPaginated($params);
+            $rows = $this->programmeRepository->findEnrichedPaginated($params);
+            $result = PaginationHelper::buildResponse($rows, 'programme_id', $params['limit'], $total);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(array_merge(['success' => true, 'message' => 'Programmes retrieved successfully'], $result));
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to retrieve programmes', 'error' => $e->getMessage()]);
         }
     }
 
@@ -1091,7 +1127,7 @@ class HODController
             }
 
             $body = json_decode(file_get_contents('php://input'), true) ?? [];
-            $allowed = ['student_name', 'email', 'phone', 'student_status', 'batch_year'];
+            $allowed = ['student_name', 'email', 'phone', 'student_status', 'batch_year', 'programme_id'];
             $updates = array_intersect_key($body, array_flip($allowed));
 
             if (empty($updates)) {
@@ -1106,6 +1142,7 @@ class HODController
             if (isset($updates['phone']))         $student->setPhone($updates['phone']);
             if (isset($updates['student_status'])) $student->setStudentStatus($updates['student_status']);
             if (isset($updates['batch_year']))    $student->setBatchYear((int)$updates['batch_year']);
+            if (isset($updates['programme_id']))  $student->setProgrammeId((int)$updates['programme_id']);
 
             $this->studentRepository->update($student);
 

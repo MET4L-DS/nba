@@ -14,9 +14,14 @@ import type {
 	PaginationParams,
 	Student,
 	UpdateStudentRequest,
+	Programme,
 } from "./types";
 
 export const hodApi = {
+	async getDepartmentProgrammes(params?: PaginationParams): Promise<PaginatedResponse<Programme>> {
+		debugLogger.info("hodApi", "getDepartmentProgrammes called", params);
+		return apiGetPaginated<Programme>("/hod/programmes", params);
+	},
 	async getBaseCourses(params?: PaginationParams) {
 		debugLogger.info("hodApi", "getBaseCourses called");
 		return apiGetPaginated<BaseCourse>("/hod/base-courses", params);

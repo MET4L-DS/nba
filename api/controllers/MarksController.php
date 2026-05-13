@@ -423,6 +423,7 @@ class MarksController
                         return [
                             'student_id' => $item['marks']->getStudentRollNo(),
                             'student_name' => $item['student_name'],
+                            'programme_name' => $item['programme_name'] ?? null,
                             'CO1' => $item['marks']->getCO1(),
                             'CO2' => $item['marks']->getCO2(),
                             'CO3' => $item['marks']->getCO3(),

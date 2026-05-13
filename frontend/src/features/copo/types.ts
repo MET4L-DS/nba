@@ -3,6 +3,8 @@
 export interface StudentMarks {
 	rollNo: string;
 	name: string;
+	programmeId?: number;
+	programmeName?: string;
 	absentee: string; // "AB" or "UR" or empty
 	tests: { [testName: string]: { [co: string]: number } };
 	total: number;

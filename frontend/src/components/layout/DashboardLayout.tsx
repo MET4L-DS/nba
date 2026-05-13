@@ -77,7 +77,8 @@ export function DashboardLayout() {
 					{ id: "users", label: "Users", icon: Users },
 					{ id: "courses", label: "Courses", icon: BookOpen },
 					{ id: "schools", label: "Schools", icon: ShieldCheck },
-					{ id: "departments", label: "Departments", icon: BookOpen },
+					{ id: "departments", label: "Departments", icon: Building2 },
+					{ id: "programmes", label: "Programmes", icon: GraduationCap },
 					{ id: "logs", label: "Audit Logs", icon: History },
 				];
 			case "hod":
@@ -85,6 +86,7 @@ export function DashboardLayout() {
 					...common,
 					{ id: "faculty", label: "Faculty", icon: Users },
 					{ id: "students", label: "Students", icon: GraduationCap },
+					{ id: "programmes", label: "Programmes", icon: GraduationCap },
 					{ id: "courses", label: "Courses", icon: BookOpen },
 					{ id: "logs", label: "Audit Logs", icon: History },
 				];

@@ -8,11 +8,13 @@ import { AdminSchools } from "./pages/admin/AdminSchools";
 import { AdminDepartments } from "./pages/admin/AdminDepartments";
 import { AdminStudents } from "./pages/admin/AdminStudents";
 import { AdminCourses } from "./pages/admin/AdminCourses";
+import { AdminProgrammes } from "./pages/admin/AdminProgrammes";
 import { AdminLogs } from "./pages/admin/AdminLogs";
 import { HODHome } from "./pages/hod/HODHome";
 import { HODFaculty } from "./pages/hod/HODFaculty";
 import { HODStudents } from "./pages/hod/HODStudents";
 import { HODCourses } from "./pages/hod/HODCourses";
+import { HODProgrammes } from "./pages/hod/HODProgrammes";
 import { HODCourseCOPO } from "./pages/hod/HODCourseCOPO";
 import { HODLogs } from "./pages/hod/HODLogs";
 import { FacultyHome } from "./pages/faculty/FacultyHome";
@@ -53,6 +55,10 @@ function App() {
 						element={<AdminDepartments />}
 					/>
 					<Route
+						path="/dashboard/programmes"
+						element={<AdminProgrammes />}
+					/>
+					<Route
 						path="/dashboard/students"
 						element={<AdminStudents />}
 					/>
@@ -64,6 +70,7 @@ function App() {
 					<Route path="/hod" element={<HODHome />} />
 					<Route path="/hod/faculty" element={<HODFaculty />} />
 					<Route path="/hod/students" element={<HODStudents />} />
+					<Route path="/hod/programmes" element={<HODProgrammes />} />
 					<Route path="/hod/courses" element={<HODCourses />} />
 					<Route
 						path="/hod/courses/:id/copo"

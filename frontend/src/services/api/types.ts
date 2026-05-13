@@ -174,6 +174,9 @@ export interface COTotals {
 export interface MarksRecord {
 	id: number;
 	student_id: string;
+	student_name?: string;
+	programme_id?: number;
+	programme_name?: string;
 	test_id: number;
 	CO1: number;
 	CO2: number;
@@ -223,11 +226,14 @@ export interface BulkMarksSaveResponse {
 export interface Student {
 	roll_no: string;
 	student_name: string;
-	department_id: number;
+	programme_id: number;
 	batch_year: number;
 	student_status: string;
 	email: string | null;
 	phones: string[];
+	programme_name?: string;
+	programme_code?: string;
+	department_id?: number;
 	department_name: string;
 	department_code: string;
 	enrolled_courses?: string; // comma-separated "code: name (year/sem)" entries
@@ -244,6 +250,7 @@ export interface EnrolledStudent extends Student {
 
 export interface UpdateStudentRequest {
 	student_name?: string;
+	programme_id?: number;
 	email?: string | null;
 	phones?: string[];
 	phone?: string | null;
@@ -290,6 +297,23 @@ export interface Department {
 	course_count?: number;
 	active_offerings_count?: number;
 	latest_offering?: string | null;
+}
+
+export interface Programme {
+	programme_id: number;
+	department_id: number;
+	programme_code: string;
+	programme_name: string;
+	degree_level: "UG" | "PG" | "Diploma" | "PhD";
+	duration_years: number;
+	created_at?: string;
+	department_name?: string;
+	department_code?: string;
+	school_id?: number | null;
+	school_name?: string | null;
+	school_code?: string | null;
+	student_count?: number;
+	course_count?: number;
 }
 
 // Admin Types
@@ -580,6 +604,31 @@ export interface UpdateDepartmentRequest {
 	description?: string;
 }
 
+export interface CreateProgrammeRequest {
+	department_id: number;
+	programme_code: string;
+	programme_name: string;
+	degree_level?: "UG" | "PG" | "Diploma" | "PhD";
+	duration_years?: number;
+}
+
+export interface UpdateProgrammeRequest {
+	department_id?: number;
+	programme_code?: string;
+	programme_name?: string;
+	degree_level?: "UG" | "PG" | "Diploma" | "PhD";
+	duration_years?: number;
+}
+
+export interface ProgrammeBulkStudent {
+	rollno: string;
+	name: string;
+}
+
+export interface ProgrammeBulkEnrollRequest {
+	students: ProgrammeBulkStudent[];
+}
+
 // Faculty Types
 export interface FacultyStats {
 	totalCourses: number;
@@ -690,6 +739,9 @@ export interface DeanCourse {
 export interface DeanStudent {
 	roll_no: string;
 	student_name: string;
+	programme_id: number;
+	programme_name?: string;
+	programme_code?: string;
 	department_id: number;
 	department_name: string;
 	department_code: string;

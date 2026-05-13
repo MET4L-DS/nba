@@ -57,6 +57,8 @@ export const marksApi = {
     marks: Array<{
       student_id: string;
       student_name: string;
+      programme_id?: number;
+      programme_name?: string;
       CO1: string | number;
       CO2: string | number;
       CO3: string | number;
@@ -71,6 +73,8 @@ export const marksApi = {
       marks: Array<{
         student_id: string;
         student_name: string;
+        programme_id?: number;
+        programme_name?: string;
         CO1: string | number;
         CO2: string | number;
         CO3: string | number;

@@ -59,6 +59,7 @@ export interface MatrixViewProps {
 	saveMatrix: () => void;
 	handleExportAttainment: (headerOverrides?: {
 		programme?: string;
+		programme_id?: number;
 		year?: string;
 		semester?: string;
 		session?: string;

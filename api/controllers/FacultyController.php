@@ -349,13 +349,14 @@ class FacultyController
             $phone          = array_key_exists('phone', $body) ? $body['phone'] : $existing['phone'];
             $studentStatus  = $body['student_status'] ?? $existing['student_status'];
             $batchYear      = $body['batch_year'] ?? $existing['batch_year'];
+            $programmeId    = $body['programme_id'] ?? $existing['programme_id'];
 
             $stmt = $this->db->prepare("
                 UPDATE students
-                SET student_name = ?, email = ?, phone = ?, student_status = ?, batch_year = ?
+                SET student_name = ?, email = ?, phone = ?, student_status = ?, batch_year = ?, programme_id = ?
                 WHERE roll_no = ?
             ");
-            $stmt->execute([$studentName, $email, $phone, $studentStatus, $batchYear, $rollNo]);
+            $stmt->execute([$studentName, $email, $phone, $studentStatus, $batchYear, $programmeId, $rollNo]);
 
             http_response_code(200);
             header('Content-Type: application/json');

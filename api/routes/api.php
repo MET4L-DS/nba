@@ -11,6 +11,8 @@ require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/UserRepository.php';
 require_once __DIR__ . '/../models/Department.php';
 require_once __DIR__ . '/../models/DepartmentRepository.php';
+require_once __DIR__ . '/../models/Programme.php';
+require_once __DIR__ . '/../models/ProgrammeRepository.php';
 require_once __DIR__ . '/../models/Course.php';
 require_once __DIR__ . '/../models/CourseRepository.php';
 require_once __DIR__ . '/../models/CourseOffering.php';
@@ -88,6 +90,7 @@ class Router
         // Initialize repositories and services
         $userRepository = new UserRepository($db);
         $departmentRepository = new DepartmentRepository($db);
+        $programmeRepository = new ProgrammeRepository($db);
         $courseRepository = new CourseRepository($db);
         $courseOfferingRepository = new CourseOfferingRepository($db);
         $courseFacultyAssignmentRepository = new CourseFacultyAssignmentRepository($db);
@@ -122,8 +125,8 @@ class Router
         $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $auditService);
         $this->enrollmentController = new EnrollmentController($db, $auditService);
         $this->attainmentController = new AttainmentController($courseRepository, $courseOfferingRepository, $attainmentScaleRepository, $coPoRepository, $auditService);
-        $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $deanAssignmentRepository, $schoolRepository, $auditService);
-        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware, $studentRepository, $auditService, $auditLogRepository);
+        $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $programmeRepository, $deanAssignmentRepository, $schoolRepository, $auditService);
+        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware, $studentRepository, $auditService, $auditLogRepository, $programmeRepository);
 
         // Initialize enrollment repository for staff controller
         $enrollmentRepository = new EnrollmentRepository($db);
@@ -405,6 +408,20 @@ class Router
                 }
                 break;
 
+            case 'admin/programmes':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->adminController->getAllProgrammes();
+                } elseif ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->adminController->createProgramme();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
             // HOD routes
             case 'hod/logs':
                 if ($method === 'GET') {
@@ -489,6 +506,16 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->hodController->getDepartmentStudents();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'hod/programmes':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->hodController->getDepartmentProgrammes();
                 } else {
                     $this->sendMethodNotAllowed();
                 }
@@ -1012,6 +1039,28 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->adminController->deleteDepartment($departmentId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^admin/programmes/(\d+)$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->updateProgramme($programmeId);
+                    } elseif ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->deleteProgramme($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^admin/programmes/(\d+)/students/bulk$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->bulkEnrollStudentsToProgramme($programmeId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

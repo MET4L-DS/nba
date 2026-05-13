@@ -322,7 +322,7 @@ class DeanController
                 LEFT JOIN enrollments e
                        ON e.offering_id = co.offering_id
                 LEFT JOIN students s
-                       ON s.department_id = d.department_id
+                       ON s.programme_id IN (SELECT programme_id FROM programmes WHERE department_id = d.department_id)
                 WHERE d.school_id = ?
                 GROUP BY d.department_id, d.department_name, d.department_code
                 ORDER BY d.department_name

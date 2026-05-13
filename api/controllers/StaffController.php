@@ -638,8 +638,17 @@ class StaffController
                 // Check if student exists in database, if not create them
                 $existingStudent = $this->studentRepository->findByRollno($rollno);
                 if (!$existingStudent) {
-                    // Create new student with the staff's department
-                    $studentModel = new Student($rollno, $name, $departmentId);
+                    $programmeId = $this->studentRepository->findFirstProgrammeIdByDepartment((int)$departmentId);
+                    if (!$programmeId) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => "No programme configured for department ID {$departmentId}"
+                        ]);
+                        return;
+                    }
+
+                    $studentModel = new Student($rollno, $name, $programmeId);
                     $this->studentRepository->save($studentModel);
                 }
 

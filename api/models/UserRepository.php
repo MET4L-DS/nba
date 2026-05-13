@@ -772,7 +772,7 @@ class UserRepository
     public function countStudentsByDepartment($departmentId)
     {
         try {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM students WHERE department_id = ?");
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM students WHERE programme_id IN (SELECT programme_id FROM programmes WHERE department_id = ?)");
             $stmt->execute([$departmentId]);
             return (int)$stmt->fetchColumn();
         } catch (PDOException $e) {

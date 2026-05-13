@@ -263,17 +263,20 @@ class FacultyController
             $fetchLimit = $limit + 1;
 
             $dataQuery = "
-                SELECT s.roll_no, s.student_name, s.department_id, s.batch_year, s.student_status,
-                       s.email, s.phone, d.department_name, d.department_code,
+                SELECT s.roll_no, s.student_name, s.programme_id, s.batch_year, s.student_status,
+                       s.email, s.phone, p.department_id AS dept_id, d.department_name, d.department_code,
+                       p.programme_name, p.programme_code,
                        GROUP_CONCAT(DISTINCT CONCAT(c.course_code, ': ', c.course_name, ' (', co.year, '/', co.semester, ')') ORDER BY c.course_code SEPARATOR ', ') AS enrolled_courses
                 FROM enrollments e
                 JOIN students s ON e.student_rollno = s.roll_no
                 JOIN course_offerings co ON e.offering_id = co.offering_id
                 JOIN courses c ON co.course_id = c.course_id
-                LEFT JOIN departments d ON s.department_id = d.department_id
+                LEFT JOIN programmes p ON s.programme_id = p.programme_id
+                LEFT JOIN departments d ON p.department_id = d.department_id
                 WHERE $whereClause
-                GROUP BY s.roll_no, s.student_name, s.department_id, s.batch_year, 
-                         s.student_status, s.email, s.phone, d.department_name, d.department_code
+                GROUP BY s.roll_no, s.student_name, s.programme_id, s.batch_year,
+                         s.student_status, s.email, s.phone, p.department_id, d.department_name, d.department_code,
+                         p.programme_name, p.programme_code
                 ORDER BY $orderBy
                 LIMIT $fetchLimit
             ";

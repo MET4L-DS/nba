@@ -26,8 +26,10 @@ DROP TABLE IF EXISTS `co_po_mapping`;
 DROP TABLE IF EXISTS `attainment_scale`;
 DROP TABLE IF EXISTS `course_faculty_assignments`;
 DROP TABLE IF EXISTS `course_offerings`;
+DROP TABLE IF EXISTS `programme_courses`;
 DROP TABLE IF EXISTS `courses`;
 DROP TABLE IF EXISTS `students`;
+DROP TABLE IF EXISTS `programmes`;
 DROP TABLE IF EXISTS `hod_assignments`;
 DROP TABLE IF EXISTS `dean_assignments`;
 DROP TABLE IF EXISTS `users`;
@@ -157,20 +159,6 @@ CREATE TABLE `dean_assignments` (
     FOREIGN KEY (`employee_id`) REFERENCES `users`(`employee_id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Students
-CREATE TABLE `students` (
-    `roll_no` VARCHAR(20) NOT NULL,
-    `student_name` VARCHAR(100) NOT NULL,
-    `department_id` INT(11) NOT NULL,
-    `batch_year` INT NULL,
-    `student_status` ENUM('Active', 'Graduated', 'Dropped') DEFAULT 'Active',
-    `email` VARCHAR(100) NULL,
-    `phone` VARCHAR(15) NULL,
-    PRIMARY KEY (`roll_no`),
-    INDEX `idx_students_dept` (`department_id`),
-    FOREIGN KEY (`department_id`) REFERENCES `departments`(`department_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- =============================================
 -- COURSE + OFFERING TABLES
 -- =============================================
@@ -191,6 +179,50 @@ CREATE TABLE `courses` (
     UNIQUE KEY (`course_code`),
     INDEX `idx_course_dept` (`department_id`),
     FOREIGN KEY (`department_id`) REFERENCES `departments`(`department_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Programmes (belongs to a department)
+CREATE TABLE `programmes` (
+    `programme_id` INT(11) NOT NULL AUTO_INCREMENT,
+    `department_id` INT(11) NOT NULL,
+    `programme_code` VARCHAR(20) NOT NULL,
+    `programme_name` VARCHAR(150) NOT NULL,
+    `degree_level` ENUM('UG', 'PG', 'Diploma', 'PhD') NOT NULL DEFAULT 'UG',
+    `duration_years` TINYINT NOT NULL DEFAULT 4,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`programme_id`),
+    UNIQUE KEY `uk_programme_code` (`programme_code`),
+    UNIQUE KEY `uk_programme_name` (`programme_name`),
+    INDEX `idx_programme_dept` (`department_id`),
+    FOREIGN KEY (`department_id`) REFERENCES `departments`(`department_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Programme-Course mapping (many-to-many)
+CREATE TABLE `programme_courses` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `programme_id` INT(11) NOT NULL,
+    `course_id` BIGINT NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_programme_course` (`programme_id`, `course_id`),
+    INDEX `idx_pc_programme` (`programme_id`),
+    INDEX `idx_pc_course` (`course_id`),
+    FOREIGN KEY (`programme_id`) REFERENCES `programmes`(`programme_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`course_id`) REFERENCES `courses`(`course_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Students
+CREATE TABLE `students` (
+    `roll_no` VARCHAR(20) NOT NULL,
+    `student_name` VARCHAR(100) NOT NULL,
+    `programme_id` INT(11) NOT NULL,
+    `batch_year` INT NULL,
+    `student_status` ENUM('Active', 'Graduated', 'Dropped') DEFAULT 'Active',
+    `email` VARCHAR(100) NULL,
+    `phone` VARCHAR(15) NULL,
+    PRIMARY KEY (`roll_no`),
+    INDEX `idx_students_programme` (`programme_id`),
+    FOREIGN KEY (`programme_id`) REFERENCES `programmes`(`programme_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Course Offerings (SESSION INSTANCE of a course — year/semester specific)
@@ -495,6 +527,18 @@ VALUES
     (7, 'EC101', 2, 'Digital Electronics', 'Theory', 'Undergraduate', 4),
     (8, 'EC201', 2, 'Signals and Systems', 'Theory', 'Undergraduate', 4);
 
+-- Programmes
+INSERT INTO `programmes` (`programme_id`, `department_id`, `programme_code`, `programme_name`, `degree_level`, `duration_years`)
+VALUES
+    (1, 1, 'CSE-BTECH', 'B.Tech in Computer Science & Engineering', 'UG', 4),
+    (2, 2, 'ECE-BTECH', 'B.Tech in Electronics & Communication Engineering', 'UG', 4);
+
+-- Programme-Course mappings
+INSERT INTO `programme_courses` (`programme_id`, `course_id`)
+VALUES
+    (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6),
+    (2, 7), (2, 8);
+
 -- Course Offerings (session instances)
 INSERT INTO `course_offerings` (`offering_id`, `course_id`, `year`, `semester`, `co_threshold`, `passing_threshold`)
 VALUES 
@@ -529,7 +573,7 @@ VALUES
     (9, 3006, 'Primary', '2025-01-01', 0);     -- Faculty Six → EC201 2025 Spring
 
 -- Students
-INSERT INTO `students` (`roll_no`, `student_name`, `department_id`, `batch_year`, `student_status`, `email`)
+INSERT INTO `students` (`roll_no`, `student_name`, `programme_id`, `batch_year`, `student_status`, `email`)
 VALUES 
     -- CSE 2024 batch
     ('2024CSE001', 'Alice Johnson', 1, 2024, 'Active', 'alice@student.tezu.ac.in'),
@@ -747,6 +791,8 @@ UNION ALL SELECT 'hod_assignments', COUNT(*) FROM `hod_assignments`
 UNION ALL SELECT 'dean_assignments', COUNT(*) FROM `dean_assignments`
 UNION ALL SELECT 'students', COUNT(*) FROM `students`
 UNION ALL SELECT 'courses', COUNT(*) FROM `courses`
+UNION ALL SELECT 'programmes', COUNT(*) FROM `programmes`
+UNION ALL SELECT 'programme_courses', COUNT(*) FROM `programme_courses`
 UNION ALL SELECT 'course_offerings', COUNT(*) FROM `course_offerings`
 UNION ALL SELECT 'faculty_assignments', COUNT(*) FROM `course_faculty_assignments`
 UNION ALL SELECT 'enrollments', COUNT(*) FROM `enrollments`

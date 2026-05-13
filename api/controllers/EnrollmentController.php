@@ -165,9 +165,18 @@ class EnrollmentController
                         return;
                     }
 
-                    // Create new student with course's department
+                    // Create new student with the department's default programme
                     $departmentId = $course->getDepartmentId() ?? $faculty->getDepartmentId();
-                    $student = new Student($rollno, $name, $departmentId);
+                    $programmeId = $this->studentRepo->findFirstProgrammeIdByDepartment((int)$departmentId);
+                    if (!$programmeId) {
+                        http_response_code(400);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => "No programme configured for department ID {$departmentId}"
+                        ]);
+                        return;
+                    }
+                    $student = new Student($rollno, $name, $programmeId);
                     $this->studentRepo->save($student);
                 }
 

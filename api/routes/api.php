@@ -13,6 +13,7 @@ require_once __DIR__ . '/../models/Department.php';
 require_once __DIR__ . '/../models/DepartmentRepository.php';
 require_once __DIR__ . '/../models/Programme.php';
 require_once __DIR__ . '/../models/ProgrammeRepository.php';
+require_once __DIR__ . '/../models/ProgrammeCourseRepository.php';
 require_once __DIR__ . '/../models/Course.php';
 require_once __DIR__ . '/../models/CourseRepository.php';
 require_once __DIR__ . '/../models/CourseOffering.php';
@@ -91,6 +92,7 @@ class Router
         $userRepository = new UserRepository($db);
         $departmentRepository = new DepartmentRepository($db);
         $programmeRepository = new ProgrammeRepository($db);
+        $programmeCourseRepository = new ProgrammeCourseRepository($db);
         $courseRepository = new CourseRepository($db);
         $courseOfferingRepository = new CourseOfferingRepository($db);
         $courseFacultyAssignmentRepository = new CourseFacultyAssignmentRepository($db);
@@ -125,8 +127,8 @@ class Router
         $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $auditService);
         $this->enrollmentController = new EnrollmentController($db, $auditService);
         $this->attainmentController = new AttainmentController($courseRepository, $courseOfferingRepository, $attainmentScaleRepository, $coPoRepository, $auditService);
-        $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $programmeRepository, $deanAssignmentRepository, $schoolRepository, $auditService);
-        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware, $studentRepository, $auditService, $auditLogRepository, $programmeRepository);
+        $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $programmeRepository, $deanAssignmentRepository, $schoolRepository, $auditService, $programmeCourseRepository);
+        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware, $studentRepository, $auditService, $auditLogRepository, $programmeRepository, $programmeCourseRepository);
 
         // Initialize enrollment repository for staff controller
         $enrollmentRepository = new EnrollmentRepository($db);
@@ -516,6 +518,10 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->hodController->getDepartmentProgrammes();
+                } elseif ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->hodController->createProgramme();
                 } else {
                     $this->sendMethodNotAllowed();
                 }
@@ -1029,6 +1035,51 @@ class Router
                     } else {
                         $this->sendMethodNotAllowed();
                     }
+                } elseif (preg_match('#^hod/programmes/(\d+)$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->updateProgramme($programmeId);
+                    } elseif ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->deleteProgramme($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^hod/programmes/(\d+)/courses$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->getProgrammeCourses($programmeId);
+                    } elseif ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->addProgrammeCourse($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^hod/programmes/(\d+)/students/bulk$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->bulkEnrollStudentsToProgramme($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^hod/programmes/(\d+)/courses/(\d+)$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    $courseId = $matches[2];
+                    if ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->removeProgrammeCourse($programmeId, $courseId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
                 } elseif (preg_match('#^admin/departments/(\d+)$#', $path, $matches)) {
                     $departmentId = $matches[1];
                     if ($method === 'PUT') {
@@ -1061,6 +1112,29 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->adminController->bulkEnrollStudentsToProgramme($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^admin/programmes/(\d+)/courses$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->getProgrammeCourses($programmeId);
+                    } elseif ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->addProgrammeCourse($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^admin/programmes/(\d+)/courses/(\d+)$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    $courseId = $matches[2];
+                    if ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->removeProgrammeCourse($programmeId, $courseId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

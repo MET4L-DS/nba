@@ -605,7 +605,7 @@ export interface UpdateDepartmentRequest {
 }
 
 export interface CreateProgrammeRequest {
-	department_id: number;
+	department_id?: number;
 	programme_code: string;
 	programme_name: string;
 	degree_level?: "UG" | "PG" | "Diploma" | "PhD";
@@ -625,8 +625,29 @@ export interface ProgrammeBulkStudent {
 	name: string;
 }
 
+export interface ProgrammeCourse {
+	id: number;
+	programme_id: number;
+	course_id: number;
+	course_code: string;
+	course_name: string;
+	credits: number | null;
+	created_at: string;
+}
+
+export interface ProgrammeCourseResponse {
+	courses: ProgrammeCourse[];
+	available: Array<{
+		course_id: number;
+		course_code: string;
+		course_name: string;
+		credits: number | null;
+	}>;
+}
+
 export interface ProgrammeBulkEnrollRequest {
 	students: ProgrammeBulkStudent[];
+	batch_year?: number;
 }
 
 // Faculty Types

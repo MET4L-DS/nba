@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -10,6 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	Table,
@@ -23,14 +30,21 @@ import { CheckCircle2, Upload, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { CSVFormatInfo } from "@/features/assessments/CSVFormatInfo";
 import { CSVFileUpload } from "@/features/assessments/CSVFileUpload";
-import { adminApi } from "@/services/api/admin";
-import type { Programme } from "@/services/api";
+import type { Programme, ProgrammeBulkEnrollRequest } from "@/services/api";
+
+interface BulkEnrollApi {
+	bulkEnrollStudentsToProgramme(
+		programmeId: number,
+		data: ProgrammeBulkEnrollRequest,
+	): Promise<any>;
+}
 
 interface BulkEnrollStudentsDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	programme: Programme | null;
 	onSuccess?: () => void;
+	api: BulkEnrollApi;
 }
 
 interface StudentEntry {
@@ -43,10 +57,20 @@ export function BulkEnrollStudentsDialog({
 	onOpenChange,
 	programme,
 	onSuccess,
+	api,
 }: BulkEnrollStudentsDialogProps) {
 	const [students, setStudents] = useState<StudentEntry[]>([]);
 	const [uploading, setUploading] = useState(false);
 	const [enrolling, setEnrolling] = useState(false);
+	const [batchYear, setBatchYear] = useState<string>("");
+	const batchYearOptions = useMemo(() => {
+		const currentYear = new Date().getFullYear();
+		const years: string[] = [];
+		for (let y = currentYear + 4; y >= currentYear - 8; y--) {
+			years.push(y.toString());
+		}
+		return years;
+	}, []);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Manual enrollment state
@@ -137,9 +161,12 @@ export function BulkEnrollStudentsDialog({
 
 		setEnrolling(true);
 		try {
-			const data = await adminApi.bulkEnrollStudentsToProgramme(
+			const data = await api.bulkEnrollStudentsToProgramme(
 				programme.programme_id,
-				{ students },
+				{
+					students,
+					...(batchYear.trim() ? { batch_year: parseInt(batchYear.trim()) } : {}),
+				},
 			);
 
 			if (data.failure_count > 0) {
@@ -179,6 +206,7 @@ export function BulkEnrollStudentsDialog({
 		setStudents([]);
 		setManualRollno("");
 		setManualName("");
+		setBatchYear("");
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
 		}
@@ -245,6 +273,25 @@ export function BulkEnrollStudentsDialog({
 				</DialogHeader>
 
 				<div className="space-y-4 py-4">
+					<div className="space-y-2">
+						<Label>Batch Year <span className="text-muted-foreground">(optional)</span></Label>
+						<Select value={batchYear} onValueChange={setBatchYear}>
+							<SelectTrigger>
+								<SelectValue placeholder="Select batch year" />
+							</SelectTrigger>
+							<SelectContent>
+								{batchYearOptions.map((year) => (
+									<SelectItem key={year} value={year}>
+										{year}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						<p className="text-xs text-muted-foreground">
+							Applies to all students in this enrollment
+						</p>
+					</div>
+
 					<Tabs defaultValue="csv" className="w-full">
 						<TabsList className="grid w-full grid-cols-2 mb-4">
 							<TabsTrigger

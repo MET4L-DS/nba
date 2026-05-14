@@ -15,6 +15,9 @@ import type {
 	Student,
 	UpdateStudentRequest,
 	Programme,
+	ProgrammeCourseResponse,
+	CreateProgrammeRequest,
+	ProgrammeBulkEnrollRequest,
 } from "./types";
 
 export const hodApi = {
@@ -22,6 +25,23 @@ export const hodApi = {
 		debugLogger.info("hodApi", "getDepartmentProgrammes called", params);
 		return apiGetPaginated<Programme>("/hod/programmes", params);
 	},
+
+	// Programme CRUD
+	async createProgramme(data: CreateProgrammeRequest): Promise<Programme> {
+		debugLogger.info("hodApi", "createProgramme called", data);
+		return apiPost<CreateProgrammeRequest, Programme>("/hod/programmes", data);
+	},
+
+	async updateProgramme(programmeId: number, data: Partial<CreateProgrammeRequest>): Promise<Programme> {
+		debugLogger.info("hodApi", "updateProgramme called", { programmeId, data });
+		return apiPut<Partial<CreateProgrammeRequest>, Programme>(`/hod/programmes/${programmeId}`, data);
+	},
+
+	async deleteProgramme(programmeId: number): Promise<void> {
+		debugLogger.info("hodApi", "deleteProgramme called", { programmeId });
+		return apiDelete(`/hod/programmes/${programmeId}`);
+	},
+
 	async getBaseCourses(params?: PaginationParams) {
 		debugLogger.info("hodApi", "getBaseCourses called");
 		return apiGetPaginated<BaseCourse>("/hod/base-courses", params);
@@ -143,6 +163,45 @@ async deleteCourse(offeringId: number): Promise<void> {
 		debugLogger.info("hodApi", "getOfferingTestAverages called");
 		return apiGet<TestAverage[]>(
 			`/hod/offerings/${offeringId}/test-averages`,
+		);
+	},
+
+	// Programme-Course Mapping
+	async getProgrammeCourses(
+		programmeId: number,
+	): Promise<ProgrammeCourseResponse> {
+		debugLogger.info("hodApi", "getProgrammeCourses called");
+		return apiGet<ProgrammeCourseResponse>(
+			`/hod/programmes/${programmeId}/courses`,
+		);
+	},
+
+	async addProgrammeCourse(
+		programmeId: number,
+		courseId: number,
+	): Promise<void> {
+		debugLogger.info("hodApi", "addProgrammeCourse called");
+		return apiPost(`/hod/programmes/${programmeId}/courses`, {
+			course_id: courseId,
+		});
+	},
+
+	async removeProgrammeCourse(
+		programmeId: number,
+		courseId: number,
+	): Promise<void> {
+		debugLogger.info("hodApi", "removeProgrammeCourse called");
+		return apiDelete(`/hod/programmes/${programmeId}/courses/${courseId}`);
+	},
+
+	async bulkEnrollStudentsToProgramme(
+		programmeId: number,
+		data: ProgrammeBulkEnrollRequest,
+	): Promise<any> {
+		debugLogger.info("hodApi", "bulkEnrollStudentsToProgramme called");
+		return apiPost<ProgrammeBulkEnrollRequest, any>(
+			`/hod/programmes/${programmeId}/students/bulk`,
+			data,
 		);
 	},
 };

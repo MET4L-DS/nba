@@ -17,8 +17,9 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { hodApi } from "@/services/api/hod";
-import type { DepartmentFaculty, BaseCourse } from "@/services/api/types";
+import type { DepartmentFaculty, BaseCourse, Programme } from "@/services/api/types";
 
 export interface CourseFormDialogProps {
 	mode: "create" | "edit";
@@ -61,6 +62,10 @@ export function CourseFormDialog({
 	const [selectedBaseCourseid, setSelectedBaseCourseid] = useState<
 		number | null
 	>(null);
+	const [programmes, setProgrammes] = useState<Programme[]>([]);
+	const [isFetchingProgrammes, setIsFetchingProgrammes] = useState(false);
+	const [selectedProgrammeIds, setSelectedProgrammeIds] = useState<number[]>([]);
+	const [programmeIdsModified, setProgrammeIdsModified] = useState(false);
 
 	useEffect(() => {
 		if (open) {
@@ -143,6 +148,22 @@ export function CourseFormDialog({
 						}
 					}
 				}
+
+				if (courseType === "base") {
+					setIsFetchingProgrammes(true);
+					try {
+						const progResp = await hodApi.getDepartmentProgrammes({
+							limit: 100,
+						});
+						setProgrammes(progResp.data || []);
+					} catch (error) {
+						console.error("Failed to fetch programmes:", error);
+					} finally {
+						setIsFetchingProgrammes(false);
+					}
+					setSelectedProgrammeIds([]);
+					setProgrammeIdsModified(false);
+				}
 			};
 			fetchData();
 		}
@@ -163,6 +184,9 @@ export function CourseFormDialog({
 			savePayload.course_type = formData.course_type;
 			savePayload.course_level = formData.course_level;
 			savePayload.is_active = formData.is_active ? 1 : 0;
+			if (mode === "create" || programmeIdsModified) {
+				savePayload.programme_ids = selectedProgrammeIds;
+			}
 		} else {
 			savePayload.name = formData.course_name;
 			savePayload.course_type = formData.course_type;
@@ -412,22 +436,86 @@ export function CourseFormDialog({
 					)}
 
 					{courseType === "base" && (
-						<div className="flex items-center space-x-2 pt-2">
-							<Checkbox
-								id="is_active"
-								checked={formData.is_active}
-								onCheckedChange={(checked: boolean) =>
-									setFormData((f) => ({
-										...f,
-										is_active: checked,
-									}))
-								}
-								disabled={isLoading}
-							/>
-							<Label htmlFor="is_active">
-								Active (Template visible for new offerings)
-							</Label>
-						</div>
+						<>
+							<div className="flex items-center space-x-2 pt-2">
+								<Checkbox
+									id="is_active"
+									checked={formData.is_active}
+									onCheckedChange={(checked: boolean) =>
+										setFormData((f) => ({
+											...f,
+											is_active: checked,
+										}))
+									}
+									disabled={isLoading}
+								/>
+								<Label htmlFor="is_active">
+									Active (Template visible for new offerings)
+								</Label>
+							</div>
+
+							<div className="space-y-2 pt-2 border-t">
+								<Label>Assign to Programmes</Label>
+								{isFetchingProgrammes ? (
+									<p className="text-sm text-muted-foreground">
+										Loading programmes...
+									</p>
+								) : programmes.length === 0 ? (
+									<p className="text-sm text-muted-foreground">
+										No programmes available for your
+										department
+									</p>
+								) : (
+									<ScrollArea className="h-32 rounded-md border p-2">
+										{programmes.map((prog) => {
+											const isChecked =
+												selectedProgrammeIds.includes(
+													prog.programme_id,
+												);
+											return (
+												<div
+													key={prog.programme_id}
+													className="flex items-center gap-2 py-1"
+												>
+													<Checkbox
+														id={`prog-${prog.programme_id}`}
+														checked={isChecked}
+														onCheckedChange={() => {
+															setProgrammeIdsModified(
+																true,
+															);
+															setSelectedProgrammeIds(
+																(prev) =>
+																	isChecked
+																		? prev.filter(
+																				(
+																					id,
+																				) =>
+																					id !==
+																					prog.programme_id,
+																			)
+																		: [
+																				...prev,
+																				prog.programme_id,
+																			],
+															);
+														}}
+														disabled={isLoading}
+													/>
+													<Label
+														htmlFor={`prog-${prog.programme_id}`}
+														className="text-sm cursor-pointer"
+													>
+														{prog.programme_code} —{" "}
+														{prog.programme_name}
+													</Label>
+												</div>
+											);
+										})}
+									</ScrollArea>
+								)}
+							</div>
+						</>
 					)}
 
 					{courseType === "offering" && (

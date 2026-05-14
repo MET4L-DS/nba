@@ -17,6 +17,7 @@ class HODController
     private $validationMiddleware;
     private $studentRepository;
     private $programmeRepository;
+    private $programmeCourseRepository;
 
     public function __construct(
         ?UserRepository $userRepository = null,
@@ -26,7 +27,7 @@ class HODController
         ?DepartmentRepository $departmentRepository = null,
         ?ValidationMiddleware $validationMiddleware = null,
         ?StudentRepository $studentRepository = null
-    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null, ?ProgrammeRepository $programmeRepository = null) {
+    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null, ?ProgrammeRepository $programmeRepository = null, ?ProgrammeCourseRepository $programmeCourseRepository = null) {
         $this->auditService = $auditService;
         $this->auditLogRepository = $auditLogRepository;
 
@@ -38,6 +39,7 @@ class HODController
         $this->validationMiddleware = $validationMiddleware;
         $this->studentRepository = $studentRepository;
         $this->programmeRepository = $programmeRepository;
+        $this->programmeCourseRepository = $programmeCourseRepository;
     }
 
     /**
@@ -189,6 +191,226 @@ class HODController
     }
 
     /**
+     * Create a new programme (auto-assigned to HOD's department)
+     */
+    public function createProgramme()
+    {
+        try {
+            if (!$this->requireHOD()) return;
+
+            $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
+            if (!$departmentId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Department not assigned']);
+                return;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (empty($input['programme_name']) || empty($input['programme_code'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'programme_name and programme_code are required']);
+                return;
+            }
+
+            $programmeCode = strtoupper(trim($input['programme_code']));
+            $programmeName = trim($input['programme_name']);
+
+            if ($this->programmeRepository->codeExists($programmeCode)) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'Programme code already exists']);
+                return;
+            }
+
+            if ($this->programmeRepository->nameExists($programmeName)) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'Programme name already exists']);
+                return;
+            }
+
+            $programme = new Programme(
+                null,
+                $departmentId,
+                $programmeCode,
+                $programmeName,
+                $input['degree_level'] ?? 'UG',
+                isset($input['duration_years']) ? (int)$input['duration_years'] : 4
+            );
+
+            $result = $this->programmeRepository->save($programme);
+            if (!$result) {
+                throw new Exception('Failed to create programme');
+            }
+
+            http_response_code(201);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Programme created successfully',
+                'data' => $programme->toArray(),
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to create programme', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Update a programme (restricted to HOD's department)
+     */
+    public function updateProgramme($programmeId)
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            $access = $this->requireProgrammeAccess((int)$programmeId);
+            if (!$access) return;
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $programme = $access['programme'];
+
+            if (!empty($input['programme_code'])) {
+                $newCode = strtoupper(trim($input['programme_code']));
+                if ($newCode !== $programme->getProgrammeCode() && $this->programmeRepository->codeExists($newCode, (int)$programmeId)) {
+                    http_response_code(409);
+                    echo json_encode(['success' => false, 'message' => 'Programme code already exists']);
+                    return;
+                }
+                $programme->setProgrammeCode($newCode);
+            }
+
+            if (!empty($input['programme_name'])) {
+                $newName = trim($input['programme_name']);
+                if ($newName !== $programme->getProgrammeName() && $this->programmeRepository->nameExists($newName, (int)$programmeId)) {
+                    http_response_code(409);
+                    echo json_encode(['success' => false, 'message' => 'Programme name already exists']);
+                    return;
+                }
+                $programme->setProgrammeName($newName);
+            }
+
+            if (array_key_exists('degree_level', $input)) {
+                $programme->setDegreeLevel($input['degree_level']);
+            }
+
+            if (array_key_exists('duration_years', $input)) {
+                $programme->setDurationYears($input['duration_years']);
+            }
+
+            $result = $this->programmeRepository->save($programme);
+            if (!$result) {
+                throw new Exception('Failed to update programme');
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Programme updated successfully',
+                'data' => $programme->toArray(),
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to update programme', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete a programme (restricted to HOD's department)
+     */
+    public function deleteProgramme($programmeId)
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            $access = $this->requireProgrammeAccess((int)$programmeId);
+            if (!$access) return;
+
+            $studentCount = $this->programmeRepository->countStudents($programmeId);
+            if ($studentCount > 0) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => "Cannot delete programme. It has {$studentCount} student(s) assigned."]);
+                return;
+            }
+
+            $result = $this->programmeRepository->delete($programmeId);
+            if (!$result) {
+                throw new Exception('Failed to delete programme');
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Programme deleted successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to delete programme', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Bulk enroll students into a programme (restricted to HOD's department)
+     * POST /hod/programmes/{id}/students/bulk
+     */
+    public function bulkEnrollStudentsToProgramme($programmeId)
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            $access = $this->requireProgrammeAccess((int)$programmeId);
+            if (!$access) return;
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!isset($input['students']) || !is_array($input['students']) || empty($input['students'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'students array is required and cannot be empty']);
+                return;
+            }
+
+            $batchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : null;
+
+            $success = [];
+            $failed = [];
+
+            foreach ($input['students'] as $index => $row) {
+                $rollno = isset($row['rollno']) ? trim($row['rollno']) : '';
+                $name = isset($row['name']) ? trim($row['name']) : '';
+
+                if ($rollno === '' || $name === '') {
+                    $failed[] = ['index' => $index, 'rollno' => $rollno, 'reason' => 'rollno and name are required'];
+                    continue;
+                }
+
+                try {
+                    $existing = $this->studentRepository->findByRollno($rollno);
+                    if ($existing) {
+                        $existing->setStudentName($name);
+                        $existing->setProgrammeId((int)$programmeId);
+                        if ($batchYear !== null) {
+                            $existing->setBatchYear($batchYear);
+                        }
+                        $this->studentRepository->update($existing);
+                    } else {
+                        $student = new Student($rollno, $name, (int)$programmeId, $batchYear);
+                        $this->studentRepository->save($student);
+                    }
+                    $success[] = ['rollno' => $rollno, 'name' => $name];
+                } catch (Exception $ex) {
+                    $failed[] = ['index' => $index, 'rollno' => $rollno, 'reason' => $ex->getMessage()];
+                }
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'success_count' => count($success),
+                'failure_count' => count($failed),
+                'successful' => $success,
+                'failed' => $failed,
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to bulk enroll students', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Get base courses (templates) for the HOD's department - paginated
      */
     public function getBaseCourses() {
@@ -302,7 +524,16 @@ class HODController
             );
             $this->courseRepository->save($course);
             
-            $createdCourse = $this->courseRepository->findByIdWithDepartment($course->getCourseId());
+            $courseId = $course->getCourseId();
+
+            // Assign to programmes if programme_ids provided
+            if (!empty($input['programme_ids']) && is_array($input['programme_ids']) && isset($this->programmeCourseRepository)) {
+                foreach ($input['programme_ids'] as $pid) {
+                    $this->programmeCourseRepository->addCourse((int)$pid, $courseId);
+                }
+            }
+            
+            $createdCourse = $this->courseRepository->findByIdWithDepartment($courseId);
 
             http_response_code(201);
             header('Content-Type: application/json');
@@ -376,6 +607,25 @@ class HODController
             }
             
             $this->courseRepository->save($course);
+
+            // Sync programme assignments if programme_ids provided
+            if (isset($input['programme_ids']) && is_array($input['programme_ids']) && isset($this->programmeCourseRepository)) {
+                $currentIds = $this->programmeCourseRepository->findByCourseId((int)$courseId);
+                $newIds = $input['programme_ids'];
+                
+                // Add new assignments
+                foreach ($newIds as $pid) {
+                    if (!in_array((int)$pid, $currentIds)) {
+                        $this->programmeCourseRepository->addCourse((int)$pid, (int)$courseId);
+                    }
+                }
+                // Remove deselected assignments
+                foreach ($currentIds as $pid) {
+                    if (!in_array((int)$pid, $newIds)) {
+                        $this->programmeCourseRepository->removeCourse((int)$pid, (int)$courseId);
+                    }
+                }
+            }
             
             http_response_code(200);
             header('Content-Type: application/json');
@@ -1351,6 +1601,103 @@ class HODController
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to reopen course', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Verify a programme belongs to the HOD's department.
+     */
+    private function requireProgrammeAccess(int $programmeId): ?array
+    {
+        $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
+        $programme = $this->programmeRepository->findById($programmeId);
+        if (!$programme || $programme->getDepartmentId() !== $departmentId) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Access denied to this programme']);
+            return null;
+        }
+        return ['programme' => $programme, 'department_id' => $departmentId];
+    }
+
+    /**
+     * Get courses assigned to a programme (restricted to HOD's department)
+     */
+    public function getProgrammeCourses($programmeId)
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+            $courses = $this->programmeCourseRepository->findByProgrammeId((int)$programmeId);
+            $available = $this->programmeCourseRepository->findAvailableCourses((int)$programmeId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'courses' => $courses,
+                    'available' => $available,
+                ],
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to retrieve programme courses', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Assign a course to a programme (restricted to HOD's department)
+     */
+    public function addProgrammeCourse($programmeId)
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $courseId = isset($input['course_id']) ? (int)$input['course_id'] : 0;
+
+            if ($courseId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'course_id is required']);
+                return;
+            }
+
+            $this->programmeCourseRepository->addCourse((int)$programmeId, $courseId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Course assigned to programme']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to assign course', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Remove a course from a programme (restricted to HOD's department)
+     */
+    public function removeProgrammeCourse($programmeId, $courseId)
+    {
+        try {
+            if (!$this->requireHOD()) return;
+            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+            if (!$this->programmeCourseRepository->exists((int)$programmeId, (int)$courseId)) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Course not assigned to this programme']);
+                return;
+            }
+
+            $this->programmeCourseRepository->removeCourse((int)$programmeId, (int)$courseId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Course removed from programme']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to remove course', 'error' => $e->getMessage()]);
         }
     }
 }

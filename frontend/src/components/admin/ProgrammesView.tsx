@@ -27,6 +27,7 @@ import { usePaginatedData } from "@/lib/usePaginatedData";
 import type { Programme, Department } from "@/services/api";
 import { getProgrammeColumns } from "./ProgrammesView.columns";
 import { BulkEnrollStudentsDialog } from "./BulkEnrollStudentsDialog";
+import { ProgrammeCoursesDialog } from "./ProgrammeCoursesDialog";
 
 export function ProgrammesView() {
 	const {
@@ -59,6 +60,7 @@ export function ProgrammesView() {
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false);
+	const [isCoursesDialogOpen, setIsCoursesDialogOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [selectedProgramme, setSelectedProgramme] = useState<Programme | null>(null);
 
@@ -95,6 +97,11 @@ export function ProgrammesView() {
 		setIsEnrollDialogOpen(true);
 	};
 
+	const openCoursesDialog = (programme: Programme) => {
+		setSelectedProgramme(programme);
+		setIsCoursesDialogOpen(true);
+	};
+
 	const handleDeleteProgramme = async (programme: Programme) => {
 		try {
 			await adminApi.deleteProgramme(programme.programme_id);
@@ -111,6 +118,7 @@ export function ProgrammesView() {
 				onEdit: openEditDialog,
 				onDelete: handleDeleteProgramme,
 				onEnroll: openEnrollDialog,
+				onManageCourses: openCoursesDialog,
 			}),
 		[],
 	);
@@ -415,6 +423,15 @@ export function ProgrammesView() {
 			<BulkEnrollStudentsDialog
 				open={isEnrollDialogOpen}
 				onOpenChange={setIsEnrollDialogOpen}
+				programme={selectedProgramme}
+				onSuccess={onDataRefresh}
+				api={adminApi}
+			/>
+
+			{/* Courses Dialog */}
+			<ProgrammeCoursesDialog
+				open={isCoursesDialogOpen}
+				onOpenChange={setIsCoursesDialogOpen}
 				programme={selectedProgramme}
 				onSuccess={onDataRefresh}
 			/>

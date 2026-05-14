@@ -16,6 +16,7 @@ class AdminController
     private $programmeRepository;
     private $deanAssignmentRepository;
     private $schoolRepository;
+    private $programmeCourseRepository;
 
     public function __construct(
         UserRepository $userRepository,
@@ -26,7 +27,7 @@ class AdminController
         ?ProgrammeRepository $programmeRepository = null,
         ?DeanAssignmentRepository $deanAssignmentRepository = null,
         ?SchoolRepository $schoolRepository = null
-    , ?AuditService $auditService = null) {
+    , ?AuditService $auditService = null, ?ProgrammeCourseRepository $programmeCourseRepository = null) {
         $this->auditService = $auditService;
 
         $this->userRepository = $userRepository;
@@ -37,6 +38,7 @@ class AdminController
         $this->programmeRepository = $programmeRepository;
         $this->deanAssignmentRepository = $deanAssignmentRepository;
         $this->schoolRepository = $schoolRepository;
+        $this->programmeCourseRepository = $programmeCourseRepository;
     }
 
     /**
@@ -1005,6 +1007,107 @@ class AdminController
     }
 
     /**
+     * Get courses assigned to a programme (Admin only)
+     */
+    public function getProgrammeCourses($programmeId)
+    {
+        try {
+            if (!$this->requireAdmin()) return;
+
+            $programme = $this->programmeRepository->findById($programmeId);
+            if (!$programme) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Programme not found']);
+                return;
+            }
+
+            $courses = $this->programmeCourseRepository->findByProgrammeId((int)$programmeId);
+            $available = $this->programmeCourseRepository->findAvailableCourses((int)$programmeId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'courses' => $courses,
+                    'available' => $available,
+                ],
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to retrieve programme courses', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Assign a course to a programme (Admin only)
+     */
+    public function addProgrammeCourse($programmeId)
+    {
+        try {
+            if (!$this->requireAdmin()) return;
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $courseId = isset($input['course_id']) ? (int)$input['course_id'] : 0;
+
+            if ($courseId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'course_id is required']);
+                return;
+            }
+
+            $programme = $this->programmeRepository->findById((int)$programmeId);
+            if (!$programme) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Programme not found']);
+                return;
+            }
+
+            if ($this->programmeCourseRepository->exists((int)$programmeId, $courseId)) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'Course already assigned to this programme']);
+                return;
+            }
+
+            $ok = $this->programmeCourseRepository->addCourse((int)$programmeId, $courseId);
+            if (!$ok) {
+                throw new Exception('Failed to assign course to programme');
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Course assigned to programme successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to assign course', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Remove a course from a programme (Admin only)
+     */
+    public function removeProgrammeCourse($programmeId, $courseId)
+    {
+        try {
+            if (!$this->requireAdmin()) return;
+
+            $ok = $this->programmeCourseRepository->removeCourse((int)$programmeId, (int)$courseId);
+            if (!$ok) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Course assignment not found']);
+                return;
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Course removed from programme successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to remove course', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Bulk create/update students into a programme (Admin only)
      */
     public function bulkEnrollStudentsToProgramme($programmeId)
@@ -1026,6 +1129,8 @@ class AdminController
                 return;
             }
 
+            $batchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : null;
+
             $success = [];
             $failed = [];
 
@@ -1043,9 +1148,12 @@ class AdminController
                     if ($existing) {
                         $existing->setStudentName($name);
                         $existing->setProgrammeId((int)$programmeId);
+                        if ($batchYear !== null) {
+                            $existing->setBatchYear($batchYear);
+                        }
                         $this->studentRepository->update($existing);
                     } else {
-                        $student = new Student($rollno, $name, (int)$programmeId);
+                        $student = new Student($rollno, $name, (int)$programmeId, $batchYear);
                         $this->studentRepository->save($student);
                     }
                     $success[] = ['rollno' => $rollno, 'name' => $name];

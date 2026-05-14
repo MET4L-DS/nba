@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { Pencil, Trash2, UserPlus, BookOpen } from "lucide-react";
 import type { Programme } from "@/services/api";
 import { ConfirmDeleteDialog } from "../../features/shared";
 import { sortableHeader } from "../../features/shared/tableUtils";
@@ -10,12 +10,14 @@ interface ProgrammeColumnProps {
 	onEdit?: (programme: Programme) => void;
 	onDelete?: (programme: Programme) => void;
 	onEnroll?: (programme: Programme) => void;
+	onManageCourses?: (programme: Programme) => void;
 }
 
 export function getProgrammeColumns({
 	onEdit,
 	onDelete,
 	onEnroll,
+	onManageCourses,
 }: ProgrammeColumnProps): ColumnDef<Programme>[] {
 	return [
 		{
@@ -100,6 +102,17 @@ export function getProgrammeColumns({
 				const prog = row.original;
 				return (
 					<div className="flex justify-center gap-2">
+						{onManageCourses && (
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => onManageCourses(prog)}
+								className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950"
+								title="Manage Courses"
+							>
+								<BookOpen className="w-4 h-4" />
+							</Button>
+						)}
 						{onEnroll && (
 							<Button
 								variant="ghost"

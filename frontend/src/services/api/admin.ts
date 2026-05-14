@@ -15,6 +15,7 @@ import type {
 	CreateProgrammeRequest,
 	UpdateProgrammeRequest,
 	ProgrammeBulkEnrollRequest,
+	ProgrammeCourseResponse,
 	School,
 	CreateSchoolRequest,
 	UpdateSchoolRequest,
@@ -178,6 +179,30 @@ export const adminApi = {
 			data,
 		);
 	},
+
+	async getProgrammeCourses(
+		programmeId: number,
+	): Promise<ProgrammeCourseResponse> {
+		debugLogger.info("adminApi", "getProgrammeCourses called");
+		return apiGet<ProgrammeCourseResponse>(`/admin/programmes/${programmeId}/courses`);
+	},
+
+	async addProgrammeCourse(
+		programmeId: number,
+		courseId: number,
+	): Promise<void> {
+		debugLogger.info("adminApi", "addProgrammeCourse called");
+		return apiPost(`/admin/programmes/${programmeId}/courses`, { course_id: courseId });
+	},
+
+	async removeProgrammeCourse(
+		programmeId: number,
+		courseId: number,
+	): Promise<void> {
+		debugLogger.info("adminApi", "removeProgrammeCourse called");
+		return apiDelete(`/admin/programmes/${programmeId}/courses/${courseId}`);
+	},
+
 
 	async getAllCourses(
 		params?: PaginationParams,

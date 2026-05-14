@@ -50,6 +50,16 @@ interface BulkEnrollStudentsDialogProps {
 interface StudentEntry {
 	rollno: string;
 	name: string;
+	batch_year?: number;
+}
+
+function extractBatchYearFromRollNo(rollno: string): number | null {
+	const match = rollno.match(/(\d{2})/);
+	if (!match) return null;
+	const twoDigit = match[1];
+	const fullYear = parseInt("20" + twoDigit);
+	if (fullYear >= 2010 && fullYear <= 2035) return fullYear;
+	return null;
 }
 
 export function BulkEnrollStudentsDialog({
@@ -119,7 +129,11 @@ export function BulkEnrollStudentsDialog({
 						const name = parts[1];
 
 						if (rollno && name) {
-							parsedStudents.push({ rollno, name });
+							parsedStudents.push({
+								rollno,
+								name,
+								batch_year: extractBatchYearFromRollNo(rollno) ?? undefined,
+							});
 						}
 					}
 				}
@@ -161,12 +175,20 @@ export function BulkEnrollStudentsDialog({
 
 		setEnrolling(true);
 		try {
+			const overrideYear = batchYear.trim() ? parseInt(batchYear.trim()) : null;
+			const studentsPayload = students.map((s) => ({
+				rollno: s.rollno,
+				name: s.name,
+				...(overrideYear
+					? { batch_year: overrideYear }
+					: s.batch_year
+						? { batch_year: s.batch_year }
+						: {}),
+			}));
+
 			const data = await api.bulkEnrollStudentsToProgramme(
 				programme.programme_id,
-				{
-					students,
-					...(batchYear.trim() ? { batch_year: parseInt(batchYear.trim()) } : {}),
-				},
+				{ students: studentsPayload },
 			);
 
 			if (data.failure_count > 0) {
@@ -229,10 +251,12 @@ export function BulkEnrollStudentsDialog({
 			return;
 		}
 
-		setStudents((prev) => [
-			...prev,
-			{ rollno: manualRollno.trim(), name: manualName.trim() },
-		]);
+		const newStudent: StudentEntry = {
+			rollno: manualRollno.trim(),
+			name: manualName.trim(),
+			batch_year: extractBatchYearFromRollNo(manualRollno.trim()) ?? undefined,
+		};
+		setStudents((prev) => [...prev, newStudent]);
 		setManualRollno("");
 		setManualName("");
 		toast.success("Student added to enrollment list");
@@ -244,6 +268,7 @@ export function BulkEnrollStudentsDialog({
 
 	const clearAllStudents = () => {
 		setStudents([]);
+		setBatchYear("");
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
 		}

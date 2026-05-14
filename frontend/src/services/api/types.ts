@@ -623,6 +623,7 @@ export interface UpdateProgrammeRequest {
 export interface ProgrammeBulkStudent {
 	rollno: string;
 	name: string;
+	batch_year?: number;
 }
 
 export interface ProgrammeCourse {

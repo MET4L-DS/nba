@@ -71,8 +71,12 @@ class AdminController
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
-                'message' => 'Stats retrieved successfully',
-                'data' => $stats
+                'data' => [
+                    'success_count' => count($success),
+                    'failure_count' => count($failed),
+                    'successful' => $success,
+                    'failed' => $failed,
+                ],
             ]);
         } catch (Exception $e) {
             if (isset($GLOBALS['fileLogger'])) { $GLOBALS['fileLogger']->error('AdminController', 'getStats prompt', ['error' => $e->getMessage()]); }
@@ -1129,7 +1133,7 @@ class AdminController
                 return;
             }
 
-            $batchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : null;
+            $globalBatchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : null;
 
             $success = [];
             $failed = [];
@@ -1143,17 +1147,19 @@ class AdminController
                     continue;
                 }
 
+                $studentBatchYear = isset($row['batch_year']) ? (int)$row['batch_year'] : $globalBatchYear;
+
                 try {
                     $existing = $this->studentRepository->findByRollno($rollno);
                     if ($existing) {
                         $existing->setStudentName($name);
                         $existing->setProgrammeId((int)$programmeId);
-                        if ($batchYear !== null) {
-                            $existing->setBatchYear($batchYear);
+                        if ($studentBatchYear !== null) {
+                            $existing->setBatchYear($studentBatchYear);
                         }
                         $this->studentRepository->update($existing);
                     } else {
-                        $student = new Student($rollno, $name, (int)$programmeId, $batchYear);
+                        $student = new Student($rollno, $name, (int)$programmeId, $studentBatchYear);
                         $this->studentRepository->save($student);
                     }
                     $success[] = ['rollno' => $rollno, 'name' => $name];

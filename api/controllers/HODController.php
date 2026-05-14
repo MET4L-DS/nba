@@ -362,7 +362,7 @@ class HODController
                 return;
             }
 
-            $batchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : null;
+            $globalBatchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : null;
 
             $success = [];
             $failed = [];
@@ -376,17 +376,19 @@ class HODController
                     continue;
                 }
 
+                $studentBatchYear = isset($row['batch_year']) ? (int)$row['batch_year'] : $globalBatchYear;
+
                 try {
                     $existing = $this->studentRepository->findByRollno($rollno);
                     if ($existing) {
                         $existing->setStudentName($name);
                         $existing->setProgrammeId((int)$programmeId);
-                        if ($batchYear !== null) {
-                            $existing->setBatchYear($batchYear);
+                        if ($studentBatchYear !== null) {
+                            $existing->setBatchYear($studentBatchYear);
                         }
                         $this->studentRepository->update($existing);
                     } else {
-                        $student = new Student($rollno, $name, (int)$programmeId, $batchYear);
+                        $student = new Student($rollno, $name, (int)$programmeId, $studentBatchYear);
                         $this->studentRepository->save($student);
                     }
                     $success[] = ['rollno' => $rollno, 'name' => $name];
@@ -399,10 +401,13 @@ class HODController
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => true,
-                'success_count' => count($success),
-                'failure_count' => count($failed),
-                'successful' => $success,
-                'failed' => $failed,
+                'data' => [
+                    'programme_id' => (int)$programmeId,
+                    'success_count' => count($success),
+                    'failure_count' => count($failed),
+                    'successful' => $success,
+                    'failed' => $failed,
+                ],
             ]);
         } catch (Exception $e) {
             http_response_code(500);

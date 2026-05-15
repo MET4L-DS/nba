@@ -16,6 +16,7 @@ class FacultyController
     private $enrollmentRepository;
     private $marksRepository;
     private $db;
+    private $attainmentSnapshotService;
 
     public function __construct(
         CourseRepository $courseRepository,
@@ -25,7 +26,7 @@ class FacultyController
         EnrollmentRepository $enrollmentRepository,
         MarksRepository $marksRepository,
         $db
-    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null) {
+    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null, ?AttainmentSnapshotService $attainmentSnapshotService = null) {
         $this->auditService = $auditService;
         $this->auditLogRepository = $auditLogRepository;
 
@@ -36,6 +37,7 @@ class FacultyController
         $this->enrollmentRepository = $enrollmentRepository;
         $this->marksRepository = $marksRepository;
         $this->db = $db;
+        $this->attainmentSnapshotService = $attainmentSnapshotService;
     }
 
     /**
@@ -767,6 +769,10 @@ class FacultyController
             //     WHERE t.offering_id = ?
             // ");
             // $stmt->execute([$offeringId]);
+
+            if ($this->attainmentSnapshotService) {
+                $this->attainmentSnapshotService->calculateAndPersist($offeringId);
+            }
 
             $this->db->commit();
 

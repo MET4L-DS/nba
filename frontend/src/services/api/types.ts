@@ -408,6 +408,38 @@ export interface CoPoMappingRow {
 	value: number;
 }
 
+export interface OfferingAttainmentCO {
+	co_name: string;
+	attainment_percentage: number;
+	attainment_level: number;
+}
+
+export interface OfferingAttainmentPO {
+	po_name: string;
+	attainment_value: number;
+}
+
+export interface OfferingAttainmentSnapshotInfo {
+	offering_id: number;
+	co_threshold: number;
+	passing_threshold: number;
+	attainment_thresholds: Array<{ id: number; level: number; percentage: number }>;
+	co_attainment: OfferingAttainmentCO[];
+	po_attainment: OfferingAttainmentPO[];
+}
+
+export interface OfferingAttainmentResponse extends OfferingAttainmentSnapshotInfo {
+	// Extends the snapshot info (same shape returned by apiGet's .data field)
+}
+
+
+
+export interface ProgrammeAttainmentResponse {
+	programme_id: number;
+	batch_year: number | null;
+	po_attainment: OfferingAttainmentPO[];
+}
+
 export interface SaveCoPoMatrixRequest {
 	mappings: Array<{ co: string; po: string; value: number }>;
 }

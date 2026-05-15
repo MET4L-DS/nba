@@ -18,6 +18,7 @@ class HODController
     private $studentRepository;
     private $programmeRepository;
     private $programmeCourseRepository;
+    private $attainmentSnapshotService;
 
     public function __construct(
         ?UserRepository $userRepository = null,
@@ -27,7 +28,7 @@ class HODController
         ?DepartmentRepository $departmentRepository = null,
         ?ValidationMiddleware $validationMiddleware = null,
         ?StudentRepository $studentRepository = null
-    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null, ?ProgrammeRepository $programmeRepository = null, ?ProgrammeCourseRepository $programmeCourseRepository = null) {
+    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null, ?ProgrammeRepository $programmeRepository = null, ?ProgrammeCourseRepository $programmeCourseRepository = null, ?AttainmentSnapshotService $attainmentSnapshotService = null) {
         $this->auditService = $auditService;
         $this->auditLogRepository = $auditLogRepository;
 
@@ -40,6 +41,7 @@ class HODController
         $this->studentRepository = $studentRepository;
         $this->programmeRepository = $programmeRepository;
         $this->programmeCourseRepository = $programmeCourseRepository;
+        $this->attainmentSnapshotService = $attainmentSnapshotService;
     }
 
     /**
@@ -1590,8 +1592,17 @@ class HODController
                 return;
             }
 
+            $db = $cfaRepo->getDb();
+            $db->beginTransaction();
+
             // Reopen: set is_active = 1, clear completion_date
             $cfaRepo->reactivateOffering($offeringId);
+
+            if ($this->attainmentSnapshotService) {
+                $this->attainmentSnapshotService->clearSnapshots($offeringId);
+            }
+
+            $db->commit();
 
             if (isset($this->auditService)) {
                 $this->auditService->log('REOPEN', 'CourseOffering', $offeringId, ['status' => 'concluded'], ['status' => 'active']);
@@ -1604,6 +1615,9 @@ class HODController
                 'message' => 'Course reopened successfully',
             ]);
         } catch (Exception $e) {
+            if (isset($db) && $db instanceof PDO && $db->inTransaction()) {
+                $db->rollBack();
+            }
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to reopen course', 'error' => $e->getMessage()]);
         }

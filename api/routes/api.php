@@ -34,6 +34,7 @@ require_once __DIR__ . '/../models/Enrollment.php';
 require_once __DIR__ . '/../models/EnrollmentRepository.php';
 require_once __DIR__ . '/../models/AttainmentScale.php';
 require_once __DIR__ . '/../models/AttainmentScaleRepository.php';
+require_once __DIR__ . '/../models/AttainmentSnapshotRepository.php';
 require_once __DIR__ . '/../models/CoPoRepository.php';
 require_once __DIR__ . '/../models/School.php';
 require_once __DIR__ . '/../models/SchoolRepository.php';
@@ -44,6 +45,7 @@ require_once __DIR__ . '/../models/DeanAssignmentRepository.php';
 require_once __DIR__ . '/../models/AuditLog.php';
 require_once __DIR__ . '/../models/AuditLogRepository.php';
 require_once __DIR__ . '/../utils/AuditService.php';
+require_once __DIR__ . '/../utils/AttainmentSnapshotService.php';
 require_once __DIR__ . '/../utils/JWTService.php';
 require_once __DIR__ . '/../utils/AuthService.php';
 require_once __DIR__ . '/../utils/PaginationHelper.php';
@@ -102,10 +104,12 @@ class Router
         $rawMarksRepository = new RawMarksRepository($db);
         $marksRepository = new MarksRepository($db);
         $attainmentScaleRepository = new AttainmentScaleRepository($db);
+        $attainmentSnapshotRepository = new AttainmentSnapshotRepository($db);
         $coPoRepository = new CoPoRepository($db);
         $schoolRepository = new SchoolRepository($db);
         $hodAssignmentRepository = new HODAssignmentRepository($db);
         $deanAssignmentRepository = new DeanAssignmentRepository($db);
+        $attainmentSnapshotService = new AttainmentSnapshotService($db, $attainmentSnapshotRepository, $attainmentScaleRepository, $coPoRepository, $courseOfferingRepository);
         $jwtService = new JWTService();
         $authService = new AuthService($userRepository, $jwtService, $departmentRepository, $hodAssignmentRepository, $deanAssignmentRepository);
 
@@ -126,16 +130,16 @@ class Router
         $this->assessmentController = new AssessmentController($courseRepository, $courseOfferingRepository, $testRepository, $questionRepository, $validationMiddleware, $db, $courseFacultyAssignmentRepository, $auditService);
         $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $auditService);
         $this->enrollmentController = new EnrollmentController($db, $auditService);
-        $this->attainmentController = new AttainmentController($courseRepository, $courseOfferingRepository, $attainmentScaleRepository, $coPoRepository, $auditService);
+        $this->attainmentController = new AttainmentController($courseRepository, $courseOfferingRepository, $attainmentScaleRepository, $coPoRepository, $programmeRepository, $attainmentSnapshotRepository, $attainmentSnapshotService, $auditService);
         $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $programmeRepository, $deanAssignmentRepository, $schoolRepository, $auditService, $programmeCourseRepository);
-        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware, $studentRepository, $auditService, $auditLogRepository, $programmeRepository, $programmeCourseRepository);
+        $this->hodController = new HODController($userRepository, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $departmentRepository, $validationMiddleware, $studentRepository, $auditService, $auditLogRepository, $programmeRepository, $programmeCourseRepository, $attainmentSnapshotService);
 
         // Initialize enrollment repository for staff controller
         $enrollmentRepository = new EnrollmentRepository($db);
         $this->staffController = new StaffController($userRepository, $courseRepository, $departmentRepository, $enrollmentRepository, $studentRepository, $validationMiddleware, $db, $courseOfferingRepository, $courseFacultyAssignmentRepository, $auditService);
 
         // Initialize faculty controller
-        $this->facultyController = new FacultyController($courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $testRepository, $enrollmentRepository, $marksRepository, $db, $auditService, $auditLogRepository);
+        $this->facultyController = new FacultyController($courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $testRepository, $enrollmentRepository, $marksRepository, $db, $auditService, $auditLogRepository, $attainmentSnapshotService);
 
         // Initialize dean controller
         $this->deanController = new DeanController($userRepository, $courseRepository, $courseOfferingRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository, $hodAssignmentRepository, $courseFacultyAssignmentRepository, $auditService);
@@ -902,10 +906,21 @@ class Router
                     $offeringId = (int)$matches[1];
                     if ($method === 'GET') {
                         $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
                         $this->attainmentController->getConfig($offeringId);
                     } elseif ($method === 'POST') {
                         $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
                         $this->attainmentController->saveConfig($offeringId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^offerings/(\d+)/attainment$#', $path, $matches)) {
+                    $offeringId = (int)$matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->attainmentController->getOfferingAttainment($offeringId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }
@@ -913,10 +928,21 @@ class Router
                     $offeringId = (int)$matches[1];
                     if ($method === 'GET') {
                         $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
                         $this->attainmentController->getCoPoMatrix($offeringId);
                     } elseif ($method === 'POST') {
                         $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
                         $this->attainmentController->saveCoPoMatrix($offeringId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^programmes/(\d+)/attainment$#', $path, $matches)) {
+                    $programmeId = (int)$matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->attainmentController->getProgrammeAttainment($programmeId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

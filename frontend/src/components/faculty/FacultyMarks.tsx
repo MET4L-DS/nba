@@ -12,9 +12,10 @@ type ViewMode = "by-question" | "by-co" | "bulk";
 
 interface FacultyMarksProps {
 	selectedCourse: Course | null;
+	readOnly?: boolean;
 }
 
-export function FacultyMarks({ selectedCourse }: FacultyMarksProps) {
+export function FacultyMarks({ selectedCourse, readOnly = false }: FacultyMarksProps) {
 	const [tests, setTests] = useState<Test[]>([]);
 	const [testsLoading, setTestsLoading] = useState(false);
 	const [selectedTest, setSelectedTest] = useState<Test | null>(null);
@@ -111,12 +112,14 @@ export function FacultyMarks({ selectedCourse }: FacultyMarksProps) {
 				<TabsTrigger
 					value="by-question"
 					className="text-xs px-4 py-1.5 font-semibold"
+					disabled={readOnly}
 				>
 					By Question
 				</TabsTrigger>
 				<TabsTrigger
 					value="by-co"
 					className="text-xs px-4 py-1.5 font-semibold"
+					disabled={readOnly}
 				>
 					By CO
 				</TabsTrigger>
@@ -132,6 +135,11 @@ export function FacultyMarks({ selectedCourse }: FacultyMarksProps) {
 
 	return (
 		<div className="flex flex-col h-full bg-background border rounded-lg shadow-sm overflow-hidden">
+			{readOnly && (
+				<div className="px-4 py-2 text-sm border-b bg-amber-50 text-amber-800 border-amber-200">
+					This course is locked. Marks editing is disabled.
+				</div>
+			)}
 			{/* Tests Header */}
 			<div className="shrink-0 bg-muted/30 border-b border-border">
 				{testsLoading ? (
@@ -192,6 +200,7 @@ export function FacultyMarks({ selectedCourse }: FacultyMarksProps) {
 						selectedTest={selectedTest}
 						headerContent={renderTabs()}
 						onStatsUpdate={setStats}
+						readOnly={readOnly}
 					/>
 				) : viewMode === "by-co" ? (
 					<div className="flex-1 overflow-auto flex flex-col">
@@ -201,6 +210,7 @@ export function FacultyMarks({ selectedCourse }: FacultyMarksProps) {
 							onBack={() => setViewMode("by-question")}
 							embedded
 							headerContent={renderTabs()}
+							readOnly={readOnly}
 						/>
 					</div>
 				) : (

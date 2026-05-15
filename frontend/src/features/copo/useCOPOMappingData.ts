@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
+import { attainmentApi } from "@/services/api/attainment";
 import { debugLogger } from "@/lib/debugLogger";
 import type {
 	StudentMarks,
@@ -392,6 +393,29 @@ export function useCOPOMappingData({
 			setMaxMarks(maxMarksMap);
 			setStudentsData(Array.from(studentMap.values()));
 			setLoading(false);
+
+			// Snapshot verification: attempt to fetch persisted attainment for comparison
+			try {
+				const snapshot = await attainmentApi.getOfferingAttainment(courseId);
+				debugLogger.info("COPOMapping", "Snapshot fetch result", {
+					courseId,
+					hasSnapshot: snapshot.co_attainment?.length > 0 || snapshot.po_attainment?.length > 0,
+					co_attainment: snapshot.co_attainment?.map((c) => ({
+						co: c.co_name,
+						attainment_percentage: c.attainment_percentage,
+						attainment_level: c.attainment_level,
+					})),
+					po_attainment: snapshot.po_attainment?.map((p) => ({
+						po: p.po_name,
+						attainment_value: p.attainment_value,
+					})),
+				});
+			} catch (snapErr) {
+				debugLogger.warn("COPOMapping", "Snapshot fetch failed (course may not be concluded)", {
+					courseId,
+					error: snapErr instanceof Error ? snapErr.message : String(snapErr),
+				});
+			}
 		} catch (error) {
 			debugLogger.error(
 				"COPOMapping",
@@ -574,10 +598,34 @@ export function useCOPOMappingData({
 	);
 
 	const attainmentData = useMemo(() => {
-		return studentsData.length > 0
+		const result = studentsData.length > 0
 			? calculateCOAttainment(studentsData, passingThreshold, coThreshold)
 			: null;
-	}, [studentsData, passingThreshold, coThreshold]);
+		// Log live calculation for snapshot comparison
+		if (result) {
+			debugLogger.info("COPOMapping", "Live CO attainment calculated", {
+				courseId,
+				totalStudents: result.totalStudents,
+				presentStudents: result.presentStudents,
+				absentees: result.absentees,
+				coStats: {
+					CO1: result.coStats?.CO1
+						? {
+								avgPct: result.coStats.CO1.averagePercentage,
+								aboveCOThreshold: result.coStats.CO1.aboveCOThreshold,
+							}
+						: undefined,
+					CO2: result.coStats?.CO2
+						? {
+								avgPct: result.coStats.CO2.averagePercentage,
+								aboveCOThreshold: result.coStats.CO2.aboveCOThreshold,
+							}
+						: undefined,
+				},
+			});
+		}
+		return result;
+	}, [studentsData, passingThreshold, coThreshold, courseId]);
 
 	const coMaxMarks = useMemo(() => {
 		return calculateCOMaxMarks(maxMarks);

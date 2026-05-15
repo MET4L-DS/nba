@@ -80,6 +80,31 @@ class MarksController
         return false;
     }
 
+    private function isOfferingEditable($offeringId): bool
+    {
+        if (!$this->assignmentRepository) {
+            return true;
+        }
+
+        $stmt = $this->assignmentRepository->getDb()->prepare(
+            "SELECT COUNT(*)
+             FROM course_faculty_assignments
+             WHERE offering_id = ? AND assignment_type = 'Primary' AND is_active = 1"
+        );
+        $stmt->execute([(int)$offeringId]);
+        return (int)$stmt->fetchColumn() > 0;
+    }
+
+    private function ensureOfferingEditable($offeringId): bool
+    {
+        if ($this->isOfferingEditable($offeringId)) {
+            return true;
+        }
+
+        $this->sendError('This course has been concluded. Reopen it before modifying marks.', 409);
+        return false;
+    }
+
     /**
      * Save marks per question (auto-calculates CO totals)
      * POST /marks/by-question
@@ -97,6 +122,12 @@ class MarksController
     {
         try {
             $data = json_decode(file_get_contents('php://input'), true);
+            $userData = $_REQUEST['authenticated_user'] ?? null;
+
+            if (!$userData || ($userData['role'] !== 'faculty' && $userData['role'] !== 'hod')) {
+                $this->sendError('Access denied. Only faculty and HOD can save marks.', 403);
+                return;
+            }
 
             // Validate required fields
             $required = ['test_id', 'student_id', 'marks'];
@@ -117,6 +148,15 @@ class MarksController
             $GLOBALS['audit_old_state'] = (isset($test) && is_object($test) && method_exists($test, 'toArray')) ? $test->toArray() : (isset($test) ? clone $test : null);
             if (!$test) {
                 $this->sendError("Test not found", 404);
+                return;
+            }
+
+            if (!$this->isOfferingAccessAllowed($userData, $test->getOfferingId())) {
+                $this->sendError('Unauthorized to save marks for this test', 403);
+                return;
+            }
+
+            if (!$this->ensureOfferingEditable($test->getOfferingId())) {
                 return;
             }
 
@@ -233,6 +273,12 @@ class MarksController
     {
         try {
             $data = json_decode(file_get_contents('php://input'), true);
+            $userData = $_REQUEST['authenticated_user'] ?? null;
+
+            if (!$userData || ($userData['role'] !== 'faculty' && $userData['role'] !== 'hod')) {
+                $this->sendError('Access denied. Only faculty and HOD can save marks.', 403);
+                return;
+            }
 
             // Validate required fields
             $required = ['test_id', 'student_id'];
@@ -251,6 +297,15 @@ class MarksController
             $GLOBALS['audit_old_state'] = (isset($test) && is_object($test) && method_exists($test, 'toArray')) ? $test->toArray() : (isset($test) ? clone $test : null);
             if (!$test) {
                 $this->sendError("Test not found", 404);
+                return;
+            }
+
+            if (!$this->isOfferingAccessAllowed($userData, $test->getOfferingId())) {
+                $this->sendError('Unauthorized to save marks for this test', 403);
+                return;
+            }
+
+            if (!$this->ensureOfferingEditable($test->getOfferingId())) {
                 return;
             }
 
@@ -778,6 +833,10 @@ class MarksController
                 return;
             }
 
+            if (!$this->ensureOfferingEditable($test->getOfferingId())) {
+                return;
+            }
+
             // Validate new marks
             $question = $this->questionRepository->findById($rawMarks->getQuestionId());
             if (!$question) {
@@ -868,6 +927,10 @@ class MarksController
                 return;
             }
 
+            if (!$this->ensureOfferingEditable($test->getOfferingId())) {
+                return;
+            }
+
             $testId = $rawMarks->getTestId();
             $studentId = $rawMarks->getStudentId();
 
@@ -927,6 +990,10 @@ class MarksController
 
             if (!$this->isOfferingAccessAllowed($userData, $test->getOfferingId())) {
                 $this->sendError("Unauthorized to delete marks for this test", 403);
+                return;
+            }
+
+            if (!$this->ensureOfferingEditable($test->getOfferingId())) {
                 return;
             }
 

@@ -43,6 +43,7 @@ interface MarksEntryByCOProps {
 	test: Test;
 	course: Course | null;
 	onBack: () => void;
+	readOnly?: boolean;
 	/** When true, suppresses the back-header and renders content only */
 	embedded?: boolean;
 	/** Custom content injected into the left side of the embedded sub-toolbar */
@@ -53,6 +54,7 @@ export function MarksEntryByCO({
 	test,
 	course,
 	onBack,
+	readOnly = false,
 	embedded = false,
 	headerContent,
 }: MarksEntryByCOProps) {
@@ -250,12 +252,16 @@ export function MarksEntryByCO({
 										}
 										value={row[co]}
 										onChange={(e) =>
+											readOnly
+												? undefined
+												:
 											handleMarkChange(
 												rollno,
 												co,
 												e.target.value,
 											)
 										}
+										disabled={readOnly}
 										onFocus={(e) => e.target.select()}
 										placeholder="-"
 										className={cn(
@@ -436,7 +442,7 @@ export function MarksEntryByCO({
 							<Button
 								size="sm"
 								onClick={handleSubmit}
-								disabled={submitting || dirtyRows.size === 0}
+								disabled={readOnly || submitting || dirtyRows.size === 0}
 								className="gap-1.5 text-xs h-8"
 							>
 								<Save className="w-3.5 h-3.5" />

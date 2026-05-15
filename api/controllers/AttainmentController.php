@@ -4,7 +4,10 @@ require_once __DIR__ . '/../models/Course.php';
 require_once __DIR__ . '/../models/CourseRepository.php';
 require_once __DIR__ . '/../models/AttainmentScale.php';
 require_once __DIR__ . '/../models/AttainmentScaleRepository.php';
+require_once __DIR__ . '/../models/AttainmentSnapshotRepository.php';
 require_once __DIR__ . '/../models/CoPoRepository.php';
+require_once __DIR__ . '/../models/ProgrammeRepository.php';
+require_once __DIR__ . '/../utils/AttainmentSnapshotService.php';
 
 class AttainmentController
 {
@@ -14,12 +17,18 @@ class AttainmentController
     private ?CourseOfferingRepository $offeringRepo;
     private ?AttainmentScaleRepository $scaleRepo;
     private ?CoPoRepository $coPoRepo;
+    private ?ProgrammeRepository $programmeRepo;
+    private ?AttainmentSnapshotRepository $snapshotRepo;
+    private ?AttainmentSnapshotService $snapshotService;
 
     public function __construct(
         ?CourseRepository $courseRepo = null,
         ?CourseOfferingRepository $offeringRepo = null,
         ?AttainmentScaleRepository $scaleRepo = null,
         ?CoPoRepository $coPoRepo = null,
+        ?ProgrammeRepository $programmeRepo = null,
+        ?AttainmentSnapshotRepository $snapshotRepo = null,
+        ?AttainmentSnapshotService $snapshotService = null,
         ?AuditService $auditService = null
     ) {
         $this->auditService = $auditService;
@@ -28,6 +37,99 @@ class AttainmentController
         $this->offeringRepo = $offeringRepo;
         $this->scaleRepo = $scaleRepo;
         $this->coPoRepo = $coPoRepo;
+        $this->programmeRepo = $programmeRepo;
+        $this->snapshotRepo = $snapshotRepo;
+        $this->snapshotService = $snapshotService;
+    }
+
+    /**
+     * Get CO/PO attainment for an offering.
+     * Returns persisted snapshots when available, otherwise live preview.
+     */
+    public function getOfferingAttainment(int $offeringId): void
+    {
+        try {
+            $resolved = $this->resolveOffering($offeringId);
+            if (!$resolved) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Course offering not found']);
+                return;
+            }
+
+            if (!$this->snapshotRepo || !$this->snapshotService) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Service not initialized']);
+                return;
+            }
+
+            $snapshotExists = $this->snapshotRepo->hasSnapshots($offeringId);
+            if ($snapshotExists) {
+                $payload = [
+                    'offering_id' => $offeringId,
+                    'co_threshold' => (float)$resolved['offering']->getCoThreshold(),
+                    'passing_threshold' => (float)$resolved['offering']->getPassingThreshold(),
+                    'attainment_thresholds' => array_map(function ($scale) {
+                        return [
+                            'id' => $scale->id,
+                            'level' => $scale->level,
+                            'percentage' => (float)$scale->min_percentage,
+                        ];
+                    }, $this->scaleRepo->getByOfferingId($offeringId)),
+                    'co_attainment' => $this->snapshotRepo->getCoAttainmentsByOfferingId($offeringId),
+                    'po_attainment' => $this->snapshotRepo->getPoAttainmentsByOfferingId($offeringId),
+                ];
+            } else {
+                $payload = $this->snapshotService->calculatePreview($offeringId);
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'snapshot_exists' => $snapshotExists,
+                'data' => $payload,
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get programme-level PO attainment from persisted offering snapshots.
+     */
+    public function getProgrammeAttainment(int $programmeId): void
+    {
+        try {
+            if (!$this->programmeRepo || !$this->snapshotRepo) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Service not initialized']);
+                return;
+            }
+
+            $programme = $this->programmeRepo->findById($programmeId);
+            if (!$programme) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Programme not found']);
+                return;
+            }
+
+            $batchYear = isset($_GET['batch_year']) && $_GET['batch_year'] !== ''
+                ? (int)$_GET['batch_year']
+                : null;
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'programme_id' => $programmeId,
+                    'batch_year' => $batchYear,
+                    'po_attainment' => $this->snapshotRepo->getProgrammePoAttainment($programmeId, $batchYear),
+                ],
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 
     /**

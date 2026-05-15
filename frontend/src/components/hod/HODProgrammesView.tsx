@@ -26,6 +26,7 @@ import { hodApi } from "@/services/api/hod";
 import { usePaginatedData } from "@/lib/usePaginatedData";
 import type { Programme } from "@/services/api";
 import { getProgrammeColumns } from "../admin/ProgrammesView.columns";
+import { ProgrammeAttainment } from "@/features/programmes/ProgrammeAttainment";
 import { BulkEnrollStudentsDialog } from "../admin/BulkEnrollStudentsDialog";
 import { ProgrammeCoursesDialog } from "../admin/ProgrammeCoursesDialog";
 
@@ -173,6 +174,8 @@ export function HODProgrammesView() {
 
 	return (
 		<div className="space-y-4">
+		<ProgrammeAttainment programmes={programmes || []} />
+
 			<Card className="border-none shadow-none bg-transparent">
 				<div className="flex flex-row items-center justify-between p-0 mb-4">
 					<div className="flex items-center gap-3">

@@ -37,6 +37,7 @@ export interface FacultyMarksByQuestionProps {
 	selectedCourse: Course;
 	selectedTest: Test;
 	headerContent?: React.ReactNode;
+	readOnly?: boolean;
 	onStatsUpdate?: (stats: {
 		entered: number;
 		total: number;
@@ -48,6 +49,7 @@ export function FacultyMarksByQuestion({
 	selectedCourse,
 	selectedTest,
 	headerContent,
+	readOnly = false,
 	onStatsUpdate,
 }: FacultyMarksByQuestionProps) {
 	// ─── Marks state ──────────────────────────────────
@@ -151,6 +153,7 @@ export function FacultyMarksByQuestion({
 		questionId: string,
 		value: string,
 	) => {
+		if (readOnly) return;
 		setMarks((prev) => ({
 			...prev,
 			[studentRollno]: { ...prev[studentRollno], [questionId]: value },
@@ -178,6 +181,7 @@ export function FacultyMarksByQuestion({
 	};
 
 	const handleSubmit = async () => {
+		if (readOnly) return;
 		if (!selectedTest) {
 			toast.error("No test selected");
 			return;
@@ -251,6 +255,7 @@ export function FacultyMarksByQuestion({
 	};
 
 	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (readOnly) return;
 		const file = event.target.files?.[0];
 		if (!file) return;
 		const reader = new FileReader();
@@ -438,7 +443,7 @@ export function FacultyMarksByQuestion({
 					<Button
 						size="sm"
 						onClick={handleSubmit}
-						disabled={submitting || dirtyRows.size === 0}
+						disabled={readOnly || submitting || dirtyRows.size === 0}
 						className="gap-1.5 text-xs h-8"
 					>
 						<Save className="w-3.5 h-3.5" />

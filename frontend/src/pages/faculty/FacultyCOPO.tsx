@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import { facultyApi } from "@/services/api/faculty";
 import { apiService } from "@/services/api";
+import { attainmentApi } from "@/services/api/attainment";
 import type { Course, User } from "@/services/api";
 import { FacultyCOPO as COPOComponent } from "@/components/faculty";
 import { AppHeader } from "@/components/layout";
@@ -22,7 +23,7 @@ export function FacultyCOPO() {
 		setSidebarOpen: (open: boolean) => void;
 	}>();
 
-	debugLogger.info("FacultyCOPO", "Component mounted");
+		debugLogger.info("FacultyCOPO", "Component mounted");
 
 	const [user, setUser] = useState<User | null>(null);
 	const [searchParams] = useSearchParams();
@@ -50,13 +51,9 @@ export function FacultyCOPO() {
 		}))
 	});
 
-	// Filter out concluded courses for the dropdown only
-	const activeCourses = courses.filter(c => c.is_active !== 0);
-
-	debugLogger.debug("FacultyCOPO", "Active courses filtered", {
+	debugLogger.debug("FacultyCOPO", "Courses loaded for dropdown", {
 		totalCourses: courses.length,
-		activeCount: activeCourses.length,
-		activeCourses: activeCourses.map(c => ({ id: c.offering_id, code: c.course_code }))
+		lockedCount: courses.filter(c => c.is_active === 0).length,
 	});
 
 	const [selectedCourse, setSelectedCourseState] = useState<Course | null>(null);
@@ -80,7 +77,7 @@ export function FacultyCOPO() {
 		debugLogger.debug("FacultyCOPO", "Course selection useEffect triggered", {
 			hasUrlOfferingId: !!urlOfferingId,
 			coursesCount: courses.length,
-			activeCoursesCount: activeCourses.length,
+			activeCoursesCount: courses.filter(c => c.is_active !== 0).length,
 			hasSelectedCourse: !!selectedCourse
 		});
 
@@ -102,8 +99,9 @@ export function FacultyCOPO() {
 			}
 		}
 
-		if (activeCourses.length > 0 && !selectedCourse) {
-			let activeCourse = activeCourses.find((c) => c.is_active !== 0) || activeCourses[0];
+		if (courses.length > 0 && !selectedCourse) {
+			let activeCourse =
+				courses.find((c) => c.is_active !== 0) || courses[0];
 			const savedCourseId = localStorage.getItem("faculty_last_course");
 			
 			debugLogger.debug("FacultyCOPO", "Selecting course", {
@@ -112,7 +110,7 @@ export function FacultyCOPO() {
 			});
 
 			if (savedCourseId) {
-				const foundCourse = activeCourses.find(c => String(c.offering_id || c.course_id) === savedCourseId);
+				const foundCourse = courses.find(c => String(c.offering_id || c.course_id) === savedCourseId);
 				if (foundCourse) {
 					activeCourse = foundCourse;
 					debugLogger.info("FacultyCOPO", "Restored course from localStorage", {
@@ -127,7 +125,41 @@ export function FacultyCOPO() {
 				courseCode: activeCourse?.course_code
 			});
 		}
-	}, [courses, activeCourses, selectedCourse, urlOfferingId]);
+	}, [courses, selectedCourse, urlOfferingId]);
+
+	// Snapshot debug: auto-fetch when a locked course is selected
+	useEffect(() => {
+		if (selectedCourse && selectedCourse.is_active === 0) {
+			const offeringId = selectedCourse.offering_id ?? selectedCourse.course_id;
+			debugLogger.info("FacultyCOPO", "Locked course selected, fetching snapshot", {
+				courseCode: selectedCourse.course_code,
+				offeringId,
+			});
+			attainmentApi.getOfferingAttainment(offeringId).then((snap) => {
+				debugLogger.info("FacultyCOPO", "Snapshot data for locked course", {
+					courseCode: selectedCourse.course_code,
+					offeringId,
+					co_count: snap.co_attainment?.length ?? 0,
+					po_count: snap.po_attainment?.length ?? 0,
+					co_attainment: snap.co_attainment?.map((c) => ({
+						co: c.co_name,
+						pct: c.attainment_percentage,
+						level: c.attainment_level,
+					})),
+					po_attainment: snap.po_attainment?.map((p) => ({
+						po: p.po_name,
+						value: p.attainment_value,
+					})),
+				});
+			})
+			.catch((err) => {
+				debugLogger.warn("FacultyCOPO", "Snapshot fetch failed for locked course", {
+					courseCode: selectedCourse.course_code,
+					error: err instanceof Error ? err.message : String(err),
+				});
+			});
+		}
+	}, [selectedCourse]);
 
 	return (
 		<div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -140,7 +172,7 @@ export function FacultyCOPO() {
 				}}
 			>
 				<div className="flex items-center gap-2">
-					{activeCourses.length > 0 && (
+					{courses.length > 0 && (
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button variant="outline" size="sm">
@@ -151,7 +183,7 @@ export function FacultyCOPO() {
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
-								{activeCourses.map((course) => (
+								{courses.map((course) => (
 									<DropdownMenuItem
 										key={
 											course.offering_id ||
@@ -161,8 +193,8 @@ export function FacultyCOPO() {
 											setSelectedCourse(course)
 										}
 									>
-										{course.course_code} -{" "}
-										{course.course_name}
+										{course.course_code} - {course.course_name}
+										{course.is_active === 0 ? " (Locked)" : ""}
 									</DropdownMenuItem>
 								))}
 							</DropdownMenuContent>

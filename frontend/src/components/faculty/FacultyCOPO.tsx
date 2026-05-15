@@ -36,6 +36,7 @@ export function FacultyCOPO({ selectedCourse, user }: FacultyCOPOProps) {
 				programme="B. Tech"
 				year={selectedCourse.year}
 				semester={selectedCourse.semester}
+				readOnly={selectedCourse.is_active === 0}
 			/>
 		</div>
 	);

@@ -42,13 +42,9 @@ export function FacultyMarks() {
 		}))
 	});
 
-	// Filter out concluded courses for the dropdown only
-	const activeCourses = courses.filter(c => c.is_active !== 0);
-
-	debugLogger.debug("FacultyMarks", "Active courses filtered", {
+	debugLogger.debug("FacultyMarks", "Courses loaded for dropdown", {
 		totalCourses: courses.length,
-		activeCount: activeCourses.length,
-		activeCourses: activeCourses.map(c => ({ id: c.offering_id, code: c.course_code }))
+		lockedCount: courses.filter(c => c.is_active === 0).length,
 	});
 
 	const [selectedCourse, setSelectedCourseState] = useState<Course | null>(null);
@@ -61,13 +57,14 @@ export function FacultyMarks() {
 
 	useEffect(() => {
 		debugLogger.debug("FacultyMarks", "Course selection useEffect triggered", {
-			activeCoursesCount: activeCourses.length,
+			activeCoursesCount: courses.filter(c => c.is_active !== 0).length,
 			hasSelectedCourse: !!selectedCourse,
 			selectedCourseId: selectedCourse?.offering_id
 		});
 
-		if (activeCourses.length > 0 && !selectedCourse) {
-			let activeCourse = activeCourses.find((c) => c.is_active !== 0) || activeCourses[0];
+		if (courses.length > 0 && !selectedCourse) {
+			let activeCourse =
+				courses.find((c) => c.is_active !== 0) || courses[0];
 			const savedCourseId = localStorage.getItem("faculty_last_course");
 			
 			debugLogger.debug("FacultyMarks", "Selecting course", {
@@ -76,7 +73,7 @@ export function FacultyMarks() {
 			});
 
 			if (savedCourseId) {
-				const foundCourse = activeCourses.find(c => String(c.offering_id || c.course_id) === savedCourseId);
+				const foundCourse = courses.find(c => String(c.offering_id || c.course_id) === savedCourseId);
 				if (foundCourse) {
 					activeCourse = foundCourse;
 					debugLogger.info("FacultyMarks", "Restored course from localStorage", {
@@ -91,7 +88,7 @@ export function FacultyMarks() {
 				courseCode: activeCourse?.course_code
 			});
 		}
-	}, [activeCourses, selectedCourse]);
+	}, [courses, selectedCourse]);
 
 	return (
 		<div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -104,7 +101,7 @@ export function FacultyMarks() {
 				}}
 			>
 				<div className="flex items-center gap-2">
-					{activeCourses.length > 0 && (
+					{courses.length > 0 && (
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button variant="outline" size="sm">
@@ -115,7 +112,7 @@ export function FacultyMarks() {
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
-								{activeCourses.map((course) => (
+								{courses.map((course) => (
 									<DropdownMenuItem
 										key={
 											course.offering_id ||
@@ -125,8 +122,8 @@ export function FacultyMarks() {
 											setSelectedCourse(course)
 										}
 									>
-										{course.course_code} -{" "}
-										{course.course_name}
+										{course.course_code} - {course.course_name}
+										{course.is_active === 0 ? " (Locked)" : ""}
 									</DropdownMenuItem>
 								))}
 							</DropdownMenuContent>
@@ -146,7 +143,10 @@ export function FacultyMarks() {
 
 			<div className="flex-1 overflow-y-auto p-4 md:p-6 italic">
 				{selectedCourse ? (
-					<MarksComponent selectedCourse={selectedCourse} />
+					<MarksComponent
+						selectedCourse={selectedCourse}
+						readOnly={selectedCourse.is_active === 0}
+					/>
 				) : (
 					<div className="flex items-center justify-center h-full text-muted-foreground">
 						Please select a course to enter marks.

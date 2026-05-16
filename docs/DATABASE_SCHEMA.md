@@ -1,4 +1,4 @@
-# NBA Assessment System - Database Schema v5.0
+# NBA Assessment System - Database Schema v6.0
 
 ## ERD Diagram
 
@@ -27,6 +27,8 @@ erDiagram
     students ||--o{ raw_marks : "receives"
     students ||--o{ marks : "has"
     questions ||--o{ raw_marks : "graded_in"
+    course_offerings ||--o{ offering_co_attainment : "snapshots_co"
+    course_offerings ||--o{ offering_po_attainment : "snapshots_po"
 
     schools {
         int school_id PK
@@ -200,6 +202,21 @@ erDiagram
         decimal CO4
         decimal CO5
         decimal CO6
+    }
+
+    offering_co_attainment {
+        bigint offering_id PK, FK
+        tinyint co_number PK
+        decimal attainment_percentage
+        decimal attainment_level
+        timestamp calculated_at
+    }
+
+    offering_po_attainment {
+        bigint offering_id PK, FK
+        string po_name PK
+        decimal attainment_value
+        timestamp calculated_at
     }
 ```
 
@@ -555,3 +572,38 @@ Aggregated marks per CO for a student in a test.
 **Foreign Keys**:
 - student_roll_no REFERENCES students(roll_no) ON DELETE CASCADE
 - test_id REFERENCES tests(test_id) ON DELETE CASCADE
+
+---
+
+### 18. offering_co_attainment
+
+Materialised CO attainment snapshot computed when a course offering is concluded/locked. Immutable record for NBA audit trail.
+
+| Column                | Type         | Constraints                              | Description                               |
+| --------------------- | ------------ | ---------------------------------------- | ----------------------------------------- |
+| offering_id           | BIGINT       | PRIMARY KEY, FOREIGN KEY                 | Course offering ID                        |
+| co_number             | TINYINT      | PRIMARY KEY, CHECK (1-6)                 | CO number (1-6)                           |
+| attainment_percentage | DECIMAL(5,2) | NOT NULL DEFAULT 0.00                    | Percentage of students above CO threshold |
+| attainment_level      | DECIMAL(5,2) | NOT NULL DEFAULT 0.00                    | Computed attainment level (0-3 scale)     |
+| calculated_at         | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                | When this snapshot was computed           |
+
+**Indexes**: PRIMARY KEY (offering_id, co_number), INDEX (offering_id)
+**Foreign Keys**: offering_id REFERENCES course_offerings(offering_id) ON DELETE CASCADE
+
+---
+
+### 19. offering_po_attainment
+
+Materialised PO attainment snapshot derived from CO attainment × CO-PO mapping values.
+
+| Column            | Type         | Constraints                     | Description                           |
+| ----------------- | ------------ | ------------------------------- | ------------------------------------- |
+| offering_id       | BIGINT       | PRIMARY KEY, FOREIGN KEY        | Course offering ID                    |
+| po_name           | VARCHAR(5)   | PRIMARY KEY                     | PO identifier (PO1-PO12, PSO1-PSO3)  |
+| attainment_value  | DECIMAL(5,2) | NOT NULL DEFAULT 0.00           | Scaled PO attainment value            |
+| calculated_at     | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP       | When this snapshot was computed       |
+
+**Indexes**: PRIMARY KEY (offering_id, po_name), INDEX (offering_id), INDEX (po_name)
+**Foreign Keys**: offering_id REFERENCES course_offerings(offering_id) ON DELETE CASCADE
+
+**Purpose**: Used by the Programme Attainment dashboard (HOD view). Programme-level PO attainment is computed by averaging `attainment_value` across all locked offerings in a programme/batch using an `EXISTS` clause that filters by student programme enrollment, avoiding student-count weighting.

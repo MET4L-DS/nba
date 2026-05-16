@@ -1,10 +1,11 @@
 -- =============================================
--- NBA DATABASE SCHEMA - WITH COURSE OFFERINGS
--- Version: 4.0
+-- NBA DATABASE SCHEMA - WITH ATTAINMENT SNAPSHOTS
+-- Version: 5.0
 -- Database: nba_db
 -- Purpose: Manage courses, tests, and CO-based assessments with assignment-based roles
--- Change from v3: courses are now templates; session-specific data lives in course_offerings
--- Date: February 18, 2026
+-- Change from v4: added offering_co_attainment and offering_po_attainment for
+--   materialised attainment snapshots (conclude/lock workflow).
+-- Date: May 16, 2026
 -- =============================================
 
 USE `nba_db`;
@@ -15,6 +16,8 @@ USE `nba_db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `offering_po_attainment`;
+DROP TABLE IF EXISTS `offering_co_attainment`;
 DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `raw_marks`;
 DROP TABLE IF EXISTS `marks`;
@@ -373,6 +376,34 @@ CREATE TABLE `marks` (
     INDEX (`test_id`),
     FOREIGN KEY (`student_roll_no`) REFERENCES `students`(`roll_no`) ON DELETE CASCADE,
     FOREIGN KEY (`test_id`) REFERENCES `tests`(`test_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- ATTAINMENT SNAPSHOTS (materialised on course conclude)
+-- =============================================
+
+-- CO Attainment Snapshot (per-CO summary at time of locking)
+CREATE TABLE `offering_co_attainment` (
+    `offering_id` BIGINT NOT NULL,
+    `co_number` TINYINT NOT NULL CHECK (`co_number` BETWEEN 1 AND 6),
+    `attainment_percentage` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    `attainment_level` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    `calculated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`offering_id`, `co_number`),
+    INDEX `idx_oca_offering` (`offering_id`),
+    FOREIGN KEY (`offering_id`) REFERENCES `course_offerings`(`offering_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- PO Attainment Snapshot (per-PO value derived from CO × CO-PO mapping)
+CREATE TABLE `offering_po_attainment` (
+    `offering_id` BIGINT NOT NULL,
+    `po_name` VARCHAR(5) NOT NULL,
+    `attainment_value` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    `calculated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`offering_id`, `po_name`),
+    INDEX `idx_opa_offering` (`offering_id`),
+    INDEX `idx_opa_po_name` (`po_name`),
+    FOREIGN KEY (`offering_id`) REFERENCES `course_offerings`(`offering_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
@@ -801,6 +832,8 @@ UNION ALL SELECT 'questions', COUNT(*) FROM `questions`
 UNION ALL SELECT 'raw_marks', COUNT(*) FROM `raw_marks`
 UNION ALL SELECT 'co_po_mapping', COUNT(*) FROM `co_po_mapping`
 UNION ALL SELECT 'attainment_scale', COUNT(*) FROM `attainment_scale`
+UNION ALL SELECT 'offering_co_attainment', COUNT(*) FROM `offering_co_attainment`
+UNION ALL SELECT 'offering_po_attainment', COUNT(*) FROM `offering_po_attainment`
 UNION ALL SELECT 'audit_logs', COUNT(*) FROM `audit_logs`;
 
 -- =============================================

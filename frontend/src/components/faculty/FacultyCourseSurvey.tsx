@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, Fragment } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
 	Sheet,
@@ -19,7 +18,6 @@ import {
 	ChevronDown,
 	ChevronRight,
 	Pen,
-	Search,
 	ArrowLeft,
 } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
@@ -31,6 +29,7 @@ import { CourseExitSurveyCSVImport } from "@/features/surveys/CourseExitSurveyCS
 import { AttainmentWeightageConfig } from "@/features/surveys/AttainmentWeightageConfig";
 import { BlendedAttainmentTable } from "@/features/surveys/BlendedAttainmentTable";
 import { AttainmentBarChart } from "@/features/surveys/AttainmentBarChart";
+import { CourseExitSurveyMatrix } from "@/features/surveys/CourseExitSurveyMatrix";
 import { attainmentApi } from "@/services/api/attainment";
 import { coursesApi } from "@/services/api/courses";
 import type { Course } from "@/services/api";
@@ -253,239 +252,12 @@ export function FacultyCourseSurvey({
 									)}
 								</Card>
 
-								<Card>
-									<div className="px-5 py-4 border-b flex justify-between items-center">
-										<div>
-											<h2 className="font-semibold text-base">
-												Course Exit Survey Analysis
-												Matrix
-											</h2>
-											<p className="text-xs text-muted-foreground mt-0.5">
-												Detailed breakdown of indirect
-												assessment responses mapped to
-												Course Outcomes.
-											</p>
-										</div>
-										<div className="flex gap-2">
-											<div className="relative">
-												<Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-												<Input
-													className="pl-8 pr-3 py-1.5 h-8 text-xs w-44"
-													placeholder="Filter questions..."
-													value={filterText}
-													onChange={(e) =>
-														setFilterText(
-															e.target.value,
-														)
-													}
-												/>
-											</div>
-										</div>
-									</div>
-									<div className="overflow-x-auto w-full">
-										<table className="w-full text-left border-collapse whitespace-nowrap min-w-[700px] text-sm">
-											<thead className="bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider sticky top-0 z-10">
-												<tr>
-													<th className="py-2.5 px-3 border-b border-r font-bold w-14 text-center">
-														CO
-													</th>
-													<th className="py-2.5 px-3 border-b border-r font-bold">
-														Survey Question / Metric
-													</th>
-													<th className="py-2.5 px-3 border-b border-r font-bold w-24 text-right">
-														Avg Score (0-3)
-													</th>
-													<th className="py-2.5 px-3 border-b border-r font-bold w-24 text-right">
-														Mapping Wt.
-													</th>
-													<th className="py-2.5 px-3 border-b border-r font-bold w-24 text-right">
-														Weighted Val.
-													</th>
-													<th className="py-2.5 px-3 border-b font-bold w-28">
-														Statistical Var.
-													</th>
-												</tr>
-											</thead>
-											<tbody className="font-mono text-xs">
-												{results?.question_analysis
-													?.length ? (
-													[1, 2, 3, 4, 5, 6].map(
-														(coNum) => {
-															const group =
-																coGroups[coNum];
-															if (
-																!group ||
-																!group.questions
-																	.length
-															)
-																return null;
-															const filtered =
-																group.questions.filter(
-																	(q) =>
-																		!filterText ||
-																		q.question_text
-																			.toLowerCase()
-																			.includes(
-																				filterText.toLowerCase(),
-																			),
-																);
-															if (
-																!filtered.length
-															)
-																return null;
-															return (
-																<Fragment
-																	key={coNum}
-																>
-																	{filtered.map(
-																		(
-																			q,
-																			qIdx,
-																		) => {
-																			const weightedVal =
-																				q.normalized_rating !==
-																					null &&
-																				q.normalized_rating !==
-																					undefined
-																					? Number(
-																							q.normalized_rating,
-																						) *
-																						Number(
-																							q.mapping_weight,
-																						)
-																					: null;
-																			return (
-																				<tr
-																					key={
-																						q.question_id
-																					}
-																					className="hover:bg-muted/30 transition-colors border-b border-muted/50"
-																				>
-																					{qIdx ===
-																						0 && (
-																						<td
-																							className="py-1.5 px-3 border-r text-center font-bold bg-muted/20"
-																							rowSpan={
-																								filtered.length
-																							}
-																						>
-																							CO
-																							{
-																								coNum
-																							}
-																						</td>
-																					)}
-																					<td className="py-1.5 px-3 border-r font-sans text-xs truncate max-w-[260px]">
-																						{
-																							q.question_text
-																						}
-																					</td>
-																					<td className="py-1.5 px-3 border-r text-right">
-																						{q.normalized_rating !==
-																							null &&
-																						q.normalized_rating !==
-																							undefined
-																							? Number(
-																									q.normalized_rating,
-																								).toFixed(
-																									2,
-																								)
-																							: "-"}
-																					</td>
-																					<td className="py-1.5 px-3 border-r text-right text-muted-foreground">
-																						{Number(
-																							q.mapping_weight,
-																						).toFixed(
-																							2,
-																						)}
-																					</td>
-																					<td className="py-1.5 px-3 border-r text-right font-semibold">
-																						{weightedVal !==
-																						null
-																							? weightedVal.toFixed(
-																									2,
-																								)
-																							: "-"}
-																					</td>
-																					<td className="py-1.5 px-3 text-muted-foreground text-xs">
-																						{q.rating_variance
-																							? `σ: ${Number(q.rating_variance).toFixed(2)}`
-																							: "-"}
-																					</td>
-																				</tr>
-																			);
-																		},
-																	)}
-																	<tr className="border-b-2 border-muted-foreground/20 bg-muted/10">
-																		<td
-																			className="py-1.5 px-3 border-r font-semibold italic text-muted-foreground text-right font-sans"
-																			colSpan={
-																				1
-																			}
-																		>
-																			CO
-																			{
-																				coNum
-																			}{" "}
-																			Indirect
-																			Subtotal
-																		</td>
-																		<td className="py-1.5 px-3 border-r" />
-																		<td className="py-1.5 px-3 border-r text-right font-bold bg-primary/5">
-																			{group.avg !==
-																			null
-																				? Number(
-																						group.avg,
-																					).toFixed(
-																						2,
-																					)
-																				: "-"}
-																		</td>
-																		<td className="py-1.5 px-3 border-r text-right text-muted-foreground">
-																			-
-																		</td>
-																		<td className="py-1.5 px-3 border-r text-right">
-																			-
-																		</td>
-																		<td className="py-1.5 px-3" />
-																	</tr>
-																</Fragment>
-															);
-														},
-													)
-												) : (
-													<tr>
-														<td
-															colSpan={6}
-															className="py-8 text-center text-muted-foreground font-sans text-sm"
-														>
-															No survey data
-															available. Import
-															CSV or enter
-															responses manually
-															to populate the
-															analysis matrix.
-														</td>
-													</tr>
-												)}
-											</tbody>
-										</table>
-									</div>
-									<div className="px-4 py-2 border-t bg-muted/10 flex justify-between items-center text-xs text-muted-foreground">
-										<span>
-											Showing{" "}
-											{results?.question_analysis
-												?.length ?? 0}{" "}
-											questions mapped to{" "}
-											{results?.co_results?.length ?? 0}{" "}
-											outcomes
-										</span>
-										<span className="flex items-center gap-1">
-											<span className="w-2 h-2 rounded-full bg-green-500 block" />
-											Data up to date
-										</span>
-									</div>
-								</Card>
+								<CourseExitSurveyMatrix
+									results={results}
+									coGroups={coGroups}
+									filterText={filterText}
+									onFilterTextChange={setFilterText}
+								/>
 							</>
 						)}
 					</div>

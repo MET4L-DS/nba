@@ -50,13 +50,19 @@ export function AttainmentBarChart({
 						/>
 						<XAxis
 							dataKey="name"
-							tick={{ fontSize: 11 }}
-							stroke="hsl(var(--muted-foreground))"
+							tick={{
+								fontSize: 11,
+								fill: "hsl(var(--muted-foreground))",
+							}}
+							stroke="hsl(var(--border))"
 						/>
 						<YAxis
 							domain={[0, 100]}
-							tick={{ fontSize: 11 }}
-							stroke="hsl(var(--muted-foreground))"
+							tick={{
+								fontSize: 11,
+								fill: "hsl(var(--muted-foreground))",
+							}}
+							stroke="hsl(var(--border))"
 							tickFormatter={(v: number) => `${v}%`}
 						/>
 						<Tooltip
@@ -65,6 +71,7 @@ export function AttainmentBarChart({
 								border: "1px solid hsl(var(--border))",
 								borderRadius: "var(--radius)",
 								fontSize: 12,
+								color: "hsl(var(--popover-foreground))",
 							}}
 							formatter={(value) => {
 								const v = Number(value);
@@ -74,12 +81,17 @@ export function AttainmentBarChart({
 							}}
 						/>
 						<Legend
-							wrapperStyle={{ fontSize: 11, paddingTop: 4 }}
+							wrapperStyle={{
+								fontSize: 11,
+								paddingTop: 4,
+								color: "hsl(var(--muted-foreground))",
+							}}
 						/>
 						<Bar
 							dataKey="Direct"
-							fill="hsl(var(--muted-foreground))"
-							opacity={0.5}
+							fill="hsl(var(--primary) / 0.25)"
+							stroke="hsl(var(--primary))"
+							strokeWidth={1}
 							radius={[3, 3, 0, 0]}
 							maxBarSize={16}
 						/>

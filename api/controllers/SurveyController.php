@@ -416,6 +416,94 @@ class SurveyController
     }
 
     /**
+     * Get stakeholder questions and existing responses for manual entry.
+     * GET /programmes/{programmeId}/survey/stakeholder/responses/manual?batch_year=&stakeholder_type=
+     */
+    public function getStakeholderManualResponses(int $programmeId): void
+    {
+        try {
+            $batchYear = isset($_GET['batch_year']) ? (int)$_GET['batch_year'] : 0;
+            $stakeholderType = !empty($_GET['stakeholder_type']) ? trim($_GET['stakeholder_type']) : null;
+
+            if ($batchYear <= 0 || !$stakeholderType) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'batch_year and stakeholder_type are required']);
+                return;
+            }
+
+            $survey = $this->stakeholderRepo->getSurvey($programmeId, $batchYear, $stakeholderType);
+            $questions = $survey ? $this->stakeholderRepo->getQuestions((int)$survey['survey_id']) : [];
+            $responses = $survey ? $this->stakeholderRepo->getResponses((int)$survey['survey_id']) : [];
+
+            $respondents = [];
+            foreach ($responses as $response) {
+                $identifier = $response['respondent_identifier'];
+                if (!isset($respondents[$identifier])) {
+                    $respondents[$identifier] = [
+                        'respondent_identifier' => $identifier,
+                        'respondent_name' => $response['respondent_name'] ?? '',
+                        'qualification' => $response['qualification'] ?? '',
+                        'responses' => [],
+                    ];
+                }
+                $respondents[$identifier]['responses'][(int)$response['question_id']] = (int)$response['likert_rating'];
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'questions' => $questions,
+                    'respondents' => array_values($respondents),
+                ],
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Save stakeholder manual Likert entries.
+     * POST /programmes/{programmeId}/survey/stakeholder/responses/manual
+     */
+    public function saveStakeholderManualResponses(int $programmeId): void
+    {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $batchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : 0;
+            $stakeholderType = trim($input['stakeholder_type'] ?? '');
+
+            if ($batchYear <= 0 || !$stakeholderType || !isset($input['responses']) || !is_array($input['responses'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid input']);
+                return;
+            }
+
+            $survey = $this->stakeholderRepo->getSurvey($programmeId, $batchYear, $stakeholderType);
+            if (!$survey) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Survey questions must be configured first.']);
+                return;
+            }
+
+            $surveyId = (int)$survey['survey_id'];
+            $this->stakeholderRepo->clearResponses($surveyId);
+            $count = $this->stakeholderRepo->saveResponses($surveyId, $input['responses']);
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => ['imported_count' => $count],
+                'message' => 'Manual responses saved',
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Get stakeholder survey results (PO averages).
      * GET /programmes/{programmeId}/survey/stakeholder/results?batch_year=&stakeholder_type=
      */

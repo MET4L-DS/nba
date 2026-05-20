@@ -359,6 +359,12 @@ class ProgrammeRepository
 		return $stmt->fetchAll(PDO::FETCH_ASSOC);
 	}
 
+	public function updateWeightage(int $programmeId, float $directWeightage, float $indirectWeightage): bool
+	{
+		$stmt = $this->db->prepare('UPDATE programmes SET direct_weightage = ?, indirect_weightage = ? WHERE programme_id = ?');
+		return $stmt->execute([$directWeightage, $indirectWeightage, $programmeId]);
+	}
+
     public function countStudents($programmeId): int
     {
         $stmt = $this->db->prepare('SELECT COUNT(*) FROM students WHERE programme_id = ?');

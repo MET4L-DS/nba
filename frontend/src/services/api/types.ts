@@ -306,6 +306,8 @@ export interface Programme {
 	programme_name: string;
 	degree_level: "UG" | "PG" | "Diploma" | "PhD";
 	duration_years: number;
+	direct_weightage?: number;
+	indirect_weightage?: number;
 	created_at?: string;
 	department_name?: string;
 	department_code?: string;
@@ -631,7 +633,7 @@ export interface StakeholderSurveyResultsResponse {
 	stakeholder_types: string[];
 	averages: StakeholderPOAverage[];
 	by_type: StakeholderByTypeRow[];
-	individual: StakeholderIndividualResponse[];
+	individual: Record<string, StakeholderIndividualResponse[]>;
 }
 
 export interface StakeholderSurveyQuestion {
@@ -649,6 +651,26 @@ export interface StakeholderSurveyConfigResponse {
 	stakeholder_type: string;
 	title: string;
 	questions: StakeholderSurveyQuestion[];
+}
+
+export interface StakeholderManualRespondent {
+	respondent_identifier: string;
+	respondent_name: string;
+	qualification: string;
+	responses: Record<string, number>;
+}
+
+export interface StakeholderManualResponse {
+	respondent_identifier: string;
+	respondent_name?: string | null;
+	qualification?: string | null;
+	question_id: number;
+	likert_rating: number;
+}
+
+export interface StakeholderManualEntryResponse {
+	questions: StakeholderSurveyQuestion[];
+	respondents: StakeholderManualRespondent[];
 }
 
 // Action Plan Types

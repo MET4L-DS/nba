@@ -35,6 +35,7 @@ export function StakeholderSurveyResults({
 	const [loading, setLoading] = useState(false);
 	const [detailOpen, setDetailOpen] = useState(false);
 	const [matrixOpen, setMatrixOpen] = useState(false);
+	const individualCount = data ? Object.values(data.individual).flat().length : 0;
 
 	const fetchResults = useCallback(async () => {
 		const year = parseInt(batchYear, 10);
@@ -67,8 +68,8 @@ export function StakeholderSurveyResults({
 					<div className="space-y-1 w-[200px]">
 						<BatchSelector
 							programmeId={programmeId}
-							value={undefined}
-							onChange={(id, batch) => {
+							value={null}
+							onChange={(_, batch) => {
 								if (batch?.batch_year) {
 									setBatchYear(String(batch.batch_year));
 								}
@@ -145,7 +146,7 @@ export function StakeholderSurveyResults({
 										<div className="flex items-center gap-2">
 											<Users className="h-4 w-4 text-muted-foreground" />
 											<span className="text-sm font-medium">
-												Individual Responses ({data.individual.length})
+								Individual Responses ({individualCount})
 											</span>
 										</div>
 										<ChevronDown

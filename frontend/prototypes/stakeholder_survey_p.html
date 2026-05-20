@@ -1,0 +1,1232 @@
+<!doctype html>
+
+<html class="light" lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+		<title>OBE Attainment Portal - Articulation Matrix</title>
+		<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<script id="tailwind-config">
+			tailwind.config = {
+				darkMode: "class",
+				theme: {
+					extend: {
+						colors: {
+							"surface-tint": "#0053db",
+							"on-error": "#ffffff",
+							"on-tertiary-fixed": "#251a00",
+							"tertiary-container": "#8a6800",
+							"secondary-fixed": "#7ffc97",
+							"inverse-surface": "#233144",
+							tertiary: "#6c5100",
+							"surface-container-low": "#eff4ff",
+							"primary-fixed-dim": "#b4c5ff",
+							"primary-container": "#2563eb",
+							"surface-container-high": "#dce9ff",
+							"on-tertiary-container": "#ffeed1",
+							"tertiary-fixed-dim": "#f7be1d",
+							"on-tertiary-fixed-variant": "#5a4300",
+							outline: "#737686",
+							"on-primary-fixed-variant": "#003ea8",
+							"surface-variant": "#d5e3fc",
+							"on-primary": "#ffffff",
+							"outline-variant": "#c3c6d7",
+							"on-secondary": "#ffffff",
+							"on-primary-fixed": "#00174b",
+							"on-error-container": "#93000a",
+							"on-background": "#0d1c2e",
+							"inverse-primary": "#b4c5ff",
+							surface: "#f8f9ff",
+							"surface-container-lowest": "#ffffff",
+							"tertiary-fixed": "#ffdf9a",
+							"inverse-on-surface": "#eaf1ff",
+							error: "#ba1a1a",
+							"secondary-fixed-dim": "#62df7d",
+							"on-secondary-container": "#007230",
+							"surface-container": "#e6eeff",
+							"surface-dim": "#ccdbf3",
+							"on-secondary-fixed": "#002109",
+							"on-primary-container": "#eeefff",
+							"error-container": "#ffdad6",
+							"on-tertiary": "#ffffff",
+							background: "#f8f9ff",
+							"on-surface": "#0d1c2e",
+							secondary: "#006e2d",
+							primary: "#004ac6",
+							"on-secondary-fixed-variant": "#005320",
+							"surface-bright": "#f8f9ff",
+							"surface-container-highest": "#d5e3fc",
+							"secondary-container": "#7cf994",
+							"primary-fixed": "#dbe1ff",
+							"on-surface-variant": "#434655",
+						},
+						borderRadius: {
+							DEFAULT: "0.25rem",
+							lg: "0.5rem",
+							xl: "0.75rem",
+							full: "9999px",
+						},
+						spacing: {
+							gutter: "1.5rem",
+							"section-padding": "2rem",
+							"stack-gap": "1rem",
+							"component-padding-x": "1rem",
+							"component-padding-y": "0.75rem",
+							"container-max": "1440px",
+						},
+						fontFamily: {
+							"body-lg": ["Manrope"],
+							"label-md": ["Manrope"],
+							"body-md": ["Manrope"],
+							"label-sm": ["Manrope"],
+							"headline-md": ["Manrope"],
+							"headline-xl": ["Manrope"],
+							"headline-lg": ["Manrope"],
+						},
+						fontSize: {
+							"body-lg": [
+								"16px",
+								{ lineHeight: "24px", fontWeight: "500" },
+							],
+							"label-md": [
+								"13px",
+								{ lineHeight: "18px", fontWeight: "600" },
+							],
+							"body-md": [
+								"14px",
+								{ lineHeight: "20px", fontWeight: "500" },
+							],
+							"label-sm": [
+								"12px",
+								{ lineHeight: "16px", fontWeight: "700" },
+							],
+							"headline-md": [
+								"16px",
+								{ lineHeight: "24px", fontWeight: "700" },
+							],
+							"headline-xl": [
+								"24px",
+								{
+									lineHeight: "32px",
+									letterSpacing: "-0.02em",
+									fontWeight: "800",
+								},
+							],
+							"headline-lg": [
+								"18px",
+								{ lineHeight: "28px", fontWeight: "700" },
+							],
+						},
+					},
+				},
+			};
+		</script>
+		<style>
+			body {
+				background-color: theme("colors.background");
+				color: theme("colors.on-background");
+			}
+			.material-symbols-outlined {
+				font-variation-settings:
+					"FILL" 0,
+					"wght" 400,
+					"GRAD" 0,
+					"opsz" 24;
+			}
+			.material-symbols-outlined.fill {
+				font-variation-settings: "FILL" 1;
+			}
+			.data-dense-table th,
+			.data-dense-table td {
+				border-bottom: 1px solid theme("colors.outline-variant");
+				padding: 0.5rem 1rem;
+				text-align: left;
+			}
+			.data-dense-table th {
+				background-color: theme("colors.surface-container");
+				font-weight: 700;
+				color: theme("colors.on-surface");
+				position: sticky;
+				top: 0;
+				z-index: 10;
+			}
+			.data-dense-table tbody tr:hover {
+				background-color: theme("colors.surface-container-low");
+			}
+			.custom-scrollbar::-webkit-scrollbar {
+				width: 6px;
+				height: 6px;
+			}
+			.custom-scrollbar::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			.custom-scrollbar::-webkit-scrollbar-thumb {
+				background: theme("colors.outline-variant");
+				border-radius: 4px;
+			}
+			.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+				background: theme("colors.outline");
+			}
+		</style>
+	</head>
+	<body
+		class="min-h-screen overflow-x-hidden flex flex-col font-body-md text-body-md bg-background text-on-background"
+	>
+		<!-- TopAppBar -->
+		<header
+			class="fixed top-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-surface-container-lowest dark:bg-surface-dim border-b border-outline-variant dark:border-outline flat no shadows"
+		>
+			<div class="flex items-center gap-6">
+				<h1
+					class="text-headline-xl font-headline-xl font-extrabold text-primary dark:text-primary-fixed-dim"
+				>
+					OBE Attainment Portal
+				</h1>
+				<nav
+					aria-label="Global navigation"
+					class="hidden md:flex gap-6 h-full items-end"
+				>
+					<a
+						class="text-on-surface-variant dark:text-outline-variant font-medium hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low transition-colors px-2 py-4 h-full flex items-end"
+						href="#"
+						>Dashboard</a
+					>
+					<a
+						class="text-on-surface-variant dark:text-outline-variant font-medium hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low transition-colors px-2 py-4 h-full flex items-end"
+						href="#"
+						>Curriculum</a
+					>
+					<a
+						class="text-on-surface-variant dark:text-outline-variant font-medium hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low transition-colors px-2 py-4 h-full flex items-end"
+						href="#"
+						>Faculty</a
+					>
+					<a
+						class="text-on-surface-variant dark:text-outline-variant font-medium hover:text-primary dark:hover:text-primary-fixed hover:bg-surface-container-low transition-colors px-2 py-4 h-full flex items-end"
+						href="#"
+						>Settings</a
+					>
+				</nav>
+			</div>
+			<div class="flex items-center gap-4">
+				<button
+					class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded shadow-sm hover:bg-primary-fixed-variant transition-colors flex items-center gap-2"
+				>
+					Generate Report
+				</button>
+				<div class="flex items-center gap-2 text-on-surface-variant">
+					<button
+						aria-label="notifications"
+						class="p-2 hover:bg-surface-container-high rounded-full transition-colors"
+					>
+						<span class="material-symbols-outlined"
+							>notifications</span
+						>
+					</button>
+					<button
+						aria-label="help_outline"
+						class="p-2 hover:bg-surface-container-high rounded-full transition-colors"
+					>
+						<span class="material-symbols-outlined"
+							>help_outline</span
+						>
+					</button>
+				</div>
+				<div
+					class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden shrink-0"
+				>
+					<img
+						alt="HOD Profile"
+						class="w-full h-full object-cover"
+						src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmbSBl7cPdPQDiVDeMvR6mAIFp2rFeEsklQAIwrw2BW3EmrXd9ecGHN94GkMHCxRoxVC6bvfH7m5UG-uvhv5hMh2SSw4Kq--pHK2GhPr14pUO7yv3ebvT5Nu9xXBbewGVRNvvwiG0aPADzj7VQQchHKEyfURAJDD9jOekoYvV4B3WSelrSo305tI-Wk5IwwPeJP-UB7BuLJJ9Z6i8_iZT3oKTHOH48VzGMd4ipoJLAas1CauA0BTI9L53BrswQpr0BikweJGfyf6pI"
+					/>
+				</div>
+			</div>
+		</header>
+		<div class="flex flex-1 pt-16">
+			<!-- SideNavBar -->
+			<aside
+				class="hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 p-4 bg-surface-bright dark:bg-inverse-surface border-r border-outline-variant dark:border-outline z-40 flat no shadows"
+			>
+				<div class="flex items-center gap-3 mb-8 px-2">
+					<div
+						class="w-10 h-10 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-lg shrink-0"
+					>
+						CS
+					</div>
+					<div>
+						<h2
+							class="text-headline-lg font-headline-lg font-bold text-on-surface dark:text-inverse-on-surface leading-tight"
+						>
+							Department Head
+						</h2>
+						<p
+							class="text-label-sm font-label-sm text-on-surface-variant"
+						>
+							Computer Science &amp; Eng.
+						</p>
+					</div>
+				</div>
+				<nav
+					aria-label="Sidebar navigation"
+					class="flex flex-col gap-1 flex-1 overflow-y-auto custom-scrollbar pr-2"
+				>
+					<a
+						class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined">analytics</span>
+						<span class="font-label-md text-label-md"
+							>Programme Overview</span
+						>
+					</a>
+					<a
+						class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined">groups</span>
+						<span class="font-label-md text-label-md"
+							>Batch Analytics</span
+						>
+					</a>
+					<a
+						class="flex items-center gap-3 px-3 py-2 rounded bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary font-bold active:translate-x-1 transition-transform"
+						href="#"
+					>
+						<span class="material-symbols-outlined fill"
+							>grid_on</span
+						>
+						<span class="font-label-md text-label-md"
+							>Articulation Matrix</span
+						>
+					</a>
+					<a
+						class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined"
+							>assignment_turned_in</span
+						>
+						<span class="font-label-md text-label-md"
+							>Survey Manager</span
+						>
+					</a>
+					<a
+						class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined"
+							>trending_up</span
+						>
+						<span class="font-label-md text-label-md"
+							>Improvement Plans</span
+						>
+					</a>
+					<a
+						class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined">history</span>
+						<span class="font-label-md text-label-md"
+							>Audit Log</span
+						>
+					</a>
+				</nav>
+				<div
+					class="mt-auto pt-4 border-t border-outline-variant flex flex-col gap-1"
+				>
+					<button
+						class="w-full mb-4 bg-surface text-primary border border-primary font-label-md text-label-md py-2 rounded hover:bg-surface-container-low transition-colors"
+					>
+						Export Accreditation Pack
+					</button>
+					<a
+						class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined">settings</span>
+						<span class="font-label-md text-label-md"
+							>System Settings</span
+						>
+					</a>
+					<a
+						class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined"
+							>contact_support</span
+						>
+						<span class="font-label-md text-label-md">Support</span>
+					</a>
+				</div>
+			</aside>
+			<!-- Main Content Area -->
+			<main
+				class="flex-1 ml-0 md:ml-64 p-section-padding overflow-y-auto"
+			>
+				<div
+					class="max-w-container-max mx-auto h-full flex flex-col gap-section-padding"
+				>
+					<header class="mb-4">
+						<h2
+							class="text-headline-xl font-headline-xl font-bold text-on-surface"
+						>
+							Technical Data Hub &amp; Articulation Matrix
+						</h2>
+						<p
+							class="text-body-md font-body-md text-on-surface-variant mt-1"
+						>
+							Manage survey configurations and analyze
+							consolidated indirect PO attainment.
+						</p>
+					</header>
+					<!-- Split Panel Layout -->
+					<div class="flex flex-col lg:flex-row gap-6 h-[600px]">
+						<!-- Left Panel: Survey Configuration -->
+						<section
+							class="w-full lg:w-1/4 flex flex-col bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm"
+						>
+							<div
+								class="p-4 border-b border-outline-variant bg-surface-container-low"
+							>
+								<h3
+									class="text-headline-md font-headline-md text-on-surface"
+								>
+									Survey Configuration
+								</h3>
+							</div>
+							<div
+								class="flex-1 overflow-y-auto p-2 flex flex-col gap-2"
+							>
+								<!-- Survey Item 1 -->
+								<button
+									class="w-full text-left p-3 rounded-lg border border-primary bg-primary-container text-on-primary-container transition-all hover:shadow-sm"
+								>
+									<div
+										class="flex justify-between items-center mb-1"
+									>
+										<span
+											class="font-label-md text-label-md font-bold"
+											>Alumni Survey</span
+										>
+										<span
+											class="material-symbols-outlined text-primary text-sm"
+											>check_circle</span
+										>
+									</div>
+									<p
+										class="text-label-sm font-label-sm opacity-80"
+									>
+										2022-2023 Batch
+									</p>
+									<div class="mt-2 flex gap-2">
+										<span
+											class="text-[10px] bg-surface text-primary px-2 py-0.5 rounded border border-primary/30"
+											>Active</span
+										>
+										<span
+											class="text-[10px] bg-surface text-on-surface-variant px-2 py-0.5 rounded border border-outline-variant"
+											>142 Responses</span
+										>
+									</div>
+								</button>
+								<!-- Survey Item 2 -->
+								<button
+									class="w-full text-left p-3 rounded-lg border border-outline-variant bg-surface hover:bg-surface-container-low transition-all hover:border-primary/50"
+								>
+									<div
+										class="flex justify-between items-center mb-1"
+									>
+										<span
+											class="font-label-md text-label-md text-on-surface font-bold"
+											>Employer Survey</span
+										>
+									</div>
+									<p
+										class="text-label-sm font-label-sm text-on-surface-variant"
+									>
+										2023 Recruitment
+									</p>
+									<div class="mt-2 flex gap-2">
+										<span
+											class="text-[10px] bg-surface-container-highest text-on-surface px-2 py-0.5 rounded"
+											>Draft</span
+										>
+										<span
+											class="text-[10px] bg-surface text-on-surface-variant px-2 py-0.5 rounded border border-outline-variant"
+											>45 Responses</span
+										>
+									</div>
+								</button>
+								<!-- Survey Item 3 -->
+								<button
+									class="w-full text-left p-3 rounded-lg border border-outline-variant bg-surface hover:bg-surface-container-low transition-all hover:border-primary/50"
+								>
+									<div
+										class="flex justify-between items-center mb-1"
+									>
+										<span
+											class="font-label-md text-label-md text-on-surface font-bold"
+											>Parent Feedback</span
+										>
+									</div>
+									<p
+										class="text-label-sm font-label-sm text-on-surface-variant"
+									>
+										Annual Review
+									</p>
+									<div class="mt-2 flex gap-2">
+										<span
+											class="text-[10px] bg-surface-container-highest text-on-surface px-2 py-0.5 rounded"
+											>Closed</span
+										>
+										<span
+											class="text-[10px] bg-surface text-on-surface-variant px-2 py-0.5 rounded border border-outline-variant"
+											>320 Responses</span
+										>
+									</div>
+								</button>
+							</div>
+							<div
+								class="p-4 border-t border-outline-variant bg-surface"
+							>
+								<button
+									class="w-full flex items-center justify-center gap-2 text-primary font-label-md text-label-md hover:bg-surface-container-low py-2 rounded transition-colors"
+								>
+									<span class="material-symbols-outlined"
+										>add</span
+									>
+									New Configuration
+								</button>
+							</div>
+						</section>
+						<!-- Right Panel: Consolidated Matrix -->
+						<section
+							class="w-full lg:w-3/4 flex flex-col bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm"
+						>
+							<div
+								class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low"
+							>
+								<div>
+									<h3
+										class="text-headline-md font-headline-md text-on-surface"
+									>
+										Consolidated Indirect PO Matrix
+									</h3>
+									<p
+										class="text-label-sm font-label-sm text-on-surface-variant"
+									>
+										Source: Alumni Survey (2022-2023)
+									</p>
+								</div>
+								<div class="flex gap-2">
+									<button
+										aria-label="Filter"
+										class="p-1.5 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors"
+									>
+										<span
+											class="material-symbols-outlined text-sm"
+											>filter_list</span
+										>
+									</button>
+									<button
+										aria-label="Download"
+										class="p-1.5 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors"
+									>
+										<span
+											class="material-symbols-outlined text-sm"
+											>download</span
+										>
+									</button>
+								</div>
+							</div>
+							<!-- Matrix Table -->
+							<div
+								class="flex-1 overflow-auto custom-scrollbar relative"
+							>
+								<table class="w-full data-dense-table text-sm">
+									<thead>
+										<tr>
+											<th
+												class="w-32 bg-surface-container"
+											>
+												Survey Q#
+											</th>
+											<th
+												class="w-48 bg-surface-container"
+											>
+												Mapped CO
+											</th>
+											<th
+												class="text-center bg-surface-container"
+											>
+												PO1
+											</th>
+											<th
+												class="text-center bg-surface-container"
+											>
+												PO2
+											</th>
+											<th
+												class="text-center bg-surface-container"
+											>
+												PO3
+											</th>
+											<th
+												class="text-center bg-surface-container"
+											>
+												PO4
+											</th>
+											<th
+												class="text-center bg-surface-container"
+											>
+												PO5
+											</th>
+											<th
+												class="text-center bg-surface-container"
+											>
+												PO6
+											</th>
+											<th
+												class="text-center bg-surface-container"
+											>
+												PO7
+											</th>
+											<th
+												class="text-center bg-surface-container"
+											>
+												PO8
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td class="font-medium">
+												Q1 - Tech Skills
+											</td>
+											<td>
+												<span
+													class="bg-surface-container-high px-2 py-1 rounded text-xs"
+													>CS401.1</span
+												>
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-primary text-on-primary leading-6"
+													>3</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-surface-dim text-on-surface leading-6"
+													>2</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-surface-dim text-on-surface leading-6"
+													>1</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+										</tr>
+										<tr>
+											<td class="font-medium">
+												Q2 - Problem Solving
+											</td>
+											<td>
+												<span
+													class="bg-surface-container-high px-2 py-1 rounded text-xs"
+													>CS401.2</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-primary text-on-primary leading-6"
+													>3</span
+												>
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-primary text-on-primary leading-6"
+													>3</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-surface-dim text-on-surface leading-6"
+													>2</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+										</tr>
+										<tr>
+											<td class="font-medium">
+												Q3 - Teamwork
+											</td>
+											<td>
+												<span
+													class="bg-surface-container-high px-2 py-1 rounded text-xs"
+													>CS402.1</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-primary text-on-primary leading-6"
+													>3</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-surface-dim text-on-surface leading-6"
+													>2</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+										</tr>
+										<tr>
+											<td class="font-medium">
+												Q4 - Communication
+											</td>
+											<td>
+												<span
+													class="bg-surface-container-high px-2 py-1 rounded text-xs"
+													>CS402.2</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-surface-dim text-on-surface leading-6"
+													>2</span
+												>
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-primary text-on-primary leading-6"
+													>3</span
+												>
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-primary text-on-primary leading-6"
+													>3</span
+												>
+											</td>
+										</tr>
+										<tr>
+											<td class="font-medium">
+												Q5 - Ethics
+											</td>
+											<td>
+												<span
+													class="bg-surface-container-high px-2 py-1 rounded text-xs"
+													>CS403.1</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-surface-dim text-on-surface leading-6"
+													>1</span
+												>
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td
+												class="text-center text-on-surface-variant"
+											>
+												-
+											</td>
+											<td class="text-center">
+												<span
+													class="inline-block w-6 h-6 rounded bg-primary text-on-primary leading-6"
+													>3</span
+												>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+							<!-- Sticky Footer Calculations -->
+							<div
+								class="border-t-2 border-outline bg-surface-container p-4 sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+							>
+								<div
+									class="flex justify-between items-center mb-2"
+								>
+									<span
+										class="font-label-md text-label-md font-bold text-on-surface w-48"
+										>Column Average</span
+									>
+									<div
+										class="flex-1 flex justify-around pl-32"
+									>
+										<span class="text-center w-12 font-bold"
+											>3.0</span
+										>
+										<span class="text-center w-12 font-bold"
+											>3.0</span
+										>
+										<span class="text-center w-12 font-bold"
+											>2.5</span
+										>
+										<span class="text-center w-12 font-bold"
+											>1.0</span
+										>
+										<span class="text-center w-12 font-bold"
+											>2.0</span
+										>
+										<span class="text-center w-12 font-bold"
+											>2.0</span
+										>
+										<span class="text-center w-12 font-bold"
+											>2.5</span
+										>
+										<span class="text-center w-12 font-bold"
+											>3.0</span
+										>
+									</div>
+								</div>
+								<div class="flex justify-between items-center">
+									<span
+										class="font-label-md text-label-md font-bold text-primary w-48"
+										>Attainment Level (Scale 3)</span
+									>
+									<div
+										class="flex-1 flex justify-around pl-32"
+									>
+										<span
+											class="text-center w-12 font-bold text-secondary bg-secondary-container px-1 rounded"
+											>High</span
+										>
+										<span
+											class="text-center w-12 font-bold text-secondary bg-secondary-container px-1 rounded"
+											>High</span
+										>
+										<span
+											class="text-center w-12 font-bold text-tertiary bg-tertiary-container/20 px-1 rounded"
+											>Med</span
+										>
+										<span
+											class="text-center w-12 font-bold text-error bg-error-container px-1 rounded"
+											>Low</span
+										>
+										<span
+											class="text-center w-12 font-bold text-tertiary bg-tertiary-container/20 px-1 rounded"
+											>Med</span
+										>
+										<span
+											class="text-center w-12 font-bold text-tertiary bg-tertiary-container/20 px-1 rounded"
+											>Med</span
+										>
+										<span
+											class="text-center w-12 font-bold text-tertiary bg-tertiary-container/20 px-1 rounded"
+											>Med</span
+										>
+										<span
+											class="text-center w-12 font-bold text-secondary bg-secondary-container px-1 rounded"
+											>High</span
+										>
+									</div>
+								</div>
+							</div>
+						</section>
+					</div>
+					<!-- Manual Response Ledger -->
+					<section
+						class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mt-4"
+					>
+						<div
+							class="p-4 border-b border-outline-variant flex justify-between items-center"
+						>
+							<div>
+								<h3
+									class="text-headline-md font-headline-md text-on-surface"
+								>
+									Manual Response Ledger
+								</h3>
+								<p
+									class="text-label-sm font-label-sm text-on-surface-variant"
+								>
+									Line-item verification of individual alumni
+									responses.
+								</p>
+							</div>
+							<div class="relative w-64">
+								<span
+									class="material-symbols-outlined absolute left-3 top-2 text-outline-variant"
+									>search</span
+								>
+								<input
+									class="w-full pl-10 pr-3 py-2 bg-surface border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-shadow"
+									placeholder="Search respondent ID..."
+									type="text"
+								/>
+							</div>
+						</div>
+						<div class="overflow-x-auto custom-scrollbar">
+							<table
+								class="w-full data-dense-table text-sm whitespace-nowrap"
+							>
+								<thead>
+									<tr>
+										<th class="bg-surface-container-low">
+											Resp. ID
+										</th>
+										<th class="bg-surface-container-low">
+											Date Submitted
+										</th>
+										<th class="bg-surface-container-low">
+											Q1 Score
+										</th>
+										<th class="bg-surface-container-low">
+											Q2 Score
+										</th>
+										<th class="bg-surface-container-low">
+											Q3 Score
+										</th>
+										<th class="bg-surface-container-low">
+											Q4 Score
+										</th>
+										<th class="bg-surface-container-low">
+											Q5 Score
+										</th>
+										<th
+											class="bg-surface-container-low text-right"
+										>
+											Actions
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td
+											class="font-mono text-xs text-on-surface-variant"
+										>
+											ALM-2023-001
+										</td>
+										<td>Oct 12, 2023</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>3</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>2</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>4</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>3</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>3</span
+											>
+										</td>
+										<td class="text-right">
+											<button
+												class="text-primary hover:text-primary-fixed-variant text-xs font-semibold mr-2"
+											>
+												View
+											</button>
+											<button
+												class="text-outline hover:text-error text-xs font-semibold"
+											>
+												Flag
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td
+											class="font-mono text-xs text-on-surface-variant"
+										>
+											ALM-2023-002
+										</td>
+										<td>Oct 14, 2023</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>4</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>4</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>3</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>4</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-error-container text-on-error-container px-2 py-0.5 rounded text-center block w-8 font-bold"
+												>1</span
+											>
+										</td>
+										<td class="text-right">
+											<button
+												class="text-primary hover:text-primary-fixed-variant text-xs font-semibold mr-2"
+											>
+												View
+											</button>
+											<button
+												class="text-outline hover:text-error text-xs font-semibold"
+											>
+												Flag
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td
+											class="font-mono text-xs text-on-surface-variant"
+										>
+											ALM-2023-003
+										</td>
+										<td>Oct 15, 2023</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>2</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>3</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>3</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>3</span
+											>
+										</td>
+										<td>
+											<span
+												class="bg-surface-dim px-2 py-0.5 rounded text-center block w-8"
+												>2</span
+											>
+										</td>
+										<td class="text-right">
+											<button
+												class="text-primary hover:text-primary-fixed-variant text-xs font-semibold mr-2"
+											>
+												View
+											</button>
+											<button
+												class="text-outline hover:text-error text-xs font-semibold"
+											>
+												Flag
+											</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div
+							class="p-3 border-t border-outline-variant bg-surface flex justify-between items-center text-sm"
+						>
+							<span class="text-on-surface-variant"
+								>Showing 1 to 3 of 142 entries</span
+							>
+							<div class="flex gap-1">
+								<button
+									class="px-2 py-1 border border-outline-variant rounded bg-surface hover:bg-surface-container-low disabled:opacity-50"
+									disabled=""
+								>
+									Prev
+								</button>
+								<button
+									class="px-2 py-1 border border-primary bg-primary-container text-on-primary-container rounded"
+								>
+									1
+								</button>
+								<button
+									class="px-2 py-1 border border-outline-variant rounded bg-surface hover:bg-surface-container-low"
+								>
+									2
+								</button>
+								<button
+									class="px-2 py-1 border border-outline-variant rounded bg-surface hover:bg-surface-container-low"
+								>
+									3
+								</button>
+								<span class="px-2 py-1">...</span>
+								<button
+									class="px-2 py-1 border border-outline-variant rounded bg-surface hover:bg-surface-container-low"
+								>
+									Next
+								</button>
+							</div>
+						</div>
+					</section>
+				</div>
+			</main>
+		</div>
+	</body>
+</html>

@@ -4,7 +4,7 @@ interface ArticulationMatrixProps {
 	data: {
 		courses: any[];
 		averages: Record<string, number>;
-		indirect: Record<string, number>;
+		indirect: Record<string, number | null>;
 		finals: Record<string, number>;
 		targets: Record<string, number>;
 	};

@@ -1038,6 +1038,15 @@ class Router
                     if ($method === 'POST') {
                         $this->surveyController->importStakeholderCsv($programmeId);
                     }
+                } elseif (preg_match('#^programmes/(\d+)/survey/stakeholder/responses/manual$#', $path, $matches)) {
+                    $programmeId = (int)$matches[1];
+                    if ($method === 'GET') {
+                        $this->surveyController->getStakeholderManualResponses($programmeId);
+                    } elseif ($method === 'POST') {
+                        $this->surveyController->saveStakeholderManualResponses($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
                 } elseif (preg_match('#^programmes/(\d+)/survey/stakeholder/results$#', $path, $matches)) {
                     $programmeId = (int)$matches[1];
                     if ($method === 'GET') {
@@ -1219,6 +1228,15 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->hodController->bulkEnrollStudentsToProgramme($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^hod/programmes/(\d+)/weightage$#', $path, $matches)) {
+                    $programmeId = (int)$matches[1];
+                    if ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->updateProgrammeWeightage($programmeId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

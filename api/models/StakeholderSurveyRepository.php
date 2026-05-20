@@ -106,6 +106,24 @@ class StakeholderSurveyRepository
         }
     }
 
+    public function clearResponses(int $surveyId): void
+    {
+        $stmt = $this->db->prepare('DELETE FROM stakeholder_survey_responses_v2 WHERE survey_id = ?');
+        $stmt->execute([$surveyId]);
+    }
+
+    public function getResponses(int $surveyId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT respondent_identifier, respondent_name, qualification, question_id, likert_rating
+             FROM stakeholder_survey_responses_v2
+             WHERE survey_id = ?
+             ORDER BY respondent_identifier, question_id'
+        );
+        $stmt->execute([$surveyId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getPoAverages(int $programmeId, int $batchYear, ?string $stakeholderType = null): array
     {
         $sql = 'SELECT 

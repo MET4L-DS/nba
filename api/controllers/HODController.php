@@ -339,6 +339,47 @@ class HODController
         }
     }
 
+    public function updateProgrammeWeightage($programmeId)
+    {
+        try {
+            $user = $_REQUEST['authenticated_user'];
+            
+            $programme = $this->programmeRepo->findById($programmeId);
+            if (!$programme) {
+                echo json_encode(['success' => false, 'message' => 'Programme not found']);
+                return;
+            }
+
+            if ($programme->getDepartmentId() !== (int)$user['department_id']) {
+                $this->sendForbidden('You can only update weightage for programmes in your department');
+                return;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $direct = isset($input['direct_weightage']) ? (float)$input['direct_weightage'] : 80.0;
+            $indirect = isset($input['indirect_weightage']) ? (float)$input['indirect_weightage'] : 20.0;
+
+            if ($direct + $indirect !== 100.0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Weightages must sum to 100']);
+                return;
+            }
+
+            $success = $this->programmeRepo->updateWeightage($programmeId, $direct, $indirect);
+            
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => 'Weightage updated successfully']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to update weightage']);
+            }
+        } catch (Exception $e) {
+            error_log('Error in HodController->updateProgrammeWeightage: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'An error occurred while updating weightage']);
+        }
+    }
+
     /**
      * Delete a programme (restricted to HOD's department)
      */

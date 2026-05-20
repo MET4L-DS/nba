@@ -13,6 +13,8 @@ import type {
 	StakeholderSurveyResultsResponse,
 	StakeholderSurveyConfigResponse,
 	StakeholderSurveyQuestion,
+	StakeholderManualEntryResponse,
+	StakeholderManualResponse,
 } from "./types";
 
 async function getCourseExitSurvey(offeringId: number): Promise<CourseExitSurveyConfig | null> {
@@ -180,6 +182,47 @@ async function saveStakeholderQuestions(
 	});
 }
 
+async function getStakeholderManualEntries(
+	programmeId: number,
+	batchYear: number,
+	stakeholderType: string,
+): Promise<StakeholderManualEntryResponse> {
+	const params = new URLSearchParams({
+		batch_year: String(batchYear),
+		stakeholder_type: stakeholderType,
+	});
+	debugLogger.info("surveyApi", "getStakeholderManualEntries called", {
+		programmeId,
+		batchYear,
+		stakeholderType,
+	});
+	return apiGet<StakeholderManualEntryResponse>(
+		`/programmes/${programmeId}/survey/stakeholder/responses/manual?${params}`,
+	);
+}
+
+async function saveStakeholderManualEntries(
+	programmeId: number,
+	batchYear: number,
+	stakeholderType: string,
+	responses: StakeholderManualResponse[],
+): Promise<{ imported_count: number }> {
+	debugLogger.info("surveyApi", "saveStakeholderManualEntries called", {
+		programmeId,
+		batchYear,
+		stakeholderType,
+		count: responses.length,
+	});
+	return apiPost<{
+		batch_year: number;
+		stakeholder_type: string;
+		responses: StakeholderManualResponse[];
+	}, { imported_count: number }>(
+		`/programmes/${programmeId}/survey/stakeholder/responses/manual`,
+		{ batch_year: batchYear, stakeholder_type: stakeholderType, responses },
+	);
+}
+
 export const surveyApi = {
 	getCourseExitSurvey,
 	saveCourseExitQuestions,
@@ -193,4 +236,6 @@ export const surveyApi = {
 	saveStakeholderQuestions,
 	getStakeholderResults,
 	clearStakeholder,
+	getStakeholderManualEntries,
+	saveStakeholderManualEntries,
 };

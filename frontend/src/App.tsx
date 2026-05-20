@@ -17,6 +17,7 @@ import { HODCourses } from "./pages/hod/HODCourses";
 import { HODProgrammes } from "./pages/hod/HODProgrammes";
 import { HODCourseCOPO } from "./pages/hod/HODCourseCOPO";
 import { HODProgrammeAttainment } from "./pages/hod/HODProgrammeAttainment";
+import { HODStakeholderSurveys } from "./pages/hod/HODStakeholderSurveys";
 import { HODLogs } from "./pages/hod/HODLogs";
 import { FacultyHome } from "./pages/faculty/FacultyHome";
 import { FacultyAssessments } from "./pages/faculty/FacultyAssessments";
@@ -76,6 +77,10 @@ function App() {
 					<Route
 						path="/hod/programme-attainment"
 						element={<HODProgrammeAttainment />}
+					/>
+					<Route
+						path="/hod/stakeholder-surveys"
+						element={<HODStakeholderSurveys />}
 					/>
 					<Route path="/hod/courses" element={<HODCourses />} />
 					<Route

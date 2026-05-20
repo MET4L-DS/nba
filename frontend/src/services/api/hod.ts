@@ -63,6 +63,14 @@ export const hodApi = {
 		return apiPut<Partial<CreateProgrammeRequest>, Programme>(`/hod/programmes/${programmeId}`, data);
 	},
 
+	async updateProgrammeWeightage(programmeId: number, directWeightage: number, indirectWeightage: number): Promise<void> {
+		debugLogger.info("hodApi", "updateProgrammeWeightage called", { programmeId, directWeightage, indirectWeightage });
+		return apiPut<{ direct_weightage: number; indirect_weightage: number }, void>(
+			`/hod/programmes/${programmeId}/weightage`,
+			{ direct_weightage: directWeightage, indirect_weightage: indirectWeightage },
+		);
+	},
+
 	async deleteProgramme(programmeId: number): Promise<void> {
 		debugLogger.info("hodApi", "deleteProgramme called", { programmeId });
 		return apiDelete(`/hod/programmes/${programmeId}`);

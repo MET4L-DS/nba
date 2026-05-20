@@ -290,7 +290,7 @@ export function BulkEnrollStudentsDialog({
 						<BatchSelector
 							programmeId={programme?.programme_id ?? null}
 							value={null}
-							onChange={(id, batch) => {
+							onChange={(_, batch) => {
 								setBatchYear(batch?.batch_year ? String(batch.batch_year) : "");
 							}}
 						/>

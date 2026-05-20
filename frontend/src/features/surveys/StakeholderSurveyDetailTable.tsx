@@ -13,7 +13,8 @@ interface StakeholderSurveyDetailTableProps {
 export function StakeholderSurveyDetailTable({
 	data,
 }: StakeholderSurveyDetailTableProps) {
-	if (!data.has_data || data.individual.length === 0) return null;
+	const rows = Object.values(data.individual).flat();
+	if (!data.has_data || rows.length === 0) return null;
 
 	const poNames = data.averages.map((a) => a.po_name);
 
@@ -39,7 +40,7 @@ export function StakeholderSurveyDetailTable({
 						</tr>
 					</thead>
 					<tbody>
-						{data.individual.map((row, idx) => (
+						{rows.map((row, idx) => (
 							<tr
 								key={row.respondent_identifier ?? idx}
 								className="border-b last:border-0"

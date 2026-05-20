@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Upload, Trash2 } from "lucide-react";
@@ -297,8 +296,8 @@ export function StakeholderSurveyImport({
 						<Label htmlFor="stk-batch">Batch Year</Label>
 						<BatchSelector
 							programmeId={programmeId}
-							value={undefined}
-							onChange={(id, batch) => {
+							value={null}
+							onChange={(_, batch) => {
 								if (batch?.batch_year) {
 									setBatchYear(String(batch.batch_year));
 								}

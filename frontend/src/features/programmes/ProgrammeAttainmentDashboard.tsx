@@ -9,7 +9,6 @@ import type {
 } from "@/services/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -31,7 +30,7 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Target, FileText, TrendingUp, ChevronDown, BarChart3, School, MessageSquare, PieChart, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Target, FileText, TrendingUp, ChevronDown, BarChart3, PieChart } from "lucide-react";
 import { StakeholderSurveyImport } from "@/features/surveys/StakeholderSurveyImport";
 import { StakeholderSurveyConfig } from "@/features/surveys/StakeholderSurveyConfig";
 import { StakeholderSurveyResults } from "@/features/surveys/StakeholderSurveyResults";
@@ -53,9 +52,6 @@ export function ProgrammeAttainmentDashboard() {
 	const [selectedProgrammeId, setSelectedProgrammeId] = useState<
 		number | null
 	>(routeState?.programmeId ?? null);
-	const [programmeName, setProgrammeName] = useState(
-		routeState?.programmeName ?? "",
-	);
 	const [batchId, setBatchId] = useState<number | null>(
 		routeState?.batchId ?? null,
 	);
@@ -69,7 +65,6 @@ export function ProgrammeAttainmentDashboard() {
 	const [error, setError] = useState<string | null>(null);
 	const [programmes, setProgrammes] = useState<Programme[]>([]);
 	const [programmesLoading, setProgrammesLoading] = useState(true);
-	const [surveyOpen, setSurveyOpen] = useState(false);
 	const [chartsOpen, setChartsOpen] = useState(false);
 	const [stakeholderRefresh, setStakeholderRefresh] = useState(0);
 	const [stakeholderBatchYear, setStakeholderBatchYear] = useState("");
@@ -266,7 +261,7 @@ export function ProgrammeAttainmentDashboard() {
 							value={String(selectedProgrammeId ?? "")}
 							onValueChange={(v) => {
 								setSelectedProgrammeId(Number(v));
-								setBatchId(undefined);
+								setBatchId(null);
 								setBatchYear("");
 							}}
 							disabled={programmesLoading}

@@ -1,6 +1,6 @@
 ﻿import { Card } from "@/components/ui/card";
 import { NumberTicker } from "@/components/ui/number-ticker";
-import type { LucideIcon } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
 
 export interface AttainmentStatItem {
 	label: string;

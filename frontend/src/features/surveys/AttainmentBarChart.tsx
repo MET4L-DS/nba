@@ -46,32 +46,32 @@ export function AttainmentBarChart({
 					<BarChart data={chartData}>
 						<CartesianGrid
 							strokeDasharray="3 3"
-							stroke="hsl(var(--border))"
+							stroke="var(--border)"
 						/>
 						<XAxis
 							dataKey="name"
 							tick={{
 								fontSize: 11,
-								fill: "hsl(var(--muted-foreground))",
+								fill: "var(--muted-foreground)",
 							}}
-							stroke="hsl(var(--border))"
+							stroke="var(--border)"
 						/>
 						<YAxis
 							domain={[0, 100]}
 							tick={{
 								fontSize: 11,
-								fill: "hsl(var(--muted-foreground))",
+								fill: "var(--muted-foreground)",
 							}}
-							stroke="hsl(var(--border))"
+							stroke="var(--border)"
 							tickFormatter={(v: number) => `${v}%`}
 						/>
 						<Tooltip
 							contentStyle={{
-								background: "hsl(var(--popover))",
-								border: "1px solid hsl(var(--border))",
+								background: "var(--popover)",
+								border: "1px solid var(--border)",
 								borderRadius: "var(--radius)",
 								fontSize: 12,
-								color: "hsl(var(--popover-foreground))",
+								color: "var(--popover-foreground)",
 							}}
 							formatter={(value) => {
 								const v = Number(value);
@@ -84,20 +84,18 @@ export function AttainmentBarChart({
 							wrapperStyle={{
 								fontSize: 11,
 								paddingTop: 4,
-								color: "hsl(var(--muted-foreground))",
+								color: "var(--muted-foreground)",
 							}}
 						/>
 						<Bar
 							dataKey="Direct"
-							fill="hsl(var(--primary) / 0.25)"
-							stroke="hsl(var(--primary))"
-							strokeWidth={1}
+							fill="var(--chart-1)"
 							radius={[3, 3, 0, 0]}
 							maxBarSize={16}
 						/>
 						<Bar
 							dataKey="Indirect"
-							fill="hsl(var(--primary))"
+							fill="var(--chart-2)"
 							radius={[3, 3, 0, 0]}
 							maxBarSize={16}
 						/>

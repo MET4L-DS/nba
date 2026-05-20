@@ -173,7 +173,7 @@ class HODController
                 'p.programme_id',
                 'p.programme_id',
                 ['p.programme_id', 'p.programme_code', 'p.programme_name', 'd.department_name', 'd.department_code'],
-                ['degree_level']
+                ['degree_level', 'year', 'has_batches']
             );
 
             // Override department_id filter to restrict to HOD's own department

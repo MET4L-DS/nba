@@ -70,12 +70,34 @@ class ProgrammeRepository
             $bindings[] = $params['degree_level'];
         }
 
+        $from = "
+            FROM programmes p
+            JOIN departments d ON p.department_id = d.department_id
+            LEFT JOIN schools s ON d.school_id = s.school_id
+        ";
+
+        // year filter → INNER JOIN students (batches still in progress)
+        if (!empty($params['filters']['year'])) {
+            $where[] = 'st_batch.batch_year >= ? - p.duration_years + 1';
+            $where[] = 'st_batch.batch_year <= ?';
+            $bindings[] = (int)$params['filters']['year'];
+            $bindings[] = (int)$params['filters']['year'];
+            $from = "FROM programmes p JOIN (SELECT DISTINCT programme_id, batch_year FROM students WHERE batch_year IS NOT NULL) st_batch ON st_batch.programme_id = p.programme_id JOIN departments d ON p.department_id = d.department_id LEFT JOIN schools s ON d.school_id = s.school_id";
+        } elseif (!empty($params['filters']['has_batches']) && $params['filters']['has_batches'] === '1') {
+            $from = "FROM programmes p JOIN (SELECT DISTINCT programme_id, batch_year FROM students WHERE batch_year IS NOT NULL) st_batch ON st_batch.programme_id = p.programme_id JOIN departments d ON p.department_id = d.department_id LEFT JOIN schools s ON d.school_id = s.school_id";
+        }
+
         if ($cursor !== null) {
             $where[] = $sortDir === 'DESC' ? 'p.programme_id < ?' : 'p.programme_id > ?';
             $bindings[] = $cursor;
         }
 
         $whereSql = empty($where) ? '' : ('WHERE ' . implode(' AND ', $where));
+
+        $selectBatchYear = "";
+        if (!empty($params['filters']['year']) || (!empty($params['filters']['has_batches']) && $params['filters']['has_batches'] === '1')) {
+            $selectBatchYear = ", st_batch.batch_year AS specific_batch_year";
+        }
 
         $sql = "
             SELECT
@@ -94,10 +116,10 @@ class ProgrammeRepository
                 s.school_name,
                 s.school_code,
                 (SELECT COUNT(*) FROM students st WHERE st.programme_id = p.programme_id) AS student_count,
-                (SELECT COUNT(*) FROM programme_courses pc WHERE pc.programme_id = p.programme_id) AS course_count
-            FROM programmes p
-            JOIN departments d ON p.department_id = d.department_id
-            LEFT JOIN schools s ON d.school_id = s.school_id
+                (SELECT COUNT(*) FROM programme_courses pc WHERE pc.programme_id = p.programme_id) AS course_count,
+                (SELECT MAX(st3.batch_year) FROM students st3 WHERE st3.programme_id = p.programme_id) AS latest_batch_year
+                {$selectBatchYear}
+            {$from}
             {$whereSql}
             ORDER BY {$sort} {$sortDir}
             LIMIT {$limit}
@@ -125,6 +147,8 @@ class ProgrammeRepository
                 'school_code' => $row['school_code'],
                 'student_count' => (int)$row['student_count'],
                 'course_count' => (int)$row['course_count'],
+                'latest_batch_year' => isset($row['latest_batch_year']) && $row['latest_batch_year'] !== null ? (int)$row['latest_batch_year'] : null,
+                'specific_batch_year' => isset($row['specific_batch_year']) && $row['specific_batch_year'] !== null ? (int)$row['specific_batch_year'] : null,
             ];
         }, $rows);
     }
@@ -133,6 +157,8 @@ class ProgrammeRepository
     {
         $where = [];
         $bindings = [];
+
+        $from = "FROM programmes p JOIN departments d ON p.department_id = d.department_id";
 
         if (!empty($params['search'])) {
             $where[] = '(p.programme_code LIKE ? OR p.programme_name LIKE ? OR d.department_code LIKE ? OR d.department_name LIKE ?)';
@@ -158,9 +184,19 @@ class ProgrammeRepository
             $bindings[] = $params['degree_level'];
         }
 
+        if (!empty($params['filters']['year'])) {
+            $where[] = 'st_batch.batch_year >= ? - p.duration_years + 1';
+            $where[] = 'st_batch.batch_year <= ?';
+            $bindings[] = (int)$params['filters']['year'];
+            $bindings[] = (int)$params['filters']['year'];
+            $from = "FROM programmes p JOIN (SELECT DISTINCT programme_id, batch_year FROM students WHERE batch_year IS NOT NULL) st_batch ON st_batch.programme_id = p.programme_id JOIN departments d ON p.department_id = d.department_id LEFT JOIN schools s ON d.school_id = s.school_id";
+        } elseif (!empty($params['filters']['has_batches']) && $params['filters']['has_batches'] === '1') {
+            $from = "FROM programmes p JOIN (SELECT DISTINCT programme_id, batch_year FROM students WHERE batch_year IS NOT NULL) st_batch ON st_batch.programme_id = p.programme_id JOIN departments d ON p.department_id = d.department_id LEFT JOIN schools s ON d.school_id = s.school_id";
+        }
+
         $whereSql = empty($where) ? '' : ('WHERE ' . implode(' AND ', $where));
 
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM programmes p JOIN departments d ON p.department_id = d.department_id {$whereSql}");
+        $stmt = $this->db->prepare("SELECT COUNT(*) {$from} {$whereSql}");
         $stmt->execute($bindings);
         return (int)$stmt->fetchColumn();
     }

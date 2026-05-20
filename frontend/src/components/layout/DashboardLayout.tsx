@@ -100,11 +100,6 @@ export function DashboardLayout() {
 						label: "Programmes",
 						icon: GraduationCap,
 					},
-					{
-						id: "programme-attainment",
-						label: "Programme Attainment",
-						icon: BarChart3,
-					},
 					{ id: "courses", label: "Courses", icon: BookOpen },
 					{ id: "logs", label: "Audit Logs", icon: History },
 				];

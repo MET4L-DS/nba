@@ -314,6 +314,8 @@ export interface Programme {
 	school_code?: string | null;
 	student_count?: number;
 	course_count?: number;
+	latest_batch_year?: number | null;
+	specific_batch_year?: number | null;
 }
 
 export interface ProgrammeWithBatch {

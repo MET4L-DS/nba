@@ -128,13 +128,13 @@ export function MarksEntryByCO({
 			<TableRow className="hover:bg-transparent border-b border-border">
 				<TableHead
 					scope="col"
-					className="sticky left-0 z-40 bg-gray-50 dark:bg-muted px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider border-r border-border w-[120px] min-w-[120px] shadow-[1px_0_0_0_hsl(var(--border))]"
+					className="sticky left-0 z-40 bg-gray-50 dark:bg-muted px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider border-r border-border w-[120px] min-w-[120px] shadow-[1px_0_0_0_var(--border)]"
 				>
 					Roll No
 				</TableHead>
 				<TableHead
 					scope="col"
-					className="sticky left-[120px] z-40 bg-gray-50 dark:bg-muted px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider border-r border-border w-[200px] min-w-[200px] shadow-[1px_0_0_0_hsl(var(--border))]"
+					className="sticky left-[120px] z-40 bg-gray-50 dark:bg-muted px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider border-r border-border w-[200px] min-w-[200px] shadow-[1px_0_0_0_var(--border)]"
 				>
 					Student Name
 				</TableHead>
@@ -217,7 +217,7 @@ export function MarksEntryByCO({
 					>
 						<TableCell
 							className={cn(
-								"sticky left-0 z-20 px-6 py-3 whitespace-nowrap font-medium text-foreground border-r border-border shadow-[1px_0_0_0_hsl(var(--border))]",
+								"sticky left-0 z-20 px-6 py-3 whitespace-nowrap font-medium text-foreground border-r border-border shadow-[1px_0_0_0_var(--border)]",
 								stickyBg,
 							)}
 						>
@@ -227,7 +227,7 @@ export function MarksEntryByCO({
 						</TableCell>
 						<TableCell
 							className={cn(
-								"sticky left-[120px] z-20 px-6 py-3 whitespace-nowrap text-muted-foreground border-r border-border shadow-[1px_0_0_0_hsl(var(--border))]",
+								"sticky left-[120px] z-20 px-6 py-3 whitespace-nowrap text-muted-foreground border-r border-border shadow-[1px_0_0_0_var(--border)]",
 								stickyBg,
 							)}
 						>

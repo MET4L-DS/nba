@@ -1,0 +1,1001 @@
+<!doctype html>
+
+<html class="light" lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+		<title>OBE Attainment Portal - Dashboard</title>
+		<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<script id="tailwind-config">
+			tailwind.config = {
+				darkMode: "class",
+				theme: {
+					extend: {
+						colors: {
+							"surface-bright": "#f8f9ff",
+							"on-secondary-container": "#007230",
+							primary: "#004ac6",
+							"surface-container-highest": "#d5e3fc",
+							"inverse-surface": "#233144",
+							"on-error-container": "#93000a",
+							"surface-tint": "#0053db",
+							surface: "#f8f9ff",
+							"inverse-on-surface": "#eaf1ff",
+							"primary-fixed-dim": "#b4c5ff",
+							"surface-container-lowest": "#ffffff",
+							"on-surface-variant": "#434655",
+							"on-error": "#ffffff",
+							"on-tertiary": "#ffffff",
+							secondary: "#006e2d",
+							"surface-dim": "#ccdbf3",
+							"on-primary-fixed": "#00174b",
+							"on-tertiary-fixed-variant": "#5a4300",
+							tertiary: "#6c5100",
+							"primary-fixed": "#dbe1ff",
+							"outline-variant": "#c3c6d7",
+							"on-surface": "#0d1c2e",
+							"on-primary-container": "#eeefff",
+							"secondary-fixed": "#7ffc97",
+							"tertiary-fixed-dim": "#f7be1d",
+							"surface-variant": "#d5e3fc",
+							"surface-container": "#e6eeff",
+							background: "#f8f9ff",
+							"on-primary": "#ffffff",
+							"secondary-fixed-dim": "#62df7d",
+							"on-secondary": "#ffffff",
+							"primary-container": "#2563eb",
+							"on-tertiary-container": "#ffeed1",
+							"surface-container-low": "#eff4ff",
+							"on-primary-fixed-variant": "#003ea8",
+							"tertiary-fixed": "#ffdf9a",
+							"on-secondary-fixed": "#002109",
+							"secondary-container": "#7cf994",
+							"on-background": "#0d1c2e",
+							"on-secondary-fixed-variant": "#005320",
+							error: "#ba1a1a",
+							"tertiary-container": "#8a6800",
+							"inverse-primary": "#b4c5ff",
+							"surface-container-high": "#dce9ff",
+							"on-tertiary-fixed": "#251a00",
+							"error-container": "#ffdad6",
+							outline: "#737686",
+						},
+						borderRadius: {
+							DEFAULT: "0.25rem",
+							lg: "0.5rem",
+							xl: "0.75rem",
+							full: "9999px",
+						},
+						spacing: {
+							"component-padding-x": "1rem",
+							"stack-gap": "1rem",
+							"section-padding": "2rem",
+							gutter: "1.5rem",
+							"container-max": "1440px",
+							"component-padding-y": "0.75rem",
+						},
+						fontFamily: {
+							"label-sm": ["Manrope"],
+							"body-lg": ["Manrope"],
+							"label-md": ["Manrope"],
+							"body-md": ["Manrope"],
+							"headline-lg": ["Manrope"],
+							"headline-xl": ["Manrope"],
+							"headline-md": ["Manrope"],
+						},
+						fontSize: {
+							"label-sm": [
+								"12px",
+								{
+									lineHeight: "16px",
+									fontWeight: "700",
+								},
+							],
+							"body-lg": [
+								"16px",
+								{
+									lineHeight: "24px",
+									fontWeight: "500",
+								},
+							],
+							"label-md": [
+								"13px",
+								{
+									lineHeight: "18px",
+									fontWeight: "600",
+								},
+							],
+							"body-md": [
+								"14px",
+								{
+									lineHeight: "20px",
+									fontWeight: "500",
+								},
+							],
+							"headline-lg": [
+								"18px",
+								{
+									lineHeight: "28px",
+									fontWeight: "700",
+								},
+							],
+							"headline-xl": [
+								"24px",
+								{
+									lineHeight: "32px",
+									letterSpacing: "-0.02em",
+									fontWeight: "800",
+								},
+							],
+							"headline-md": [
+								"16px",
+								{
+									lineHeight: "24px",
+									fontWeight: "700",
+								},
+							],
+						},
+					},
+				},
+			};
+		</script>
+		<style>
+			body {
+				font-family: "Manrope", sans-serif;
+			}
+		</style>
+	</head>
+	<body class="bg-background text-on-background min-h-screen pt-16 md:pl-64">
+		<!-- TopAppBar -->
+		<header
+			class="fixed top-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-surface-container-lowest border-b border-outline-variant flat no shadows"
+		>
+			<div class="flex items-center gap-4">
+				<span
+					class="text-headline-xl font-headline-xl font-extrabold text-primary"
+					>OBE Attainment Portal</span
+				>
+			</div>
+			<nav class="hidden md:flex gap-6 h-full items-center">
+				<a
+					class="h-full flex items-center text-primary border-b-2 border-primary pb-1 font-bold"
+					href="#"
+					>Dashboard</a
+				>
+				<a
+					class="h-full flex items-center text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container-low transition-colors px-2"
+					href="#"
+					>Curriculum</a
+				>
+				<a
+					class="h-full flex items-center text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container-low transition-colors px-2"
+					href="#"
+					>Faculty</a
+				>
+				<a
+					class="h-full flex items-center text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container-low transition-colors px-2"
+					href="#"
+					>Settings</a
+				>
+			</nav>
+			<div class="flex items-center gap-4">
+				<div
+					class="hidden lg:flex items-center bg-surface-container-low rounded-full px-4 py-2 border border-outline-variant"
+				>
+					<span
+						class="material-symbols-outlined text-on-surface-variant mr-2"
+						>search</span
+					>
+					<input
+						class="bg-transparent border-none focus:ring-0 text-body-md font-body-md text-on-surface p-0 w-48"
+						placeholder="Search..."
+						type="text"
+					/>
+				</div>
+				<button
+					class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded-full hover:bg-primary-container transition-colors hidden sm:block"
+				>
+					Generate Report
+				</button>
+				<div class="flex gap-2">
+					<button
+						class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-low"
+					>
+						<span class="material-symbols-outlined"
+							>notifications</span
+						>
+					</button>
+					<button
+						class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-low"
+					>
+						<span class="material-symbols-outlined"
+							>help_outline</span
+						>
+					</button>
+				</div>
+				<img
+					alt="HOD Profile"
+					class="w-8 h-8 rounded-full border border-outline-variant cursor-pointer"
+					data-alt="A professional headshot of an academic administrator in a modern office setting. High-key lighting. Modern corporate aesthetic."
+					src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEKYsd2SVR0H-e3y6tlJV9M-cqZhBwWtaBGUWfy1dWKwHMF3Nj2BockKoe9ybpCi9B6IpaVmNCtJXIW99imErGlfIzszmY5Yub1MqdvSodltQiIqj9EjG9PrFeM1fDGxnR7F6Z9_MAR69TTV2DbMuztzCA5_Abdl_u74_3dPdkDnr-PsLrMBU0x9sWqgwbg7XTE32g9jF4vzPs7HtZ-kHuFA-fPKr97k6SzjWUGCsywZhWtiVsw5fLI-o9Q-rmvBZVhwpYEYp-yVJr"
+				/>
+			</div>
+		</header>
+		<!-- SideNavBar -->
+		<aside
+			class="hidden md:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 flex-col p-4 bg-surface-bright border-r border-outline-variant flat no shadows"
+		>
+			<div class="mb-8 px-4 flex items-center gap-3">
+				<img
+					alt="Academic Logo"
+					class="w-10 h-10 rounded-lg"
+					data-alt="A crisp, modern university crest logo in primary blue and white, set against a light grey background. Minimalist design."
+					src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtwAmLfXMIvY9ExdxxvM2LENL4QwNEDJ3rbfCnaymj5fzcJ-O9pWnikDn1PAvXTBnxLzxeTKGGTDKHHdaiyvE0SAULLgB3IqAJEfcJ85QTMofIcg-gTXcb3OXoM0MW0MmEHUBODPXEN4NhTVkj6wotIqXFUKbyCz4Rsn8OVd73JxC1urBX5dyt89OV7tOEVnjoY1wM-NPZPR_Al0w3Pxf3JVGOVRk80ofjFKqxiNQQvruJ5EpTeteKtNTkfRspiqLH-_qosgqOU006"
+				/>
+				<div>
+					<h2
+						class="text-headline-md font-headline-md font-bold text-on-surface"
+					>
+						Department Head
+					</h2>
+					<p
+						class="text-label-sm font-label-sm text-on-surface-variant"
+					>
+						Computer Science &amp; Eng.
+					</p>
+				</div>
+			</div>
+			<nav class="flex-1 space-y-1">
+				<a
+					class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg font-bold"
+					href="#"
+				>
+					<span class="material-symbols-outlined">analytics</span>
+					<span class="font-label-md text-label-md"
+						>Programme Overview</span
+					>
+				</a>
+				<a
+					class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200"
+					href="#"
+				>
+					<span class="material-symbols-outlined">groups</span>
+					<span class="font-label-md text-label-md"
+						>Batch Analytics</span
+					>
+				</a>
+				<a
+					class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200"
+					href="#"
+				>
+					<span class="material-symbols-outlined">grid_on</span>
+					<span class="font-label-md text-label-md"
+						>Articulation Matrix</span
+					>
+				</a>
+				<a
+					class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200"
+					href="#"
+				>
+					<span class="material-symbols-outlined"
+						>assignment_turned_in</span
+					>
+					<span class="font-label-md text-label-md"
+						>Survey Manager</span
+					>
+				</a>
+				<a
+					class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200"
+					href="#"
+				>
+					<span class="material-symbols-outlined">trending_up</span>
+					<span class="font-label-md text-label-md"
+						>Improvement Plans</span
+					>
+				</a>
+				<a
+					class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200"
+					href="#"
+				>
+					<span class="material-symbols-outlined">history</span>
+					<span class="font-label-md text-label-md">Audit Log</span>
+				</a>
+			</nav>
+			<div class="mt-auto space-y-4">
+				<button
+					class="w-full bg-surface-container-highest text-primary font-label-md text-label-md py-2 rounded-lg border border-primary-fixed-dim hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center gap-2"
+				>
+					<span class="material-symbols-outlined text-[18px]"
+						>download</span
+					>
+					Export Accreditation Pack
+				</button>
+				<div class="border-t border-outline-variant pt-4 space-y-1">
+					<a
+						class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined">settings</span>
+						<span class="font-label-md text-label-md"
+							>System Settings</span
+						>
+					</a>
+					<a
+						class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200"
+						href="#"
+					>
+						<span class="material-symbols-outlined"
+							>contact_support</span
+						>
+						<span class="font-label-md text-label-md">Support</span>
+					</a>
+				</div>
+			</div>
+		</aside>
+		<!-- Main Content -->
+		<main class="p-section-padding max-w-container-max mx-auto space-y-8">
+			<!-- Header Section -->
+			<div
+				class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant pb-4"
+			>
+				<div>
+					<h1
+						class="font-headline-xl text-headline-xl text-on-surface"
+					>
+						Executive Analytics Dashboard
+					</h1>
+					<p
+						class="font-body-md text-body-md text-on-surface-variant mt-1"
+					>
+						Batch 2020-24 Attainment Overview
+					</p>
+				</div>
+				<div class="flex gap-3">
+					<button
+						class="bg-surface-container-lowest border border-outline text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-low flex items-center gap-2 transition-colors"
+					>
+						<span class="material-symbols-outlined text-[18px]"
+							>calendar_month</span
+						>
+						Select Batch
+					</button>
+				</div>
+			</div>
+			<!-- Stats Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+				<!-- Stat Card 1 -->
+				<div
+					class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm relative overflow-hidden"
+				>
+					<div
+						class="absolute top-0 right-0 w-24 h-24 bg-primary opacity-5 rounded-bl-full"
+					></div>
+					<div class="flex justify-between items-start mb-4">
+						<div class="bg-surface-container-low p-2 rounded-lg">
+							<span class="material-symbols-outlined text-primary"
+								>school</span
+							>
+						</div>
+						<span
+							class="bg-surface-container-high text-primary font-label-sm text-label-sm px-2 py-1 rounded-full border border-primary-fixed-dim"
+							>Target: 2.50</span
+						>
+					</div>
+					<h3
+						class="font-label-md text-label-md text-on-surface-variant"
+					>
+						Direct Attainment
+					</h3>
+					<div class="flex items-baseline gap-2 mt-1">
+						<span
+							class="font-headline-xl text-[32px] text-on-surface font-extrabold"
+							>2.64</span
+						>
+						<span
+							class="font-label-sm text-label-sm text-secondary flex items-center"
+							><span class="material-symbols-outlined text-[14px]"
+								>arrow_upward</span
+							>
+							+0.14</span
+						>
+					</div>
+				</div>
+				<!-- Stat Card 2 -->
+				<div
+					class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm relative overflow-hidden"
+				>
+					<div
+						class="absolute top-0 right-0 w-24 h-24 bg-secondary opacity-5 rounded-bl-full"
+					></div>
+					<div class="flex justify-between items-start mb-4">
+						<div class="bg-surface-container-low p-2 rounded-lg">
+							<span
+								class="material-symbols-outlined text-secondary"
+								>forum</span
+							>
+						</div>
+						<span
+							class="bg-surface-container-high text-secondary font-label-sm text-label-sm px-2 py-1 rounded-full border border-secondary-fixed"
+							>Target: 2.50</span
+						>
+					</div>
+					<h3
+						class="font-label-md text-label-md text-on-surface-variant"
+					>
+						Indirect Attainment
+					</h3>
+					<div class="flex items-baseline gap-2 mt-1">
+						<span
+							class="font-headline-xl text-[32px] text-on-surface font-extrabold"
+							>2.81</span
+						>
+						<span
+							class="font-label-sm text-label-sm text-secondary flex items-center"
+							><span class="material-symbols-outlined text-[14px]"
+								>arrow_upward</span
+							>
+							+0.31</span
+						>
+					</div>
+				</div>
+				<!-- Stat Card 3 -->
+				<div
+					class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm relative overflow-hidden border-l-4 border-l-primary"
+				>
+					<div
+						class="absolute top-0 right-0 w-24 h-24 bg-primary opacity-5 rounded-bl-full"
+					></div>
+					<div class="flex justify-between items-start mb-4">
+						<div class="bg-surface-container-low p-2 rounded-lg">
+							<span class="material-symbols-outlined text-primary"
+								>pie_chart</span
+							>
+						</div>
+						<span
+							class="bg-surface-container-high text-primary font-label-sm text-label-sm px-2 py-1 rounded-full border border-primary-fixed-dim"
+							>Target: 2.50</span
+						>
+					</div>
+					<h3
+						class="font-label-md text-label-md text-on-surface-variant"
+					>
+						Blended Attainment (80/20)
+					</h3>
+					<div class="flex items-baseline gap-2 mt-1">
+						<span
+							class="font-headline-xl text-[32px] text-primary font-extrabold"
+							>2.67</span
+						>
+						<span
+							class="font-label-sm text-label-sm text-secondary flex items-center"
+							><span class="material-symbols-outlined text-[14px]"
+								>arrow_upward</span
+							>
+							+0.17</span
+						>
+					</div>
+				</div>
+			</div>
+			<!-- Master Articulation Matrix -->
+			<div
+				class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden"
+			>
+				<div
+					class="p-6 border-b border-outline-variant bg-surface-bright flex justify-between items-center"
+				>
+					<div>
+						<h2
+							class="font-headline-lg text-headline-lg text-on-surface"
+						>
+							Master Articulation Matrix
+						</h2>
+						<p
+							class="font-body-md text-body-md text-on-surface-variant"
+						>
+							Consolidated course mappings and final attainment
+							calculation.
+						</p>
+					</div>
+					<button
+						class="text-primary hover:bg-surface-container-low p-2 rounded-lg transition-colors"
+					>
+						<span class="material-symbols-outlined"
+							>open_in_full</span
+						>
+					</button>
+				</div>
+				<div class="overflow-x-auto">
+					<table class="w-full text-left border-collapse">
+						<thead>
+							<tr
+								class="bg-surface-container-low border-b border-outline-variant"
+							>
+								<th
+									class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider sticky left-0 bg-surface-container-low z-10 border-r border-outline-variant"
+								>
+									Course
+								</th>
+								<th
+									class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-center"
+								>
+									PO1
+								</th>
+								<th
+									class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-center"
+								>
+									PO2
+								</th>
+								<th
+									class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-center"
+								>
+									PO3
+								</th>
+								<th
+									class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-center bg-error-container text-on-error-container rounded-t-md"
+								>
+									PO4
+								</th>
+								<th
+									class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-center"
+								>
+									PO5
+								</th>
+								<th
+									class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-center"
+								>
+									...
+								</th>
+								<th
+									class="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-center border-l border-outline-variant"
+								>
+									PSO1
+								</th>
+							</tr>
+						</thead>
+						<tbody class="font-body-md text-body-md">
+							<tr
+								class="border-b border-outline-variant hover:bg-surface-bright"
+							>
+								<td
+									class="p-4 font-bold text-on-surface sticky left-0 bg-surface-container-lowest border-r border-outline-variant group-hover:bg-surface-bright"
+								>
+									CS101
+								</td>
+								<td class="p-4 text-center">3</td>
+								<td class="p-4 text-center">2</td>
+								<td class="p-4 text-center">-</td>
+								<td
+									class="p-4 text-center bg-error-container/30"
+								>
+									1
+								</td>
+								<td class="p-4 text-center">2</td>
+								<td
+									class="p-4 text-center text-outline-variant"
+								>
+									...
+								</td>
+								<td
+									class="p-4 text-center border-l border-outline-variant"
+								>
+									3
+								</td>
+							</tr>
+							<tr
+								class="border-b border-outline-variant hover:bg-surface-bright"
+							>
+								<td
+									class="p-4 font-bold text-on-surface sticky left-0 bg-surface-container-lowest border-r border-outline-variant"
+								>
+									CS102
+								</td>
+								<td class="p-4 text-center">2</td>
+								<td class="p-4 text-center">3</td>
+								<td class="p-4 text-center">1</td>
+								<td
+									class="p-4 text-center bg-error-container/30"
+								>
+									2
+								</td>
+								<td class="p-4 text-center">-</td>
+								<td
+									class="p-4 text-center text-outline-variant"
+								>
+									...
+								</td>
+								<td
+									class="p-4 text-center border-l border-outline-variant"
+								>
+									2
+								</td>
+							</tr>
+							<tr
+								class="border-b border-outline-variant hover:bg-surface-bright"
+							>
+								<td
+									class="p-4 font-bold text-on-surface sticky left-0 bg-surface-container-lowest border-r border-outline-variant"
+								>
+									CS201
+								</td>
+								<td class="p-4 text-center">3</td>
+								<td class="p-4 text-center">3</td>
+								<td class="p-4 text-center">2</td>
+								<td
+									class="p-4 text-center bg-error-container/30"
+								>
+									1
+								</td>
+								<td class="p-4 text-center">3</td>
+								<td
+									class="p-4 text-center text-outline-variant"
+								>
+									...
+								</td>
+								<td
+									class="p-4 text-center border-l border-outline-variant"
+								>
+									3
+								</td>
+							</tr>
+						</tbody>
+						<!-- Pinned Footer Calculations -->
+						<tfoot
+							class="bg-surface-container-low font-label-md text-label-md sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+						>
+							<tr class="border-t-2 border-outline">
+								<td
+									class="p-3 sticky left-0 bg-surface-container-low border-r border-outline-variant font-bold"
+								>
+									Average Direct
+								</td>
+								<td class="p-3 text-center">2.67</td>
+								<td class="p-3 text-center">2.67</td>
+								<td class="p-3 text-center">1.50</td>
+								<td
+									class="p-3 text-center text-error font-bold bg-error-container/50"
+								>
+									1.33
+								</td>
+								<td class="p-3 text-center">2.50</td>
+								<td class="p-3 text-center">...</td>
+								<td
+									class="p-3 text-center border-l border-outline-variant"
+								>
+									2.67
+								</td>
+							</tr>
+							<tr class="border-t border-outline-variant">
+								<td
+									class="p-3 sticky left-0 bg-surface-container-low border-r border-outline-variant"
+								>
+									Direct (80%)
+								</td>
+								<td class="p-3 text-center">2.13</td>
+								<td class="p-3 text-center">2.13</td>
+								<td class="p-3 text-center">1.20</td>
+								<td
+									class="p-3 text-center text-error bg-error-container/50"
+								>
+									1.06
+								</td>
+								<td class="p-3 text-center">2.00</td>
+								<td class="p-3 text-center">...</td>
+								<td
+									class="p-3 text-center border-l border-outline-variant"
+								>
+									2.13
+								</td>
+							</tr>
+							<tr class="border-t border-outline-variant">
+								<td
+									class="p-3 sticky left-0 bg-surface-container-low border-r border-outline-variant"
+								>
+									Indirect (20%)
+								</td>
+								<td class="p-3 text-center">0.56</td>
+								<td class="p-3 text-center">0.58</td>
+								<td class="p-3 text-center">0.52</td>
+								<td
+									class="p-3 text-center text-error bg-error-container/50"
+								>
+									0.40
+								</td>
+								<td class="p-3 text-center">0.60</td>
+								<td class="p-3 text-center">...</td>
+								<td
+									class="p-3 text-center border-l border-outline-variant"
+								>
+									0.55
+								</td>
+							</tr>
+							<tr
+								class="border-t-2 border-primary bg-primary-container text-on-primary-container font-bold text-lg"
+							>
+								<td
+									class="p-4 sticky left-0 bg-primary-container border-r border-primary-fixed-dim"
+								>
+									Final Attainment
+								</td>
+								<td class="p-4 text-center">2.69</td>
+								<td class="p-4 text-center">2.71</td>
+								<td class="p-4 text-center">1.72</td>
+								<td
+									class="p-4 text-center text-on-error-container bg-error-container"
+								>
+									1.46
+								</td>
+								<td class="p-4 text-center">2.60</td>
+								<td class="p-4 text-center">...</td>
+								<td
+									class="p-4 text-center border-l border-primary-fixed-dim"
+								>
+									2.68
+								</td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+			<!-- Stakeholder Feedback Section -->
+			<div
+				class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden"
+			>
+				<div
+					class="p-6 border-b border-outline-variant bg-surface-bright"
+				>
+					<h2
+						class="font-headline-lg text-headline-lg text-on-surface"
+					>
+						Stakeholder Feedback (Indirect)
+					</h2>
+					<p
+						class="font-body-md text-body-md text-on-surface-variant"
+					>
+						Manage survey imports and calculate consolidated
+						indirect scores.
+					</p>
+				</div>
+				<div
+					class="border-b border-outline-variant px-6 flex gap-6 overflow-x-auto scrollbar-hide"
+				>
+					<button
+						class="py-4 border-b-2 border-primary text-primary font-label-md text-label-md whitespace-nowrap"
+					>
+						Alumni Survey
+					</button>
+					<button
+						class="py-4 border-b-2 border-transparent text-on-surface-variant hover:text-primary font-label-md text-label-md whitespace-nowrap"
+					>
+						Graduate Exit
+					</button>
+					<button
+						class="py-4 border-b-2 border-transparent text-on-surface-variant hover:text-primary font-label-md text-label-md whitespace-nowrap"
+					>
+						Parent Survey
+					</button>
+					<button
+						class="py-4 border-b-2 border-transparent text-on-surface-variant hover:text-primary font-label-md text-label-md whitespace-nowrap"
+					>
+						Peer Review
+					</button>
+					<button
+						class="py-4 border-b-2 border-transparent text-on-surface-variant hover:text-primary font-label-md text-label-md whitespace-nowrap"
+					>
+						Employer Survey
+					</button>
+				</div>
+				<div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+					<!-- Uploader -->
+					<div
+						class="lg:col-span-1 border-2 border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center bg-surface-bright hover:bg-surface-container-low transition-colors cursor-pointer"
+					>
+						<span
+							class="material-symbols-outlined text-4xl text-primary mb-3"
+							>upload_file</span
+						>
+						<h3
+							class="font-headline-md text-headline-md text-on-surface mb-1"
+						>
+							Import CSV Data
+						</h3>
+						<p
+							class="font-body-md text-body-md text-on-surface-variant mb-4"
+						>
+							Upload the latest Alumni survey results.
+						</p>
+						<button
+							class="bg-surface-container-highest border border-outline text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg"
+						>
+							Browse Files
+						</button>
+					</div>
+					<!-- Preview Table -->
+					<div
+						class="lg:col-span-2 border border-outline-variant rounded-xl overflow-hidden flex flex-col"
+					>
+						<div
+							class="bg-surface-container-low px-4 py-2 border-b border-outline-variant flex justify-between items-center"
+						>
+							<span
+								class="font-label-md text-label-md text-on-surface"
+								>Alumni_2024_Q3.csv</span
+							>
+							<span
+								class="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-2 py-1 rounded-full"
+								>142 Responses</span
+							>
+						</div>
+						<div class="overflow-y-auto max-h-48 flex-1">
+							<table class="w-full text-left text-body-md">
+								<thead class="bg-surface-bright sticky top-0">
+									<tr>
+										<th
+											class="p-3 font-label-sm text-label-sm text-on-surface-variant border-b border-outline-variant"
+										>
+											Respondent ID
+										</th>
+										<th
+											class="p-3 font-label-sm text-label-sm text-on-surface-variant border-b border-outline-variant"
+										>
+											PO1 Score
+										</th>
+										<th
+											class="p-3 font-label-sm text-label-sm text-on-surface-variant border-b border-outline-variant"
+										>
+											PO2 Score
+										</th>
+										<th
+											class="p-3 font-label-sm text-label-sm text-on-surface-variant border-b border-outline-variant"
+										>
+											Status
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr class="border-b border-outline-variant">
+										<td class="p-3 text-on-surface-variant">
+											ALM-2024-001
+										</td>
+										<td class="p-3 text-on-surface-variant">
+											3
+										</td>
+										<td class="p-3 text-on-surface-variant">
+											3
+										</td>
+										<td class="p-3 text-secondary">
+											Valid
+										</td>
+									</tr>
+									<tr class="border-b border-outline-variant">
+										<td class="p-3 text-on-surface-variant">
+											ALM-2024-002
+										</td>
+										<td class="p-3 text-on-surface-variant">
+											2
+										</td>
+										<td class="p-3 text-on-surface-variant">
+											3
+										</td>
+										<td class="p-3 text-secondary">
+											Valid
+										</td>
+									</tr>
+									<tr>
+										<td class="p-3 text-on-surface-variant">
+											ALM-2024-003
+										</td>
+										<td class="p-3 text-on-surface-variant">
+											1
+										</td>
+										<td class="p-3 text-on-surface-variant">
+											2
+										</td>
+										<td class="p-3 text-secondary">
+											Valid
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- Action Center -->
+			<div>
+				<h2
+					class="font-headline-lg text-headline-lg text-on-surface flex items-center gap-2 mb-4"
+				>
+					<span class="material-symbols-outlined text-error"
+						>warning</span
+					>
+					Action Center: Outcomes Below Target
+				</h2>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<!-- Action Card 1 -->
+					<div
+						class="bg-error-container/20 border border-error-container rounded-xl p-6 shadow-sm"
+					>
+						<div class="flex justify-between items-start mb-3">
+							<div class="flex items-center gap-3">
+								<div
+									class="w-10 h-10 rounded-full bg-error text-on-error flex items-center justify-center font-bold text-lg"
+								>
+									PO4
+								</div>
+								<h3
+									class="font-headline-md text-headline-md text-on-surface"
+								>
+									Conduct Investigations
+								</h3>
+							</div>
+							<span
+								class="bg-error text-on-error font-label-sm text-label-sm px-2 py-1 rounded-full"
+								>Gap: -1.04</span
+							>
+						</div>
+						<p
+							class="font-body-md text-body-md text-on-surface-variant mb-4"
+						>
+							Use research-based knowledge and research methods
+							including design of experiments, analysis and
+							interpretation of data...
+						</p>
+						<div class="space-y-3">
+							<label
+								class="block font-label-md text-label-md text-on-surface"
+								>Root Cause Analysis</label
+							>
+							<textarea
+								class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+								placeholder="Identify reasons for low attainment..."
+								rows="2"
+							></textarea>
+							<label
+								class="block font-label-md text-label-md text-on-surface mt-3"
+								>Corrective Action Plan</label
+							>
+							<textarea
+								class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 text-body-md focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+								placeholder="Propose curriculum changes, new lab setups, etc."
+								rows="2"
+							></textarea>
+							<div class="flex justify-end mt-4">
+								<button
+									class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-primary-container transition-colors"
+								>
+									Save Action Plan
+								</button>
+							</div>
+						</div>
+					</div>
+					<!-- Action Card Placeholder (if another was low) -->
+					<div
+						class="bg-surface-container-low border border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center opacity-70"
+					>
+						<span
+							class="material-symbols-outlined text-4xl text-outline mb-2"
+							>check_circle</span
+						>
+						<p
+							class="font-body-md text-body-md text-on-surface-variant"
+						>
+							No other POs fell below the 2.50 threshold.
+						</p>
+					</div>
+				</div>
+			</div>
+		</main>
+	</body>
+</html>

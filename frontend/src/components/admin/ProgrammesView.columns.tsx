@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, UserPlus, BookOpen } from "lucide-react";
+import { Pencil, Trash2, UserPlus, BookOpen, BarChart3 } from "lucide-react";
 import type { Programme } from "@/services/api";
 import { ConfirmDeleteDialog } from "../../features/shared";
 import { sortableHeader } from "../../features/shared/tableUtils";
@@ -11,6 +11,7 @@ interface ProgrammeColumnProps {
 	onDelete?: (programme: Programme) => void;
 	onEnroll?: (programme: Programme) => void;
 	onManageCourses?: (programme: Programme) => void;
+	onViewAttainment?: (programme: Programme) => void;
 }
 
 export function getProgrammeColumns({
@@ -18,6 +19,7 @@ export function getProgrammeColumns({
 	onDelete,
 	onEnroll,
 	onManageCourses,
+	onViewAttainment,
 }: ProgrammeColumnProps): ColumnDef<Programme>[] {
 	return [
 		{
@@ -40,6 +42,15 @@ export function getProgrammeColumns({
 					{row.getValue("programme_name")}
 				</div>
 			),
+		},
+		{
+			id: "batch",
+			header: "Batch",
+			cell: ({ row }) => {
+				const batchYear = row.original.specific_batch_year;
+				if (!batchYear) return <span className="text-muted-foreground">—</span>;
+				return <Badge variant="outline" className="font-mono">{batchYear}</Badge>;
+			},
 		},
 		{
 			accessorKey: "degree_level",
@@ -90,6 +101,28 @@ export function getProgrammeColumns({
 							>
 								📚 {prog.course_count}
 							</Badge>
+						)}
+					</div>
+				);
+			},
+		},
+		{
+			id: "attainment",
+			header: () => <div className="text-center">Attainment</div>,
+			cell: ({ row }) => {
+				const prog = row.original;
+				return (
+					<div className="flex justify-center">
+						{onViewAttainment && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="gap-1.5 h-7 text-xs"
+								onClick={() => onViewAttainment(prog)}
+							>
+								<BarChart3 className="w-3.5 h-3.5" />
+								View
+							</Button>
 						)}
 					</div>
 				);

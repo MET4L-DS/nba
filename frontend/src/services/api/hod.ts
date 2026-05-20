@@ -16,6 +16,7 @@ import type {
 	UpdateStudentRequest,
 	Programme,
 	ProgrammeWithBatch,
+	ProgrammeBatch,
 	ProgrammeCourseResponse,
 	CreateProgrammeRequest,
 	ProgrammeBulkEnrollRequest,
@@ -30,6 +31,25 @@ export const hodApi = {
 	async getProgrammesWithBatches(): Promise<ProgrammeWithBatch[]> {
 		debugLogger.info("hodApi", "getProgrammesWithBatches called");
 		return apiGet<ProgrammeWithBatch[]>("/hod/programmes/with-batches");
+	},
+
+	// Batch operations
+	async getBatchesByProgramme(programmeId: number): Promise<ProgrammeBatch[]> {
+		debugLogger.info("hodApi", "getBatchesByProgramme called", { programmeId });
+		return apiGet<ProgrammeBatch[]>(`/hod/programmes/${programmeId}/batches`);
+	},
+
+	async createBatch(programmeId: number, batchYear: number, status?: string): Promise<{ batch_id: number }> {
+		debugLogger.info("hodApi", "createBatch called", { programmeId, batchYear, status });
+		return apiPost<{ batch_year: number; status?: string }, { batch_id: number }>(
+			`/hod/programmes/${programmeId}/batches`,
+			{ batch_year: batchYear, status },
+		);
+	},
+
+	async getBatch(batchId: number): Promise<ProgrammeBatch> {
+		debugLogger.info("hodApi", "getBatch called", { batchId });
+		return apiGet<ProgrammeBatch>(`/hod/batches/${batchId}`);
 	},
 
 	// Programme CRUD

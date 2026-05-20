@@ -36,9 +36,9 @@ export function HODProgrammes() {
 		setSidebarOpen: (open: boolean) => void;
 	}>();
 
-	const [activeTab, setActiveTab] = useState<"ongoing" | "offered" | "catalog">(
-		"catalog",
-	);
+	const [activeTab, setActiveTab] = useState<
+		"ongoing" | "offered" | "catalog"
+	>("ongoing");
 
 	// Dialog state
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -49,18 +49,16 @@ export function HODProgrammes() {
 
 	// Refresh trigger for ProgrammeList
 	const [refreshKey, setRefreshKey] = useState(0);
-	const triggerRefresh = useCallback(
-		() => setRefreshKey((k) => k + 1),
-		[],
-	);
+	const triggerRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
-	// View Attainment handler — uses specific_batch_year from the programme row, fallback to latest
+	// View Attainment handler — uses batch_id from the programme row, fallback to latest_batch_year
 	const handleViewAttainment = useCallback(
 		(programme: Programme) => {
 			navigate("/hod/programme-attainment", {
 				state: {
 					programmeId: programme.programme_id,
 					programmeName: programme.programme_name,
+					batchId: programme.batch_id ?? undefined,
 					batchYear: programme.specific_batch_year
 						? String(programme.specific_batch_year)
 						: programme.latest_batch_year
@@ -181,34 +179,32 @@ export function HODProgrammes() {
 		}
 	};
 
-	const fetchOngoing = useCallback(
-		(params: PaginationParams) => {
-			const now = new Date();
-			// Assume academic year starts in July (month 6).
-			// If it's before July, the current academic year started last year.
-			const academicYear =
-				now.getMonth() < 6
-					? now.getFullYear() - 1
-					: now.getFullYear();
+	const fetchOngoing = useCallback((params: PaginationParams) => {
+		const now = new Date();
+		// Assume academic year starts in July (month 6).
+		// If it's before July, the current academic year started last year.
+		const academicYear =
+			now.getMonth() < 6 ? now.getFullYear() - 1 : now.getFullYear();
 
-			return hodApi.getDepartmentProgrammes({
-				...params,
-				year: String(academicYear),
-				limit: 100,
-			});
-		},
-		[],
-	);
+		return hodApi.getDepartmentProgrammes({
+			...params,
+			year: String(academicYear),
+			limit: 100,
+		});
+	}, []);
 
-	const fetchOffered = useCallback(
-		(params: PaginationParams) =>
-			hodApi.getDepartmentProgrammes({
-				...params,
-				has_batches: "1",
-				limit: 100,
-			}),
-		[],
-	);
+	const fetchOffered = useCallback((params: PaginationParams) => {
+		const now = new Date();
+		const academicYear =
+			now.getMonth() < 6 ? now.getFullYear() - 1 : now.getFullYear();
+
+		return hodApi.getDepartmentProgrammes({
+			...params,
+			has_batches: "1",
+			batch_year_max: String(academicYear),
+			limit: 100,
+		});
+	}, []);
 
 	const fetchAll = useCallback(
 		(params: PaginationParams) =>
@@ -527,7 +523,6 @@ export function HODProgrammes() {
 						</DialogFooter>
 					</DialogContent>
 				</Dialog>
-
 			</div>
 		</div>
 	);

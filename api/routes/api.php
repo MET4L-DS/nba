@@ -1232,6 +1232,28 @@ class Router
                     } else {
                         $this->sendMethodNotAllowed();
                     }
+                } elseif (preg_match('#^hod/programmes/(\d+)/batches$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->listBatches($programmeId);
+                    } elseif ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->createBatch($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^hod/batches/(\d+)$#', $path, $matches)) {
+                    $batchId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->getBatch($batchId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
                 } elseif (preg_match('#^admin/departments/(\d+)$#', $path, $matches)) {
                     $departmentId = $matches[1];
                     if ($method === 'PUT') {

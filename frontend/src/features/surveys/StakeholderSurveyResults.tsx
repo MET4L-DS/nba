@@ -5,8 +5,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
@@ -19,6 +17,7 @@ import { debugLogger } from "@/lib/debugLogger";
 import type { StakeholderSurveyResultsResponse } from "@/services/api";
 import { StakeholderSurveyDetailTable } from "./StakeholderSurveyDetailTable";
 import { ConsolidatedIndirectMatrix } from "./ConsolidatedIndirectMatrix";
+import { BatchSelector } from "@/features/shared/BatchSelector";
 
 interface StakeholderSurveyResultsProps {
 	programmeId: number;
@@ -65,14 +64,15 @@ export function StakeholderSurveyResults({
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div className="flex items-end gap-3">
-					<div className="space-y-1">
-						<Label htmlFor="ssr-batch">Batch Year</Label>
-						<Input
-							id="ssr-batch"
-							value={batchYear}
-							onChange={(e) => setBatchYear(e.target.value)}
-							placeholder="e.g. 2022"
-							className="w-32"
+					<div className="space-y-1 w-[200px]">
+						<BatchSelector
+							programmeId={programmeId}
+							value={undefined}
+							onChange={(id, batch) => {
+								if (batch?.batch_year) {
+									setBatchYear(String(batch.batch_year));
+								}
+							}}
 						/>
 					</div>
 					<Button onClick={fetchResults} disabled={loading || !batchYear}>

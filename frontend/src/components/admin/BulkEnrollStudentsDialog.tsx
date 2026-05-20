@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -10,13 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	Table,
@@ -30,6 +23,7 @@ import { CheckCircle2, Upload, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { CSVFormatInfo } from "@/features/assessments/CSVFormatInfo";
 import { CSVFileUpload } from "@/features/assessments/CSVFileUpload";
+import { BatchSelector } from "@/features/shared/BatchSelector";
 import type { Programme, ProgrammeBulkEnrollRequest } from "@/services/api";
 
 interface BulkEnrollApi {
@@ -73,14 +67,7 @@ export function BulkEnrollStudentsDialog({
 	const [uploading, setUploading] = useState(false);
 	const [enrolling, setEnrolling] = useState(false);
 	const [batchYear, setBatchYear] = useState<string>("");
-	const batchYearOptions = useMemo(() => {
-		const currentYear = new Date().getFullYear();
-		const years: string[] = [];
-		for (let y = currentYear + 4; y >= currentYear - 8; y--) {
-			years.push(y.toString());
-		}
-		return years;
-	}, []);
+
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Manual enrollment state
@@ -299,19 +286,14 @@ export function BulkEnrollStudentsDialog({
 
 				<div className="space-y-4 py-4">
 					<div className="space-y-2">
-						<Label>Batch Year <span className="text-muted-foreground">(optional)</span></Label>
-						<Select value={batchYear} onValueChange={setBatchYear}>
-							<SelectTrigger>
-								<SelectValue placeholder="Select batch year" />
-							</SelectTrigger>
-							<SelectContent>
-								{batchYearOptions.map((year) => (
-									<SelectItem key={year} value={year}>
-										{year}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						<Label>Batch <span className="text-muted-foreground">(optional)</span></Label>
+						<BatchSelector
+							programmeId={programme?.programme_id ?? null}
+							value={null}
+							onChange={(id, batch) => {
+								setBatchYear(batch?.batch_year ? String(batch.batch_year) : "");
+							}}
+						/>
 						<p className="text-xs text-muted-foreground">
 							Applies to all students in this enrollment
 						</p>

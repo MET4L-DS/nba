@@ -9,7 +9,6 @@ import type {
 } from "@/services/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -18,7 +17,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { StatsGrid, type StatItem } from "@/features/shared";
+import { BatchSelector, type StatItem } from "@/features/shared";
+import { AttainmentStatCard } from "./AttainmentStatCard";
+import { ArticulationMatrix } from "./ArticulationMatrix";
 import {
 	Tabs,
 	TabsContent,
@@ -30,13 +31,7 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-	Target,
-	FileText,
-	TrendingUp,
-	ChevronDown,
-	BarChart3,
-} from "lucide-react";
+import { Target, FileText, TrendingUp, ChevronDown, BarChart3, School, MessageSquare, PieChart, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { StakeholderSurveyImport } from "@/features/surveys/StakeholderSurveyImport";
 import { StakeholderSurveyConfig } from "@/features/surveys/StakeholderSurveyConfig";
 import { StakeholderSurveyResults } from "@/features/surveys/StakeholderSurveyResults";
@@ -47,7 +42,8 @@ import { AttainmentComparisonCharts } from "@/features/programmes/AttainmentComp
 interface ProgrammeAttainmentRouteState {
 	programmeId: number;
 	programmeName: string;
-	batchYear: string;
+	batchYear?: string;
+	batchId?: number;
 }
 
 export function ProgrammeAttainmentDashboard() {
@@ -57,6 +53,12 @@ export function ProgrammeAttainmentDashboard() {
 	const [selectedProgrammeId, setSelectedProgrammeId] = useState<
 		number | null
 	>(routeState?.programmeId ?? null);
+	const [programmeName, setProgrammeName] = useState(
+		routeState?.programmeName ?? "",
+	);
+	const [batchId, setBatchId] = useState<number | null>(
+		routeState?.batchId ?? null,
+	);
 	const [batchYear, setBatchYear] = useState<string>(
 		routeState?.batchYear ?? "",
 	);
@@ -119,15 +121,30 @@ export function ProgrammeAttainmentDashboard() {
 		loadProgrammes();
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+	// Resolve batchId → batchYear when dashboard loads with batchId but no batchYear
+	useEffect(() => {
+		if (!batchId || batchYear) return;
+		(async () => {
+			try {
+				const batch = await hodApi.getBatch(batchId);
+				if (batch.batch_year) {
+					setBatchYear(String(batch.batch_year));
+				}
+			} catch {
+				// silently fail, user can pick batch year manually
+			}
+		})();
+	}, [batchId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 	useEffect(() => {
 		if (
 			programmesLoadedRef.current &&
-			routeState?.programmeId &&
-			routeState?.batchYear
+			selectedProgrammeId &&
+			batchYear.trim() !== ""
 		) {
 			loadAttainment();
 		}
-	}, [programmesLoadedRef.current, routeState?.programmeId, routeState?.batchYear]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [programmesLoadedRef.current, selectedProgrammeId, batchYear, loadAttainment]);
 
 	const selectedProgramme = useMemo(
 		() =>
@@ -228,76 +245,76 @@ export function ProgrammeAttainmentDashboard() {
 
 	return (
 		<div className="space-y-6">
-			{/* Controls */}
-			<Card className="p-4">
-				<div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-					<div className="flex flex-col md:flex-row gap-3 md:items-end">
-						{data && (
-							<SetTargetsDialog
-								programmeId={selectedProgrammeId!}
-								batchYear={batchYear}
-								poList={poList}
-								onSaved={loadAttainment}
-							/>
-						)}
-						<div className="space-y-1">
-							<Label>Programme</Label>
-							<Select
-								value={String(selectedProgrammeId ?? "")}
-								onValueChange={(v) => setSelectedProgrammeId(Number(v))}
-								disabled={programmesLoading}
-							>
-								<SelectTrigger className="w-[280px]">
-									<SelectValue placeholder="Select programme..." />
-								</SelectTrigger>
-								<SelectContent>
-									{programmes.map((p) => (
-										<SelectItem key={p.programme_id} value={String(p.programme_id)}>
-											{p.programme_code} - {p.programme_name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-						<div className="space-y-1">
-							<Label htmlFor="pa-batch">Batch Year</Label>
-							<Input
-								id="pa-batch"
-								value={batchYear}
-								onChange={(e) => setBatchYear(e.target.value)}
-								placeholder="e.g. 2022"
-							/>
-						</div>
-						<Button
-							onClick={loadAttainment}
-							disabled={
-								loading || !selectedProgrammeId || !batchYear.trim()
-							}
-							variant="outline"
+			{/* Header Section */}
+			<div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b pb-4">
+				<div>
+					<h1 className="text-2xl font-bold tracking-tight text-foreground">
+						Executive Analytics Dashboard
+					</h1>
+					<p className="text-sm text-muted-foreground mt-1">
+						{selectedProgramme ? (
+							<>
+								{selectedProgramme.programme_code} - {selectedProgramme.programme_name}
+								{batchYear.trim() !== "" ? ` (Batch ${batchYear})` : " - Overview"}
+							</>
+						) : "Select a programme and batch to view attainment"}
+					</p>
+				</div>
+				<div className="flex gap-3 items-end">
+					<div className="space-y-1">
+						<Select
+							value={String(selectedProgrammeId ?? "")}
+							onValueChange={(v) => {
+								setSelectedProgrammeId(Number(v));
+								setBatchId(undefined);
+								setBatchYear("");
+							}}
+							disabled={programmesLoading}
 						>
-							{loading ? "Loading..." : "Load"}
-						</Button>
-						<Button
-							onClick={handleCalculate}
-							disabled={
-								calculating ||
-								!selectedProgrammeId ||
-								!batchYear.trim()
-							}
-						>
-							{calculating ? "Calculating..." : "Calculate"}
-						</Button>
+							<SelectTrigger className="w-[280px]">
+								<SelectValue placeholder="Select programme..." />
+							</SelectTrigger>
+							<SelectContent>
+								{programmes.map((p) => (
+									<SelectItem key={p.programme_id} value={String(p.programme_id)}>
+										{p.programme_code} - {p.programme_name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
-					{selectedProgramme && (
-						<div className="text-sm text-muted-foreground">
-							{selectedProgramme.programme_name}
-							{data?.batch_year
-								? ` - Batch ${data.batch_year}`
-								: ""}
-						</div>
+					<div className="space-y-1 w-[160px]">
+						<BatchSelector
+							programmeId={selectedProgrammeId}
+							value={batchId}
+							onChange={(id, batch) => {
+								setBatchId(id);
+								if (batch?.batch_year) {
+									setBatchYear(String(batch.batch_year));
+								}
+							}}
+							disabled={programmesLoading || !selectedProgrammeId}
+						/>
+					</div>
+					<Button
+						onClick={handleCalculate}
+						disabled={calculating || !selectedProgrammeId || !batchYear.trim()}
+						variant="outline"
+						className="gap-2"
+					>
+						<BarChart3 className="w-4 h-4" />
+						{calculating ? "Recalculating..." : "Recalculate"}
+					</Button>
+					{data && (
+						<SetTargetsDialog
+							programmeId={selectedProgrammeId!}
+							batchYear={batchYear}
+							poList={poList}
+							onSaved={loadAttainment}
+						/>
 					)}
 				</div>
-			</Card>
+			</div>
 
 			{error && (
 				<div className="text-sm text-red-500 bg-red-50 border border-red-200 rounded px-3 py-2">
@@ -307,269 +324,82 @@ export function ProgrammeAttainmentDashboard() {
 
 			{/* KPI Stats */}
 			{data && kpiStats.length > 0 && (
-				<StatsGrid stats={kpiStats} variant="outline" columns={4} />
+				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+					{kpiStats.map((stat, idx) => (
+						<AttainmentStatCard
+							key={idx}
+							stat={{
+								label: stat.label,
+								value: stat.value,
+								target: data.targets[stat.label] ?? 0,
+								icon: stat.label.includes('Blended') ? Target : (idx % 2 === 0 ? TrendingUp : PieChart),
+								iconColorClass: stat.label.includes('Blended') ? 'text-primary' : (idx % 2 === 0 ? 'text-emerald-600' : 'text-blue-600'),
+								iconBgClass: stat.label.includes('Blended') ? 'bg-primary/10' : (idx % 2 === 0 ? 'bg-emerald-100' : 'bg-blue-100'),
+								diffValue: stat.value - (data.targets[stat.label] ?? 0),
+							}}
+							isLoading={loading}
+						/>
+					))}
+				</div>
 			)}
 
 			{/* Course × PO/PSO Matrix */}
-			{data && (
-				<Card className="p-4 space-y-3">
-					<h3 className="text-lg font-semibold">
-						Programme Articulation Matrix
-					</h3>
-					<p className="text-sm text-muted-foreground">
-						Course-level PO/PSO attainment with summary footer rows.
-					</p>
-					<div className="rounded-md border overflow-x-auto">
-						<table className="w-full text-sm whitespace-nowrap">
-							<thead className="bg-muted/40">
-								<tr>
-									<th className="text-left px-2 py-2 w-10">#</th>
-									<th className="text-left px-2 py-2 min-w-[80px]">
-										Code
-									</th>
-									<th className="text-left px-2 py-2 min-w-[160px]">
-										Course
-									</th>
-									{poList.map((po) => (
-										<th
-											key={po}
-											className="text-right px-2 py-2 min-w-[56px]"
-										>
-											{po}
-										</th>
-									))}
-								</tr>
-							</thead>
-							<tbody>
-								{data.courses.length === 0 ? (
-									<tr>
-										<td
-											colSpan={3 + poList.length}
-											className="px-3 py-4 text-muted-foreground text-center"
-										>
-											No courses found for this programme and
-											batch.
-										</td>
-									</tr>
-								) : (
-									data.courses.map((course, idx) => (
-										<tr key={course.offering_id} className="border-t">
-											<td className="px-2 py-2 text-muted-foreground">
-												{idx + 1}
-											</td>
-											<td className="px-2 py-2 font-mono text-xs">
-												{course.course_code}
-											</td>
-											<td className="px-2 py-2 text-ellipsis overflow-hidden max-w-[200px]">
-												{course.course_name}
-											</td>
-											{poList.map((po) => {
-												const val = course.values[po];
-												return (
-													<td
-														key={po}
-														className="px-2 py-2 text-right"
-													>
-														{val != null
-															? Number(val).toFixed(2)
-															: "—"}
-													</td>
-												);
-											})}
-										</tr>
-									))
-								)}
-							</tbody>
-							{data.courses.length > 0 && (
-								<tfoot className="border-t-2 border-border font-medium">
-									{/* Average row */}
-									<tr className="bg-muted/20">
-										<td
-											colSpan={3}
-											className="px-2 py-2 text-xs text-muted-foreground"
-										>
-											Average
-										</td>
-										{poList.map((po) => (
-											<td
-												key={po}
-												className="px-2 py-2 text-right"
-											>
-												{Number(
-													data.averages[po] ?? 0,
-												).toFixed(2)}
-											</td>
-										))}
-									</tr>
-									{/* Direct row */}
-									<tr className="bg-muted/20">
-										<td
-											colSpan={3}
-											className="px-2 py-2 text-xs text-muted-foreground"
-										>
-											Direct
-										</td>
-										{poList.map((po) => (
-											<td
-												key={po}
-												className="px-2 py-2 text-right"
-											>
-												{Number(
-													data.averages[po] ?? 0,
-												).toFixed(2)}
-											</td>
-										))}
-									</tr>
-									{/* Indirect row */}
-									<tr className="bg-muted/20">
-										<td
-											colSpan={3}
-											className="px-2 py-2 text-xs text-muted-foreground"
-										>
-											Indirect
-										</td>
-										{poList.map((po) => {
-											const val = data.indirect[po];
-											return (
-												<td
-													key={po}
-													className="px-2 py-2 text-right"
-												>
-													{val != null
-														? Number(val).toFixed(2)
-														: "—"}
-												</td>
-											);
-										})}
-									</tr>
-									{/* Final row */}
-									<tr className="bg-primary/5 font-semibold">
-										<td
-											colSpan={3}
-											className="px-2 py-2 text-xs text-muted-foreground"
-										>
-											Final Attainment
-										</td>
-										{poList.map((po) => (
-											<td
-												key={po}
-												className="px-2 py-2 text-right"
-											>
-												{Number(
-													data.finals[po] ?? 0,
-												).toFixed(2)}
-											</td>
-										))}
-									</tr>
-									{/* Target row */}
-									<tr className="bg-muted/20">
-										<td
-											colSpan={3}
-											className="px-2 py-2 text-xs text-muted-foreground"
-										>
-											Target Level
-										</td>
-										{poList.map((po) => {
-											const val = data.targets[po];
-											return (
-												<td
-													key={po}
-													className="px-2 py-2 text-right"
-												>
-													{val != null
-														? Number(val).toFixed(2)
-														: "—"}
-												</td>
-											);
-										})}
-									</tr>
-								</tfoot>
-							)}
-						</table>
-					</div>
-				</Card>
-			)}
+			{data && <ArticulationMatrix data={data} poList={poList} />}
 
 			{/* Consolidated Indirect Survey Breakdown */}
-			<Collapsible
-				open={surveyOpen}
-				onOpenChange={setSurveyOpen}
-				className="space-y-2"
-			>
-				<Card>
-					<CollapsibleTrigger asChild>
-						<Button
-							variant="ghost"
-							className="flex w-full justify-between p-4 h-auto"
-						>
-							<div className="flex items-center gap-2">
-								<FileText className="h-5 w-5 text-muted-foreground" />
-								<span className="font-semibold">
-									Stakeholder Surveys (Indirect Attainment)
-								</span>
-							</div>
-							<ChevronDown
-								className={`h-4 w-4 transition-transform ${
-									surveyOpen ? "rotate-180" : ""
-								}`}
+			{selectedProgrammeId && batchYear && (
+				<Card className="p-6">
+					<div className="flex items-center gap-2 mb-6">
+						<FileText className="h-5 w-5 text-primary" />
+						<h3 className="text-lg font-semibold">Stakeholder Surveys (Indirect Attainment)</h3>
+					</div>
+					<Tabs defaultValue="results">
+						<TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0">
+							<TabsTrigger value="results" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+								Results
+							</TabsTrigger>
+							<TabsTrigger value="import" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+								Import CSV
+							</TabsTrigger>
+							<TabsTrigger value="config" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+								Question Config
+							</TabsTrigger>
+						</TabsList>
+						<TabsContent value="results" className="pt-6">
+							<StakeholderSurveyResults
+								programmeId={selectedProgrammeId}
+								refreshTrigger={stakeholderRefresh}
 							/>
-						</Button>
-					</CollapsibleTrigger>
-					<CollapsibleContent className="px-4 pb-4">
-						{selectedProgrammeId ? (
-							<Tabs defaultValue="import">
-								<TabsList>
-									<TabsTrigger value="import">
-										Import CSV
-									</TabsTrigger>
-									<TabsTrigger value="config">
-										Question Config
-									</TabsTrigger>
-									<TabsTrigger value="results">
-										Results
-									</TabsTrigger>
-								</TabsList>
-								<TabsContent value="import" className="pt-4">
-									<StakeholderSurveyImport
-										programmeId={selectedProgrammeId}
-										onImportComplete={() =>
-											setStakeholderRefresh((n) => n + 1)
-										}
-										batchYear={stakeholderBatchYear}
-										stakeholderType={stakeholderType}
-										onBatchYearChange={
-											setStakeholderBatchYear
-										}
-										onStakeholderTypeChange={
-											setStakeholderType
-										}
-									/>
-								</TabsContent>
-								<TabsContent value="config" className="pt-4">
-									<StakeholderSurveyConfig
-										programmeId={selectedProgrammeId}
-										batchYear={stakeholderBatchYear}
-										stakeholderType={stakeholderType}
-										onConfigSaved={() =>
-											setStakeholderRefresh((n) => n + 1)
-										}
-									/>
-								</TabsContent>
-								<TabsContent value="results" className="pt-4">
-									<StakeholderSurveyResults
-										programmeId={selectedProgrammeId}
-										refreshTrigger={stakeholderRefresh}
-									/>
-								</TabsContent>
-							</Tabs>
-						) : (
-							<p className="text-sm text-muted-foreground">
-								Select a programme to view stakeholder surveys.
-							</p>
-						)}
-					</CollapsibleContent>
+						</TabsContent>
+						<TabsContent value="import" className="pt-6">
+							<StakeholderSurveyImport
+								programmeId={selectedProgrammeId}
+								onImportComplete={() =>
+									setStakeholderRefresh((n) => n + 1)
+								}
+								batchYear={stakeholderBatchYear}
+								stakeholderType={stakeholderType}
+								onBatchYearChange={
+									setStakeholderBatchYear
+								}
+								onStakeholderTypeChange={
+									setStakeholderType
+								}
+							/>
+						</TabsContent>
+						<TabsContent value="config" className="pt-6">
+							<StakeholderSurveyConfig
+								programmeId={selectedProgrammeId}
+								batchYear={stakeholderBatchYear}
+								stakeholderType={stakeholderType}
+								onConfigSaved={() =>
+									setStakeholderRefresh((n) => n + 1)
+								}
+							/>
+						</TabsContent>
+					</Tabs>
 				</Card>
-			</Collapsible>
+			)}
 
 			{/* Comparison Charts */}
 			<Collapsible

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Upload, Trash2 } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
 import { useCSVParser } from "@/features/shared/useCSVParser";
+import { BatchSelector } from "@/features/shared/BatchSelector";
 
 const VALID_STAKEHOLDER_TYPES = [
 	"Alumni",
@@ -294,11 +295,14 @@ export function StakeholderSurveyImport({
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div className="space-y-1">
 						<Label htmlFor="stk-batch">Batch Year</Label>
-						<Input
-							id="stk-batch"
-							value={batchYear}
-							onChange={(e) => setBatchYear(e.target.value)}
-							placeholder="e.g. 2022"
+						<BatchSelector
+							programmeId={programmeId}
+							value={undefined}
+							onChange={(id, batch) => {
+								if (batch?.batch_year) {
+									setBatchYear(String(batch.batch_year));
+								}
+							}}
 						/>
 					</div>
 					<div className="space-y-1">

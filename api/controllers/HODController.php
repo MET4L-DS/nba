@@ -173,7 +173,7 @@ class HODController
                 'p.programme_id',
                 'p.programme_id',
                 ['p.programme_id', 'p.programme_code', 'p.programme_name', 'd.department_name', 'd.department_code'],
-                ['degree_level', 'year', 'has_batches']
+                ['degree_level', 'year', 'has_batches', 'batch_year_max']
             );
 
             // Override department_id filter to restrict to HOD's own department
@@ -1718,29 +1718,103 @@ class HODController
         }
     }
 
-    /**
-     * Remove a course from a programme (restricted to HOD's department)
-     */
-    public function removeProgrammeCourse($programmeId, $courseId)
-    {
-        try {
-            if (!$this->requireHOD()) return;
-            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+	/**
+	 * Remove a course from a programme (restricted to HOD's department)
+	 */
+	public function removeProgrammeCourse($programmeId, $courseId)
+	{
+		try {
+			if (!$this->requireHOD()) return;
+			if (!$this->requireProgrammeAccess((int)$programmeId)) return;
 
-            if (!$this->programmeCourseRepository->exists((int)$programmeId, (int)$courseId)) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'message' => 'Course not assigned to this programme']);
-                return;
-            }
+			if (!$this->programmeCourseRepository->exists((int)$programmeId, (int)$courseId)) {
+				http_response_code(404);
+				echo json_encode(['success' => false, 'message' => 'Course not assigned to this programme']);
+				return;
+			}
 
-            $this->programmeCourseRepository->removeCourse((int)$programmeId, (int)$courseId);
+			$this->programmeCourseRepository->removeCourse((int)$programmeId, (int)$courseId);
 
-            http_response_code(200);
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'message' => 'Course removed from programme']);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Failed to remove course', 'error' => $e->getMessage()]);
-        }
-    }
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => true, 'message' => 'Course removed from programme']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to remove course', 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * GET /hod/programmes/{id}/batches — List batches for a programme
+	 */
+	public function listBatches($programmeId)
+	{
+		try {
+			if (!$this->requireHOD()) return;
+			if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+			$rows = $this->programmeRepository->getBatchesByProgramme((int)$programmeId);
+
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => true, 'data' => $rows]);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to list batches', 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * POST /hod/programmes/{id}/batches — Create a new batch for a programme
+	 */
+	public function createBatch($programmeId)
+	{
+		try {
+			if (!$this->requireHOD()) return;
+			if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+			$input = json_decode(file_get_contents('php://input'), true);
+			$batchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : 0;
+			$status = $input['status'] ?? 'upcoming';
+
+			if ($batchYear < 2000 || $batchYear > 2100) {
+				http_response_code(400);
+				echo json_encode(['success' => false, 'message' => 'Invalid batch_year']);
+				return;
+			}
+
+			$batchId = $this->programmeRepository->createBatch((int)$programmeId, $batchYear, $status);
+
+			http_response_code(201);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => true, 'data' => ['batch_id' => $batchId]]);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to create batch', 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * GET /hod/batches/{id} — Get batch details
+	 */
+	public function getBatch($batchId)
+	{
+		try {
+			if (!$this->requireHOD()) return;
+
+			$batch = $this->programmeRepository->getBatchById((int)$batchId);
+			if (!$batch) {
+				http_response_code(404);
+				echo json_encode(['success' => false, 'message' => 'Batch not found']);
+				return;
+			}
+
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => true, 'data' => $batch]);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to get batch', 'error' => $e->getMessage()]);
+		}
+	}
 }

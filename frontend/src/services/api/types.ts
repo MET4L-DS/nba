@@ -315,7 +315,21 @@ export interface Programme {
 	student_count?: number;
 	course_count?: number;
 	latest_batch_year?: number | null;
+	batch_id?: number | null;
 	specific_batch_year?: number | null;
+}
+
+export interface ProgrammeBatch {
+	batch_id: number;
+	programme_id: number;
+	batch_year: number;
+	coordinator_id?: number | null;
+	coordinator_name?: string | null;
+	status: "upcoming" | "active" | "completed";
+	student_count?: number;
+	start_date?: string | null;
+	end_date?: string | null;
+	created_at?: string;
 }
 
 export interface ProgrammeWithBatch {
@@ -326,7 +340,10 @@ export interface ProgrammeWithBatch {
 	degree_level: "UG" | "PG" | "Diploma" | "PhD";
 	duration_years: number;
 	created_at?: string;
+	batch_id: number;
 	batch_year: number;
+	batch_status?: "upcoming" | "active" | "completed";
+	student_count?: number;
 }
 
 // Admin Types

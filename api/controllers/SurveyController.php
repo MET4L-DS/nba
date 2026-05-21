@@ -324,6 +324,13 @@ class SurveyController
                 return;
             }
 
+            $allowedTypes = ['Alumni', 'Employer', 'Graduate Exit', 'Parent', 'Academic Peer'];
+            if (!in_array($stakeholderType, $allowedTypes, true)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid stakeholder_type']);
+                return;
+            }
+
             $survey = $this->stakeholderRepo->getSurvey($programmeId, $batchYear, $stakeholderType);
             if (!$survey) {
                 http_response_code(200);
@@ -359,6 +366,13 @@ class SurveyController
                 return;
             }
 
+            $allowedTypes = ['Alumni', 'Employer', 'Graduate Exit', 'Parent', 'Academic Peer'];
+            if (!in_array($stakeholderType, $allowedTypes, true)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid stakeholder_type']);
+                return;
+            }
+
             $survey = $this->stakeholderRepo->getSurvey($programmeId, $batchYear, $stakeholderType);
             $surveyId = $survey ? (int)$survey['survey_id'] : $this->stakeholderRepo->createSurvey($programmeId, $batchYear, $stakeholderType);
 
@@ -387,6 +401,13 @@ class SurveyController
             if ($batchYear <= 0 || !$stakeholderType || !isset($input['responses']) || !is_array($input['responses'])) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Invalid input']);
+                return;
+            }
+
+            $allowedTypes = ['Alumni', 'Employer', 'Graduate Exit', 'Parent', 'Academic Peer'];
+            if (!in_array($stakeholderType, $allowedTypes, true)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid stakeholder_type']);
                 return;
             }
 
@@ -516,6 +537,12 @@ class SurveyController
             $stakeholderType = !empty($_GET['stakeholder_type']) ? trim($_GET['stakeholder_type']) : null;
             $mode = isset($_GET['mode']) && $_GET['mode'] === 'threshold' ? 'threshold' : 'average';
             $proficiencyThreshold = isset($_GET['proficiency_threshold']) ? (int)$_GET['proficiency_threshold'] : 4;
+
+            if ($proficiencyThreshold < 1 || $proficiencyThreshold > 5) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'proficiency_threshold must be between 1 and 5']);
+                return;
+            }
 
             $averages = $this->stakeholderRepo->getPoAverages($programmeId, $batchYear, $stakeholderType);
             $byType = $this->stakeholderRepo->getPoAveragesByType($programmeId, $batchYear);

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Trash2, Save } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
@@ -78,9 +79,11 @@ export function StakeholderSurveyConfig({
 	};
 
 	const removeQuestion = (idx: number) => {
-		const newQ = [...questions];
-		newQ.splice(idx, 1);
-		setQuestions(newQ.map((q, i) => ({ ...q, question_number: i + 1 })));
+		setQuestions((prev) =>
+			prev
+				.filter((_, i) => i !== idx)
+				.map((q, i) => ({ ...q, question_number: i + 1 })),
+		);
 	};
 
 	const updateQuestion = (
@@ -88,9 +91,11 @@ export function StakeholderSurveyConfig({
 		field: keyof StakeholderSurveyQuestion,
 		value: string | number,
 	) => {
-		const newQ = [...questions];
-		newQ[idx] = { ...newQ[idx], [field]: value };
-		setQuestions(newQ);
+		setQuestions((prev) =>
+			prev.map((q, i) =>
+				i === idx ? { ...q, [field]: value } : q,
+			),
+		);
 	};
 
 	const handleSave = async () => {
@@ -177,23 +182,23 @@ export function StakeholderSurveyConfig({
 								/>
 							</div>
 							<div>
-								<select
-									className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+								<Select
 									value={q.po_name}
-									onChange={(e) =>
-										updateQuestion(
-											idx,
-											"po_name",
-											e.target.value,
-										)
+									onValueChange={(v) =>
+										updateQuestion(idx, "po_name", v)
 									}
 								>
-									{PO_OPTIONS.map((po) => (
-										<option key={po} value={po}>
-											{po}
-										</option>
-									))}
-								</select>
+									<SelectTrigger>
+										<SelectValue placeholder="Select PO" />
+									</SelectTrigger>
+									<SelectContent>
+										{PO_OPTIONS.map((po) => (
+											<SelectItem key={po} value={po}>
+												{po}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 							</div>
 							<div>
 								<Input
@@ -202,13 +207,14 @@ export function StakeholderSurveyConfig({
 									min="0"
 									max="1"
 									value={q.mapping_weight}
-									onChange={(e) =>
+									onChange={(e) => {
+										const parsed = parseFloat(e.target.value);
 										updateQuestion(
 											idx,
 											"mapping_weight",
-											parseFloat(e.target.value),
-										)
-									}
+											isNaN(parsed) ? 0 : Math.min(1, Math.max(0, parsed)),
+										);
+									}}
 								/>
 							</div>
 							<div className="pt-0.5">

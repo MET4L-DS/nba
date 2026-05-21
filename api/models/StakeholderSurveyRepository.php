@@ -328,15 +328,11 @@ class StakeholderSurveyRepository
         $averages = [];
         foreach ($poList as $po) {
             $sum = 0.0;
-            $count = 0;
             foreach ($standardTypes as $type) {
                 $val = $matrix[$type][$po] ?? 0.0;
-                if ($val > 0) {
-                    $sum += $val;
-                    $count++;
-                }
+                $sum += $val;
             }
-            $averages[$po] = $count > 0 ? round($sum / $count, 2) : 0.0;
+            $averages[$po] = round($sum / count($standardTypes), 2);
         }
 
         return [
@@ -350,18 +346,13 @@ class StakeholderSurveyRepository
     {
         if ($percentage >= 70.0) return 3.0;
         if ($percentage >= 60.0) {
-            $diff = 70.0 - 60.0;
-            if ($diff == 0.0) return 3.0;
-            return 2.0 + ($percentage - 60.0) / $diff;
+            return 2.0 + ($percentage - 60.0) / 10.0;
         }
         if ($percentage >= 50.0) {
-            $diff = 60.0 - 50.0;
-            if ($diff == 0.0) return 2.0;
-            return 1.0 + ($percentage - 50.0) / $diff;
+            return 1.0 + ($percentage - 50.0) / 10.0;
         }
         if ($percentage > 0.0) {
-            $diff = 50.0;
-            return $percentage / $diff;
+            return $percentage / 50.0;
         }
         return 0.0;
     }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { attainmentApi } from "@/services/api/attainment";
 import { hodApi } from "@/services/api";
 import { debugLogger } from "@/lib/debugLogger";
@@ -9,6 +9,7 @@ import type {
 } from "@/services/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Select,
 	SelectContent,
@@ -16,7 +17,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { BatchSelector, type StatItem } from "@/features/shared";
+import { BatchSelector } from "@/features/shared";
 import { AttainmentStatCard } from "./AttainmentStatCard";
 import { ArticulationMatrix } from "./ArticulationMatrix";
 import {
@@ -24,8 +25,7 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Target, FileText, TrendingUp, ChevronDown, BarChart3, PieChart } from "lucide-react";
-import { StakeholderSurveyResults } from "@/features/surveys/StakeholderSurveyResults";
+import { Target, FileText, TrendingUp, ChevronDown, BarChart3, ExternalLink } from "lucide-react";
 import { SetTargetsDialog } from "@/features/programmes/SetTargetsDialog";
 import { ActionPlansSection } from "@/features/programmes/ActionPlansSection";
 import { AttainmentComparisonCharts } from "@/features/programmes/AttainmentComparisonCharts";
@@ -39,6 +39,7 @@ interface ProgrammeAttainmentRouteState {
 
 export function ProgrammeAttainmentDashboard() {
 	const location = useLocation();
+	const navigate = useNavigate();
 	const routeState = location.state as ProgrammeAttainmentRouteState | null;
 
 	const [selectedProgrammeId, setSelectedProgrammeId] = useState<
@@ -58,7 +59,6 @@ export function ProgrammeAttainmentDashboard() {
 	const [programmes, setProgrammes] = useState<Programme[]>([]);
 	const [programmesLoading, setProgrammesLoading] = useState(true);
 	const [chartsOpen, setChartsOpen] = useState(false);
-	const [stakeholderRefresh] = useState(0);
 
 	const loadAttainment = useCallback(async () => {
 		if (!selectedProgrammeId) return;
@@ -148,16 +148,17 @@ export function ProgrammeAttainmentDashboard() {
 				selectedProgrammeId,
 				Number(year),
 			);
+			await loadAttainment();
 		} catch (err) {
 			setError(
-				`Calculate warning: ${err instanceof Error ? err.message : String(err)}`,
+				`Failed to calculate: ${err instanceof Error ? err.message : String(err)}`,
 			);
 		} finally {
 			setCalculating(false);
 		}
 	};
 
-	const kpiStats: StatItem[] = useMemo(() => {
+	const kpiStats = useMemo(() => {
 		if (!data) return [];
 
 		const avgValues = Object.values(data.averages);
@@ -189,41 +190,40 @@ export function ProgrammeAttainmentDashboard() {
 			: 0;
 		const targetMet = !hasTargets || gapCount === 0;
 
-		const stats: StatItem[] = [
+		return [
 			{
 				label: "Overall Direct Attainment",
 				value: Number(overallDirect.toFixed(2)),
 				icon: Target,
-				suffix: " / 3",
-				color: "#3b82f6",
+				iconColorClass: "text-blue-600",
+				iconBgClass: "bg-blue-100",
 			},
 			{
 				label: "Overall Indirect Attainment",
 				value: Number(overallIndirect.toFixed(2)),
 				icon: FileText,
-				suffix: " / 3",
-				color: "#8b5cf6",
+				iconColorClass: "text-purple-600",
+				iconBgClass: "bg-purple-100",
 			},
 			{
 				label: "Final Blended Attainment",
 				value: Number(overallFinal.toFixed(2)),
 				icon: TrendingUp,
-				suffix: " / 3",
-				color: "#10b981",
+				iconColorClass: "text-primary",
+				iconBgClass: "bg-primary/10",
 			},
 			{
 				label: targetMet ? "Target Achieved" : "Gap Identified",
 				value: gapCount,
 				icon: Target,
-				suffix: targetMet ? "" : " PO(s) below target",
-				color: targetMet ? "#10b981" : "#ef4444",
+				iconColorClass: targetMet ? "text-emerald-600" : "text-red-600",
+				iconBgClass: targetMet ? "bg-emerald-100" : "bg-red-100",
 				description: targetMet
 					? "All PO targets met"
 					: `${gapCount} PO(s) below target`,
+				isStatusCard: true,
 			},
 		];
-
-		return stats;
 	}, [data]);
 
 	const poList = data?.po_list ?? [];
@@ -247,15 +247,17 @@ export function ProgrammeAttainmentDashboard() {
 				</div>
 				<div className="flex gap-3 items-end">
 					<div className="space-y-1">
-						<Select
-							value={String(selectedProgrammeId ?? "")}
-							onValueChange={(v) => {
-								setSelectedProgrammeId(Number(v));
-								setBatchId(null);
-								setBatchYear("");
-							}}
-							disabled={programmesLoading}
-						>
+					<Select
+						value={String(selectedProgrammeId ?? "")}
+						onValueChange={(v) => {
+							setSelectedProgrammeId(Number(v));
+							setBatchId(null);
+							setBatchYear("");
+							setData(null);
+							setError(null);
+						}}
+						disabled={programmesLoading}
+					>
 							<SelectTrigger className="w-[280px]">
 								<SelectValue placeholder="Select programme..." />
 							</SelectTrigger>
@@ -269,17 +271,19 @@ export function ProgrammeAttainmentDashboard() {
 						</Select>
 					</div>
 					<div className="space-y-1 w-[160px]">
-						<BatchSelector
-							programmeId={selectedProgrammeId}
-							value={batchId}
-							onChange={(id, batch) => {
-								setBatchId(id);
-								if (batch?.batch_year) {
-									setBatchYear(String(batch.batch_year));
-								}
-							}}
-							disabled={programmesLoading || !selectedProgrammeId}
-						/>
+					<BatchSelector
+						programmeId={selectedProgrammeId}
+						value={batchId}
+						onChange={(id, batch) => {
+							setBatchId(id);
+							setData(null);
+							setError(null);
+							if (batch?.batch_year) {
+								setBatchYear(String(batch.batch_year));
+							}
+						}}
+						disabled={programmesLoading || !selectedProgrammeId}
+					/>
 					</div>
 					<Button
 						onClick={handleCalculate}
@@ -290,9 +294,9 @@ export function ProgrammeAttainmentDashboard() {
 						<BarChart3 className="w-4 h-4" />
 						{calculating ? "Recalculating..." : "Recalculate"}
 					</Button>
-					{data && (
+					{selectedProgrammeId && batchYear && (
 						<SetTargetsDialog
-							programmeId={selectedProgrammeId!}
+							programmeId={selectedProgrammeId}
 							batchYear={batchYear}
 							poList={poList}
 							onSaved={loadAttainment}
@@ -307,41 +311,98 @@ export function ProgrammeAttainmentDashboard() {
 				</div>
 			)}
 
+			{loading && (
+				<div className="space-y-6">
+					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+						{[...Array(4)].map((_, i) => (
+							<Card key={i} className="p-6 space-y-3">
+								<div className="flex justify-between items-start">
+									<Skeleton className="h-10 w-10 rounded-lg" />
+									<Skeleton className="h-5 w-20 rounded-full" />
+								</div>
+								<Skeleton className="h-4 w-32" />
+								<Skeleton className="h-8 w-20" />
+							</Card>
+						))}
+					</div>
+					<Card className="border border-outline-variant shadow-sm overflow-hidden">
+						<div className="p-4 border-b bg-muted/20">
+							<Skeleton className="h-6 w-48" />
+							<Skeleton className="h-4 w-64 mt-2" />
+						</div>
+						<div className="p-4 space-y-3">
+							{[...Array(5)].map((_, i) => (
+								<div key={i} className="flex gap-4">
+									<Skeleton className="h-4 w-8" />
+									<Skeleton className="h-4 w-24" />
+									<Skeleton className="h-4 w-48 flex-1" />
+									{[...Array(6)].map((_, j) => (
+										<Skeleton key={j} className="h-4 w-12" />
+									))}
+								</div>
+							))}
+						</div>
+					</Card>
+				</div>
+			)}
+
 			{/* KPI Stats */}
-			{data && kpiStats.length > 0 && (
+			{data && kpiStats.length > 0 && data.courses.length > 0 && (
 				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 					{kpiStats.map((stat, idx) => (
 						<AttainmentStatCard
 							key={idx}
-							stat={{
-								label: stat.label,
-								value: stat.value,
-								target: data.targets[stat.label] ?? 0,
-								icon: stat.label.includes('Blended') ? Target : (idx % 2 === 0 ? TrendingUp : PieChart),
-								iconColorClass: stat.label.includes('Blended') ? 'text-primary' : (idx % 2 === 0 ? 'text-emerald-600' : 'text-blue-600'),
-								iconBgClass: stat.label.includes('Blended') ? 'bg-primary/10' : (idx % 2 === 0 ? 'bg-emerald-100' : 'bg-blue-100'),
-								diffValue: stat.value - (data.targets[stat.label] ?? 0),
-							}}
+							stat={stat}
 							isLoading={loading}
 						/>
 					))}
 				</div>
 			)}
 
+			{data && data.courses.length === 0 && (
+				<Card className="border border-dashed p-8 text-center">
+					<div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+						<BarChart3 className="w-6 h-6 text-muted-foreground" />
+					</div>
+					<p className="text-sm font-medium text-foreground">No Courses Found</p>
+					<p className="text-xs text-muted-foreground mt-1">
+						No courses are mapped to this programme for batch {batchYear}. Add course offerings to see attainment data.
+					</p>
+				</Card>
+			)}
+
 			{/* Course × PO/PSO Matrix */}
 			{data && <ArticulationMatrix data={data} poList={poList} />}
 
-			{/* Consolidated Indirect Survey Breakdown */}
+			{/* Stakeholder Surveys Link */}
 			{selectedProgrammeId && batchYear && (
-				<Card className="p-6">
-					<div className="flex items-center gap-2 mb-6">
-						<FileText className="h-5 w-5 text-primary" />
-						<h3 className="text-lg font-semibold">Stakeholder Surveys (Indirect Attainment)</h3>
+				<Card className="border border-outline-variant shadow-sm overflow-hidden">
+					<div className="p-4 border-b bg-muted/20">
+						<h3 className="text-lg font-semibold flex items-center gap-2">
+							<div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+								<FileText className="h-4 w-4 text-emerald-600" />
+							</div>
+							Stakeholder Surveys
+						</h3>
+						<p className="text-sm text-muted-foreground mt-1 ml-10">
+							Configure surveys, import responses, and review consolidated indirect attainment.
+						</p>
 					</div>
-					<StakeholderSurveyResults
-						programmeId={selectedProgrammeId}
-						refreshTrigger={stakeholderRefresh}
-					/>
+					<div className="p-6 flex items-center justify-between">
+						<div className="text-sm text-muted-foreground">
+							Batch {batchYear} — Manage alumni, employer, graduate exit, parent, and academic peer surveys.
+						</div>
+						<Button
+							variant="default"
+							size="sm"
+							onClick={() => {
+								navigate(`/hod/stakeholder-surveys?programmeId=${selectedProgrammeId}&batchYear=${batchYear}`);
+							}}
+						>
+							<ExternalLink className="h-4 w-4 mr-1.5" />
+							View Surveys
+						</Button>
+					</div>
 				</Card>
 			)}
 
@@ -383,7 +444,7 @@ export function ProgrammeAttainmentDashboard() {
 			</Collapsible>
 
 			{/* Action Plans */}
-			{selectedProgrammeId && batchYear.trim() && (
+			{selectedProgrammeId && batchYear.trim() && !loading && (
 				<ActionPlansSection
 					programmeId={selectedProgrammeId}
 					batchYear={batchYear}

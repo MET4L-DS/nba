@@ -491,6 +491,11 @@ class AttainmentSnapshotService
         foreach ($poList as $poName) {
             $directVal = $directByPo[$poName] ?? 0.0;
 
+            // Skip zero rows when no course data exists
+            if (empty($directByPo)) {
+                continue;
+            }
+
             $indirectLevel = $stakeholderByPo[$poName] ?? 0.0;
             $finalVal = round(
                 ($directVal * $directWeightage / 100) + ($indirectLevel * $indirectWeightage / 100),

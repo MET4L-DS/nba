@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { surveyApi } from "@/services/api/surveys";
 import type { StakeholderIndividualResponse, StakeholderSurveyResultsResponse } from "@/services/api/types";
 
@@ -42,38 +50,38 @@ export function ConsolidatedMatrixView({ programmeId, batchYear, stakeholderType
 						</Badge>
 					</div>
 				</CardHeader>
-				<CardContent>
-					<div className="overflow-x-auto max-h-[520px]">
-						<table className="w-full text-sm">
-							<thead className="sticky top-0 bg-card border-b">
-								<tr>
-									<th className="px-3 py-2 text-left">#</th>
-									<th className="px-3 py-2 text-left">Respondent</th>
-									<th className="px-3 py-2 text-left">Qualification</th>
+			<CardContent>
+				<div className="overflow-x-auto max-h-[60vh]">
+						<Table>
+							<TableHeader className="sticky top-0 bg-card">
+								<TableRow>
+									<TableHead className="w-10">#</TableHead>
+									<TableHead>Respondent</TableHead>
+									<TableHead>Qualification</TableHead>
 									{PO_NAMES.map((po) => (
-										<th key={po} className="px-3 py-2 text-center font-medium">{po}</th>
+										<TableHead key={po} className="text-center font-medium">{po}</TableHead>
 									))}
-								</tr>
-							</thead>
-							<tbody>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
 								{ledger.length === 0 ? (
-									<tr>
-										<td colSpan={PO_NAMES.length + 3} className="px-3 py-8 text-center text-muted-foreground">
+									<TableRow>
+										<TableCell colSpan={PO_NAMES.length + 3} className="py-8 text-center text-muted-foreground">
 											{loading ? "Loading..." : "No responses yet. Use Import CSV or Manual Entry to add data."}
-										</td>
-									</tr>
+										</TableCell>
+									</TableRow>
 								) : ledger.map((row, index) => (
-									<tr key={`${row.respondent_identifier ?? index}`} className="border-b hover:bg-muted/10">
-										<td className="px-3 py-2 text-muted-foreground">{index + 1}</td>
-										<td className="px-3 py-2 font-medium">{row.respondent_name || row.respondent_identifier || `Respondent ${index + 1}`}</td>
-										<td className="px-3 py-2 text-muted-foreground">{row.qualification || "-"}</td>
+									<TableRow key={row.respondent_identifier ?? `row-${index}`}>
+										<TableCell className="text-muted-foreground">{index + 1}</TableCell>
+										<TableCell className="font-medium">{row.respondent_name || row.respondent_identifier || `Respondent ${index + 1}`}</TableCell>
+										<TableCell className="text-muted-foreground">{row.qualification || "-"}</TableCell>
 										{PO_NAMES.map((po) => (
-											<td key={po} className="px-3 py-2 text-center tabular-nums">{row.ratings?.[po] ?? "-"}</td>
+											<TableCell key={po} className="text-center tabular-nums">{row.ratings?.[po] ?? "-"}</TableCell>
 										))}
-									</tr>
+									</TableRow>
 								))}
-							</tbody>
-						</table>
+							</TableBody>
+						</Table>
 					</div>
 				</CardContent>
 			</Card>

@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BatchSelector } from "@/features/shared";
-import { Button } from "@/components/ui/button";
-import { Download, Filter, Calculator } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { hodApi, type Programme } from "@/services/api";
+import { Calculator, GraduationCap, BookOpen } from "lucide-react";
+import { hodApi, type Programme, type ProgrammeWithBatch } from "@/services/api";
 import { ConsolidatedMatrixView } from "@/features/surveys/ConsolidatedMatrixView";
 import { StakeholderManualEntry } from "@/features/surveys/StakeholderManualEntry";
 import { ProgrammeWeightageConfig } from "@/features/surveys/ProgrammeWeightageConfig";
@@ -20,21 +19,118 @@ const SURVEY_TYPES = [
 	{ id: "Academic Peer", label: "Academic Peers Survey", shortLabel: "Acad Peers" },
 ];
 
+interface ActiveBatch {
+	programmeId: number;
+	programmeCode: string;
+	programmeName: string;
+	batchId: number;
+	batchYear: number;
+	studentCount?: number;
+}
+
 export function HODStakeholderSurveys() {
+	const [searchParams] = useSearchParams();
 	const [programmes, setProgrammes] = useState<Programme[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [selectedProgId, setSelectedProgId] = useState<number>();
-	const [selectedBatchYear, setSelectedBatchYear] = useState<string>("");
+	const [activeBatches, setActiveBatches] = useState<ActiveBatch[]>([]);
+	const [selectedProgId, setSelectedProgId] = useState<number | undefined>(
+		() => {
+			const p = searchParams.get("programmeId");
+			return p ? Number(p) : undefined;
+		},
+	);
+	const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
+	const [selectedBatchYear, setSelectedBatchYear] = useState<string>(
+		() => searchParams.get("batchYear") ?? "",
+	);
 	const [selectedType, setSelectedType] = useState<string>("Alumni");
+	const [activeSubTab, setActiveSubTab] = useState<string>("ledger");
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
 	useEffect(() => {
-		hodApi.getDepartmentProgrammes({ limit: 100 })
-			.then((res) => setProgrammes(res.data ?? []))
-			.finally(() => setLoading(false));
-	}, []);
+		Promise.all([
+			hodApi.getDepartmentProgrammes({ limit: 100 }),
+			hodApi.getProgrammesWithBatches(),
+		]).then(([progRes, batches]) => {
+			const progs = progRes.data ?? [];
+			setProgrammes(progs);
+			const actives: ActiveBatch[] = (batches ?? [])
+				.filter((b: ProgrammeWithBatch) => b.batch_status === "active")
+				.map((b: ProgrammeWithBatch) => ({
+					programmeId: b.programme_id,
+					programmeCode: b.programme_code,
+					programmeName: b.programme_name,
+					batchId: b.batch_id,
+					batchYear: b.batch_year,
+					studentCount: b.student_count,
+				}));
+			setActiveBatches(actives);
+			// Resolve batchId from URL batchYear when programme is pre-selected via URL
+			const urlProg = searchParams.get("programmeId");
+			const urlBatch = searchParams.get("batchYear");
+			if (urlProg && urlBatch && progs.some(p => p.programme_id === Number(urlProg))) {
+				hodApi.getBatchesByProgramme(Number(urlProg))
+					.then((bRes) => {
+						const match = bRes?.find(
+							(b: { batch_year: number | string }) => String(b.batch_year) === urlBatch,
+						);
+						if (match) {
+							setSelectedBatchId(match.batch_id);
+						}
+					})
+					.catch((err) => {
+						console.error("Failed to resolve batch from URL:", err);
+					});
+			}
+		}).finally(() => setLoading(false));
+	}, [searchParams]);
+
+	const handleSelectBatch = (batch: ActiveBatch) => {
+		setSelectedProgId(batch.programmeId);
+		setSelectedBatchId(batch.batchId);
+		setSelectedBatchYear(String(batch.batchYear));
+	};
 
 	const handleRefresh = () => setRefreshTrigger(n => n + 1);
+
+	const renderActiveContent = () => {
+		if (!selectedProgId || !selectedBatchYear) return null;
+		const props = {
+			programmeId: selectedProgId,
+			batchYear: Number(selectedBatchYear),
+			stakeholderType: selectedType,
+		};
+		switch (activeSubTab) {
+			case "ledger":
+				return <ConsolidatedMatrixView {...props} refreshTrigger={refreshTrigger} />;
+			case "configure":
+				return (
+					<div className="p-4">
+						<StakeholderSurveyConfig
+							{...props}
+							batchYear={selectedBatchYear}
+							onConfigSaved={handleRefresh}
+						/>
+					</div>
+				);
+			case "import":
+				return (
+					<div className="p-4">
+						<div className="max-w-3xl mx-auto pt-8">
+							<StakeholderSurveyImport
+								{...props}
+								batchYear={selectedBatchYear}
+								onImportComplete={handleRefresh}
+							/>
+						</div>
+					</div>
+				);
+			case "manual":
+				return <StakeholderManualEntry {...props} onSaved={handleRefresh} />;
+			default:
+				return null;
+		}
+	};
 
 	return (
 		<div className="h-[calc(100vh-4rem)] flex flex-col gap-6 p-8 overflow-y-auto">
@@ -53,6 +149,7 @@ export function HODStakeholderSurveys() {
 						value={String(selectedProgId ?? "")}
 						onValueChange={(v) => {
 							setSelectedProgId(Number(v));
+							setSelectedBatchId(null);
 							setSelectedBatchYear("");
 						}}
 						disabled={loading}
@@ -72,8 +169,9 @@ export function HODStakeholderSurveys() {
 				<div className="space-y-1 w-[160px]">
 					<BatchSelector
 						programmeId={selectedProgId ?? null}
-						value={undefined}
-						onChange={(_, batch) => {
+						value={selectedBatchId}
+						onChange={(id, batch) => {
+							setSelectedBatchId(id);
 							if (batch?.batch_year) {
 								setSelectedBatchYear(String(batch.batch_year));
 							}
@@ -90,115 +188,60 @@ export function HODStakeholderSurveys() {
 
 			{selectedProgId && selectedBatchYear ? (
 				<div className="flex flex-col gap-6 flex-1">
-					{/* Survey Type Tabs */}
 					<section className="bg-card border rounded-xl overflow-hidden shadow-sm">
-						<div className="p-4 border-b bg-muted/40 flex justify-between items-center">
+						<div className="p-4 border-b bg-muted/[.4] flex justify-between items-center">
 							<div>
 								<h3 className="font-semibold">Survey Configuration</h3>
 								<p className="text-xs text-muted-foreground">Batch {selectedBatchYear}</p>
 							</div>
-							<div className="flex gap-2">
-								<Button variant="outline" size="sm" className="h-8 w-8 p-0">
-									<Filter className="h-4 w-4" />
-								</Button>
-								<Button variant="outline" size="sm" className="h-8 w-8 p-0">
-									<Download className="h-4 w-4" />
-								</Button>
+						</div>
+
+						<div className="border-b px-4">
+							<div className="flex h-12 space-x-6">
+								{SURVEY_TYPES.map((type) => (
+									<button
+										key={type.id}
+										onClick={() => setSelectedType(type.id)}
+										className={`rounded-none h-full px-0 text-sm font-medium transition-colors hover:text-foreground ${
+											selectedType === type.id
+												? "border-b-2 border-primary text-foreground"
+												: "border-b-2 border-transparent text-muted-foreground"
+										}`}
+									>
+										{type.label}
+									</button>
+								))}
 							</div>
 						</div>
 
-						<Tabs value={selectedType} onValueChange={setSelectedType} className="flex-1 flex flex-col">
-							<div className="border-b px-4">
-								<TabsList className="bg-transparent h-12 p-0 space-x-6">
-									{SURVEY_TYPES.map((type) => (
-										<TabsTrigger
-											key={type.id}
-											value={type.id}
-											className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full data-[state=active]:shadow-none data-[state=active]:bg-transparent px-0"
-										>
-											{type.label}
-										</TabsTrigger>
-									))}
-								</TabsList>
-							</div>
-
-							<div className="flex-1 overflow-y-auto bg-muted/10 relative">
-								{SURVEY_TYPES.map((type) => (
-									<TabsContent key={type.id} value={type.id} className="m-0 h-full">
-										<Tabs defaultValue="ledger" className="flex-1 flex flex-col h-full">
-											<div className="border-b px-4">
-												<TabsList className="bg-transparent h-10 p-0 space-x-4">
-													<TabsTrigger
-														value="ledger"
-														className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full data-[state=active]:shadow-none data-[state=active]:bg-transparent px-0 text-sm"
-													>
-														Response Ledger
-													</TabsTrigger>
-													<TabsTrigger
-														value="configure"
-														className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full data-[state=active]:shadow-none data-[state=active]:bg-transparent px-0 text-sm"
-													>
-														Question Config
-													</TabsTrigger>
-													<TabsTrigger
-														value="import"
-														className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full data-[state=active]:shadow-none data-[state=active]:bg-transparent px-0 text-sm"
-													>
-														Import CSV
-													</TabsTrigger>
-													<TabsTrigger
-														value="manual"
-														className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full data-[state=active]:shadow-none data-[state=active]:bg-transparent px-0 text-sm"
-													>
-														Manual Entry
-													</TabsTrigger>
-												</TabsList>
-											</div>
-
-											<div className="flex-1 overflow-y-auto">
-												<TabsContent value="ledger" className="m-0 h-full">
-													<ConsolidatedMatrixView
-														programmeId={selectedProgId}
-														batchYear={Number(selectedBatchYear)}
-														stakeholderType={type.id}
-														refreshTrigger={refreshTrigger}
-													/>
-												</TabsContent>
-												<TabsContent value="configure" className="m-0 p-4 h-full">
-													<StakeholderSurveyConfig
-														programmeId={selectedProgId}
-														batchYear={selectedBatchYear}
-														stakeholderType={type.id}
-														onConfigSaved={handleRefresh}
-													/>
-												</TabsContent>
-												<TabsContent value="import" className="m-0 p-4 h-full">
-													<div className="max-w-3xl mx-auto pt-8">
-														<StakeholderSurveyImport
-															programmeId={selectedProgId}
-															batchYear={selectedBatchYear}
-															stakeholderType={type.id}
-															onImportComplete={handleRefresh}
-														/>
-													</div>
-												</TabsContent>
-												<TabsContent value="manual" className="m-0 h-full">
-													<StakeholderManualEntry
-														programmeId={selectedProgId}
-														batchYear={Number(selectedBatchYear)}
-														stakeholderType={type.id}
-														onSaved={handleRefresh}
-													/>
-												</TabsContent>
-											</div>
-										</Tabs>
-									</TabsContent>
+						<div className="border-b px-4">
+							<div className="flex h-10 space-x-4">
+								{[
+									{ id: "ledger", label: "Response Ledger" },
+									{ id: "configure", label: "Question Config" },
+									{ id: "import", label: "Import CSV" },
+									{ id: "manual", label: "Manual Entry" },
+								].map((tab) => (
+									<button
+										key={tab.id}
+										onClick={() => setActiveSubTab(tab.id)}
+										className={`rounded-none h-full px-0 text-sm font-medium transition-colors hover:text-foreground ${
+											activeSubTab === tab.id
+												? "border-b-2 border-primary text-foreground"
+												: "border-b-2 border-transparent text-muted-foreground"
+										}`}
+									>
+										{tab.label}
+									</button>
 								))}
 							</div>
-						</Tabs>
+						</div>
+
+						<div className="overflow-y-auto bg-muted/[.1]">
+							{renderActiveContent()}
+						</div>
 					</section>
 
-					{/* Consolidated Indirect Survey Matrix (programme-level, not type-specific) */}
 					<ConsolidatedIndirectMatrix
 						programmeId={selectedProgId}
 						batchYear={Number(selectedBatchYear)}
@@ -206,14 +249,45 @@ export function HODStakeholderSurveys() {
 					/>
 				</div>
 			) : (
-				<div className="flex-1 flex items-center justify-center border-2 border-dashed rounded-xl mt-4">
-					<div className="text-center">
-						<Calculator className="mx-auto h-8 w-8 text-muted-foreground/50 mb-3" />
-						<p className="text-lg font-medium text-foreground">Select Programme & Batch</p>
-						<p className="text-sm text-muted-foreground max-w-sm mt-1">
-							Choose a programme and batch year from the dropdown above to view stakeholder surveys.
+				<div className="flex-1 flex flex-col gap-6 mt-4">
+					<div className="text-center mb-2">
+						<Calculator className="mx-auto h-8 w-8 text-muted-foreground/[.5] mb-3" />
+						<p className="text-lg font-medium text-foreground">Active Programme Batches</p>
+						<p className="text-sm text-muted-foreground max-w-sm mt-1 mx-auto">
+							Select an active batch below or use the dropdown above to get started.
 						</p>
 					</div>
+					{activeBatches.length > 0 ? (
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+							{activeBatches.map((batch) => (
+								<button
+									key={`${batch.programmeId}-${batch.batchId}`}
+									onClick={() => handleSelectBatch(batch)}
+									className="flex items-start gap-3 p-4 bg-card border rounded-xl shadow-sm hover:border-primary hover:shadow-md transition-all text-left group"
+								>
+									<div className="w-10 h-10 rounded-lg bg-primary/[.1] flex items-center justify-center flex-shrink-0 group-hover:bg-primary/[.2] transition-colors">
+										<GraduationCap className="h-5 w-5 text-primary" />
+									</div>
+									<div className="min-w-0">
+										<p className="font-semibold text-sm truncate">
+											{batch.programmeCode} — {batch.programmeName}
+										</p>
+										<p className="text-xs text-muted-foreground mt-0.5">
+											Batch {batch.batchYear}
+											{batch.studentCount != null && ` · ${batch.studentCount} students`}
+										</p>
+									</div>
+								</button>
+							))}
+						</div>
+					) : (
+						<div className="flex-1 flex items-center justify-center border-2 border-dashed rounded-xl">
+							<div className="text-center">
+								<BookOpen className="mx-auto h-8 w-8 text-muted-foreground/[.5] mb-3" />
+								<p className="text-sm text-muted-foreground">No active batches found.</p>
+							</div>
+						</div>
+					)}
 				</div>
 			)}
 		</div>

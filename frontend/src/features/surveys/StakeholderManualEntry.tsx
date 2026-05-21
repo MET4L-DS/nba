@@ -104,15 +104,23 @@ export function StakeholderManualEntry({ programmeId, batchYear, stakeholderType
 
 	if (loadError) {
 		return (
-			<div className="p-4 flex items-start gap-2 text-red-500 bg-red-50 border border-red-200 rounded-lg">
-				<AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-				<div>
-					<p className="font-medium text-sm">Failed to load</p>
-					<p className="text-xs mt-0.5">{loadError}</p>
-					<Button variant="outline" size="sm" className="mt-2" onClick={loadData}>
-						Retry
-					</Button>
-				</div>
+			<div className="p-4">
+				<Card className="border-red-200">
+					<CardContent className="pt-6">
+						<div className="flex items-start gap-3">
+							<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100">
+								<AlertCircle className="h-4 w-4 text-red-600" />
+							</div>
+							<div className="flex-1">
+								<h4 className="font-semibold text-sm text-red-900">Failed to load</h4>
+								<p className="text-sm text-red-700 mt-1">{loadError}</p>
+								<Button variant="outline" size="sm" className="mt-3" onClick={loadData}>
+									Retry
+								</Button>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 		);
 	}
@@ -181,7 +189,7 @@ export function StakeholderManualEntry({ programmeId, batchYear, stakeholderType
 											{questions.map((question) => (
 												<td key={question.question_id ?? question.question_number} className="px-2 py-1.5">
 													<select
-														className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+														className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
 														value={respondent.responses[String(question.question_id)] ?? ""}
 														onChange={(e) => updateRating(index, Number(question.question_id), Number(e.target.value))}
 													>

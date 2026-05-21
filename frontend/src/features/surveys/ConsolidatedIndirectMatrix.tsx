@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableFooter,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { surveyApi } from "@/services/api/surveys";
 import type { StakeholderConsolidatedMatrixResponse } from "@/services/api/types";
 
@@ -60,7 +69,7 @@ export function ConsolidatedIndirectMatrix({ programmeId, batchYear, refreshTrig
 	}
 
 	const hasAnyData = SURVEY_ORDER.some(
-		(type) => matrix.matrix[type] && Object.values(matrix.matrix[type]).some((v) => v > 0),
+		(type) => matrix.matrix[type] && Object.values(matrix.matrix[type]).some((v) => v !== null && v !== undefined),
 	);
 
 	return (
@@ -80,58 +89,58 @@ export function ConsolidatedIndirectMatrix({ programmeId, batchYear, refreshTrig
 			</CardHeader>
 			<CardContent>
 				<div className="overflow-x-auto">
-					<table className="w-full text-sm border-collapse">
-						<thead>
-							<tr className="border-b-2 border-border bg-muted/50">
-								<th className="px-3 py-2.5 text-left font-semibold w-56">INDIRECT SURVEY</th>
+					<Table>
+						<TableHeader>
+							<TableRow className="border-b-2 bg-muted/[.5]">
+								<TableHead className="text-left font-semibold w-56">INDIRECT SURVEY</TableHead>
 								{PO_LIST.map((po) => (
-									<th key={po} className="px-2 py-2.5 text-center font-semibold tabular-nums min-w-[56px]">
+									<TableHead key={po} className="text-center font-semibold tabular-nums min-w-[56px]">
 										{po}
-									</th>
+									</TableHead>
 								))}
-							</tr>
-						</thead>
-						<tbody>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
 							{SURVEY_ORDER.map((type, idx) => {
 								const row = matrix.matrix[type] ?? {};
 								return (
-									<tr
+									<TableRow
 										key={type}
-										className={`border-b hover:bg-muted/10 ${idx % 2 === 0 ? "bg-card" : "bg-muted/10"}`}
+										className={idx % 2 === 0 ? "" : "bg-muted/[.1]"}
 									>
-										<td className="px-3 py-2.5 font-medium text-sm">{SURVEY_LABELS[type] ?? type}</td>
+										<TableCell className="font-medium text-sm">{SURVEY_LABELS[type] ?? type}</TableCell>
 										{PO_LIST.map((po) => {
-											const val = row[po] ?? 0;
+											const val = row[po];
 											return (
-												<td key={po} className="px-2 py-2.5 text-center tabular-nums">
-													{val > 0 ? (
-														<span className="inline-block px-1.5 py-0.5 rounded bg-muted/40 font-medium">
+												<TableCell key={po} className="text-center tabular-nums">
+													{val != null ? (
+														<span className="inline-block px-1.5 py-0.5 rounded bg-muted/[.4] font-medium">
 															{val.toFixed(2)}
 														</span>
 													) : (
 														<span className="text-muted-foreground/30">—</span>
 													)}
-												</td>
+												</TableCell>
 											);
 										})}
-									</tr>
+									</TableRow>
 								);
 							})}
-						</tbody>
-						<tfoot>
-							<tr className="border-t-2 border-primary/30 bg-primary/5">
-								<td className="px-3 py-3 font-bold text-sm text-primary">Average</td>
+						</TableBody>
+						<TableFooter className="border-t-2 border-primary/[.3] bg-primary/[.05]">
+							<TableRow>
+								<TableCell className="font-bold text-sm text-primary">Average</TableCell>
 								{PO_LIST.map((po) => {
-									const avg = matrix.averages[po] ?? 0;
+									const avg = matrix.averages[po];
 									return (
-										<td key={po} className="px-2 py-3 text-center tabular-nums font-bold text-primary">
-											{avg > 0 ? avg.toFixed(2) : "—"}
-										</td>
+										<TableCell key={po} className="text-center tabular-nums font-bold text-primary">
+											{avg != null ? avg.toFixed(2) : "—"}
+										</TableCell>
 									);
 								})}
-							</tr>
-						</tfoot>
-					</table>
+							</TableRow>
+						</TableFooter>
+					</Table>
 				</div>
 			</CardContent>
 		</Card>

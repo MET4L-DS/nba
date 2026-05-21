@@ -86,18 +86,17 @@ class ActionPlanRepository
     public function setTargets(int $programmeId, int $batchYear, array $targets): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO programme_batch_attainments
-                (programme_id, batch_year, po_name, target)
-             VALUES (?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE target = VALUES(target)'
+            'UPDATE programme_batch_attainments
+             SET target = ?
+             WHERE programme_id = ? AND batch_year = ? AND po_name = ?'
         );
 
         foreach ($targets as $poName => $targetVal) {
             $stmt->execute([
+                (float)$targetVal,
                 $programmeId,
                 $batchYear,
                 $poName,
-                (float)$targetVal,
             ]);
         }
     }

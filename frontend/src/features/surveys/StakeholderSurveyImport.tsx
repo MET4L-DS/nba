@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Upload, Trash2 } from "lucide-react";
@@ -70,6 +70,15 @@ export function StakeholderSurveyImport({
 	const [headers, setHeaders] = useState<string[]>([]);
 	const [importing, setImporting] = useState(false);
 	const [hasData, setHasData] = useState(false);
+
+	const poOptions = useMemo(
+		() => [...Array(12)].map((_, i) => `PO${i + 1}`),
+		[],
+	);
+	const psoOptions = useMemo(
+		() => [...Array(3)].map((_, i) => `PSO${i + 1}`),
+		[],
+	);
 
 	const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -303,17 +312,17 @@ export function StakeholderSurveyImport({
 									}
 								>
 									<option value="">Skip</option>
-									{[...Array(12)].map((_, i) => (
-										<option key={`PO${i + 1}`} value={`PO${i + 1}`}>
-											PO{i + 1}
+									{poOptions.map((po) => (
+										<option key={po} value={po}>
+											{po}
 										</option>
 									))}
-									{[...Array(3)].map((_, i) => (
+									{psoOptions.map((pso) => (
 										<option
-											key={`PSO${i + 1}`}
-											value={`PSO${i + 1}`}
+											key={pso}
+											value={pso}
 										>
-											PSO{i + 1}
+											{pso}
 										</option>
 									))}
 								</select>

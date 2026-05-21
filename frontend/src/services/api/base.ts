@@ -159,7 +159,7 @@ export async function apiDelete<T = void>(endpoint: string): Promise<T> {
 		}
 
 		debugLogger.warn("API", `DELETE ${endpoint} - Success`);
-		return data as T;
+		return data.data as T;
 	} catch (error) {
 		debugLogger.error("API", `DELETE ${endpoint} - Error`, error);
 		throw error;

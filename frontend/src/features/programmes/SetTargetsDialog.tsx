@@ -57,7 +57,11 @@ export function SetTargetsDialog({
 		const cleanTargets: Record<string, number> = {};
 		for (const [po, val] of Object.entries(targets)) {
 			const n = parseFloat(val);
-			if (!isNaN(n) && n >= 0) cleanTargets[po] = n;
+			if (!isNaN(n) && n >= 0) {
+				cleanTargets[po] = n;
+			} else if (val === "") {
+				cleanTargets[po] = 0;
+			}
 		}
 		setLoading(true);
 		try {
@@ -96,20 +100,22 @@ export function SetTargetsDialog({
 							{poList.map((po) => (
 								<div key={po} className="space-y-1">
 									<Label className="font-medium text-xs">{po}</Label>
-									<Input
-										type="number"
-										step="0.1"
-										min="0"
-										max="3"
-										placeholder="e.g. 2.5"
-										value={targets[po] ?? ""}
-										onChange={(e) =>
-											setTargets((prev) => ({
-												...prev,
-												[po]: e.target.value,
-											}))
-										}
-									/>
+								<Input
+									type="number"
+									step="0.1"
+									min="0"
+									max="3"
+									placeholder="e.g. 2.5"
+									value={targets[po] ?? ""}
+									onChange={(e) => {
+										const raw = e.target.value;
+										const clamped = raw.startsWith('-') ? '0' : raw;
+										setTargets((prev) => ({
+											...prev,
+											[po]: clamped,
+										}));
+									}}
+								/>
 								</div>
 							))}
 						</div>

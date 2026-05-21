@@ -22,11 +22,46 @@ export function AttainmentComparisonCharts({
 		name: po,
 		Direct: Number(data.averages[po] ?? 0),
 		Indirect:
-			data.indirect[po] != null ? Number(data.indirect[po]) : undefined,
+			data.indirect[po] != null ? Number(data.indirect[po]) : null,
 		Final: Number(data.finals[po] ?? 0),
 		Target:
-			data.targets[po] != null ? Number(data.targets[po]) : undefined,
+			data.targets[po] != null ? Number(data.targets[po]) : null,
 	}));
+
+	const hasData = chartData.some(
+		(d) => d.Direct > 0 || d.Final > 0 || (d.Indirect ?? 0) > 0,
+	);
+
+	if (!hasData) {
+		return (
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-sm font-medium">
+							Direct vs Indirect vs Final
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<p className="text-sm text-muted-foreground text-center py-12">
+							No attainment data available. Run "Recalculate" to generate data.
+						</p>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-sm font-medium">
+							Final vs Target
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<p className="text-sm text-muted-foreground text-center py-12">
+							No attainment data available. Run "Recalculate" to generate data.
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
 
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -41,7 +76,7 @@ export function AttainmentComparisonCharts({
 					<ResponsiveContainer width="100%" height={300}>
 						<BarChart data={chartData}>
 							<CartesianGrid strokeDasharray="3 3" />
-							<XAxis dataKey="name" fontSize={11} />
+							<XAxis dataKey="name" fontSize={10} interval={0} angle={-30} textAnchor="end" height={60} />
 							<YAxis domain={[0, 3]} fontSize={11} />
 							<Tooltip />
 							<Legend />
@@ -76,7 +111,7 @@ export function AttainmentComparisonCharts({
 					<ResponsiveContainer width="100%" height={300}>
 						<BarChart data={chartData}>
 							<CartesianGrid strokeDasharray="3 3" />
-							<XAxis dataKey="name" fontSize={11} />
+							<XAxis dataKey="name" fontSize={10} interval={0} angle={-30} textAnchor="end" height={60} />
 							<YAxis domain={[0, 3]} fontSize={11} />
 							<Tooltip />
 							<Legend />

@@ -1,8 +1,9 @@
 ﻿import { Card } from "@/components/ui/card";
+import type { CoursePOAttainmentRow } from "@/services/api";
 
 interface ArticulationMatrixProps {
 	data: {
-		courses: any[];
+		courses: CoursePOAttainmentRow[];
 		averages: Record<string, number>;
 		indirect: Record<string, number | null>;
 		finals: Record<string, number>;
@@ -25,7 +26,7 @@ export function ArticulationMatrix({ data, poList }: ArticulationMatrixProps) {
 					Course-level PO/PSO attainment with summary footer rows.
 				</p>
 			</div>
-			<div className="overflow-x-auto">
+			<div className="overflow-x-auto max-h-[600px]">
 				<table className="w-full text-sm whitespace-nowrap">
 					<thead className="bg-muted/40 sticky top-0 z-10 shadow-sm border-b">
 						<tr>
@@ -119,19 +120,19 @@ export function ArticulationMatrix({ data, poList }: ArticulationMatrixProps) {
 								>
 									Indirect Attainment (Surveys)
 								</td>
-								{poList.map((po) => {
-									const val = data.indirect[po];
-									return (
-										<td
-											key={po}
-											className="px-4 py-3 text-center tabular-nums font-semibold"
-										>
-											{val != null
-												? Number(val).toFixed(2)
-												: <span className="text-muted-foreground/30">—</span>}
-										</td>
-									);
-								})}
+							{poList.map((po) => {
+								const val = data.indirect[po];
+								return (
+									<td
+										key={po}
+										className="px-4 py-3 text-center tabular-nums font-semibold"
+									>
+										{val != null && val > 0
+											? Number(val).toFixed(2)
+											: <span className="text-muted-foreground/30">—</span>}
+									</td>
+								);
+							})}
 							</tr>
 							{/* Final row */}
 							<tr className="bg-primary/5 border-t border-primary/20">
@@ -160,25 +161,26 @@ export function ArticulationMatrix({ data, poList }: ArticulationMatrixProps) {
 								>
 									Target Level
 								</td>
-								{poList.map((po) => {
-									const val = data.targets[po];
-									const final = data.finals[po] ?? 0;
-									const isMet = val != null && final >= val;
-									return (
-										<td
-											key={po}
-											className="px-4 py-3 text-center tabular-nums"
-										>
-											{val != null
-												? (
-													<span className={`inline-flex items-center justify-center min-w-[3rem] px-2 py-1 rounded text-xs font-bold ${isMet ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-														{Number(val).toFixed(2)}
-													</span>
-												)
-												: <span className="text-muted-foreground/30">—</span>}
-										</td>
-									);
-								})}
+							{poList.map((po) => {
+								const val = data.targets[po];
+								const final = data.finals[po] ?? 0;
+								const hasTarget = val != null && val > 0;
+								const isMet = hasTarget && final >= val;
+								return (
+									<td
+										key={po}
+										className="px-4 py-3 text-center tabular-nums"
+									>
+										{hasTarget
+											? (
+												<span className={`inline-flex items-center justify-center min-w-[3rem] px-2 py-1 rounded text-xs font-bold ${isMet ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+													{Number(val).toFixed(2)}
+												</span>
+											)
+											: <span className="text-muted-foreground/30">—</span>}
+									</td>
+								);
+							})}
 							</tr>
 						</tfoot>
 					)}

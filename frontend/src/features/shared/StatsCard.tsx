@@ -30,9 +30,7 @@ export function StatsCard({
 	if (variant === "gradient") {
 		return (
 			<Card
-				className={`bg-linear-to-br ${
-					stat.gradient || "from-blue-500 to-blue-600"
-				} text-white border-0`}
+				className={`bg-linear-to-br ${stat.gradient || "from-blue-500 to-blue-600"} text-white border-0`}
 			>
 				<CardHeader className="flex flex-row items-center justify-between pb-2">
 					<CardTitle className="text-sm font-medium opacity-90">
@@ -64,19 +62,14 @@ export function StatsCard({
 	if (variant === "solid") {
 		return (
 			<Card
-				className={`bg-linear-to-br ${
-					stat.bgGradient ||
-					"from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30"
-				} border-0 shadow-sm hover:shadow-md transition-shadow`}
+				className={`bg-linear-to-br ${stat.bgGradient || "from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30"} border-0 shadow-sm hover:shadow-md transition-shadow`}
 			>
 				<CardHeader className="flex flex-row items-center justify-between pb-2">
 					<CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
 						{stat.label}
 					</CardTitle>
 					<div
-						className={`w-10 h-10 rounded-lg bg-linear-to-br ${
-							stat.gradient || "from-blue-500 to-blue-600"
-						} flex items-center justify-center`}
+						className={`w-10 h-10 rounded-lg bg-linear-to-br ${stat.bgGradient || "from-blue-500 to-blue-600"} flex items-center justify-center`}
 					>
 						<Icon className="w-5 h-5 text-white" />
 					</div>

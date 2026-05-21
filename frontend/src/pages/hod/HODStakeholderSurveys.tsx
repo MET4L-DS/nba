@@ -29,7 +29,7 @@ interface ActiveBatch {
 }
 
 export function HODStakeholderSurveys() {
-	const [searchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const [programmes, setProgrammes] = useState<Programme[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [activeBatches, setActiveBatches] = useState<ActiveBatch[]>([]);
@@ -47,6 +47,7 @@ export function HODStakeholderSurveys() {
 	const [activeSubTab, setActiveSubTab] = useState<string>("ledger");
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+	// Load programs and active batches on mount only
 	useEffect(() => {
 		Promise.all([
 			hodApi.getDepartmentProgrammes({ limit: 100 }),
@@ -65,30 +66,51 @@ export function HODStakeholderSurveys() {
 					studentCount: b.student_count,
 				}));
 			setActiveBatches(actives);
-			// Resolve batchId from URL batchYear when programme is pre-selected via URL
-			const urlProg = searchParams.get("programmeId");
-			const urlBatch = searchParams.get("batchYear");
-			if (urlProg && urlBatch && progs.some(p => p.programme_id === Number(urlProg))) {
-				hodApi.getBatchesByProgramme(Number(urlProg))
+		}).finally(() => setLoading(false));
+	}, []);
+
+	// Sync state when search parameters change (supporting direct links, reload, and back/forward navigation)
+	useEffect(() => {
+		const urlProg = searchParams.get("programmeId");
+		const urlBatch = searchParams.get("batchYear");
+
+		if (urlProg) {
+			const progId = Number(urlProg);
+			setSelectedProgId(progId);
+
+			if (urlBatch) {
+				setSelectedBatchYear(urlBatch);
+				hodApi.getBatchesByProgramme(progId)
 					.then((bRes) => {
 						const match = bRes?.find(
-							(b: { batch_year: number | string }) => String(b.batch_year) === urlBatch,
+							(b: { batch_id: number; batch_year: number | string }) => String(b.batch_year) === urlBatch,
 						);
 						if (match) {
 							setSelectedBatchId(match.batch_id);
+						} else {
+							setSelectedBatchId(null);
 						}
 					})
 					.catch((err) => {
 						console.error("Failed to resolve batch from URL:", err);
+						setSelectedBatchId(null);
 					});
+			} else {
+				setSelectedBatchId(null);
+				setSelectedBatchYear("");
 			}
-		}).finally(() => setLoading(false));
+		} else {
+			setSelectedProgId(undefined);
+			setSelectedBatchId(null);
+			setSelectedBatchYear("");
+		}
 	}, [searchParams]);
 
 	const handleSelectBatch = (batch: ActiveBatch) => {
-		setSelectedProgId(batch.programmeId);
-		setSelectedBatchId(batch.batchId);
-		setSelectedBatchYear(String(batch.batchYear));
+		setSearchParams({
+			programmeId: String(batch.programmeId),
+			batchYear: String(batch.batchYear),
+		});
 	};
 
 	const handleRefresh = () => setRefreshTrigger(n => n + 1);
@@ -148,9 +170,7 @@ export function HODStakeholderSurveys() {
 					<Select
 						value={String(selectedProgId ?? "")}
 						onValueChange={(v) => {
-							setSelectedProgId(Number(v));
-							setSelectedBatchId(null);
-							setSelectedBatchYear("");
+							setSearchParams({ programmeId: v });
 						}}
 						disabled={loading}
 					>
@@ -170,10 +190,16 @@ export function HODStakeholderSurveys() {
 					<BatchSelector
 						programmeId={selectedProgId ?? null}
 						value={selectedBatchId}
-						onChange={(id, batch) => {
-							setSelectedBatchId(id);
-							if (batch?.batch_year) {
-								setSelectedBatchYear(String(batch.batch_year));
+						onChange={(_id, batch) => {
+							if (batch?.batch_year && selectedProgId) {
+								setSearchParams({
+									programmeId: String(selectedProgId),
+									batchYear: String(batch.batch_year),
+								});
+							} else if (selectedProgId) {
+								setSearchParams({ programmeId: String(selectedProgId) });
+							} else {
+								setSearchParams({});
 							}
 						}}
 						disabled={!selectedProgId}

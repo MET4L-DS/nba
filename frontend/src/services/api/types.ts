@@ -676,7 +676,7 @@ export interface StakeholderManualRespondent {
 	respondent_identifier: string;
 	respondent_name: string;
 	qualification: string;
-	responses: Record<string, number>;
+	responses: Record<string, number | null>;
 }
 
 export interface StakeholderManualResponse {

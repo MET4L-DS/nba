@@ -44,7 +44,7 @@ export function StakeholderManualEntry({ programmeId, batchYear, stakeholderType
 		setRespondents((current) => current.map((row, i) => i === index ? { ...row, ...patch } : row));
 	};
 
-	const updateRating = (index: number, questionId: number, value: number) => {
+	const updateRating = (index: number, questionId: number, value: number | null) => {
 		setRespondents((current) => current.map((row, i) => i === index ? {
 			...row,
 			responses: { ...row.responses, [questionId]: value },
@@ -66,7 +66,16 @@ export function StakeholderManualEntry({ programmeId, batchYear, stakeholderType
 		const payload = validRespondents.flatMap((respondent) => {
 			const identifier = respondent.respondent_identifier || respondent.respondent_name.replace(/\s+/g, "_").toLowerCase();
 			return questions
-				.filter((question) => question.question_id && respondent.responses[String(question.question_id)] != null)
+				.filter((question) => {
+					const rating = respondent.responses[String(question.question_id)];
+					return (
+						question.question_id &&
+						rating !== null &&
+						rating !== undefined &&
+						rating >= 1 &&
+						rating <= 5
+					);
+				})
 				.map((question) => ({
 					respondent_identifier: identifier,
 					respondent_name: respondent.respondent_name,
@@ -191,7 +200,10 @@ export function StakeholderManualEntry({ programmeId, batchYear, stakeholderType
 													<select
 														className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
 														value={respondent.responses[String(question.question_id)] ?? ""}
-														onChange={(e) => updateRating(index, Number(question.question_id), Number(e.target.value))}
+														onChange={(e) => {
+															const val = e.target.value;
+															updateRating(index, Number(question.question_id), val === "" ? null : Number(val));
+														}}
 													>
 														<option value="">-</option>
 														<option value="5">5 - Strongly Agree</option>

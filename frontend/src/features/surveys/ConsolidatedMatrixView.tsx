@@ -31,65 +31,45 @@ export function ConsolidatedMatrixView({ programmeId, batchYear, stakeholderType
 		return data.individual[stakeholderType] ?? [];
 	}, [data, stakeholderType]);
 
-	const averageByPo = new Map((data?.averages ?? []).map((row) => [row.po_name, row]));
-
 	return (
-		<div className="p-4 space-y-4">
+		<div className="p-4">
 			<Card>
 				<CardHeader className="pb-3">
 					<div className="flex items-center justify-between">
-						<CardTitle className="text-base">Consolidated PO Attainment Matrix</CardTitle>
-						<Badge variant={data?.has_data ? "default" : "secondary"}>{loading ? "Loading" : data?.has_data ? "Data available" : "No data"}</Badge>
+						<CardTitle className="text-base">Response Ledger — {stakeholderType}</CardTitle>
+						<Badge variant={data?.has_data ? "default" : "secondary"}>
+							{loading ? "Loading" : data?.has_data ? `${ledger.length} responses` : "No data"}
+						</Badge>
 					</div>
 				</CardHeader>
 				<CardContent>
-					<div className="overflow-x-auto">
-						<table className="w-full text-sm border-collapse">
-							<thead>
-								<tr className="border-b bg-muted/50">
-									{PO_NAMES.map((po) => <th key={po} className="px-3 py-2 text-center font-medium">{po}</th>)}
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									{PO_NAMES.map((po) => {
-										const row = averageByPo.get(po);
-										return (
-											<td key={po} className="px-3 py-3 text-center border-b">
-												<div className="font-semibold">{row ? row.attainment_percentage.toFixed(1) : "-"}%</div>
-												<div className="text-xs text-muted-foreground">{row ? row.average_rating.toFixed(2) : "-"}/5</div>
-											</td>
-										);
-									})}
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</CardContent>
-			</Card>
-
-			<Card>
-				<CardHeader className="pb-3">
-					<CardTitle className="text-base">Response Ledger</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="overflow-x-auto max-h-[420px]">
+					<div className="overflow-x-auto max-h-[520px]">
 						<table className="w-full text-sm">
-							<thead className="sticky top-0 bg-card">
-								<tr className="border-b">
+							<thead className="sticky top-0 bg-card border-b">
+								<tr>
+									<th className="px-3 py-2 text-left">#</th>
 									<th className="px-3 py-2 text-left">Respondent</th>
 									<th className="px-3 py-2 text-left">Qualification</th>
-									{PO_NAMES.map((po) => <th key={po} className="px-3 py-2 text-center">{po}</th>)}
+									{PO_NAMES.map((po) => (
+										<th key={po} className="px-3 py-2 text-center font-medium">{po}</th>
+									))}
 								</tr>
 							</thead>
 							<tbody>
 								{ledger.length === 0 ? (
-									<tr><td colSpan={PO_NAMES.length + 2} className="px-3 py-8 text-center text-muted-foreground">No responses yet.</td></tr>
+									<tr>
+										<td colSpan={PO_NAMES.length + 3} className="px-3 py-8 text-center text-muted-foreground">
+											{loading ? "Loading..." : "No responses yet. Use Import CSV or Manual Entry to add data."}
+										</td>
+									</tr>
 								) : ledger.map((row, index) => (
-									<tr key={`${row.respondent_identifier ?? index}`} className="border-b">
-										<td className="px-3 py-2">{row.respondent_name || row.respondent_identifier || `Respondent ${index + 1}`}</td>
+									<tr key={`${row.respondent_identifier ?? index}`} className="border-b hover:bg-muted/10">
+										<td className="px-3 py-2 text-muted-foreground">{index + 1}</td>
+										<td className="px-3 py-2 font-medium">{row.respondent_name || row.respondent_identifier || `Respondent ${index + 1}`}</td>
 										<td className="px-3 py-2 text-muted-foreground">{row.qualification || "-"}</td>
-										{PO_NAMES.map((po) => <td key={po} className="px-3 py-2 text-center">{row.ratings?.[po] ?? "-"}</td>)}
+										{PO_NAMES.map((po) => (
+											<td key={po} className="px-3 py-2 text-center tabular-nums">{row.ratings?.[po] ?? "-"}</td>
+										))}
 									</tr>
 								))}
 							</tbody>

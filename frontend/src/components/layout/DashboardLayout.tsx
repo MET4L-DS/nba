@@ -96,6 +96,11 @@ export function DashboardLayout() {
 					{ id: "faculty", label: "Faculty", icon: Users },
 					{ id: "students", label: "Students", icon: GraduationCap },
 					{
+						id: "stakeholder-surveys",
+						label: "Surveys",
+						icon: FileText,
+					},
+					{
 						id: "programmes",
 						label: "Programmes",
 						icon: GraduationCap,

@@ -20,19 +20,11 @@ import { BatchSelector, type StatItem } from "@/features/shared";
 import { AttainmentStatCard } from "./AttainmentStatCard";
 import { ArticulationMatrix } from "./ArticulationMatrix";
 import {
-	Tabs,
-	TabsContent,
-	TabsList,
-	TabsTrigger,
-} from "@/components/ui/tabs";
-import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Target, FileText, TrendingUp, ChevronDown, BarChart3, PieChart } from "lucide-react";
-import { StakeholderSurveyImport } from "@/features/surveys/StakeholderSurveyImport";
-import { StakeholderSurveyConfig } from "@/features/surveys/StakeholderSurveyConfig";
 import { StakeholderSurveyResults } from "@/features/surveys/StakeholderSurveyResults";
 import { SetTargetsDialog } from "@/features/programmes/SetTargetsDialog";
 import { ActionPlansSection } from "@/features/programmes/ActionPlansSection";
@@ -66,9 +58,7 @@ export function ProgrammeAttainmentDashboard() {
 	const [programmes, setProgrammes] = useState<Programme[]>([]);
 	const [programmesLoading, setProgrammesLoading] = useState(true);
 	const [chartsOpen, setChartsOpen] = useState(false);
-	const [stakeholderRefresh, setStakeholderRefresh] = useState(0);
-	const [stakeholderBatchYear, setStakeholderBatchYear] = useState("");
-	const [stakeholderType, setStakeholderType] = useState("");
+	const [stakeholderRefresh] = useState(0);
 
 	const loadAttainment = useCallback(async () => {
 		if (!selectedProgrammeId) return;
@@ -348,51 +338,10 @@ export function ProgrammeAttainmentDashboard() {
 						<FileText className="h-5 w-5 text-primary" />
 						<h3 className="text-lg font-semibold">Stakeholder Surveys (Indirect Attainment)</h3>
 					</div>
-					<Tabs defaultValue="results">
-						<TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0">
-							<TabsTrigger value="results" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-								Results
-							</TabsTrigger>
-							<TabsTrigger value="import" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-								Import CSV
-							</TabsTrigger>
-							<TabsTrigger value="config" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-								Question Config
-							</TabsTrigger>
-						</TabsList>
-						<TabsContent value="results" className="pt-6">
-							<StakeholderSurveyResults
-								programmeId={selectedProgrammeId}
-								refreshTrigger={stakeholderRefresh}
-							/>
-						</TabsContent>
-						<TabsContent value="import" className="pt-6">
-							<StakeholderSurveyImport
-								programmeId={selectedProgrammeId}
-								onImportComplete={() =>
-									setStakeholderRefresh((n) => n + 1)
-								}
-								batchYear={stakeholderBatchYear}
-								stakeholderType={stakeholderType}
-								onBatchYearChange={
-									setStakeholderBatchYear
-								}
-								onStakeholderTypeChange={
-									setStakeholderType
-								}
-							/>
-						</TabsContent>
-						<TabsContent value="config" className="pt-6">
-							<StakeholderSurveyConfig
-								programmeId={selectedProgrammeId}
-								batchYear={stakeholderBatchYear}
-								stakeholderType={stakeholderType}
-								onConfigSaved={() =>
-									setStakeholderRefresh((n) => n + 1)
-								}
-							/>
-						</TabsContent>
-					</Tabs>
+					<StakeholderSurveyResults
+						programmeId={selectedProgrammeId}
+						refreshTrigger={stakeholderRefresh}
+					/>
 				</Card>
 			)}
 

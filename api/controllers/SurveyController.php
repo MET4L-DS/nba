@@ -397,7 +397,9 @@ class SurveyController
                 return;
             }
 
-            $imported = $this->stakeholderRepo->saveResponses((int)$survey['survey_id'], $input['responses']);
+            $surveyId = (int)$survey['survey_id'];
+            $responses = $this->stakeholderRepo->mapPoResponses($surveyId, $input['responses']);
+            $imported = $this->stakeholderRepo->saveResponses($surveyId, $responses);
 
             if (isset($GLOBALS['fileLogger'])) { $GLOBALS['fileLogger']->log('INFO', 'SurveyController', 'Stakeholder CSV imported', ['count' => $imported]); }
             http_response_code(200);
@@ -512,30 +514,75 @@ class SurveyController
         try {
             $batchYear = isset($_GET['batch_year']) ? (int)$_GET['batch_year'] : 0;
             $stakeholderType = !empty($_GET['stakeholder_type']) ? trim($_GET['stakeholder_type']) : null;
+            $mode = isset($_GET['mode']) && $_GET['mode'] === 'threshold' ? 'threshold' : 'average';
+            $proficiencyThreshold = isset($_GET['proficiency_threshold']) ? (int)$_GET['proficiency_threshold'] : 4;
 
             $averages = $this->stakeholderRepo->getPoAverages($programmeId, $batchYear, $stakeholderType);
             $byType = $this->stakeholderRepo->getPoAveragesByType($programmeId, $batchYear);
             $types = $this->stakeholderRepo->getDistinctTypes($programmeId, $batchYear);
             $individual = $this->stakeholderRepo->getByProgrammeBatchGrouped($programmeId, $batchYear, $stakeholderType);
+            $consolidatedMatrix = $this->stakeholderRepo->getConsolidatedMatrix($programmeId, $batchYear);
 
             $results = [];
             foreach ($averages as $avg) {
                 $avgRating = (float)$avg['average_rating'];
-                $results[] = [
+                $row = [
                     'po_name' => $avg['po_name'],
                     'average_rating' => $avgRating,
                     'attainment_percentage' => $avgRating > 0 ? round(($avgRating - 1) / 4 * 100, 2) : 0.0,
                     'respondent_count' => (int)$avg['respondent_count'],
                 ];
+                if ($mode === 'threshold') {
+                    $row['above_threshold_pct'] = null;
+                }
+                $results[] = $row;
+            }
+
+            if ($mode === 'threshold') {
+                $thresholds = $this->stakeholderRepo->getPoThresholds($programmeId, $batchYear, $proficiencyThreshold, $stakeholderType);
+                $thresholdByPo = [];
+                foreach ($thresholds as $t) {
+                    $thresholdByPo[$t['po_name']] = round((float)$t['above_threshold_pct'], 2);
+                }
+                foreach ($results as &$row) {
+                    $row['above_threshold_pct'] = $thresholdByPo[$row['po_name']] ?? 0.0;
+                }
             }
 
             $byTypeFormatted = [];
             foreach ($byType as $row) {
-                $byTypeFormatted[] = [
+                $avgRating = (float)$row['average_rating'];
+                $entry = [
                     'stakeholder_type' => $row['stakeholder_type'],
                     'po_name' => $row['po_name'],
-                    'average_rating' => (float)$row['average_rating'],
+                    'average_rating' => $avgRating,
+                    'attainment_percentage' => $avgRating > 0 ? round(($avgRating - 1) / 4 * 100, 2) : 0.0,
                     'respondent_count' => (int)$row['respondent_count'],
+                ];
+                if ($mode === 'threshold') {
+                    $entry['above_threshold_pct'] = null;
+                }
+                $byTypeFormatted[] = $entry;
+            }
+
+            if ($mode === 'threshold') {
+                $thresholdsByType = $this->stakeholderRepo->getPoThresholdsByType($programmeId, $batchYear, $proficiencyThreshold);
+                $threshByTypePo = [];
+                foreach ($thresholdsByType as $t) {
+                    $key = $t['stakeholder_type'] . '|' . $t['po_name'];
+                    $threshByTypePo[$key] = round((float)$t['above_threshold_pct'], 2);
+                }
+                foreach ($byTypeFormatted as &$row) {
+                    $key = $row['stakeholder_type'] . '|' . $row['po_name'];
+                    $row['above_threshold_pct'] = $threshByTypePo[$key] ?? 0.0;
+                }
+            }
+
+            $consolidated = [];
+            foreach ($consolidatedMatrix['averages'] as $po => $level) {
+                $consolidated[] = [
+                    'po_name' => $po,
+                    'attainment_level' => $level,
                 ];
             }
 
@@ -546,9 +593,12 @@ class SurveyController
                     'programme_id' => $programmeId,
                     'batch_year' => $batchYear,
                     'has_data' => !empty($averages),
+                    'mode' => $mode,
                     'stakeholder_types' => $types,
                     'averages' => $results,
                     'by_type' => $byTypeFormatted,
+                    'consolidated' => $consolidated,
+                    'consolidated_matrix' => $consolidatedMatrix,
                     'individual' => $individual,
                 ],
             ]);

@@ -586,7 +586,8 @@ export interface ManualEntryResponse {
 
 // Stakeholder Survey Types
 export interface StakeholderSurveyRow {
-	po_name: string;
+	po_name?: string;
+	question_id?: number;
 	likert_rating: number;
 	respondent_identifier?: string | null;
 	respondent_name?: string | null;
@@ -607,16 +608,31 @@ export interface StakeholderSurveyImportResponse {
 
 export interface StakeholderPOAverage {
 	po_name: string;
-	average_rating: number;
-	attainment_percentage: number;
+	average_rating?: number;
+	attainment_percentage?: number;
+	above_threshold_pct?: number;
 	respondent_count: number;
 }
 
 export interface StakeholderByTypeRow {
 	stakeholder_type: string;
 	po_name: string;
-	average_rating: number;
+	average_rating?: number;
+	attainment_percentage?: number;
+	above_threshold_pct?: number;
 	respondent_count: number;
+}
+
+export interface StakeholderConsolidatedRow {
+	po_name: string;
+	attainment_percentage: number;
+	attainment_level?: number;
+}
+
+export interface StakeholderConsolidatedMatrixResponse {
+	matrix: Record<string, Record<string, number>>;
+	averages: Record<string, number>;
+	po_list: string[];
 }
 
 export interface StakeholderIndividualResponse {
@@ -630,9 +646,12 @@ export interface StakeholderSurveyResultsResponse {
 	programme_id: number;
 	batch_year: number;
 	has_data: boolean;
+	mode: string;
 	stakeholder_types: string[];
 	averages: StakeholderPOAverage[];
 	by_type: StakeholderByTypeRow[];
+	consolidated: StakeholderConsolidatedRow[];
+	consolidated_matrix: StakeholderConsolidatedMatrixResponse;
 	individual: Record<string, StakeholderIndividualResponse[]>;
 }
 

@@ -76,7 +76,7 @@ class StakeholderSurveyRepository
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare(
-                'INSERT INTO stakeholder_survey_responses_v2 
+                'INSERT INTO stakeholder_survey_responses 
                  (survey_id, respondent_identifier, respondent_name, qualification, question_id, likert_rating) 
                  VALUES (?, ?, ?, ?, ?, ?) 
                  ON DUPLICATE KEY UPDATE 
@@ -108,7 +108,7 @@ class StakeholderSurveyRepository
 
     public function clearResponses(int $surveyId): void
     {
-        $stmt = $this->db->prepare('DELETE FROM stakeholder_survey_responses_v2 WHERE survey_id = ?');
+        $stmt = $this->db->prepare('DELETE FROM stakeholder_survey_responses WHERE survey_id = ?');
         $stmt->execute([$surveyId]);
     }
 
@@ -116,7 +116,7 @@ class StakeholderSurveyRepository
     {
         $stmt = $this->db->prepare(
             'SELECT respondent_identifier, respondent_name, qualification, question_id, likert_rating
-             FROM stakeholder_survey_responses_v2
+             FROM stakeholder_survey_responses
              WHERE survey_id = ?
              ORDER BY respondent_identifier, question_id'
         );
@@ -130,7 +130,7 @@ class StakeholderSurveyRepository
                     q.po_name, 
                     SUM(r.likert_rating * q.mapping_weight) / SUM(q.mapping_weight) as average_rating,
                     COUNT(DISTINCT r.respondent_identifier) as respondent_count
-                FROM stakeholder_survey_responses_v2 r
+                FROM stakeholder_survey_responses r
                 JOIN stakeholder_survey_questions q ON r.question_id = q.question_id
                 JOIN stakeholder_surveys s ON r.survey_id = s.survey_id
                 WHERE s.programme_id = ? AND s.batch_year = ?';
@@ -154,7 +154,7 @@ class StakeholderSurveyRepository
                     q.po_name, 
                     SUM(r.likert_rating * q.mapping_weight) / SUM(q.mapping_weight) as average_rating,
                     COUNT(DISTINCT r.respondent_identifier) as respondent_count
-                FROM stakeholder_survey_responses_v2 r
+                FROM stakeholder_survey_responses r
                 JOIN stakeholder_survey_questions q ON r.question_id = q.question_id
                 JOIN stakeholder_surveys s ON r.survey_id = s.survey_id
                 WHERE s.programme_id = ? AND s.batch_year = ?
@@ -186,7 +186,7 @@ class StakeholderSurveyRepository
                     MAX(r.qualification) as qualification,
                     q.po_name,
                     SUM(r.likert_rating * q.mapping_weight) / SUM(q.mapping_weight) as po_rating
-                FROM stakeholder_survey_responses_v2 r
+                FROM stakeholder_survey_responses r
                 JOIN stakeholder_survey_questions q ON r.question_id = q.question_id
                 JOIN stakeholder_surveys s ON r.survey_id = s.survey_id
                 WHERE s.programme_id = ? AND s.batch_year = ?';
@@ -226,6 +226,144 @@ class StakeholderSurveyRepository
         }
 
         return $grouped;
+    }
+
+    public function mapPoResponses(int $surveyId, array $responses): array
+    {
+        $questions = $this->getQuestions($surveyId);
+        $poToQid = [];
+        foreach ($questions as $q) {
+            $po = $q['po_name'];
+            if (!isset($poToQid[$po])) {
+                $poToQid[$po] = (int)$q['question_id'];
+            }
+        }
+
+        $mapped = [];
+        foreach ($responses as $row) {
+            if (isset($row['question_id'])) {
+                $mapped[] = $row;
+                continue;
+            }
+            $poName = $row['po_name'] ?? null;
+            if (!$poName || !isset($poToQid[$poName])) {
+                continue;
+            }
+            $row['question_id'] = $poToQid[$poName];
+            unset($row['po_name']);
+            $mapped[] = $row;
+        }
+        return $mapped;
+    }
+
+    public function getPoThresholds(int $programmeId, int $batchYear, int $proficiencyThreshold = 4, ?string $stakeholderType = null): array
+    {
+        $sql = 'SELECT 
+                    q.po_name, 
+                    COUNT(DISTINCT r.respondent_identifier) as respondent_count,
+                    SUM(r.likert_rating >= ?) / COUNT(DISTINCT r.respondent_identifier) * 100 as above_threshold_pct
+                FROM stakeholder_survey_responses r
+                JOIN stakeholder_survey_questions q ON r.question_id = q.question_id
+                JOIN stakeholder_surveys s ON r.survey_id = s.survey_id
+                WHERE s.programme_id = ? AND s.batch_year = ?';
+        
+        $params = [$proficiencyThreshold, $programmeId, $batchYear];
+        if ($stakeholderType) {
+            $sql .= ' AND s.stakeholder_type = ?';
+            $params[] = $stakeholderType;
+        }
+        $sql .= ' GROUP BY q.po_name';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getPoThresholdsByType(int $programmeId, int $batchYear, int $proficiencyThreshold = 4): array
+    {
+        $sql = 'SELECT 
+                    s.stakeholder_type,
+                    q.po_name, 
+                    COUNT(DISTINCT r.respondent_identifier) as respondent_count,
+                    SUM(r.likert_rating >= ?) / COUNT(DISTINCT r.respondent_identifier) * 100 as above_threshold_pct
+                FROM stakeholder_survey_responses r
+                JOIN stakeholder_survey_questions q ON r.question_id = q.question_id
+                JOIN stakeholder_surveys s ON r.survey_id = s.survey_id
+                WHERE s.programme_id = ? AND s.batch_year = ?
+                GROUP BY s.stakeholder_type, q.po_name';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$proficiencyThreshold, $programmeId, $batchYear]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getConsolidatedMatrix(int $programmeId, int $batchYear): array
+    {
+        $standardTypes = ['Alumni', 'Graduate Exit', 'Parent', 'Academic Peer', 'Employer'];
+        $poList = [];
+        for ($i = 1; $i <= 12; $i++) { $poList[] = 'PO' . $i; }
+        for ($i = 1; $i <= 3; $i++) { $poList[] = 'PSO' . $i; }
+
+        $byType = $this->getPoAveragesByType($programmeId, $batchYear);
+
+        $typePcts = [];
+        foreach ($byType as $row) {
+            $po = $row['po_name'];
+            $t = $row['stakeholder_type'];
+            $avg = (float)$row['average_rating'];
+            $pct = $avg > 0 ? ($avg - 1) / 4 * 100 : 0.0;
+            $typePcts[$t][$po] = $pct;
+        }
+
+        $matrix = [];
+        foreach ($standardTypes as $type) {
+            $matrix[$type] = [];
+            $pctsForType = $typePcts[$type] ?? [];
+            foreach ($poList as $po) {
+                $pct = $pctsForType[$po] ?? 0.0;
+                $matrix[$type][$po] = round($this->pctToAttainmentLevel($pct), 2);
+            }
+        }
+
+        $averages = [];
+        foreach ($poList as $po) {
+            $sum = 0.0;
+            $count = 0;
+            foreach ($standardTypes as $type) {
+                $val = $matrix[$type][$po] ?? 0.0;
+                if ($val > 0) {
+                    $sum += $val;
+                    $count++;
+                }
+            }
+            $averages[$po] = $count > 0 ? round($sum / $count, 2) : 0.0;
+        }
+
+        return [
+            'matrix' => $matrix,
+            'averages' => $averages,
+            'po_list' => $poList,
+        ];
+    }
+
+    private function pctToAttainmentLevel(float $percentage): float
+    {
+        if ($percentage >= 70.0) return 3.0;
+        if ($percentage >= 60.0) {
+            $diff = 70.0 - 60.0;
+            if ($diff == 0.0) return 3.0;
+            return 2.0 + ($percentage - 60.0) / $diff;
+        }
+        if ($percentage >= 50.0) {
+            $diff = 60.0 - 50.0;
+            if ($diff == 0.0) return 2.0;
+            return 1.0 + ($percentage - 50.0) / $diff;
+        }
+        if ($percentage > 0.0) {
+            $diff = 50.0;
+            return $percentage / $diff;
+        }
+        return 0.0;
     }
 
     public function deleteByProgrammeBatch(int $programmeId, int $batchYear, ?string $stakeholderType = null): void

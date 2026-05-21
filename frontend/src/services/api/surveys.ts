@@ -114,13 +114,16 @@ async function getStakeholderResults(
 	programmeId: number,
 	batchYear: number,
 	stakeholderType?: string,
+	mode?: string,
 ): Promise<StakeholderSurveyResultsResponse> {
 	const params = new URLSearchParams({ batch_year: String(batchYear) });
 	if (stakeholderType) params.set("stakeholder_type", stakeholderType);
+	if (mode) params.set("mode", mode);
 	debugLogger.info("surveyApi", "getStakeholderResults called", {
 		programmeId,
 		batchYear,
 		stakeholderType,
+		mode,
 	});
 	const response = await apiGet<StakeholderSurveyResultsResponse>(
 		`/programmes/${programmeId}/survey/stakeholder/results?${params}`,

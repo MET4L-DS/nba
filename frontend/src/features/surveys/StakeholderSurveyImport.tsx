@@ -1,20 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Upload, Trash2 } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
 import { useCSVParser } from "@/features/shared/useCSVParser";
-import { BatchSelector } from "@/features/shared/BatchSelector";
-
-const VALID_STAKEHOLDER_TYPES = [
-	"Alumni",
-	"Employer",
-	"Graduate Exit",
-	"Parent",
-	"Academic Peer",
-] as const;
 
 const PO_PATTERNS = [
 	/^PO\s*(\d+)$/i,
@@ -63,34 +52,20 @@ function detectMetaColumn(header: string): "name" | "qualification" | null {
 
 interface StakeholderSurveyImportProps {
 	programmeId: number;
+	batchYear: string;
+	stakeholderType: string;
 	onImportComplete?: () => void;
-	batchYear?: string;
-	stakeholderType?: string;
-	onBatchYearChange?: (val: string) => void;
-	onStakeholderTypeChange?: (val: string) => void;
 }
 
 export function StakeholderSurveyImport({
 	programmeId,
+	batchYear,
+	stakeholderType,
 	onImportComplete,
-	batchYear: controlledBatch,
-	stakeholderType: controlledType,
-	onBatchYearChange,
-	onStakeholderTypeChange,
 }: StakeholderSurveyImportProps) {
-	const { parseCSV, isParsing, error } = useCSVParser<any>();
-	const [localBatchYear, setLocalBatchYear] = useState("");
-	const [localStakeholderType, setLocalStakeholderType] = useState("");
-	const batchYear = controlledBatch ?? localBatchYear;
-	const stakeholderType = controlledType ?? localStakeholderType;
-	const setBatchYear = onBatchYearChange ?? setLocalBatchYear;
-	const setStakeholderType = onStakeholderTypeChange ?? setLocalStakeholderType;
-	const [columnMapping, setColumnMapping] = useState<
-		Record<string, string | null>
-	>({});
-	const [metaMapping, setMetaMapping] = useState<
-		Record<string, "name" | "qualification" | null>
-	>({});
+	const { parseCSV, isParsing, error: parseError } = useCSVParser<any>();
+	const [columnMapping, setColumnMapping] = useState<Record<string, string | null>>({});
+	const [metaMapping, setMetaMapping] = useState<Record<string, "name" | "qualification" | null>>({});
 	const [parsedData, setParsedData] = useState<any[] | null>(null);
 	const [headers, setHeaders] = useState<string[]>([]);
 	const [importing, setImporting] = useState(false);
@@ -148,11 +123,11 @@ export function StakeholderSurveyImport({
 		if (!parsedData || !columnMapping) return;
 		const year = parseInt(batchYear, 10);
 		if (!year || year < 1900 || year > 2100) {
-			toast.error("Please enter a valid batch year");
+			toast.error("Invalid batch year");
 			return;
 		}
 		if (!stakeholderType) {
-			toast.error("Please select a stakeholder type");
+			toast.error("No stakeholder type selected");
 			return;
 		}
 
@@ -250,8 +225,8 @@ export function StakeholderSurveyImport({
 			);
 			setHasData(true);
 			onImportComplete?.();
-		} catch {
-			toast.error("Failed to import stakeholder survey");
+		} catch (e) {
+			toast.error(e instanceof Error ? e.message : "Failed to import stakeholder survey");
 		} finally {
 			setImporting(false);
 		}
@@ -262,7 +237,7 @@ export function StakeholderSurveyImport({
 		if (!confirm("Clear all stakeholder survey data for this programme/batch?"))
 			return;
 		try {
-			await surveyApi.clearStakeholder(programmeId, year, stakeholderType || undefined);
+			await surveyApi.clearStakeholder(programmeId, year, stakeholderType);
 			toast.success("Stakeholder survey data cleared");
 			setHasData(false);
 			setParsedData(null);
@@ -277,144 +252,110 @@ export function StakeholderSurveyImport({
 	);
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">
-					Stakeholder Survey — Import
-				</CardTitle>
-			</CardHeader>
-			<CardContent className="space-y-4">
-				<p className="text-sm text-muted-foreground">
-					Upload a CSV export from Google Forms. PO/PSO columns (e.g. "PO1",
-					"PSO1") are auto-detected. "Name" and "Qualification" columns
-					are also auto-detected. Supports Likert text ("Strongly Agree"→5)
-					or numeric values.
-				</p>
+		<div className="space-y-3">
+			<div className="flex items-center gap-2 text-sm text-muted-foreground">
+				<span>Batch: <strong>{batchYear}</strong></span>
+				<span>Type: <strong>{stakeholderType}</strong></span>
+			</div>
 
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<div className="space-y-1">
-						<Label htmlFor="stk-batch">Batch Year</Label>
-						<BatchSelector
-							programmeId={programmeId}
-							value={null}
-							onChange={(_, batch) => {
-								if (batch?.batch_year) {
-									setBatchYear(String(batch.batch_year));
-								}
-							}}
-						/>
-					</div>
-					<div className="space-y-1">
-						<Label htmlFor="stk-type">Stakeholder Type</Label>
-						<select
-							id="stk-type"
-							className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-							value={stakeholderType}
-							onChange={(e) => setStakeholderType(e.target.value)}
-						>
-							<option value="">Select type...</option>
-							{VALID_STAKEHOLDER_TYPES.map((t) => (
-								<option key={t} value={t}>
-									{t}
-								</option>
-							))}
-						</select>
-					</div>
-				</div>
+			<p className="text-xs text-muted-foreground">
+				Upload a Google Forms CSV export. PO/PSO columns (e.g. "PO1", "PSO1")
+				are auto-detected. "Name" and "Qualification" are also auto-detected.
+				Likert text ("Strongly Agree"→5) or numeric values supported.
+			</p>
 
-				<div>
-					<input
-						type="file"
-						accept=".csv"
-						onChange={handleFileSelected}
-						className="hidden"
-						id="stk-csv-input"
-					/>
-					<Button
-						variant="outline"
-						disabled={isParsing}
-						onClick={() =>
-							document.getElementById("stk-csv-input")?.click()
-						}
-					>
-						<Upload className="w-4 h-4 mr-2" />
-						{isParsing ? "Parsing..." : "Upload CSV"}
-					</Button>
-					{error && (
-						<p className="text-sm text-red-500 mt-1">{error}</p>
-					)}
-				</div>
-
-				{headers.length > 0 && (
-					<div className="space-y-2">
-						<h4 className="text-sm font-medium">Column Mapping</h4>
-						<div className="grid grid-cols-[1fr_auto] gap-2 text-sm">
-							{renderingColumns.map((col) => (
-								<div key={col} className="contents">
-									<span className="truncate py-1">{col}</span>
-									<select
-										className="h-8 rounded border px-2 text-xs"
-										value={columnMapping[col] ?? ""}
-										onChange={(e) =>
-											handleMappingChange(col, e.target.value)
-										}
-									>
-										<option value="">Skip</option>
-										{[...Array(12)].map((_, i) => (
-											<option key={`PO${i + 1}`} value={`PO${i + 1}`}>
-												PO{i + 1}
-											</option>
-										))}
-										{[...Array(3)].map((_, i) => (
-											<option
-												key={`PSO${i + 1}`}
-												value={`PSO${i + 1}`}
-											>
-												PSO{i + 1}
-											</option>
-										))}
-									</select>
-								</div>
-							))}
-						</div>
-
-						<div className="text-xs text-muted-foreground">
-							{Object.entries(metaMapping).length > 0 && (
-								<p>
-									Auto-detected:{" "}
-									{Object.entries(metaMapping)
-										.map(([col, type]) => `${col} → ${type}`)
-										.join(", ")}
-								</p>
-							)}
-						</div>
-
-						<div className="flex gap-2 pt-2">
-							<Button
-								onClick={handleImport}
-								disabled={
-									importing ||
-									!batchYear ||
-									!stakeholderType ||
-									getPoColumns().length === 0
-								}
-							>
-								{importing ? "Importing..." : "Import Responses"}
-							</Button>
-							{hasData && (
-								<Button
-									variant="destructive"
-									size="sm"
-									onClick={handleClear}
-								>
-									<Trash2 className="w-4 h-4 mr-1" />
-									Clear
-								</Button>
-							)}
-						</div>
-					</div>
+			<div>
+				<input
+					type="file"
+					accept=".csv"
+					onChange={handleFileSelected}
+					className="hidden"
+					id="stk-csv-input"
+				/>
+				<Button
+					variant="outline"
+					size="sm"
+					disabled={isParsing}
+					onClick={() =>
+						document.getElementById("stk-csv-input")?.click()
+					}
+				>
+					<Upload className="w-4 h-4 mr-1.5" />
+					{isParsing ? "Parsing..." : "Upload CSV"}
+				</Button>
+				{parseError && (
+					<p className="text-sm text-red-500 mt-1">{parseError}</p>
 				)}
-			</CardContent>
-		</Card>
+			</div>
+
+			{headers.length > 0 && (
+				<div className="space-y-2">
+					<h4 className="text-sm font-medium">Column Mapping</h4>
+					<div className="grid grid-cols-[1fr_auto] gap-2 text-sm max-w-lg">
+						{renderingColumns.map((col) => (
+							<div key={col} className="contents">
+								<span className="truncate py-1 text-xs">{col}</span>
+								<select
+									className="h-7 rounded border px-2 text-xs"
+									value={columnMapping[col] ?? ""}
+									onChange={(e) =>
+										handleMappingChange(col, e.target.value)
+									}
+								>
+									<option value="">Skip</option>
+									{[...Array(12)].map((_, i) => (
+										<option key={`PO${i + 1}`} value={`PO${i + 1}`}>
+											PO{i + 1}
+										</option>
+									))}
+									{[...Array(3)].map((_, i) => (
+										<option
+											key={`PSO${i + 1}`}
+											value={`PSO${i + 1}`}
+										>
+											PSO{i + 1}
+										</option>
+									))}
+								</select>
+							</div>
+						))}
+					</div>
+
+					{Object.entries(metaMapping).length > 0 && (
+						<p className="text-xs text-muted-foreground">
+							Auto-detected:{" "}
+							{Object.entries(metaMapping)
+								.map(([col, type]) => `${col} → ${type}`)
+								.join(", ")}
+						</p>
+					)}
+
+					<div className="flex gap-2 pt-1">
+						<Button
+							size="sm"
+							onClick={handleImport}
+							disabled={
+								importing ||
+								!batchYear ||
+								!stakeholderType ||
+								getPoColumns().length === 0
+							}
+						>
+							{importing ? "Importing..." : "Import Responses"}
+						</Button>
+						{hasData && (
+							<Button
+								variant="destructive"
+								size="sm"
+								onClick={handleClear}
+							>
+								<Trash2 className="w-4 h-4 mr-1" />
+								Clear
+							</Button>
+						)}
+					</div>
+				</div>
+			)}
+		</div>
 	);
 }

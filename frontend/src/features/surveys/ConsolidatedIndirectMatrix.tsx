@@ -1,108 +1,138 @@
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import type { StakeholderSurveyResultsResponse } from "@/services/api";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { surveyApi } from "@/services/api/surveys";
+import type { StakeholderConsolidatedMatrixResponse } from "@/services/api/types";
 
 interface ConsolidatedIndirectMatrixProps {
-	data: StakeholderSurveyResultsResponse;
+	programmeId: number;
+	batchYear: number;
+	refreshTrigger?: number;
 }
 
-export function ConsolidatedIndirectMatrix({
-	data,
-}: ConsolidatedIndirectMatrixProps) {
-	if (!data.has_data || data.by_type.length === 0) return null;
+const SURVEY_LABELS: Record<string, string> = {
+	"Alumni": "Alumni Survey Form",
+	"Graduate Exit": "Graduate Exit Survey Form",
+	"Parent": "Parent Survey Form",
+	"Academic Peer": "Academic Peers Survey Form",
+	"Employer": "Employer Survey Form",
+};
 
-	const poNames = data.averages.map((a) => a.po_name);
-	const typeGroups: Record<
-		string,
-		Array<{ po_name: string; average_rating: number; respondent_count: number }>
-	> = {};
-	for (const row of data.by_type) {
-		if (!typeGroups[row.stakeholder_type]) {
-			typeGroups[row.stakeholder_type] = [];
-		}
-		typeGroups[row.stakeholder_type].push({
-			po_name: row.po_name,
-			average_rating: Number(row.average_rating),
-			respondent_count: row.respondent_count,
-		});
+const SURVEY_ORDER = ["Alumni", "Graduate Exit", "Parent", "Academic Peer", "Employer"];
+
+const PO_LIST = [
+	"PO1", "PO2", "PO3", "PO4", "PO5", "PO6", "PO7", "PO8", "PO9", "PO10", "PO11", "PO12",
+	"PSO1", "PSO2", "PSO3",
+];
+
+export function ConsolidatedIndirectMatrix({ programmeId, batchYear, refreshTrigger = 0 }: ConsolidatedIndirectMatrixProps) {
+	const [matrix, setMatrix] = useState<StakeholderConsolidatedMatrixResponse | null>(null);
+	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		setLoading(true);
+		surveyApi.getStakeholderResults(programmeId, batchYear)
+			.then((res) => setMatrix(res.consolidated_matrix ?? null))
+			.finally(() => setLoading(false));
+	}, [programmeId, batchYear, refreshTrigger]);
+
+	if (loading) {
+		return (
+			<Card>
+				<CardContent className="py-8 text-center text-muted-foreground">
+					Loading consolidated matrix...
+				</CardContent>
+			</Card>
+		);
 	}
 
-	const typeNames = Object.keys(typeGroups);
+	if (!matrix) {
+		return (
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-base">Consolidated Indirect Survey Matrix</CardTitle>
+				</CardHeader>
+				<CardContent className="py-8 text-center text-muted-foreground">
+					No survey data for this programme/batch. Import responses first.
+				</CardContent>
+			</Card>
+		);
+	}
+
+	const hasAnyData = SURVEY_ORDER.some(
+		(type) => matrix.matrix[type] && Object.values(matrix.matrix[type]).some((v) => v > 0),
+	);
 
 	return (
 		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">
-					Consolidated Indirect Survey Matrix
-				</CardTitle>
+			<CardHeader className="pb-3">
+				<div className="flex items-center justify-between">
+					<div>
+						<CardTitle className="text-base">Consolidated Indirect Survey Matrix</CardTitle>
+						<p className="text-xs text-muted-foreground mt-1">
+							Batch {batchYear} — Normalised PO attainment levels (0.00 – 3.00)
+						</p>
+					</div>
+					<Badge variant={hasAnyData ? "default" : "secondary"}>
+						{hasAnyData ? "Data available" : "No data"}
+					</Badge>
+				</div>
 			</CardHeader>
-			<CardContent className="overflow-x-auto">
-				<table className="w-full text-sm whitespace-nowrap">
-					<thead>
-						<tr className="border-b">
-							<th className="text-left py-2 px-2">Type</th>
-							{poNames.map((po) => (
-								<th key={po} className="text-right py-2 px-2">
-									{po}
-								</th>
-							))}
-						</tr>
-					</thead>
-					<tbody>
-						{typeNames.map((type) => {
-							const rowMap: Record<string, number> = {};
-							for (const r of typeGroups[type]) {
-								rowMap[r.po_name] = r.average_rating;
-							}
-							return (
-								<tr
-									key={type}
-									className="border-b last:border-0"
-								>
-									<td className="py-2 px-2 font-medium">
-										{type}
-									</td>
-									{poNames.map((po) => (
-										<td
-											key={po}
-											className="py-2 px-2 text-right"
-										>
-											{rowMap[po] !== undefined
-												? Number(rowMap[po]).toFixed(2)
-												: "—"}
-										</td>
-									))}
-								</tr>
-							);
-						})}
-					</tbody>
-					<tfoot className="border-t-2 border-border font-medium">
-						<tr className="bg-muted/20">
-							<td className="py-2 px-2 text-xs text-muted-foreground">
-								Average
-							</td>
-							{poNames.map((po) => {
-								const avg = data.averages.find(
-									(a) => a.po_name === po,
-								);
+			<CardContent>
+				<div className="overflow-x-auto">
+					<table className="w-full text-sm border-collapse">
+						<thead>
+							<tr className="border-b-2 border-border bg-muted/50">
+								<th className="px-3 py-2.5 text-left font-semibold w-56">INDIRECT SURVEY</th>
+								{PO_LIST.map((po) => (
+									<th key={po} className="px-2 py-2.5 text-center font-semibold tabular-nums min-w-[56px]">
+										{po}
+									</th>
+								))}
+							</tr>
+						</thead>
+						<tbody>
+							{SURVEY_ORDER.map((type, idx) => {
+								const row = matrix.matrix[type] ?? {};
 								return (
-									<td
-										key={po}
-										className="py-2 px-2 text-right font-semibold"
+									<tr
+										key={type}
+										className={`border-b hover:bg-muted/10 ${idx % 2 === 0 ? "bg-card" : "bg-muted/10"}`}
 									>
-										{avg
-											? Number(avg.average_rating).toFixed(2)
-											: "—"}
-									</td>
+										<td className="px-3 py-2.5 font-medium text-sm">{SURVEY_LABELS[type] ?? type}</td>
+										{PO_LIST.map((po) => {
+											const val = row[po] ?? 0;
+											return (
+												<td key={po} className="px-2 py-2.5 text-center tabular-nums">
+													{val > 0 ? (
+														<span className="inline-block px-1.5 py-0.5 rounded bg-muted/40 font-medium">
+															{val.toFixed(2)}
+														</span>
+													) : (
+														<span className="text-muted-foreground/30">—</span>
+													)}
+												</td>
+											);
+										})}
+									</tr>
 								);
 							})}
-						</tr>
-					</tfoot>
-				</table>
+						</tbody>
+						<tfoot>
+							<tr className="border-t-2 border-primary/30 bg-primary/5">
+								<td className="px-3 py-3 font-bold text-sm text-primary">Average</td>
+								{PO_LIST.map((po) => {
+									const avg = matrix.averages[po] ?? 0;
+									return (
+										<td key={po} className="px-2 py-3 text-center tabular-nums font-bold text-primary">
+											{avg > 0 ? avg.toFixed(2) : "—"}
+										</td>
+									);
+								})}
+							</tr>
+						</tfoot>
+					</table>
+				</div>
 			</CardContent>
 		</Card>
 	);

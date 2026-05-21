@@ -5,6 +5,7 @@ require_once __DIR__ . '/../models/AttainmentScaleRepository.php';
 require_once __DIR__ . '/../models/CoPoRepository.php';
 require_once __DIR__ . '/../models/CourseOfferingRepository.php';
 require_once __DIR__ . '/../models/CourseSurveyRepository.php';
+require_once __DIR__ . '/../models/StakeholderSurveyRepository.php';
 
 class AttainmentSnapshotService
 {
@@ -403,7 +404,7 @@ class AttainmentSnapshotService
         $indirectWeightage = $progRow ? (float)$progRow['indirect_weightage'] : 20.0;
 
         // 2. Get course-level direct PO attainment
-		$courseStmt = $this->db->prepare(
+        $courseStmt = $this->db->prepare(
             "SELECT
                 opa.po_name,
                 ROUND(AVG(opa.attainment_value), 2) AS direct_attainment
@@ -423,27 +424,15 @@ class AttainmentSnapshotService
         $courseStmt->execute([$programmeId, $batchYear]);
         $courseRows = $courseStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // 3. Get stakeholder survey indirect (PO-level Likert averages)
-        $stakeholderStmt = $this->db->prepare(
-            "SELECT 
-                 q.po_name, 
-                 SUM(r.likert_rating * q.mapping_weight) / SUM(q.mapping_weight) as average_rating
-             FROM stakeholder_survey_responses_v2 r
-             JOIN stakeholder_survey_questions q ON r.question_id = q.question_id
-             JOIN stakeholder_surveys s ON r.survey_id = s.survey_id
-             WHERE s.programme_id = ? AND s.batch_year = ?
-             GROUP BY q.po_name"
-        );
-        $stakeholderStmt->execute([$programmeId, $batchYear]);
-        $stakeholderRows = $stakeholderStmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Build lookup: po_name => Likert avg
-        $stakeholderByPo = [];
-        foreach ($stakeholderRows as $s) {
-            $avg = (float)$s['average_rating'];
-            $pct = $avg > 0 ? round(($avg - 1) / 4 * 100, 2) : 0.0;
-            $stakeholderByPo[$s['po_name']] = $pct;
+        // Direct lookup: po_name => direct_attainment
+        $directByPo = [];
+        foreach ($courseRows as $row) {
+            $directByPo[$row['po_name']] = (float)$row['direct_attainment'];
         }
+
+        // 3. Get per-type PO attainment levels via stakeholder_survey_repo
+        $repo = new StakeholderSurveyRepository($this->db);
+        $byType = $repo->getPoAveragesByType($programmeId, $batchYear);
 
         // 4. Use default thresholds for Likert->level conversion
         $defaultThresholds = [
@@ -452,43 +441,66 @@ class AttainmentSnapshotService
             new AttainmentScale(0, 0, 1, 50.0),
         ];
 
-        // 5. Blend for each PO
-        $results = [];
+        // Build per-type attainment level lookup: [po_name => [type => level, ...]]
+        $typeLevels = [];
+        foreach ($byType as $row) {
+            $po = $row['po_name'];
+            $t = $row['stakeholder_type'];
+            $avg = (float)$row['average_rating'];
+            $pct = $avg > 0 ? ($avg - 1) / 4 * 100 : 0.0;
+            $typeLevels[$po][$t] = $this->resolveAttainmentLevel($pct, $defaultThresholds);
+        }
+
+        // Consolidated = mean of per-type attainment levels (not mean of percentages)
+        $stakeholderByPo = [];
+        foreach ($typeLevels as $po => $levelsByType) {
+            $stakeholderByPo[$po] = round(array_sum($levelsByType) / count($levelsByType), 2);
+        }
+
+        // 5. Build canonical PO list
+        $poList = [];
+        for ($i = 1; $i <= 12; $i++) { $poList[] = 'PO' . $i; }
+        for ($i = 1; $i <= 3; $i++) { $poList[] = 'PSO' . $i; }
+
+        // Preserve existing targets before deleting
+        $targetStmt = $this->db->prepare(
+            'SELECT po_name, target FROM programme_batch_attainments WHERE programme_id = ? AND batch_year = ?'
+        );
+        $targetStmt->execute([$programmeId, $batchYear]);
+        $existingTargets = [];
+        foreach ($targetStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $existingTargets[$row['po_name']] = (float)$row['target'];
+        }
+
+        $this->db->beginTransaction();
+
+        // Delete stale rows for this programme/batch
+        $deleteStmt = $this->db->prepare(
+            'DELETE FROM programme_batch_attainments WHERE programme_id = ? AND batch_year = ?'
+        );
+        $deleteStmt->execute([$programmeId, $batchYear]);
+
+        // Upsert all 15 PO rows deterministically
         $insertStmt = $this->db->prepare(
             'INSERT INTO programme_batch_attainments
                 (programme_id, batch_year, po_name, direct_attainment, indirect_attainment, final_attainment, target)
-             VALUES (?, ?, ?, ?, ?, ?, 0)
-             ON DUPLICATE KEY UPDATE
-                direct_attainment = VALUES(direct_attainment),
-                indirect_attainment = VALUES(indirect_attainment),
-                final_attainment = VALUES(final_attainment),
-                calculated_at = CURRENT_TIMESTAMP'
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
 
-        foreach ($courseRows as $row) {
-            $poName = $row['po_name'];
-            $directVal = (float)$row['direct_attainment'];
+        $results = [];
+        foreach ($poList as $poName) {
+            $directVal = $directByPo[$poName] ?? 0.0;
 
-            // Stakeholder indirect for this PO
-            $indirectPct = $stakeholderByPo[$poName] ?? null;
-            $indirectLevel = null;
-            $finalVal = $directVal;
-
-            if ($indirectPct !== null) {
-                $indirectLevel = round(
-                    $this->resolveAttainmentLevel($indirectPct, $defaultThresholds),
-                    2
-                );
-                $finalVal = round(
-                    ($directVal * $directWeightage / 100) + ($indirectLevel * $indirectWeightage / 100),
-                    2
-                );
-            }
+            $indirectLevel = $stakeholderByPo[$poName] ?? 0.0;
+            $finalVal = round(
+                ($directVal * $directWeightage / 100) + ($indirectLevel * $indirectWeightage / 100),
+                2
+            );
 
             $results[] = [
                 'po_name' => $poName,
                 'direct_attainment' => $directVal,
-                'indirect_attainment' => $indirectLevel ?? 0.0,
+                'indirect_attainment' => $indirectLevel,
                 'final_attainment' => $finalVal,
             ];
 
@@ -497,10 +509,13 @@ class AttainmentSnapshotService
                 $batchYear,
                 $poName,
                 $directVal,
-                $indirectLevel ?? 0.0,
+                $indirectLevel,
                 $finalVal,
+                $existingTargets[$poName] ?? 0.0,
             ]);
         }
+
+        $this->db->commit();
 
         return $results;
     }

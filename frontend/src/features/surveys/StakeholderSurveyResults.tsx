@@ -188,7 +188,11 @@ export function StakeholderSurveyResults({
 									</Button>
 								</CollapsibleTrigger>
 								<CollapsibleContent className="p-3 pt-0">
-									<ConsolidatedIndirectMatrix data={data} />
+									<ConsolidatedIndirectMatrix
+										programmeId={programmeId}
+										batchYear={parseInt(batchYear, 10)}
+										refreshTrigger={refreshTrigger}
+									/>
 								</CollapsibleContent>
 							</div>
 						</Collapsible>

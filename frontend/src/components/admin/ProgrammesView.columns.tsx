@@ -27,8 +27,8 @@ export function getProgrammeColumns({
 			header: sortableHeader("Code"),
 			cell: ({ row }) => (
 				<Badge
-					variant="secondary"
-					className="font-mono bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+					variant="outline"
+					className="font-mono font-bold tracking-tight text-[11px] bg-primary/[0.04] text-primary border-primary/20 dark:border-primary/30"
 				>
 					{row.getValue("programme_code")}
 				</Badge>
@@ -38,7 +38,7 @@ export function getProgrammeColumns({
 			accessorKey: "programme_name",
 			header: sortableHeader("Name", "text-left"),
 			cell: ({ row }) => (
-				<div className="font-medium text-left">
+				<div className="font-semibold text-xs text-left text-foreground/90 leading-snug">
 					{row.getValue("programme_name")}
 				</div>
 			),
@@ -48,15 +48,25 @@ export function getProgrammeColumns({
 			header: "Batch",
 			cell: ({ row }) => {
 				const batchYear = row.original.specific_batch_year;
-				if (!batchYear) return <span className="text-muted-foreground">—</span>;
-				return <Badge variant="outline" className="font-mono">{batchYear}</Badge>;
+				if (!batchYear) return <span className="text-muted-foreground/40 text-xs">—</span>;
+				return (
+					<Badge 
+						variant="outline" 
+						className="font-mono font-bold text-[10px] bg-muted/40 border-muted/80 text-muted-foreground"
+					>
+						{batchYear}
+					</Badge>
+				);
 			},
 		},
 		{
 			accessorKey: "degree_level",
 			header: "Level",
 			cell: ({ row }) => (
-				<Badge variant="outline">
+				<Badge 
+					variant="outline"
+					className="font-bold text-[10px] bg-background/50 border-muted text-muted-foreground/90"
+				>
 					{row.getValue("degree_level")}
 				</Badge>
 			),
@@ -65,7 +75,7 @@ export function getProgrammeColumns({
 			accessorKey: "duration_years",
 			header: "Duration",
 			cell: ({ row }) => (
-				<span className="text-sm">
+				<span className="text-xs text-muted-foreground/90 font-medium">
 					{row.getValue("duration_years")} Years
 				</span>
 			),
@@ -74,33 +84,31 @@ export function getProgrammeColumns({
 			accessorKey: "department_name",
 			header: "Department",
 			cell: ({ row }) => (
-				<div className="text-sm">
+				<div className="text-xs text-muted-foreground truncate max-w-[150px]">
 					{row.getValue("department_name") || row.original.department_code || "—"}
 				</div>
 			),
 		},
 		{
 			id: "counts",
-			header: () => <div className="text-center">Statistics</div>,
+			header: () => <div className="text-center font-bold text-xs uppercase text-muted-foreground/80 tracking-wider">Statistics</div>,
 			cell: ({ row }) => {
 				const prog = row.original;
 				return (
-					<div className="flex flex-wrap gap-1.5 justify-center max-w-[150px] mx-auto">
+					<div className="flex flex-wrap gap-2 justify-center max-w-[160px] mx-auto">
 						{typeof prog.student_count !== "undefined" && (
-							<Badge
-								variant="outline"
-								className="text-[10px] px-1.5 py-0"
+							<span
+								className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
 							>
 								🎓 {prog.student_count}
-							</Badge>
+							</span>
 						)}
 						{typeof prog.course_count !== "undefined" && (
-							<Badge
-								variant="outline"
-								className="text-[10px] px-1.5 py-0"
+							<span
+								className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
 							>
 								📚 {prog.course_count}
-							</Badge>
+							</span>
 						)}
 					</div>
 				);
@@ -108,7 +116,7 @@ export function getProgrammeColumns({
 		},
 		{
 			id: "attainment",
-			header: () => <div className="text-center">Attainment</div>,
+			header: () => <div className="text-center font-bold text-xs uppercase text-muted-foreground/80 tracking-wider">Attainment</div>,
 			cell: ({ row }) => {
 				const prog = row.original;
 				return (
@@ -117,10 +125,10 @@ export function getProgrammeColumns({
 							<Button
 								variant="outline"
 								size="sm"
-								className="gap-1.5 h-7 text-xs"
+								className="gap-1.5 h-7 text-[11px] font-bold bg-background border-muted/80 text-foreground hover:bg-primary/[0.06] hover:text-primary hover:border-primary/40 transition-all hover:scale-105 active:scale-95 duration-200"
 								onClick={() => onViewAttainment(prog)}
 							>
-								<BarChart3 className="w-3.5 h-3.5" />
+								<BarChart3 className="w-3.5 h-3.5 text-primary/80" />
 								View
 							</Button>
 						)}

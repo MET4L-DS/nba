@@ -265,8 +265,8 @@ export function FacultyManagement() {
 		if (isHOD) {
 			return (
 				<Badge
-					variant="secondary"
-					className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+					variant="outline"
+					className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 shadow-sm"
 				>
 					HOD
 				</Badge>
@@ -277,8 +277,8 @@ export function FacultyManagement() {
 			case "admin":
 				return (
 					<Badge
-						variant="secondary"
-						className="bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 border-red-200 dark:border-red-800"
+						variant="outline"
+						className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 shadow-sm"
 					>
 						Admin
 					</Badge>
@@ -286,8 +286,8 @@ export function FacultyManagement() {
 			case "faculty":
 				return (
 					<Badge
-						variant="secondary"
-						className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+						variant="outline"
+						className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 shadow-sm"
 					>
 						Faculty
 					</Badge>
@@ -295,8 +295,8 @@ export function FacultyManagement() {
 			case "staff":
 				return (
 					<Badge
-						variant="secondary"
-						className="bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300 border-orange-200 dark:border-orange-800"
+						variant="outline"
+						className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shadow-sm"
 					>
 						Staff
 					</Badge>
@@ -304,8 +304,8 @@ export function FacultyManagement() {
 			default:
 				return (
 					<Badge
-						variant="secondary"
-						className="bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300 border-gray-200 dark:border-gray-800"
+						variant="outline"
+						className="bg-muted/50 text-muted-foreground border-muted/50 shadow-sm"
 					>
 						{member.role}
 					</Badge>
@@ -395,21 +395,22 @@ export function FacultyManagement() {
 	];
 
 	return (
-		<Card>
-			<CardHeader className="flex flex-row items-center justify-between">
+		<Card className="bg-card/80 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 relative">
+			<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-blue-500 via-indigo-500 to-transparent"></div>
+			<CardHeader className="flex flex-row items-center justify-between pb-4 border-b bg-muted/[.06]">
 				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-						<Users className="w-5 h-5 text-white" />
+					<div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-inner text-blue-600 dark:text-blue-400">
+						<Users className="w-5 h-5" />
 					</div>
 					<div>
-						<CardTitle>Department Members</CardTitle>
-						<p className="text-sm text-muted-foreground">
-							Manage faculty and staff in your department
+						<CardTitle className="text-base font-bold bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">Department Members</CardTitle>
+						<p className="text-xs text-muted-foreground mt-0.5">
+							Manage faculty and staff in your department catalog.
 						</p>
 					</div>
 				</div>
 				<Button
-					className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+					className="gap-2 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs py-2 px-4 rounded-lg shadow-md shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 duration-200"
 					onClick={() => {
 						setIsAddDialogOpen(true);
 						resetForm();

@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, GraduationCap, BookOpen, Award, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { hodApi } from "@/services/api/hod";
 import type { Programme, PaginationParams } from "@/services/api";
@@ -50,6 +51,34 @@ export function HODProgrammes() {
 	// Refresh trigger for ProgrammeList
 	const [refreshKey, setRefreshKey] = useState(0);
 	const triggerRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+
+	// Executive department stats state
+	const [stats, setStats] = useState({ total: 0, ug: 0, pg: 0, durationAvg: 0 });
+	const [statsLoading, setStatsLoading] = useState(true);
+
+	useEffect(() => {
+		setStatsLoading(true);
+		hodApi.getDepartmentProgrammes({ limit: 100 })
+			.then((res) => {
+				const list = res.data ?? [];
+				const ug = list.filter((p) => p.degree_level === "UG").length;
+				const pg = list.filter((p) => p.degree_level === "PG" || p.degree_level === "PhD" || p.degree_level === "Diploma").length;
+				const totalDuration = list.reduce((acc, curr) => acc + curr.duration_years, 0);
+				const avg = list.length > 0 ? totalDuration / list.length : 0;
+				setStats({
+					total: list.length,
+					ug,
+					pg,
+					durationAvg: avg,
+				});
+			})
+			.catch((err) => {
+				console.error("Failed to load department stats:", err);
+			})
+			.finally(() => {
+				setStatsLoading(false);
+			});
+	}, [refreshKey]);
 
 	// View Attainment handler — uses batch_id from the programme row, fallback to latest_batch_year
 	const handleViewAttainment = useCallback(
@@ -216,13 +245,57 @@ export function HODProgrammes() {
 	);
 
 	return (
-		<div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+		<div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background/50">
 			<AppHeader
-				title="Programmes"
+				title="Programmes Catalog"
 				sidebarOpen={sidebarOpen}
 				onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
 			/>
 			<div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+				{/* Executive Stats Overview */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+					<Card className="p-4 bg-card/75 backdrop-blur-sm border border-muted/50 rounded-xl shadow-sm relative overflow-hidden flex items-center gap-4 transition-all duration-300 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
+						<div className="absolute top-0 right-0 w-16 h-16 opacity-5 rounded-bl-full bg-blue-500"></div>
+						<div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0 shadow-inner">
+							<BookOpen className="w-5 h-5" />
+						</div>
+						<div>
+							<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Programmes</p>
+							<p className="text-2xl font-extrabold tracking-tight mt-0.5 text-foreground">{statsLoading ? "—" : stats.total}</p>
+						</div>
+					</Card>
+					<Card className="p-4 bg-card/75 backdrop-blur-sm border border-muted/50 rounded-xl shadow-sm relative overflow-hidden flex items-center gap-4 transition-all duration-300 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
+						<div className="absolute top-0 right-0 w-16 h-16 opacity-5 rounded-bl-full bg-emerald-500"></div>
+						<div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0 shadow-inner">
+							<GraduationCap className="w-5 h-5" />
+						</div>
+						<div>
+							<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">UG Catalog</p>
+							<p className="text-2xl font-extrabold tracking-tight mt-0.5 text-foreground">{statsLoading ? "—" : stats.ug}</p>
+						</div>
+					</Card>
+					<Card className="p-4 bg-card/75 backdrop-blur-sm border border-muted/50 rounded-xl shadow-sm relative overflow-hidden flex items-center gap-4 transition-all duration-300 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
+						<div className="absolute top-0 right-0 w-16 h-16 opacity-5 rounded-bl-full bg-purple-500"></div>
+						<div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0 shadow-inner">
+							<Award className="w-5 h-5" />
+						</div>
+						<div>
+							<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">PG Catalog</p>
+							<p className="text-2xl font-extrabold tracking-tight mt-0.5 text-foreground">{statsLoading ? "—" : stats.pg}</p>
+						</div>
+					</Card>
+					<Card className="p-4 bg-card/75 backdrop-blur-sm border border-muted/50 rounded-xl shadow-sm relative overflow-hidden flex items-center gap-4 transition-all duration-300 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
+						<div className="absolute top-0 right-0 w-16 h-16 opacity-5 rounded-bl-full bg-amber-500"></div>
+						<div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0 shadow-inner">
+							<Clock className="w-5 h-5" />
+						</div>
+						<div>
+							<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Avg. Duration</p>
+							<p className="text-2xl font-extrabold tracking-tight mt-0.5 text-foreground">{statsLoading ? "—" : `${stats.durationAvg.toFixed(1)} Yrs`}</p>
+						</div>
+					</Card>
+				</div>
+
 				<Tabs
 					value={activeTab}
 					onValueChange={(v) =>
@@ -230,28 +303,27 @@ export function HODProgrammes() {
 					}
 					className="w-full"
 				>
-					<div className="flex items-center justify-between mb-4">
-						<TabsList>
-							<TabsTrigger value="ongoing">On-going</TabsTrigger>
-							<TabsTrigger value="offered">Offered</TabsTrigger>
-							<TabsTrigger value="catalog">Catalog</TabsTrigger>
+					<div className="flex flex-wrap gap-4 items-center justify-between mb-4 bg-card/40 border border-muted/50 rounded-xl p-2 backdrop-blur-sm">
+						<TabsList className="bg-muted/50 p-1 rounded-lg">
+							<TabsTrigger value="ongoing" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">On-going</TabsTrigger>
+							<TabsTrigger value="offered" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">Offered</TabsTrigger>
+							<TabsTrigger value="catalog" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">Catalog</TabsTrigger>
 						</TabsList>
 						<Dialog
 							open={isAddDialogOpen}
 							onOpenChange={setIsAddDialogOpen}
 						>
 							<DialogTrigger asChild>
-								<Button className="gap-2 bg-blue-600 hover:bg-blue-700">
+								<Button className="gap-2 bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs py-2 px-4 rounded-lg shadow-md shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 duration-200">
 									<Plus className="w-4 h-4" />
 									Add Programme
 								</Button>
 							</DialogTrigger>
-							<DialogContent className="sm:max-w-[450px]">
+							<DialogContent className="sm:max-w-[450px] rounded-xl border border-muted/50 backdrop-blur-lg">
 								<DialogHeader>
-									<DialogTitle>Add New Programme</DialogTitle>
-									<DialogDescription>
-										Create a new academic programme for your
-										department
+									<DialogTitle className="font-bold text-lg text-foreground">Add New Programme</DialogTitle>
+									<DialogDescription className="text-xs text-muted-foreground mt-1">
+										Create a new academic programme for your department Catalog.
 									</DialogDescription>
 								</DialogHeader>
 								<div className="grid gap-4 py-4">
@@ -408,11 +480,11 @@ export function HODProgrammes() {
 					open={isEditDialogOpen}
 					onOpenChange={setIsEditDialogOpen}
 				>
-					<DialogContent className="sm:max-w-[450px]">
+					<DialogContent className="sm:max-w-[450px] rounded-xl border border-muted/50 backdrop-blur-lg">
 						<DialogHeader>
-							<DialogTitle>Edit Programme</DialogTitle>
-							<DialogDescription>
-								Update programme information
+							<DialogTitle className="font-bold text-lg text-foreground">Edit Programme</DialogTitle>
+							<DialogDescription className="text-xs text-muted-foreground mt-1">
+								Update academic programme details in your Catalog.
 							</DialogDescription>
 						</DialogHeader>
 						<div className="grid gap-4 py-4">
@@ -516,7 +588,7 @@ export function HODProgrammes() {
 							<Button
 								onClick={handleUpdateProgramme}
 								disabled={isSubmitting}
-								className="bg-blue-600 hover:bg-blue-700"
+								className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs py-2 px-4 rounded-lg shadow-md shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 duration-200"
 							>
 								{isSubmitting ? "Saving..." : "Save Changes"}
 							</Button>

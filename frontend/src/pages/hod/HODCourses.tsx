@@ -59,15 +59,13 @@ export function HODCourses() {
 					}
 					className="w-full"
 				>
-					<TabsList className="mb-4">
-						<TabsTrigger value="current">
-							Current Semester
-						</TabsTrigger>
-						<TabsTrigger value="all">All Offerings</TabsTrigger>
-						<TabsTrigger value="catalog">
-							Course Catalog
-						</TabsTrigger>
-					</TabsList>
+					<div className="flex flex-wrap gap-4 items-center justify-between mb-4 bg-card/40 border border-muted/50 rounded-xl p-2 backdrop-blur-sm">
+						<TabsList className="bg-muted/50 p-1 rounded-lg">
+							<TabsTrigger value="current" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">Current Semester</TabsTrigger>
+							<TabsTrigger value="all" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">All Offerings</TabsTrigger>
+							<TabsTrigger value="catalog" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">Course Catalog</TabsTrigger>
+						</TabsList>
+					</div>
 
 					<TabsContent value="current" className="space-y-4">
 						<CourseList

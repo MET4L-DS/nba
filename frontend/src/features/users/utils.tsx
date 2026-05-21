@@ -229,7 +229,20 @@ export function createStudentColumns(
 		header: "Status",
 		cell: ({ row }) => {
 			const status = row.getValue("student_status") as string;
-			return <Badge variant={getStatusVariant(status)}>{status}</Badge>;
+			const normStatus = status?.toLowerCase();
+			let badgeClass = "bg-muted text-muted-foreground border-muted/50 shadow-sm";
+			if (normStatus === "active") {
+				badgeClass = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-semibold shadow-sm";
+			} else if (normStatus === "graduated") {
+				badgeClass = "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 font-semibold shadow-sm";
+			} else if (normStatus === "inactive" || normStatus === "dropped") {
+				badgeClass = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 font-semibold shadow-sm";
+			}
+			return (
+				<Badge variant="outline" className={badgeClass}>
+					{status}
+				</Badge>
+			);
 		},
 	});
 
@@ -243,7 +256,7 @@ export function createStudentColumns(
 						<Button
 							variant="ghost"
 							size="icon"
-							className="h-8 w-8"
+							className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 active:scale-95 duration-200 transition-all"
 							onClick={() => onEdit(row.original)}
 						>
 							<Pencil className="h-4 w-4" />
@@ -253,7 +266,7 @@ export function createStudentColumns(
 						<Button
 							variant="ghost"
 							size="icon"
-							className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+							className="h-8 w-8 text-destructive hover:text-destructive hover:bg-red-50 active:scale-95 duration-200 transition-all"
 							onClick={() => onDelete(row.original.roll_no)}
 						>
 							<Trash2 className="h-4 w-4" />

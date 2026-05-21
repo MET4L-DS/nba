@@ -123,30 +123,31 @@ export function ConsolidatedIndirectMatrix({ programmeId, batchYear, refreshTrig
 	);
 
 	return (
-		<Card className="bg-card/70 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg transition-all hover:shadow-xl hover:border-primary/20">
-			<CardHeader className="pb-3 border-b bg-muted/[.1]">
+		<Card className="bg-card/80 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl hover:border-primary/30 relative">
+			<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary/80 via-primary/50 to-transparent"></div>
+			<CardHeader className="pb-4 border-b bg-muted/[.06]">
 				<div className="flex items-center justify-between">
 					<div>
-						<CardTitle className="text-base font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+						<CardTitle className="text-base font-bold bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">
 							Consolidated Indirect Survey Matrix
 						</CardTitle>
-						<p className="text-xs text-muted-foreground mt-1">
-							Batch {batchYear} — Normalised PO attainment levels (0.00 – 3.00)
+						<p className="text-xs text-muted-foreground mt-1.5">
+							Batch {batchYear} — Normalised PO attainment levels (0.00 – 3.00) based on direct feedback
 						</p>
 					</div>
-					<Badge variant={hasAnyData ? "default" : "secondary"} className={hasAnyData ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/15" : ""}>
-						{hasAnyData ? "Data available" : "No data"}
+					<Badge variant={hasAnyData ? "default" : "secondary"} className={hasAnyData ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/15" : ""}>
+						{hasAnyData ? "Responses Available" : "No Responses"}
 					</Badge>
 				</div>
 			</CardHeader>
 			<CardContent className="pt-6">
-				<div className="overflow-x-auto rounded-lg border border-muted/40">
-					<Table>
+				<div className="overflow-x-auto rounded-xl border border-muted/50 shadow-inner bg-background/50">
+					<Table className="border-collapse">
 						<TableHeader>
-							<TableRow className="border-b bg-muted/[.4] hover:bg-muted/[.4]">
-								<TableHead className="text-left font-semibold w-56 text-foreground/80">INDIRECT SURVEY</TableHead>
+							<TableRow className="border-b border-muted/50 bg-muted/[0.22] hover:bg-muted/[0.22] transition-colors">
+								<TableHead className="text-left font-bold text-xs uppercase tracking-wider text-muted-foreground/90 w-64 h-12 px-4 border-r border-muted/30">INDIRECT SURVEY</TableHead>
 								{PO_LIST.map((po) => (
-									<TableHead key={po} className="text-center font-semibold tabular-nums min-w-[56px] text-foreground/80">
+									<TableHead key={po} className="text-center font-bold text-xs uppercase tracking-wider text-muted-foreground/90 min-w-[62px] h-12 p-2 border-r border-muted/30 last:border-r-0">
 										{po}
 									</TableHead>
 								))}
@@ -158,13 +159,13 @@ export function ConsolidatedIndirectMatrix({ programmeId, batchYear, refreshTrig
 								return (
 									<TableRow
 										key={type}
-										className={`${idx % 2 === 0 ? "bg-card" : "bg-muted/[.05]"} hover:bg-muted/[.1] transition-colors`}
+										className={`${idx % 2 === 0 ? "bg-card" : "bg-muted/[.03]"} hover:bg-primary/[0.015] border-b border-muted/30 last:border-b-0 transition-colors`}
 									>
-										<TableCell className="font-medium text-sm text-foreground/90">{SURVEY_LABELS[type] ?? type}</TableCell>
+										<TableCell className="font-semibold text-xs text-foreground/90 px-4 py-3 border-r border-muted/20">{SURVEY_LABELS[type] ?? type}</TableCell>
 										{PO_LIST.map((po) => {
 											const val = row[po];
 											return (
-												<TableCell key={po} className="text-center tabular-nums p-2.5">
+												<TableCell key={po} className="text-center tabular-nums p-2 border-r border-muted/20 last:border-r-0">
 													{getAttainmentBadge(val)}
 												</TableCell>
 											);
@@ -173,13 +174,13 @@ export function ConsolidatedIndirectMatrix({ programmeId, batchYear, refreshTrig
 								);
 							})}
 						</TableBody>
-						<TableFooter className="border-t bg-muted/[.2] hover:bg-muted/[.2]">
+						<TableFooter className="border-t-2 border-muted/60 bg-muted/[0.18] hover:bg-muted/[0.18]">
 							<TableRow>
-								<TableCell className="font-bold text-sm text-foreground/95">Average</TableCell>
+								<TableCell className="font-bold text-sm text-foreground px-4 py-3.5 border-r border-muted/30">Weighted Average</TableCell>
 								{PO_LIST.map((po) => {
 									const avg = matrix.averages[po];
 									return (
-										<TableCell key={po} className="text-center tabular-nums p-2.5">
+										<TableCell key={po} className="text-center tabular-nums p-2 border-r border-muted/30 last:border-r-0">
 											{getAverageBadge(avg)}
 										</TableCell>
 									);

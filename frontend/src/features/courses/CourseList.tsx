@@ -366,14 +366,15 @@ export function CourseList({
 				</div>
 			)}
 
-			<Card>
-				<CardHeader className="py-4">
-					<CardTitle className="flex items-center gap-2 text-lg">
-						<BookOpen className="h-5 w-5" />
-						Courses
+			<Card className="bg-card/85 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 relative">
+				<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary/80 via-primary/50 to-transparent"></div>
+				<CardHeader className="py-4 border-b bg-muted/[.06]">
+					<CardTitle className="flex items-center gap-2 text-base font-bold bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">
+						<BookOpen className="h-5 w-5 text-primary" />
+						Offered Academic Courses
 					</CardTitle>
 				</CardHeader>
-				<CardContent>
+				<CardContent className="pt-6">
 					<DataTable
 						columns={columns}
 						data={courses || []}

@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { usePaginatedData } from "@/lib/usePaginatedData";
 import type {
 	Student,
@@ -262,26 +262,24 @@ export function StudentList({
 
 	return (
 		<div className="space-y-4 w-full">
-			<Card className="w-full">
+			<Card className="bg-card/85 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 relative w-full">
+				<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent"></div>
 				{!hideHeader && (
-					<CardHeader>
+					<CardHeader className="pb-4 border-b bg-muted/[.06]">
 						<div className="flex items-center justify-between">
 							<div>
-								<CardTitle className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-									<GraduationCap className="h-6 w-6" />
+								<CardTitle className="flex items-center gap-2 text-base font-bold bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">
+									<GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
 									{title}
 								</CardTitle>
-								<p className="text-muted-foreground mt-1">
-									Total:{" "}
-									{paginationMode === "server"
-										? (pagination?.total ?? students.length)
-										: students.length}{" "}
-									student
-									{(paginationMode === "server"
-										? (pagination?.total ?? students.length)
-										: students.length) !== 1
-										? "s"
-										: ""}
+								<p className="text-xs text-muted-foreground mt-1 ml-7">
+									Total Enrolled:{" "}
+									<span className="font-semibold text-foreground">
+										{paginationMode === "server"
+											? (pagination?.total ?? students.length)
+											: students.length}
+									</span>{" "}
+									students in this department catalog.
 								</p>
 							</div>
 							{onRefresh && (
@@ -289,6 +287,7 @@ export function StudentList({
 									variant="outline"
 									onClick={onRefresh}
 									disabled={isLoading}
+									className="h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200"
 								>
 									Refresh
 								</Button>
@@ -297,7 +296,7 @@ export function StudentList({
 					</CardHeader>
 				)}
 
-				<CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+				<CardContent className="pt-6">
 					<DataTable
 						columns={columns}
 						data={students || []}

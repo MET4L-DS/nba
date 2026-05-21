@@ -8,6 +8,7 @@ import type {
 	Programme,
 } from "@/services/api";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -231,34 +232,42 @@ export function ProgrammeAttainmentDashboard() {
 	return (
 		<div className="space-y-6">
 			{/* Header Section */}
-			<div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b pb-4">
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight text-foreground">
+			<div className="flex flex-wrap gap-4 items-end bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden">
+				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20 pointer-events-none"></div>
+				<div className="flex-1 min-w-[280px]">
+					<h1 className="text-xl font-bold tracking-tight text-foreground">
 						Executive Analytics Dashboard
 					</h1>
-					<p className="text-sm text-muted-foreground mt-1">
+					<p className="text-xs text-muted-foreground mt-1">
 						{selectedProgramme ? (
-							<>
-								{selectedProgramme.programme_code} - {selectedProgramme.programme_name}
-								{batchYear.trim() !== "" ? ` (Batch ${batchYear})` : " - Overview"}
-							</>
+							<span className="inline-flex items-center gap-1.5 mt-0.5">
+								<span className="font-semibold text-primary">{selectedProgramme.programme_code}</span> 
+								<span className="text-muted-foreground/30">—</span> 
+								<span>{selectedProgramme.programme_name}</span>
+								{batchYear.trim() !== "" && (
+									<Badge variant="outline" className="ml-1.5 text-[10px] font-bold bg-primary/5 text-primary border-primary/20">
+										Batch {batchYear}
+									</Badge>
+								)}
+							</span>
 						) : "Select a programme and batch to view attainment"}
 					</p>
 				</div>
-				<div className="flex gap-3 items-end">
-					<div className="space-y-1">
-					<Select
-						value={String(selectedProgrammeId ?? "")}
-						onValueChange={(v) => {
-							setSelectedProgrammeId(Number(v));
-							setBatchId(null);
-							setBatchYear("");
-							setData(null);
-							setError(null);
-						}}
-						disabled={programmesLoading}
-					>
-							<SelectTrigger className="w-[280px]">
+				<div className="flex flex-wrap gap-3 items-end">
+					<div className="space-y-1.5">
+						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block ml-0.5">Programme</span>
+						<Select
+							value={String(selectedProgrammeId ?? "")}
+							onValueChange={(v) => {
+								setSelectedProgrammeId(Number(v));
+								setBatchId(null);
+								setBatchYear("");
+								setData(null);
+								setError(null);
+							}}
+							disabled={programmesLoading}
+						>
+							<SelectTrigger className="w-[260px] bg-background/60 shadow-inner">
 								<SelectValue placeholder="Select programme..." />
 							</SelectTrigger>
 							<SelectContent>
@@ -270,38 +279,41 @@ export function ProgrammeAttainmentDashboard() {
 							</SelectContent>
 						</Select>
 					</div>
-					<div className="space-y-1 w-[160px]">
-					<BatchSelector
-						programmeId={selectedProgrammeId}
-						value={batchId}
-						onChange={(id, batch) => {
-							setBatchId(id);
-							setData(null);
-							setError(null);
-							if (batch?.batch_year) {
-								setBatchYear(String(batch.batch_year));
-							}
-						}}
-						disabled={programmesLoading || !selectedProgrammeId}
-					/>
-					</div>
-					<Button
-						onClick={handleCalculate}
-						disabled={calculating || !selectedProgrammeId || !batchYear.trim()}
-						variant="outline"
-						className="gap-2"
-					>
-						<BarChart3 className="w-4 h-4" />
-						{calculating ? "Recalculating..." : "Recalculate"}
-					</Button>
-					{selectedProgrammeId && batchYear && (
-						<SetTargetsDialog
+					<div className="space-y-1.5 w-[150px]">
+						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block ml-0.5">Batch Year</span>
+						<BatchSelector
 							programmeId={selectedProgrammeId}
-							batchYear={batchYear}
-							poList={poList}
-							onSaved={loadAttainment}
+							value={batchId}
+							onChange={(id, batch) => {
+								setBatchId(id);
+								setData(null);
+								setError(null);
+								if (batch?.batch_year) {
+									setBatchYear(String(batch.batch_year));
+								}
+							}}
+							disabled={programmesLoading || !selectedProgrammeId}
 						/>
-					)}
+					</div>
+					<div className="flex items-center gap-2 mb-0.5">
+						<Button
+							onClick={handleCalculate}
+							disabled={calculating || !selectedProgrammeId || !batchYear.trim()}
+							variant="outline"
+							className="gap-1.5 h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200"
+						>
+							<BarChart3 className="w-3.5 h-3.5" />
+							{calculating ? "Calculating..." : "Recalculate"}
+						</Button>
+						{selectedProgrammeId && batchYear && (
+							<SetTargetsDialog
+								programmeId={selectedProgrammeId}
+								batchYear={batchYear}
+								poList={poList}
+								onSaved={loadAttainment}
+							/>
+						)}
+					</div>
 				</div>
 			</div>
 

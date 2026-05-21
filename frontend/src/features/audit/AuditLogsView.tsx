@@ -90,13 +90,29 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 				header: "Action",
 				cell: ({ row }: any) => {
 					const action = row.original.action;
-					const variants: any = {
-						CREATE: "default",
-						UPDATE: "secondary",
-						DELETE: "destructive",
-					};
+					if (action === "CREATE") {
+						return (
+							<Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-semibold shadow-sm">
+								CREATE
+							</Badge>
+						);
+					}
+					if (action === "UPDATE") {
+						return (
+							<Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 font-semibold shadow-sm">
+								UPDATE
+							</Badge>
+						);
+					}
+					if (action === "DELETE") {
+						return (
+							<Badge variant="outline" className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 font-semibold shadow-sm">
+								DELETE
+							</Badge>
+						);
+					}
 					return (
-						<Badge variant={variants[action] || "outline"}>
+						<Badge variant="outline" className="bg-muted text-muted-foreground border-muted/50 shadow-sm">
 							{action}
 						</Badge>
 					);
@@ -134,8 +150,9 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 						variant="ghost"
 						size="sm"
 						onClick={() => setSelectedLog(row.original)}
+						className="h-8 gap-2 text-primary hover:bg-primary/[0.06] hover:text-primary font-semibold active:scale-95 duration-200 transition-all"
 					>
-						<Eye className="mr-2 h-4 w-4" />
+						<Eye className="h-4 w-4 text-primary" />
 						View
 					</Button>
 				),
@@ -145,18 +162,22 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 	);
 
 	return (
-		<Card>
-			<CardHeader className="space-y-4 pb-4">
+		<Card className="bg-card/85 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 relative">
+			<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary/80 via-indigo-500 to-transparent"></div>
+			<CardHeader className="space-y-4 pb-4 border-b bg-muted/[.06] pt-6">
 				<div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-					<div className="space-y-1">
-						<CardTitle className="flex items-center gap-2">
+					<div className="flex items-center gap-3">
+						<div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-inner text-primary">
 							<Activity className="h-5 w-5" />
-							System Audit Trail
-						</CardTitle>
-						<p className="text-sm text-muted-foreground">
-							High-density event stream for user and system
-							changes.
-						</p>
+						</div>
+						<div>
+							<CardTitle className="text-base font-bold bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text flex items-center gap-2">
+								System Audit Trail
+							</CardTitle>
+							<p className="text-xs text-muted-foreground mt-0.5">
+								High-density event stream for user and system changes.
+							</p>
+						</div>
 					</div>
 
 					<Button
@@ -164,34 +185,39 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 						size="sm"
 						onClick={() => fetchLogs()}
 						disabled={isLoading}
+						className="h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95"
 					>
 						<RefreshCw
-							className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+							className={`mr-2 h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`}
 						/>
 						Refresh
 					</Button>
 				</div>
 
 				<div className="flex flex-wrap items-center gap-2">
-					{ACTION_FILTERS.map((action) => (
-						<Button
-							key={action}
-							size="sm"
-							variant={
-								actionFilter === action ? "default" : "outline"
-							}
-							onClick={() => setActionFilter(action)}
-						>
-							{action}
-						</Button>
-					))}
-					<Badge variant="outline" className="ml-auto">
-						Showing {filteredLogs.length} of {logs.length} on this
-						page
+					<div className="bg-muted/50 p-1 rounded-lg flex flex-wrap gap-1 border border-muted/40 backdrop-blur-sm">
+						{ACTION_FILTERS.map((action) => (
+							<Button
+								key={action}
+								size="sm"
+								variant="ghost"
+								onClick={() => setActionFilter(action)}
+								className={`px-3 py-1 h-8 text-xs font-semibold rounded-md transition-all duration-200 ${
+									actionFilter === action
+										? "bg-card text-foreground shadow-sm scale-102"
+										: "text-muted-foreground hover:bg-card/40 hover:text-foreground"
+								}`}
+							>
+								{action}
+							</Button>
+						))}
+					</div>
+					<Badge variant="outline" className="ml-auto bg-primary/5 text-primary border-primary/10 font-semibold py-1">
+						Showing {filteredLogs.length} of {logs.length} on this page
 					</Badge>
 				</div>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="pt-6">
 				<DataTable
 					columns={columns}
 					data={filteredLogs}

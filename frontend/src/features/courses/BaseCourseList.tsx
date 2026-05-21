@@ -110,7 +110,14 @@ function createBaseCourseColumns(
 			cell: ({ row }) => {
 				const status = row.getValue("is_active") as number | undefined;
 				return (
-					<Badge variant={status === 1 ? "default" : "destructive"}>
+					<Badge
+						variant="outline"
+						className={
+							status === 1
+								? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-semibold shadow-sm"
+								: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 font-semibold shadow-sm"
+						}
+					>
 						{status === 1 ? "Active" : "Inactive"}
 					</Badge>
 				);
@@ -126,19 +133,19 @@ function createBaseCourseColumns(
 				<div className="flex gap-2">
 					{canOffer && onOffer && (
 						<Button
-							variant="outline"
+							variant="ghost"
 							size="sm"
 							onClick={() => onOffer(row.original)}
-							className="text-xs"
+							className="text-xs text-primary hover:text-primary hover:bg-primary/[0.06] font-semibold active:scale-95 duration-200 transition-all"
 						>
 							Offer
 						</Button>
 					)}
 					{canEdit && onEdit && (
 						<Button
-							variant="outline"
+							variant="ghost"
 							size="icon"
-							className="h-8 w-8"
+							className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 active:scale-95 duration-200 transition-all"
 							onClick={() => onEdit(row.original)}
 						>
 							<Pencil className="h-4 w-4" />
@@ -146,9 +153,9 @@ function createBaseCourseColumns(
 					)}
 					{canDelete && onDelete && (
 						<Button
-							variant="destructive"
+							variant="ghost"
 							size="icon"
-							className="h-8 w-8"
+							className="h-8 w-8 text-destructive hover:text-destructive hover:bg-red-50 active:scale-95 duration-200 transition-all"
 							onClick={() => onDelete(row.original.course_id)}
 						>
 							<Trash2 className="h-4 w-4" />
@@ -334,13 +341,14 @@ export function BaseCourseList({
 						</div>
 					</div>
 
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								Course Templates
+					<Card className="bg-card/85 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 relative">
+						<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary/80 via-primary/50 to-transparent"></div>
+						<CardHeader className="py-4 border-b bg-muted/[.06]">
+							<CardTitle className="flex items-center gap-2 text-base font-bold bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">
+								Course Templates Catalog
 							</CardTitle>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="pt-6">
 							<DataTable
 								columns={columns}
 								data={filteredCourses || []}

@@ -267,8 +267,7 @@ class SurveyController
                 return;
             }
 
-            $this->surveyRepo->clearResponses($surveyId);
-            $count = $this->surveyRepo->saveResponses($surveyId, $input['responses']);
+            $count = $this->surveyRepo->replaceResponses($surveyId, $input['responses']);
 
             if (isset($GLOBALS['fileLogger'])) { $GLOBALS['fileLogger']->log('INFO', 'SurveyController', 'Manual responses saved', ['count' => $count]); }
             http_response_code(200);

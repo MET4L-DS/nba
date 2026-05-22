@@ -960,33 +960,40 @@ class Router
                 } elseif (preg_match('#^offerings/(\d+)/survey/course-exit/enrollments$#', $path, $matches)) {
                     $offeringId = (int)$matches[1];
                     if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
                         $this->surveyController->getCourseExitEnrollments($offeringId);
                     }
                 } elseif (preg_match('#^offerings/(\d+)/survey/course-exit/responses/manual$#', $path, $matches)) {
                     $offeringId = (int)$matches[1];
                     if ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
                         $this->surveyController->saveManualResponses($offeringId);
                     }
                 } elseif (preg_match('#^offerings/(\d+)/survey/course-exit/questions$#', $path, $matches)) {
                     $offeringId = (int)$matches[1];
                     if ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
                         $this->surveyController->saveCourseExitQuestions($offeringId);
                     }
                 } elseif (preg_match('#^offerings/(\d+)/survey/course-exit/import$#', $path, $matches)) {
                     $offeringId = (int)$matches[1];
                     if ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
                         $this->surveyController->importCourseExitCsv($offeringId);
                     }
                 } elseif (preg_match('#^offerings/(\d+)/survey/course-exit/results$#', $path, $matches)) {
                     $offeringId = (int)$matches[1];
                     if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
                         $this->surveyController->getCourseExitResults($offeringId);
                     }
                 } elseif (preg_match('#^offerings/(\d+)/survey/course-exit$#', $path, $matches)) {
                     $offeringId = (int)$matches[1];
                     if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
                         $this->surveyController->getCourseExitSurvey($offeringId);
                     } elseif ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
                         $this->surveyController->clearCourseExit($offeringId);
                     }
                 } elseif (preg_match('#^action-plans/(\d+)$#', $path, $matches)) {

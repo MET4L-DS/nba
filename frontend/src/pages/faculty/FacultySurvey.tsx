@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { facultyApi } from "@/services/api/faculty";
+import { apiService } from "@/services/api";
 import type { Course } from "@/services/api";
 import { FacultyCourseSurvey } from "@/components/faculty";
 import { AppHeader } from "@/components/layout";
@@ -29,13 +30,13 @@ export function FacultySurvey() {
 		limit: 100,
 	});
 
-	const activeCourses = courses.filter(c => c.is_active !== 0);
+	const activeCourses = courses.filter(c => c.is_active === undefined || c.is_active > 0);
 
 	const [selectedCourse, setSelectedCourseState] = useState<Course | null>(null);
 	const setSelectedCourse = (course: Course | null) => {
 		setSelectedCourseState(course);
-		if (course) {
-			localStorage.setItem("faculty_last_course", String(course.offering_id || course.course_id || ""));
+		if (course && (course.offering_id || course.course_id)) {
+			localStorage.setItem("faculty_last_course", String(course.offering_id || course.course_id));
 		}
 	};
 
@@ -58,6 +59,7 @@ export function FacultySurvey() {
 				sidebarOpen={sidebarOpen}
 				onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
 				onLogout={async () => {
+					await apiService.logout().catch(() => {});
 					window.location.href = "/login";
 				}}
 			>

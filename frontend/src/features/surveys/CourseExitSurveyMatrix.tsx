@@ -41,7 +41,7 @@ function filterQuestions(
 	if (!filter) return questions;
 	const lower = filter.toLowerCase();
 	return questions.filter((q) =>
-		q.question_text.toLowerCase().includes(lower),
+		(q.question_text ?? "").toLowerCase().includes(lower),
 	);
 }
 
@@ -61,7 +61,7 @@ function CoGroupSection({ coNum, group, filterText }: CoGroupSectionProps) {
 	return (
 		<Fragment>
 			{filtered.map((q, qIdx) => (
-				<TableRow key={q.question_id}>
+				<TableRow key={q.question_id ?? `q-${coNum}-${qIdx}`}>
 					{qIdx === 0 && (
 						<CoLabelCell
 							coNum={coNum}

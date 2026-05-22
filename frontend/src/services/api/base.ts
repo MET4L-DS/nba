@@ -42,10 +42,9 @@ class TokenManager {
 export const tokenManager = new TokenManager();
 
 /** Called on any 401 response — clears stale token and sends user to login. */
-function handleUnauthorized(): never {
+function handleUnauthorized(): void {
 	tokenManager.clearToken();
 	window.location.href = "/login";
-	throw new Error("Session expired. Please log in again.");
 }
 
 // Helper function for making GET requests

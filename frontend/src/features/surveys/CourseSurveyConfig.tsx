@@ -10,10 +10,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface CourseSurveyConfigProps {
 	offeringId: number;
+	maxCoCount?: number;
 	onConfigSaved?: () => void;
 }
 
-export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyConfigProps) {
+export function CourseSurveyConfig({ offeringId, maxCoCount = 6, onConfigSaved }: CourseSurveyConfigProps) {
+	const coRange = Array.from({ length: maxCoCount }, (_, i) => i + 1);
 	const [questions, setQuestions] = useState<CourseSurveyQuestion[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
@@ -29,22 +31,23 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 			if (data && data.questions && data.questions.length > 0) {
 				const normalized = data.questions.map((q: CourseSurveyQuestion) => ({
 					...q,
-					mapping_weight: Number(q.mapping_weight),
-					co_number: Number(q.co_number),
+					mapping_weight: Number(q.mapping_weight) || 0,
+					co_number: Number(q.co_number) || 1,
 				}));
 				setQuestions(normalized);
 			} else {
 				// Default template: 1 question per CO
-				setQuestions([
-					{ question_number: 1, question_text: "Rate your attainment for CO1", co_number: 1, mapping_weight: 1.0 },
-					{ question_number: 2, question_text: "Rate your attainment for CO2", co_number: 2, mapping_weight: 1.0 },
-					{ question_number: 3, question_text: "Rate your attainment for CO3", co_number: 3, mapping_weight: 1.0 },
-					{ question_number: 4, question_text: "Rate your attainment for CO4", co_number: 4, mapping_weight: 1.0 },
-					{ question_number: 5, question_text: "Rate your attainment for CO5", co_number: 5, mapping_weight: 1.0 },
-					{ question_number: 6, question_text: "Rate your attainment for CO6", co_number: 6, mapping_weight: 1.0 },
-				]);
+				setQuestions(
+					coRange.map((n) => ({
+						question_number: n,
+						question_text: `Rate your attainment for CO${n}`,
+						co_number: n,
+						mapping_weight: 1.0,
+					})),
+				);
 			}
 		} catch (err) {
+			console.error("CourseSurveyConfig: Failed to load survey", err);
 			toast.error("Failed to load survey configuration");
 		} finally {
 			setLoading(false);
@@ -67,7 +70,7 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 		);
 	};
 
-	const updateQuestion = (idx: number, field: keyof CourseSurveyQuestion, value: any) => {
+	const updateQuestion = (idx: number, field: keyof CourseSurveyQuestion, value: string | number) => {
 		setQuestions((prev) =>
 			prev.map((q, i) => (i === idx ? { ...q, [field]: value } : q)),
 		);
@@ -77,6 +80,14 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 		for (const q of questions) {
 			if (!q.question_text.trim()) {
 				toast.error(`Question ${q.question_number} is missing text`);
+				return;
+			}
+			if (q.question_text.trim().length > 500) {
+				toast.error(`Question ${q.question_number} text is too long (max 500 chars)`);
+				return;
+			}
+			if (q.co_number < 1 || q.co_number > maxCoCount) {
+				toast.error(`Question ${q.question_number} CO number must be between 1 and ${maxCoCount}`);
 				return;
 			}
 			if (q.mapping_weight < 0 || q.mapping_weight > 1) {
@@ -91,6 +102,7 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 			toast.success("Survey questions configured successfully");
 			onConfigSaved?.();
 		} catch (err) {
+			console.error("CourseSurveyConfig: Failed to save", err);
 			toast.error("Failed to save configuration");
 		} finally {
 			setSaving(false);
@@ -132,7 +144,7 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 							<AnimatePresence initial={false}>
 								{questions.map((q, idx) => (
 									<motion.div 
-										key={q.question_number} 
+										key={q.question_id ?? `q-${idx}`} 
 										initial={{ opacity: 0, x: -10, scale: 0.98 }}
 										animate={{ opacity: 1, x: 0, scale: 1 }}
 										exit={{ opacity: 0, x: 10, scale: 0.95 }}
@@ -159,7 +171,7 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 												value={q.co_number}
 												onChange={(e) => updateQuestion(idx, 'co_number', parseInt(e.target.value))}
 											>
-												{[1,2,3,4,5,6].map(n => <option key={n} value={n} className="font-semibold text-foreground">CO{n}</option>)}
+												{coRange.map(n => <option key={n} value={n} className="font-semibold text-foreground">CO{n}</option>)}
 											</select>
 										</div>
 										<div className="flex items-center gap-2.5 px-1">
@@ -173,7 +185,7 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 												className="w-full h-1.5 bg-muted dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-400"
 											/>
 											<span className="text-[11px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md min-w-[36px] text-center shadow-sm">
-												{q.mapping_weight.toFixed(1)}
+												{(q.mapping_weight ?? 0).toFixed(1)}
 											</span>
 										</div>
 										<div className="flex justify-center">

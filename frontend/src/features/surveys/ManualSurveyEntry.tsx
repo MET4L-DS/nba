@@ -44,13 +44,15 @@ export function ManualSurveyEntry({ offeringId, onSaved }: ManualSurveyEntryProp
 			for (const e of data.enrollments ?? []) {
 				initial[e.roll_no] = {};
 				for (const q of data.questions ?? []) {
-					const qid = q.question_id!;
+					if (q.question_id == null) continue;
+					const qid = q.question_id;
 					const existing = e.responses[qid];
 					initial[e.roll_no][qid] = existing !== undefined ? String(existing) : "";
 				}
 			}
 			setEntries(initial);
-		} catch {
+		} catch (err) {
+			console.error("ManualSurveyEntry: Failed to load enrollment data", err);
 			toast.error("Failed to load enrollment data");
 		} finally {
 			setLoading(false);
@@ -90,7 +92,8 @@ export function ManualSurveyEntry({ offeringId, onSaved }: ManualSurveyEntryProp
 			const result = await surveyApi.saveManualResponses(offeringId, responses);
 			toast.success(`Saved ${result.imported_count} responses`);
 			onSaved?.();
-		} catch {
+		} catch (err) {
+			console.error("ManualSurveyEntry: Failed to save responses", err);
 			toast.error("Failed to save responses");
 		} finally {
 			setSaving(false);
@@ -179,14 +182,14 @@ export function ManualSurveyEntry({ offeringId, onSaved }: ManualSurveyEntryProp
 						<tr className="border-b bg-muted/30">
 							<th className="text-left py-2.5 px-3 sticky left-0 bg-background/95 backdrop-blur z-10 font-bold text-foreground/85">S.No</th>
 							<th className="text-left py-2.5 px-3 sticky left-10 bg-background/95 backdrop-blur z-10 font-bold text-foreground/85">Student</th>
-							{questions.map((q) => (
-								<th key={q.question_id} className="text-center py-2.5 px-3 min-w-[130px] font-bold text-foreground/80">
+							{questions.map((q, qi) => (
+								<th key={q.question_id ?? `q-${qi}`} className="text-center py-2.5 px-3 min-w-[130px] font-bold text-foreground/80">
 									<div className="text-xs font-bold">Q{q.question_number}</div>
 									<div className="text-[10px] font-normal text-muted-foreground truncate max-w-[130px] mt-0.5" title={q.question_text}>
 										{q.question_text}
 									</div>
 									<div className="text-[10px] font-semibold text-primary mt-0.5">
-										CO{q.co_number} <span className="opacity-60">(w={Number(q.mapping_weight).toFixed(1)})</span>
+										CO{q.co_number} <span className="opacity-60">(w={Number(q.mapping_weight || 0).toFixed(1)})</span>
 									</div>
 								</th>
 							))}
@@ -210,7 +213,8 @@ export function ManualSurveyEntry({ offeringId, onSaved }: ManualSurveyEntryProp
 									<div className="text-muted-foreground text-[10px] font-normal mt-0.5">{e.student_name}</div>
 								</td>
 								{questions.map((q) => {
-									const qid = q.question_id!;
+									if (q.question_id == null) return null;
+									const qid = q.question_id;
 									const val = entries[e.roll_no]?.[qid] ?? "";
 									return (
 										<td key={qid} className="py-2 px-3 text-center">

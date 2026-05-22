@@ -47,7 +47,8 @@ interface FacultyCourseSurveyProps {
 export function FacultyCourseSurvey({
 	selectedCourse,
 }: FacultyCourseSurveyProps) {
-	const offeringId = selectedCourse.offering_id!;
+	const offeringId = selectedCourse.offering_id;
+	const [loadError, setLoadError] = useState<string | null>(null);
 
 	const [results, setResults] =
 		useState<CourseExitSurveyResultsResponse | null>(null);
@@ -71,7 +72,11 @@ export function FacultyCourseSurvey({
 	const [filterText, setFilterText] = useState("");
 
 	useEffect(() => {
-		if (!offeringId) return;
+		if (!offeringId) {
+			setLoadError("Course offering not available");
+			return;
+		}
+		setLoadError(null);
 		setLoading(true);
 		Promise.all([
 			surveyApi.getCourseExitResults(offeringId),
@@ -92,30 +97,20 @@ export function FacultyCourseSurvey({
 					"Failed to load data",
 					err,
 				);
+				setLoadError("Failed to load survey data. Please try again.");
 			})
 			.finally(() => setLoading(false));
 	}, [offeringId, refreshTrigger]);
 
-	const coGroups: Record<
-		number,
-		{ questions: CourseExitSurveyQuestionAnalysis[]; avg: number | null }
-	> = {};
-	if (results?.question_analysis) {
-		for (const q of results.question_analysis) {
-			if (!coGroups[q.co_number]) {
-				const coResult = results.co_results.find(
-					(c) => c.co_number === q.co_number,
-				);
-				coGroups[q.co_number] = {
-					questions: [],
-					avg: coResult?.normalized_rating ?? null,
-				};
-			}
-			coGroups[q.co_number].questions.push(q);
-		}
-	}
-
 	const indirectWeight = 100 - directWeight;
+
+	if (!offeringId) {
+		return (
+			<div className="flex flex-col min-w-0 h-full items-center justify-center text-destructive">
+				<span className="text-sm font-medium">Course offering not available</span>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex flex-col min-w-0 h-full">
@@ -160,14 +155,34 @@ export function FacultyCourseSurvey({
 					<Button 
 						variant="outline" 
 						size="sm"
+						disabled={!results?.has_data}
 						className="border-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200 active:scale-95"
+						onClick={() => {
+							if (!results?.raw_responses?.length) return;
+							const headers = ["Roll No", ...results.co_results.map(r => r.co_name)];
+							const rows = results.raw_responses.map(row =>
+								headers.map(h =>
+									h === "Roll No" ? row.student_rollno : (row.ratings[h] ?? "")
+								).join(",")
+							);
+							const csv = [headers.join(","), ...rows].join("\n");
+							const blob = new Blob([csv], { type: "text/csv" });
+							const url = URL.createObjectURL(blob);
+							const a = document.createElement("a");
+							a.href = url;
+							a.download = `course-exit-survey-${offeringId}.csv`;
+							a.click();
+							URL.revokeObjectURL(url);
+						}}
 					>
 						<Download className="w-4 h-4 mr-1.5" />
 						Export CSV
 					</Button>
 					<Button 
 						size="sm"
-						className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 border-none"
+						disabled
+						title="Coming soon"
+						className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 border-none opacity-60 cursor-not-allowed"
 					>
 						<RefreshCw className="w-4 h-4 mr-1.5" />
 						Sync Survey Platform
@@ -201,7 +216,11 @@ export function FacultyCourseSurvey({
 			) : (
 				<>
 					<div className="flex-1 overflow-y-auto p-6 space-y-6">
-						{loading ? (
+						{loadError ? (
+							<div className="flex items-center justify-center h-32 text-destructive">
+								<span className="text-sm font-medium">{loadError}</span>
+							</div>
+						) : loading ? (
 							<div className="flex items-center justify-center h-32 text-muted-foreground">
 								<RefreshCw className="w-5 h-5 animate-spin mr-2 text-violet-500" />
 								Loading survey data...
@@ -269,12 +288,34 @@ export function FacultyCourseSurvey({
 									)}
 								</Card>
 
-								<CourseExitSurveyMatrix
-									results={results}
-									coGroups={coGroups}
-									filterText={filterText}
-									onFilterTextChange={setFilterText}
-								/>
+								{(() => {
+									const coGroups: Record<
+										number,
+										{ questions: CourseExitSurveyQuestionAnalysis[]; avg: number | null }
+									> = {};
+									if (results?.question_analysis) {
+										for (const q of results.question_analysis) {
+											if (!coGroups[q.co_number]) {
+												const coResult = results.co_results.find(
+													(c) => c.co_number === q.co_number,
+												);
+												coGroups[q.co_number] = {
+													questions: [],
+													avg: coResult?.normalized_rating ?? null,
+												};
+											}
+											coGroups[q.co_number].questions.push(q);
+										}
+									}
+									return (
+										<CourseExitSurveyMatrix
+											results={results}
+											coGroups={coGroups}
+											filterText={filterText}
+											onFilterTextChange={setFilterText}
+										/>
+									);
+								})()}
 							</>
 						)}
 					</div>

@@ -32,8 +32,8 @@ export function AttainmentBarChart({
 
 	const chartData = attainmentCoData.map((c) => ({
 		name: c.co_name,
-		Direct: Math.min(c.attainment_percentage ?? 0, 100),
-		Indirect: Math.min(c.indirect_attainment_percentage ?? 0, 100),
+		Direct: c.attainment_percentage ?? 0,
+		Indirect: c.indirect_attainment_percentage ?? 0,
 	}));
 
 	return (
@@ -41,8 +41,8 @@ export function AttainmentBarChart({
 			<h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
 				Direct vs Indirect Variance
 			</h4>
-			<div className="border rounded-lg bg-muted/20 p-3 h-full">
-				<ResponsiveContainer width="100%" height="100%">
+			<div className="border rounded-lg bg-muted/20 p-3">
+				<ResponsiveContainer width="100%" height={250}>
 					<BarChart data={chartData}>
 						<CartesianGrid
 							strokeDasharray="3 3"
@@ -89,13 +89,13 @@ export function AttainmentBarChart({
 						/>
 						<Bar
 							dataKey="Direct"
-							fill="var(--chart-1)"
+							fill="var(--chart-1, #6366f1)"
 							radius={[3, 3, 0, 0]}
 							maxBarSize={16}
 						/>
 						<Bar
 							dataKey="Indirect"
-							fill="var(--chart-2)"
+							fill="var(--chart-2, #22c55e)"
 							radius={[3, 3, 0, 0]}
 							maxBarSize={16}
 						/>

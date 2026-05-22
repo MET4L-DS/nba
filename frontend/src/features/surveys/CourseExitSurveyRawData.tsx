@@ -71,17 +71,18 @@ export function CourseExitSurveyRawData({
 							>
 								Attainment %
 							</td>
-							{coLabels.map((co) => {
+							{coLabels.map((co, idx) => {
+								const coNum = coNumbers[idx];
 								const cr = data.co_results.find(
-									(r) => r.co_name === co,
+									(r) => r.co_number === coNum,
 								);
-								const impliedPct =
-									cr?.average_rating !== null &&
-									cr?.average_rating !== undefined
-										? ((Number(cr.average_rating) - 1) /
-												4) *
-											100
-										: null;
+							const avgRating = cr?.average_rating;
+							const impliedPct =
+								avgRating != null && Number(avgRating) > 0
+									? ((Number(avgRating) - 1) /
+											4) *
+										100
+									: null;
 								return (
 									<td
 										key={co}

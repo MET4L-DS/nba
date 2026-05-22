@@ -37,12 +37,12 @@ export function CourseExitSurveyImport({
 	offeringId,
 	onImportComplete,
 }: CourseExitSurveyImportProps) {
-	const { parseCSV, isParsing, error } = useCSVParser<any>();
+	const { parseCSV, isParsing, error } = useCSVParser<Record<string, string>>();
 	const [config, setConfig] = useState<CourseExitSurveyConfig | null>(null);
 	const [loadingConfig, setLoadingConfig] = useState(true);
 	
 	const [columnMapping, setColumnMapping] = useState<Record<string, number | null>>({});
-	const [parsedData, setParsedData] = useState<any[] | null>(null);
+	const [parsedData, setParsedData] = useState<Record<string, string>[] | null>(null);
 	const [headers, setHeaders] = useState<string[]>([]);
 	const [importing, setImporting] = useState(false);
 
@@ -73,7 +73,7 @@ export function CourseExitSurveyImport({
 
 		parseCSV(file, {
 			requiredHeaders: [],
-			onParseComplete: (data: any[]) => {
+			onParseComplete: (data: Record<string, string>[]) => {
 				if (data.length === 0) {
 					toast.error("CSV file is empty");
 					return;
@@ -82,18 +82,20 @@ export function CourseExitSurveyImport({
 				setHeaders(cols);
 				setParsedData(data);
 				
-				// Auto-map chronologically. Skip rollno column, then map questions 1..N
 				const mapping: Record<string, number | null> = {};
 				let foundRollNo = false;
 				let qIdx = 0;
-				
+				const lower2 = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+				const rollnoCols = new Set(["rollno", "roll_no", "roll number", "roll", "student_roll", "studentid", "student_id", "student id"]);
+
 				for (const col of cols) {
-					const lower = col.toLowerCase();
-					if (!foundRollNo && (lower.includes("roll") || lower.includes("student") || lower.includes("id"))) {
-						mapping[col] = 0; // 0 = rollno
+					const normal = lower2(col);
+					if (!foundRollNo && rollnoCols.has(normal)) {
+						mapping[col] = 0;
 						foundRollNo = true;
-					} else if (qIdx < config.questions.length && lower !== 'timestamp') {
-						mapping[col] = config.questions[qIdx].question_id!; // mapping value is question_id
+					} else if (qIdx < config.questions.length && normal !== "timestamp") {
+						const qid = config.questions[qIdx].question_id;
+						mapping[col] = qid != null ? qid : null;
 						qIdx++;
 					} else {
 						mapping[col] = null;
@@ -106,7 +108,7 @@ export function CourseExitSurveyImport({
 	};
 
 	const handleMappingChange = (column: string, value: string) => {
-		const num = value === "" ? null : Number(value);
+		const num = value === "" ? null : value === "0" ? 0 : Number(value) || null;
 		setColumnMapping((prev) => ({ ...prev, [column]: num }));
 	};
 
@@ -150,6 +152,7 @@ export function CourseExitSurveyImport({
 			setParsedData(null);
 			onImportComplete?.();
 		} catch (err) {
+			console.error("CourseExitSurveyImport: Import failed", err);
 			toast.error("Failed to import survey responses");
 		} finally {
 			setImporting(false);

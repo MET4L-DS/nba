@@ -76,9 +76,14 @@ export function CourseExitSurveyCSVImport({
 					const lower = col.toLowerCase();
 					if (
 						!foundRollNo &&
-						(lower.includes("roll") ||
-							lower.includes("student") ||
-							lower.includes("id"))
+						(lower === "rollno" ||
+						 lower === "roll_no" ||
+						 lower === "roll number" ||
+						 lower === "roll" ||
+						 lower === "student_roll" ||
+						 lower === "studentid" ||
+						 lower === "student_id" ||
+						 lower === "student id")
 					) {
 						mapping[col] = 0;
 						foundRollNo = true;
@@ -86,7 +91,8 @@ export function CourseExitSurveyCSVImport({
 						qIdx < config.questions.length &&
 						lower !== "timestamp"
 					) {
-						mapping[col] = config.questions[qIdx].question_id!;
+						const qid = config.questions[qIdx].question_id;
+						mapping[col] = qid != null ? qid : null;
 						qIdx++;
 					} else {
 						mapping[col] = null;
@@ -100,7 +106,7 @@ export function CourseExitSurveyCSVImport({
 	const handleMappingChange = (column: string, value: string) => {
 		setColumnMapping((prev) => ({
 			...prev,
-			[column]: value === "" ? null : Number(value),
+			[column]: value === "" ? null : value === "0" ? 0 : Number(value) || null,
 		}));
 	};
 
@@ -142,7 +148,8 @@ export function CourseExitSurveyCSVImport({
 			toast.success(`Imported ${result.imported_count} responses`);
 			setParsedData(null);
 			onImportComplete();
-		} catch {
+		} catch (err) {
+			console.error("CourseExitSurveyCSVImport: Import failed", err);
 			toast.error("Import failed");
 		} finally {
 			setImporting(false);
@@ -255,6 +262,7 @@ export function CourseExitSurveyCSVImport({
 								onClick={() => {
 									setParsedData(null);
 									setHeaders([]);
+									setColumnMapping({});
 								}}
 							>
 								Cancel

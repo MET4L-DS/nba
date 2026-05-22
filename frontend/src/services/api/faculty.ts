@@ -16,7 +16,7 @@ async function getStats(): Promise<FacultyStats> {
 async function getCourses(
 	params?: PaginationParams,
 ): Promise<PaginatedResponse<Course>> {
-	return apiGetPaginated<Course>("/courses", params as any);
+	return apiGetPaginated<Course>("/courses", params as unknown as Record<string, string | number | undefined>);
 }
 
 async function getEnrolledStudents(

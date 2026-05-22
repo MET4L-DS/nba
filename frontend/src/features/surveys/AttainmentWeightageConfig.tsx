@@ -45,7 +45,8 @@ export function AttainmentWeightageConfig({
 			});
 			toast.success("Weightage updated");
 			onSaved();
-		} catch {
+		} catch (err) {
+			console.error("AttainmentWeightageConfig: Failed to save weightage", err);
 			toast.error("Failed to save weightage");
 		} finally {
 			setSavingWeightage(false);

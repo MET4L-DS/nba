@@ -6,11 +6,20 @@ interface BlendedAttainmentTableProps {
 	indirectWeight: number;
 }
 
+function matchCoName(coName: string, coNum: number): boolean {
+	const n = coName.replace(/[^0-9]/g, "");
+	return n === String(coNum);
+}
+
 export function BlendedAttainmentTable({
 	attainmentCoData,
 	directWeight,
 	indirectWeight,
 }: BlendedAttainmentTableProps) {
+	const hasMatchingData = attainmentCoData.some((c) =>
+		[1, 2, 3, 4, 5, 6].some((n) => matchCoName(c.co_name, n)),
+	);
+
 	return (
 		<div>
 			<h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -37,7 +46,7 @@ export function BlendedAttainmentTable({
 					<tbody>
 						{[1, 2, 3, 4, 5, 6].map((coNum) => {
 							const coData = attainmentCoData.find(
-								(c) => c.co_name === `CO${coNum}`,
+								(c) => matchCoName(c.co_name, coNum),
 							);
 							if (!coData) return null;
 							const directVal =
@@ -74,6 +83,16 @@ export function BlendedAttainmentTable({
 								>
 									No attainment data yet. Import survey
 									responses to see blended attainment.
+								</td>
+							</tr>
+						)}
+						{attainmentCoData.length > 0 && !hasMatchingData && (
+							<tr>
+								<td
+									colSpan={4}
+									className="p-4 text-center text-muted-foreground text-xs"
+								>
+									Attainment data format not recognized. Expected CO1-CO6 names.
 								</td>
 							</tr>
 						)}

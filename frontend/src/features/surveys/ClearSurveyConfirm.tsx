@@ -31,7 +31,8 @@ export function ClearSurveyConfirm({ offeringId, onCleared }: ClearSurveyConfirm
 			toast.success("All survey data cleared");
 			setOpen(false);
 			onCleared?.();
-		} catch {
+		} catch (err) {
+			console.error("ClearSurveyConfirm: Failed to clear survey data", err);
 			toast.error("Failed to clear survey data");
 		} finally {
 			setClearing(false);

@@ -114,7 +114,7 @@ class CourseSurveyRepository
         $stmt = $this->db->prepare(
             'SELECT 
                 q.co_number, 
-                SUM(r.likert_rating * q.mapping_weight) / SUM(q.mapping_weight) as average_rating,
+                SUM(r.likert_rating * q.mapping_weight) / NULLIF(SUM(q.mapping_weight), 0) as average_rating,
                 COUNT(DISTINCT r.student_rollno) as respondent_count
              FROM course_survey_responses r
              JOIN course_survey_questions q ON r.question_id = q.question_id
@@ -156,7 +156,7 @@ class CourseSurveyRepository
             'SELECT 
                 r.student_rollno,
                 q.co_number,
-                SUM(r.likert_rating * q.mapping_weight) / SUM(q.mapping_weight) as co_rating
+                SUM(r.likert_rating * q.mapping_weight) / NULLIF(SUM(q.mapping_weight), 0) as co_rating
              FROM course_survey_responses r
              JOIN course_survey_questions q ON r.question_id = q.question_id
              JOIN course_surveys s ON r.survey_id = s.survey_id
@@ -201,5 +201,36 @@ class CourseSurveyRepository
     {
         $stmt = $this->db->prepare('DELETE FROM course_survey_responses WHERE survey_id = ?');
         $stmt->execute([$surveyId]);
+    }
+
+    public function replaceResponses(int $surveyId, array $responses): int
+    {
+        try {
+            $this->db->beginTransaction();
+            $this->clearResponses($surveyId);
+
+            $stmt = $this->db->prepare(
+                'INSERT INTO course_survey_responses (survey_id, student_rollno, question_id, likert_rating) 
+                 VALUES (?, ?, ?, ?) 
+                 ON DUPLICATE KEY UPDATE likert_rating = VALUES(likert_rating)'
+            );
+
+            $count = 0;
+            foreach ($responses as $row) {
+                $stmt->execute([
+                    $surveyId,
+                    $row['student_rollno'],
+                    $row['question_id'],
+                    $row['likert_rating']
+                ]);
+                $count++;
+            }
+
+            $this->db->commit();
+            return $count;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 }

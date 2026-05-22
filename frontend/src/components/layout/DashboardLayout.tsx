@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { PageLoader } from "@/components/ui/page-loader";
 import { Toaster } from "@/components/ui/sonner";
 import { AppSidebar, type NavItem } from "@/components/layout";
 import { apiService } from "@/services/api";
@@ -42,10 +43,10 @@ export function DashboardLayout() {
 		navigate("/login");
 	};
 
-	if (!user) return null;
+	// Define navigation based on role using useMemo
+	const navItems = useMemo((): NavItem[] => {
+		if (!user) return [];
 
-	// Define navigation based on role
-	const getNavItems = (): NavItem[] => {
 		const common = [
 			{ id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
 		];
@@ -139,7 +140,9 @@ export function DashboardLayout() {
 			default:
 				return common;
 		}
-	};
+	}, [user?.role, user?.is_dean]);
+
+	if (!user) return null;
 
 	// Determine active ID from URL
 	const pathParts = location.pathname.split("/");
@@ -164,7 +167,7 @@ export function DashboardLayout() {
 		<div className="flex h-screen bg-background w-full overflow-hidden">
 			<Toaster />
 			<AppSidebar
-				items={getNavItems()}
+				items={navItems}
 				user={user}
 				activeId={activeId}
 				onNavigate={onNavigate}
@@ -172,7 +175,9 @@ export function DashboardLayout() {
 				sidebarOpen={sidebarOpen}
 			/>
 			<main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-				<Outlet context={{ user, sidebarOpen, setSidebarOpen }} />
+				<Suspense fallback={<PageLoader />}>
+					<Outlet context={{ user, sidebarOpen, setSidebarOpen }} />
+				</Suspense>
 			</main>
 		</div>
 	);

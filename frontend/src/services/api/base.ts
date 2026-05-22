@@ -47,39 +47,91 @@ function handleUnauthorized(): void {
 	window.location.href = "/login";
 }
 
+// Caching and Request Deduplication structures
+const apiCache = new Map<string, { data: any; timestamp: number }>();
+const activeGetRequests = new Map<string, Promise<any>>();
+
+export function clearApiCache(): void {
+	debugLogger.info("API", "Clearing API response cache due to mutation request.");
+	apiCache.clear();
+}
+
+function getCacheKey(endpoint: string, params?: Record<string, any>): string {
+	if (!params) return endpoint;
+	const filtered = Object.fromEntries(
+		Object.entries(params).filter(
+			([, v]) => v !== undefined && v !== null && v !== "",
+		),
+	);
+	const qs = new URLSearchParams(
+		Object.fromEntries(
+			Object.entries(filtered).map(([k, v]) => [k, String(v)]),
+		),
+	).toString();
+	return qs ? `${endpoint}?${qs}` : endpoint;
+}
+
 // Helper function for making GET requests
-export async function apiGet<T>(endpoint: string): Promise<T> {
-	debugLogger.debug("API", `GET request: ${endpoint}`);
-	const startTime = performance.now();
+export async function apiGet<T>(endpoint: string, options?: { bypassCache?: boolean }): Promise<T> {
+	const cacheKey = endpoint;
+	const bypassCache = options?.bypassCache;
 
-	try {
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-			headers: tokenManager.getAuthHeaders(),
-		});
-
-		const duration = performance.now() - startTime;
-		debugLogger.debug(
-			"API",
-			`GET ${endpoint} - Status: ${response.status} (${duration.toFixed(2)}ms)`,
-		);
-
-		if (response.status === 401) handleUnauthorized();
-
-		const data = await response.json();
-
-		if (!response.ok) {
-			debugLogger.error("API", `GET ${endpoint} failed`, {
-				status: response.status,
-				message: data.message,
-			});
-			throw new Error(data.message || "Request failed");
+	if (!bypassCache) {
+		const cached = apiCache.get(cacheKey);
+		if (cached && Date.now() - cached.timestamp < 5000) {
+			debugLogger.debug("API", `GET ${endpoint} - Cache Hit`);
+			return cached.data;
 		}
 
-		debugLogger.debug("API", `GET ${endpoint} - Success`);
-		return data.data;
-	} catch (error) {
-		debugLogger.error("API", `GET ${endpoint} - Error`, error);
-		throw error;
+		const active = activeGetRequests.get(cacheKey);
+		if (active) {
+			debugLogger.debug("API", `GET ${endpoint} - Request Deduplicated`);
+			return active;
+		}
+	}
+
+	const requestPromise = (async () => {
+		debugLogger.debug("API", `GET request: ${endpoint}`);
+		const startTime = performance.now();
+
+		try {
+			const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+				headers: tokenManager.getAuthHeaders(),
+			});
+
+			const duration = performance.now() - startTime;
+			debugLogger.debug(
+				"API",
+				`GET ${endpoint} - Status: ${response.status} (${duration.toFixed(2)}ms)`,
+			);
+
+			if (response.status === 401) handleUnauthorized();
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				debugLogger.error("API", `GET ${endpoint} failed`, {
+					status: response.status,
+					message: data.message,
+				});
+				throw new Error(data.message || "Request failed");
+			}
+
+			debugLogger.debug("API", `GET ${endpoint} - Success`);
+			apiCache.set(cacheKey, { data: data.data, timestamp: Date.now() });
+			return data.data;
+		} catch (error) {
+			debugLogger.error("API", `GET ${endpoint} - Error`, error);
+			throw error;
+		}
+	})();
+
+	activeGetRequests.set(cacheKey, requestPromise);
+
+	try {
+		return await requestPromise;
+	} finally {
+		activeGetRequests.delete(cacheKey);
 	}
 }
 
@@ -121,6 +173,7 @@ export async function apiPost<T, R>(endpoint: string, body: T): Promise<R> {
 		debugLogger.info("API", `POST ${endpoint} - Success`, {
 			data: data.data,
 		});
+		clearApiCache();
 		return data.data;
 	} catch (error) {
 		debugLogger.error("API", `POST ${endpoint} - Error`, error);
@@ -158,6 +211,7 @@ export async function apiDelete<T = void>(endpoint: string): Promise<T> {
 		}
 
 		debugLogger.warn("API", `DELETE ${endpoint} - Success`);
+		clearApiCache();
 		return data.data as T;
 	} catch (error) {
 		debugLogger.error("API", `DELETE ${endpoint} - Error`, error);
@@ -204,6 +258,7 @@ export async function apiPut<T, R>(endpoint: string, body: T): Promise<R> {
 		debugLogger.info("API", `PUT ${endpoint} - Success`, {
 			data: data.data,
 		});
+		clearApiCache();
 		return data.data;
 	} catch (error) {
 		debugLogger.error("API", `PUT ${endpoint} - Error`, error);
@@ -214,20 +269,49 @@ export async function apiPut<T, R>(endpoint: string, body: T): Promise<R> {
 // Helper for full response (when we need success, message, data)
 export async function apiGetFull<T>(
 	endpoint: string,
+	options?: { bypassCache?: boolean }
 ): Promise<{ success: boolean; message: string; data: T }> {
-	const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-		headers: tokenManager.getAuthHeaders(),
-	});
+	const cacheKey = `full:${endpoint}`;
+	const bypassCache = options?.bypassCache;
 
-	if (response.status === 401) handleUnauthorized();
+	if (!bypassCache) {
+		const cached = apiCache.get(cacheKey);
+		if (cached && Date.now() - cached.timestamp < 5000) {
+			debugLogger.debug("API", `GET full ${endpoint} - Cache Hit`);
+			return cached.data;
+		}
 
-	const data = await response.json();
-
-	if (!response.ok) {
-		throw new Error(data.message || "Request failed");
+		const active = activeGetRequests.get(cacheKey);
+		if (active) {
+			debugLogger.debug("API", `GET full ${endpoint} - Request Deduplicated`);
+			return active;
+		}
 	}
 
-	return data;
+	const requestPromise = (async () => {
+		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+			headers: tokenManager.getAuthHeaders(),
+		});
+
+		if (response.status === 401) handleUnauthorized();
+
+		const data = await response.json();
+
+		if (!response.ok) {
+			throw new Error(data.message || "Request failed");
+		}
+
+		apiCache.set(cacheKey, { data, timestamp: Date.now() });
+		return data;
+	})();
+
+	activeGetRequests.set(cacheKey, requestPromise);
+
+	try {
+		return await requestPromise;
+	} finally {
+		activeGetRequests.delete(cacheKey);
+	}
 }
 
 export async function apiPostFull<T, R>(
@@ -252,6 +336,7 @@ export async function apiPostFull<T, R>(
 		);
 	}
 
+	clearApiCache();
 	return data;
 }
 
@@ -259,41 +344,68 @@ export async function apiPostFull<T, R>(
 export async function apiGetPaginated<T>(
 	endpoint: string,
 	params?: Record<string, string | number | undefined>,
+	options?: { bypassCache?: boolean }
 ): Promise<import("./types").PaginatedResponse<T>> {
-	let url = `${API_BASE_URL}${endpoint}`;
-	if (params) {
-		const filtered = Object.fromEntries(
-			Object.entries(params).filter(
-				([, v]) => v !== undefined && v !== null && v !== "",
-			),
-		) as Record<string, string>;
-		const qs = new URLSearchParams(
-			Object.fromEntries(
-				Object.entries(filtered).map(([k, v]) => [k, String(v)]),
-			),
-		).toString();
-		if (qs) url += "?" + qs;
+	const cacheKey = getCacheKey(endpoint, params);
+	const bypassCache = options?.bypassCache;
+
+	if (!bypassCache) {
+		const cached = apiCache.get(cacheKey);
+		if (cached && Date.now() - cached.timestamp < 5000) {
+			debugLogger.debug("API", `GET paginated ${endpoint} - Cache Hit`);
+			return cached.data;
+		}
+
+		const active = activeGetRequests.get(cacheKey);
+		if (active) {
+			debugLogger.debug("API", `GET paginated ${endpoint} - Request Deduplicated`);
+			return active;
+		}
 	}
 
-	debugLogger.debug("API", `GET paginated request: ${url}`);
-	const response = await fetch(url, {
-		headers: tokenManager.getAuthHeaders(),
-	});
+	const requestPromise = (async () => {
+		let url = `${API_BASE_URL}${endpoint}`;
+		if (params) {
+			const filtered = Object.fromEntries(
+				Object.entries(params).filter(
+					([, v]) => v !== undefined && v !== null && v !== "",
+				),
+			) as Record<string, string>;
+			const qs = new URLSearchParams(
+				Object.fromEntries(
+					Object.entries(filtered).map(([k, v]) => [k, String(v)]),
+				),
+			).toString();
+			if (qs) url += "?" + qs;
+		}
 
-	if (response.status === 401) handleUnauthorized();
-
-	const data = await response.json();
-
-	if (!response.ok) {
-		debugLogger.error("API", `GET paginated ${endpoint} failed`, {
-			status: response.status,
-			message: data.message,
+		debugLogger.debug("API", `GET paginated request: ${url}`);
+		const response = await fetch(url, {
+			headers: tokenManager.getAuthHeaders(),
 		});
-		throw new Error(data.message || "Request failed");
-	}
 
-	debugLogger.debug("API", `GET paginated ${endpoint} - Success`, {
-		data: data.data,
-	});
-	return data as import("./types").PaginatedResponse<T>;
+		if (response.status === 401) handleUnauthorized();
+
+		const data = await response.json();
+
+		if (!response.ok) {
+			debugLogger.error("API", `GET paginated ${endpoint} failed`, {
+				status: response.status,
+				message: data.message,
+			});
+			throw new Error(data.message || "Request failed");
+		}
+
+		debugLogger.debug("API", `GET paginated ${endpoint} - Success`);
+		apiCache.set(cacheKey, { data, timestamp: Date.now() });
+		return data;
+	})();
+
+	activeGetRequests.set(cacheKey, requestPromise);
+
+	try {
+		return await requestPromise;
+	} finally {
+		activeGetRequests.delete(cacheKey);
+	}
 }

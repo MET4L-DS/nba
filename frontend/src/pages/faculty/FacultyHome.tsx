@@ -1,71 +1,30 @@
 import { useState, useEffect } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
-import { facultyApi } from "@/services/api/faculty";
 import type { User, FacultyStats, Course } from "@/services/api";
-import { RefreshCw } from "lucide-react";
 import { StatsGrid, QuickAccessGrid } from "@/features/shared";
 import { createFacultyStats } from "@/features/shared/statsFactory";
 import { createFacultyQuickAccess } from "@/features/shared/quickAccessFactory";
 import { FacultyOverview } from "@/components/faculty";
-import { AppHeader } from "@/components/layout";
-import { Button } from "@/components/ui/button";
-import { usePaginatedData } from "@/lib/usePaginatedData";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import { debugLogger } from "@/lib/debugLogger";
+import { motion } from "framer-motion";
 
 export function FacultyHome() {
 	const navigate = useNavigate();
-	const { user, sidebarOpen, setSidebarOpen } = useOutletContext<{
+	const {
+		user,
+		courses,
+		selectedCourse,
+		isLoadingCourses,
+	} = useOutletContext<{
 		user: User;
-		sidebarOpen: boolean;
-		setSidebarOpen: (open: boolean) => void;
+		courses: Course[];
+		selectedCourse: Course | null;
+		isLoadingCourses: boolean;
 	}>();
 
 	debugLogger.info("FacultyHome", "Component mounted", { user: user?.username });
 
-	const {
-		data: courses,
-		loading: isLoadingCourses,
-		refresh: refreshCourses,
-	} = usePaginatedData<Course>({
-		fetchFn: facultyApi.getCourses,
-		limit: 100,
-	});
-
-	debugLogger.debug("FacultyHome", "Courses fetched", {
-		count: courses.length,
-		loading: isLoadingCourses,
-		courses: courses.map(c => ({ id: c.offering_id, code: c.course_code, active: c.is_active }))
-	});
-
-	// Filter out concluded courses for the dropdown only
-	const activeCourses = courses.filter(c => c.is_active !== 0);
-
-	debugLogger.debug("FacultyHome", "Active courses filtered", {
-		totalCourses: courses.length,
-		activeCount: activeCourses.length,
-		activeCourses: activeCourses.map(c => ({ id: c.offering_id, code: c.course_code }))
-	});
-
-	const [selectedCourse, setSelectedCourseState] = useState<Course | null>(
-		null,
-	);
-	const setSelectedCourse = (course: Course | null) => {
-		setSelectedCourseState(course);
-		if (course) {
-			localStorage.setItem(
-				"faculty_last_course",
-				String(course.offering_id || course.course_id || ""),
-			);
-		}
-	};
 	const [stats, setStats] = useState<FacultyStats>({
 		totalCourses: 0,
 		totalAssessments: 0,
@@ -78,49 +37,11 @@ export function FacultyHome() {
 		loadStats();
 	}, []);
 
-	useEffect(() => {
-		debugLogger.debug("FacultyHome", "Course selection useEffect triggered", {
-			activeCoursesCount: activeCourses.length,
-			hasSelectedCourse: !!selectedCourse,
-			selectedCourseId: selectedCourse?.offering_id
-		});
-
-		if (activeCourses.length > 0 && !selectedCourse) {
-			let activeCourse =
-				activeCourses.find((c) => c.is_active !== 0) || activeCourses[0];
-			const savedCourseId = localStorage.getItem("faculty_last_course");
-
-			debugLogger.debug("FacultyHome", "Selecting course", {
-				savedCourseId,
-				selectedCourseCode: activeCourse?.course_code
-			});
-
-			if (savedCourseId) {
-				const foundCourse = activeCourses.find(
-					(c) =>
-						String(c.offering_id || c.course_id) === savedCourseId,
-				);
-				if (foundCourse) {
-					activeCourse = foundCourse;
-					debugLogger.info("FacultyHome", "Restored course from localStorage", {
-						courseId: foundCourse.offering_id,
-						courseCode: foundCourse.course_code
-					});
-				}
-			}
-			setSelectedCourse(activeCourse);
-			debugLogger.info("FacultyHome", "Course selected", {
-				courseId: activeCourse?.offering_id,
-				courseCode: activeCourse?.course_code
-			});
-		}
-	}, [activeCourses, selectedCourse]);
-
-	const loadStats = async () => {
+	const loadStats = async (options?: { bypassCache?: boolean }) => {
 		debugLogger.debug("FacultyHome", "Loading faculty stats...");
 		setStatsLoading(true);
 		try {
-			const statsData = await apiService.getFacultyStats();
+			const statsData = await apiService.getFacultyStats(options);
 			debugLogger.info("FacultyHome", "Faculty stats loaded", {
 				stats: statsData,
 				totalCourses: statsData.totalCourses,
@@ -143,101 +64,57 @@ export function FacultyHome() {
 		}
 	};
 
-	const handleRefresh = () => {
-		loadStats();
-		refreshCourses();
+	const pageVariants = {
+		initial: { opacity: 0, y: 15 },
+		animate: { opacity: 1, y: 0 },
+		exit: { opacity: 0, y: -15 },
+	};
+
+	const pageTransition = {
+		duration: 0.45,
+		ease: [0.16, 1, 0.3, 1] as const,
 	};
 
 	return (
-		<div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-			<AppHeader
-				title="Faculty Dashboard"
-				sidebarOpen={sidebarOpen}
-				onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-				onLogout={async () => {
-					await apiService.logout();
-					window.location.href = "/login";
-				}}
-			>
-				<div className="flex items-center gap-2">
-					{activeCourses.length > 0 && (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="outline"
-									size="sm"
-									className="hidden md:flex"
-								>
-									{selectedCourse
-										? selectedCourse.course_code
-										: "Select Course"}
-									<ChevronDown className="ml-2 h-4 w-4" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								{activeCourses.map((course) => (
-									<DropdownMenuItem
-										key={
-											course.offering_id ||
-											course.course_id
-										}
-										onClick={() =>
-											setSelectedCourse(course)
-										}
-									>
-										{course.course_code} -{" "}
-										{course.course_name}
-									</DropdownMenuItem>
-								))}
-							</DropdownMenuContent>
-						</DropdownMenu>
-					)}
-					<Button
-						variant="outline"
-						size="icon"
-						onClick={handleRefresh}
-						disabled={statsLoading}
-						className="hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95"
-					>
-						<RefreshCw
-							className={`h-4 w-4 ${statsLoading ? "animate-spin" : ""}`}
-						/>
-					</Button>
+		<motion.div
+			initial="initial"
+			animate="animate"
+			exit="exit"
+			variants={pageVariants}
+			transition={pageTransition}
+			className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6"
+		>
+			<div className="flex flex-wrap gap-4 items-center justify-between bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden mb-2">
+				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20 pointer-events-none"></div>
+				<div>
+					<h1 className="text-2xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+						Welcome, {user.username}
+					</h1>
+					<p className="text-sm text-muted-foreground mt-1">
+						{selectedCourse
+							? `Currently managing ${selectedCourse.course_code} — ${selectedCourse.course_name}`
+							: "Overview of your assigned courses and student performance."}
+					</p>
 				</div>
-			</AppHeader>
-
-			<div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-				<div className="flex flex-wrap gap-4 items-center justify-between bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden mb-2">
-					<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20 pointer-events-none"></div>
-					<div>
-						<h1 className="text-2xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-							Welcome, {user.username}
-						</h1>
-						<p className="text-sm text-muted-foreground mt-1">
-							{selectedCourse
-								? `Currently managing ${selectedCourse.course_code} — ${selectedCourse.course_name}`
-								: "Overview of your assigned courses and student performance."}
-						</p>
-					</div>
-				</div>
-
-				<StatsGrid
-					stats={createFacultyStats(stats)}
-					isLoading={statsLoading}
-					variant="solid"
-					columns={4}
-				/>
-				<QuickAccessGrid
-					items={createFacultyQuickAccess()}
-					onItemClick={(nav) => navigate(`/faculty/${nav}`)}
-					variant="elevated"
-					columns={4}
-				/>
-				<FacultyOverview
-					courses={courses}
-					isLoading={isLoadingCourses}
-				/>
 			</div>
-		</div>
+
+			<StatsGrid
+				stats={createFacultyStats(stats)}
+				isLoading={statsLoading}
+				variant="solid"
+				columns={4}
+			/>
+			<QuickAccessGrid
+				items={createFacultyQuickAccess()}
+				onItemClick={(nav) => navigate(`/faculty/${nav}`)}
+				variant="elevated"
+				columns={4}
+			/>
+			<FacultyOverview
+				courses={courses}
+				isLoading={isLoadingCourses}
+			/>
+		</motion.div>
 	);
 }
+

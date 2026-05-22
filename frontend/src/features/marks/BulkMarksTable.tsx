@@ -10,6 +10,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import type { QuestionResponse, Enrollment } from "@/services/api";
+import { motion } from "framer-motion";
 
 /** CO badge colour map (CO1–CO6) */
 const CO_COLORS: Record<string, string> = {
@@ -139,7 +140,7 @@ export function BulkMarksTable({
 				</TableRow>
 			</TableHeader>
 			<TableBody className="bg-background [&_tr:last-child]:border-0">
-				{enrollments.map((enrollment) => {
+				{enrollments.map((enrollment, idx) => {
 					const rollno = enrollment.student_rollno;
 					const isInvalid = rowHasInvalid(rollno);
 					const isDirty = dirtyRows.has(rollno);
@@ -153,7 +154,7 @@ export function BulkMarksTable({
 							: "bg-background group-hover:bg-muted";
 
 					return (
-						<TableRow
+						<motion.tr
 							key={rollno}
 							className={cn(
 								"transition-colors group border-b border-border",
@@ -163,6 +164,13 @@ export function BulkMarksTable({
 										? "bg-amber-50/30 hover:bg-amber-50/60 dark:bg-amber-900/10 dark:hover:bg-amber-900/20"
 										: "hover:bg-muted/50",
 							)}
+							initial={{ opacity: 0, y: 6 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{
+								ease: [0.16, 1, 0.3, 1],
+								duration: 0.35,
+								delay: Math.min(idx * 0.015, 0.15),
+							}}
 						>
 							{/* Sticky Roll No */}
 							<TableCell
@@ -238,7 +246,7 @@ export function BulkMarksTable({
 									</span>
 								)}
 							</TableCell>
-						</TableRow>
+						</motion.tr>
 					);
 				})}
 			</TableBody>

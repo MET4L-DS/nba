@@ -9,6 +9,7 @@ import {
 	AlertCircle,
 } from "lucide-react";
 import { apiService } from "@/services/api";
+import { motion } from "framer-motion";
 import type {
 	Course,
 	Test,
@@ -373,10 +374,39 @@ export function FacultyMarksByQuestion({
 		}
 	}, [enteredCount, enrollments.length, averageTotal, onStatsUpdate]);
 
+	const containerVariants = {
+		initial: {},
+		animate: {
+			transition: {
+				staggerChildren: 0.08,
+			},
+		},
+	};
+
+	const itemVariants = {
+		initial: { opacity: 0, y: 10 },
+		animate: {
+			opacity: 1,
+			y: 0,
+			transition: {
+				duration: 0.4,
+				ease: [0.16, 1, 0.3, 1] as const,
+			},
+		},
+	};
+
 	return (
-		<>
+		<motion.div
+			variants={containerVariants}
+			initial="initial"
+			animate="animate"
+			className="flex-1 flex flex-col min-h-0"
+		>
 			{/* Toolbar */}
-			<div className="px-6 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-muted/50 bg-muted/10 shrink-0">
+			<motion.div
+				variants={itemVariants}
+				className="px-6 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-muted/50 bg-muted/10 shrink-0"
+			>
 				<div className="flex items-center gap-3.5 flex-wrap">
 					{headerContent}
 					{enrollments.length > 0 && (
@@ -451,10 +481,13 @@ export function FacultyMarksByQuestion({
 						{submitting ? "Saving…" : "Save"}
 					</Button>
 				</div>
-			</div>
+			</motion.div>
 			{/* Content Area */}
 			{dirtyRows.size > 0 && (
-				<div className="shrink-0 flex items-center gap-2.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-500/5 border-b border-amber-500/20 px-6 py-2.5">
+				<motion.div
+					variants={itemVariants}
+					className="shrink-0 flex items-center gap-2.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-500/5 border-b border-amber-500/20 px-6 py-2.5"
+				>
 					<AlertCircle className="w-4 h-4 shrink-0 text-amber-500 animate-pulse" />
 					<span className="font-bold">
 						{dirtyRows.size} student(s) modified
@@ -462,9 +495,12 @@ export function FacultyMarksByQuestion({
 					<span className="text-xs font-medium text-amber-600/80 dark:text-amber-500/80">
 						— unsaved changes highlighted in table. Remember to click Save!
 					</span>
-				</div>
+				</motion.div>
 			)}
-			<div className="flex-1 overflow-auto bg-background/30 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full">
+			<motion.div
+				variants={itemVariants}
+				className="flex-1 overflow-auto bg-background/30 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full"
+			>
 				{marksLoading ? (
 					<div className="flex items-center justify-center h-full min-h-[200px] text-sm text-muted-foreground animate-pulse">
 						Loading students and questions…
@@ -487,9 +523,12 @@ export function FacultyMarksByQuestion({
 						validateMarks={validateMarks}
 					/>
 				)}
-			</div>
+			</motion.div>
 			{!marksLoading && filteredEnrollments.length > 0 && (
-				<div className="shrink-0 bg-background/50 border-t border-muted/50 px-6 py-3.5 flex items-center justify-between gap-4">
+				<motion.div
+					variants={itemVariants}
+					className="shrink-0 bg-background/50 border-t border-muted/50 px-6 py-3.5 flex items-center justify-between gap-4"
+				>
 					<p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
 						Showing{" "}
 						{filteredEnrollments.length === 0 ? 0 : startIndex + 1}{" "}
@@ -575,8 +614,8 @@ export function FacultyMarksByQuestion({
 							</PaginationContent>
 						</Pagination>
 					)}
-				</div>
+				</motion.div>
 			)}
-		</>
+		</motion.div>
 	);
 }

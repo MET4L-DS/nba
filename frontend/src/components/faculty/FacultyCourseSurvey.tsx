@@ -39,6 +39,7 @@ import type {
 	CourseExitSurveyQuestionAnalysis,
 	CourseExitSurveyConfig as CourseExitSurveyConfigType,
 } from "@/services/api";
+import { motion } from "framer-motion";
 
 interface FacultyCourseSurveyProps {
 	selectedCourse: Course;
@@ -111,6 +112,27 @@ export function FacultyCourseSurvey({
 			</div>
 		);
 	}
+
+	const containerVariants = {
+		initial: {},
+		animate: {
+			transition: {
+				staggerChildren: 0.1,
+			},
+		},
+	};
+
+	const itemVariants = {
+		initial: { opacity: 0, y: 15 },
+		animate: {
+			opacity: 1,
+			y: 0,
+			transition: {
+				duration: 0.45,
+				ease: [0.16, 1, 0.3, 1] as const,
+			},
+		},
+	};
 
 	return (
 		<div className="flex flex-col min-w-0 h-full">
@@ -215,7 +237,7 @@ export function FacultyCourseSurvey({
 				</div>
 			) : (
 				<>
-					<div className="flex-1 overflow-y-auto p-6 space-y-6">
+					<div className="flex-1 overflow-y-auto p-6">
 						{loadError ? (
 							<div className="flex items-center justify-center h-32 text-destructive">
 								<span className="text-sm font-medium">{loadError}</span>
@@ -226,8 +248,16 @@ export function FacultyCourseSurvey({
 								Loading survey data...
 							</div>
 						) : (
-							<>
-								<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<motion.div
+								variants={containerVariants}
+								initial="initial"
+								animate="animate"
+								className="space-y-6"
+							>
+								<motion.div
+									variants={itemVariants}
+									className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+								>
 									<CourseExitSurveyCSVImport
 										offeringId={offeringId}
 										config={config}
@@ -240,83 +270,87 @@ export function FacultyCourseSurvey({
 										onDirectWeightChange={setDirectWeight}
 										onSaved={refresh}
 									/>
-								</div>
+								</motion.div>
 
-								<Card className="bg-card/85 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 relative">
-									<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent"></div>
-									<button
-										className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/[0.04] transition-colors border-b border-muted/50 cursor-pointer group text-left relative"
-										onClick={() =>
-											setMetricsOpen(!metricsOpen)
-										}
-									>
-										<div className="flex items-center gap-3">
-											<div className="w-9 h-9 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400 group-hover:scale-105 transition-transform duration-200">
-												<BarChart3 className="w-4 h-4" />
-											</div>
-											<div>
-												<h3 className="font-bold text-sm bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">
-													Metrics Overview: Blended Attainment
-												</h3>
-												<p className="text-xs text-muted-foreground font-normal mt-0.5">
-													View blended results combining direct exams and survey feedback.
-												</p>
-											</div>
-										</div>
-										{metricsOpen ? (
-											<ChevronDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-										) : (
-											<ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-										)}
-									</button>
-
-									{metricsOpen && (
-										<div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6 bg-muted/[0.02]">
-											<BlendedAttainmentTable
-												attainmentCoData={
-													attainmentCoData
-												}
-												directWeight={directWeight}
-												indirectWeight={indirectWeight}
-											/>
-											<AttainmentBarChart
-												attainmentCoData={
-													attainmentCoData
-												}
-											/>
-										</div>
-									)}
-								</Card>
-
-								{(() => {
-									const coGroups: Record<
-										number,
-										{ questions: CourseExitSurveyQuestionAnalysis[]; avg: number | null }
-									> = {};
-									if (results?.question_analysis) {
-										for (const q of results.question_analysis) {
-											if (!coGroups[q.co_number]) {
-												const coResult = results.co_results.find(
-													(c) => c.co_number === q.co_number,
-												);
-												coGroups[q.co_number] = {
-													questions: [],
-													avg: coResult?.normalized_rating ?? null,
-												};
+								<motion.div variants={itemVariants}>
+									<Card className="bg-card/85 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 relative">
+										<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent"></div>
+										<button
+											className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/[0.04] transition-colors border-b border-muted/50 cursor-pointer group text-left relative"
+											onClick={() =>
+												setMetricsOpen(!metricsOpen)
 											}
-											coGroups[q.co_number].questions.push(q);
+										>
+											<div className="flex items-center gap-3">
+												<div className="w-9 h-9 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400 group-hover:scale-105 transition-transform duration-200">
+													<BarChart3 className="w-4 h-4" />
+												</div>
+												<div>
+													<h3 className="font-bold text-sm bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">
+														Metrics Overview: Blended Attainment
+													</h3>
+													<p className="text-xs text-muted-foreground font-normal mt-0.5">
+														View blended results combining direct exams and survey feedback.
+													</p>
+												</div>
+											</div>
+											{metricsOpen ? (
+												<ChevronDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+											) : (
+												<ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+											)}
+										</button>
+
+										{metricsOpen && (
+											<div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6 bg-muted/[0.02]">
+												<BlendedAttainmentTable
+													attainmentCoData={
+														attainmentCoData
+													}
+													directWeight={directWeight}
+													indirectWeight={indirectWeight}
+												/>
+												<AttainmentBarChart
+													attainmentCoData={
+														attainmentCoData
+													}
+												/>
+											</div>
+										)}
+									</Card>
+								</motion.div>
+
+								<motion.div variants={itemVariants}>
+									{(() => {
+										const coGroups: Record<
+											number,
+											{ questions: CourseExitSurveyQuestionAnalysis[]; avg: number | null }
+										> = {};
+										if (results?.question_analysis) {
+											for (const q of results.question_analysis) {
+												if (!coGroups[q.co_number]) {
+													const coResult = results.co_results.find(
+														(c) => c.co_number === q.co_number,
+													);
+													coGroups[q.co_number] = {
+														questions: [],
+														avg: coResult?.normalized_rating ?? null,
+													};
+												}
+												coGroups[q.co_number].questions.push(q);
+											}
 										}
-									}
-									return (
-										<CourseExitSurveyMatrix
-											results={results}
-											coGroups={coGroups}
-											filterText={filterText}
-											onFilterTextChange={setFilterText}
-										/>
-									);
-								})()}
-							</>
+										return (
+											<CourseExitSurveyMatrix
+												results={results}
+												coGroups={coGroups}
+												filterText={filterText}
+												onFilterTextChange={setFilterText}
+											/>
+										);
+									})()}
+								</motion.div>
+							</motion.div>
 						)}
 					</div>
 

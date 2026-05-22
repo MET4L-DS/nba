@@ -1,29 +1,30 @@
-import { useOutletContext } from "react-router-dom";
-import { AppHeader } from "@/components/layout";
-import { apiService } from "@/services/api";
 import { AuditLogsView } from "../../features/audit/AuditLogsView";
 import { auditApi } from "@/services/api/audit";
+import { motion } from "framer-motion";
 
 export function FacultyLogs() {
-	const { sidebarOpen, setSidebarOpen } = useOutletContext<{
-		sidebarOpen: boolean;
-		setSidebarOpen: (open: boolean) => void;
-	}>();
+	const pageVariants = {
+		initial: { opacity: 0, y: 15 },
+		animate: { opacity: 1, y: 0 },
+		exit: { opacity: 0, y: -15 },
+	};
+
+	const pageTransition = {
+		duration: 0.45,
+		ease: [0.16, 1, 0.3, 1] as const,
+	};
 
 	return (
-		<div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-			<AppHeader
-				title="My Audit Logs"
-				sidebarOpen={sidebarOpen}
-				onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-				onLogout={async () => {
-					await apiService.logout();
-					window.location.href = "/login";
-				}}
-			/>
-			<div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-				<AuditLogsView fetchFn={auditApi.getFacultyLogs} />
-			</div>
-		</div>
+		<motion.div
+			initial="initial"
+			animate="animate"
+			exit="exit"
+			variants={pageVariants}
+			transition={pageTransition}
+			className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6"
+		>
+			<AuditLogsView fetchFn={auditApi.getFacultyLogs} />
+		</motion.div>
 	);
 }
+

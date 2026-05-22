@@ -9,14 +9,15 @@ import type {
 	UpdateStudentRequest,
 } from "./types";
 
-async function getStats(): Promise<FacultyStats> {
-	return apiGet<FacultyStats>("/faculty/stats");
+async function getStats(options?: { bypassCache?: boolean }): Promise<FacultyStats> {
+	return apiGet<FacultyStats>("/faculty/stats", options);
 }
 
 async function getCourses(
 	params?: PaginationParams,
+	options?: { bypassCache?: boolean },
 ): Promise<PaginatedResponse<Course>> {
-	return apiGetPaginated<Course>("/courses", params as unknown as Record<string, string | number | undefined>);
+	return apiGetPaginated<Course>("/courses", params as unknown as Record<string, string | number | undefined>, options);
 }
 
 async function getEnrolledStudents(

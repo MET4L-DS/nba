@@ -33,11 +33,11 @@ export function HODHome() {
 		loadStats();
 	}, []);
 
-	const loadStats = async () => {
-		debugLogger.info("HODHome", "loadStats starting");
+	const loadStats = async (options?: { bypassCache?: boolean }) => {
+		debugLogger.info("HODHome", "loadStats starting", options);
 		setIsLoading(true);
 		try {
-			const statsData = await apiService.getHODStats();
+			const statsData = await apiService.getHODStats(options);
 			setStats(statsData);
 		} catch (error) {
 			debugLogger.error("HODHome", "loadStats failed", error);
@@ -73,7 +73,7 @@ export function HODHome() {
 					<Button
 						variant="outline"
 						size="sm"
-						onClick={loadStats}
+						onClick={() => loadStats({ bypassCache: true })}
 						disabled={isLoading}
 						className="hidden sm:flex h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200"
 					>

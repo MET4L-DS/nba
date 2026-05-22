@@ -36,7 +36,7 @@ export function AppSidebar({
 			animate={{ width: sidebarOpen ? 256 : 0 }}
 			transition={{ type: "spring", stiffness: 300, damping: 30 }}
 			className="bg-white dark:bg-gray-950 border-r border-gray-200/80 dark:border-gray-800/80 overflow-hidden shrink-0 flex flex-col h-full"
-			style={{ minWidth: 0 }}
+			style={{ minWidth: 0, willChange: "width" }}
 		>
 			<div className="flex flex-col h-full w-64">
 				{/* Header / Logo */}

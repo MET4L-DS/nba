@@ -10,7 +10,10 @@ export interface UsePaginatedDataOptions<
 	F extends Record<string, string | number | undefined>,
 > {
 	/** The async function that fetches a page */
-	fetchFn: (params: PaginationParams) => Promise<PaginatedResponse<unknown>>;
+	fetchFn: (
+		params: PaginationParams,
+		options?: { bypassCache?: boolean }
+	) => Promise<PaginatedResponse<unknown>>;
 	/** How many rows per page (default 20) */
 	limit?: number;
 	/** Default sort field */
@@ -44,7 +47,7 @@ export interface UsePaginatedDataReturn<
 	/** Jump back to page 1 */
 	reset: () => void;
 	/** Refresh the current page */
-	refresh: () => void;
+	refresh: (options?: { bypassCache?: boolean }) => void;
 	/** Current search string */
 	search: string;
 	/** Update search (triggers debounce + page reset) */
@@ -118,12 +121,13 @@ export function usePaginatedData<
 	// Derive current cursor from cursor stack
 	const currentCursor = cursorStack[pageIndex];
 
-	const doFetch = useCallback(async () => {
+	const doFetch = useCallback(async (options?: { bypassCache?: boolean }) => {
 		debugLogger.debug("usePaginatedData", "doFetch triggering", {
 			pageIndex,
 			limit,
 			search,
 			filters,
+			options,
 		});
 		setLoading(true);
 		setError(null);
@@ -143,7 +147,7 @@ export function usePaginatedData<
 				...(filters as Record<string, string | number | undefined>),
 			};
 
-			const response = await (fetchFnRef.current(params) as Promise<
+			const response = await (fetchFnRef.current(params, options) as Promise<
 				PaginatedResponse<T>
 			>);
 			debugLogger.debug("usePaginatedData", "doFetch success", {
@@ -189,8 +193,8 @@ export function usePaginatedData<
 		setPageIndex(0);
 	}, []);
 
-	const refresh = useCallback(() => {
-		doFetch();
+	const refresh = useCallback((options?: { bypassCache?: boolean }) => {
+		doFetch(options);
 	}, [doFetch]);
 
 	const setSearch = useCallback(

@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import {
 	Table,
 	TableHeader,
-	TableBody,
 	TableHead,
 	TableRow,
 	TableCell,
@@ -21,6 +20,7 @@ import type {
 	CourseExitSurveyResultsResponse,
 	CourseExitSurveyQuestionAnalysis,
 } from "@/services/api";
+import { motion } from "framer-motion";
 
 const CO_RANGE = [1, 2, 3, 4, 5, 6] as const;
 
@@ -54,6 +54,28 @@ interface CoGroupSectionProps {
 	filterText: string;
 }
 
+const listVariants = {
+	hidden: { opacity: 0 },
+	show: {
+		opacity: 1,
+		transition: {
+			staggerChildren: 0.02,
+		},
+	},
+};
+
+const rowVariants = {
+	hidden: { opacity: 0, y: 6 },
+	show: {
+		opacity: 1,
+		y: 0,
+		transition: {
+			duration: 0.35,
+			ease: [0.16, 1, 0.3, 1] as const,
+		},
+	},
+};
+
 function CoGroupSection({ coNum, group, filterText }: CoGroupSectionProps) {
 	const filtered = filterQuestions(group.questions, filterText);
 	if (!filtered.length) return null;
@@ -61,7 +83,11 @@ function CoGroupSection({ coNum, group, filterText }: CoGroupSectionProps) {
 	return (
 		<Fragment>
 			{filtered.map((q, qIdx) => (
-				<TableRow key={q.question_id ?? `q-${coNum}-${qIdx}`}>
+				<motion.tr
+					key={q.question_id ?? `q-${coNum}-${qIdx}`}
+					variants={rowVariants}
+					className="border-b border-border hover:bg-muted/30 transition-colors"
+				>
 					{qIdx === 0 && (
 						<CoLabelCell
 							coNum={coNum}
@@ -78,9 +104,12 @@ function CoGroupSection({ coNum, group, filterText }: CoGroupSectionProps) {
 						weight={q.mapping_weight}
 					/>
 					<VarianceCell variance={q.rating_variance} />
-				</TableRow>
+				</motion.tr>
 			))}
-			<TableRow className="border-b-2 border-muted-foreground/20 bg-muted/10 font-sans">
+			<motion.tr
+				variants={rowVariants}
+				className="border-b-2 border-muted-foreground/20 bg-muted/10 font-sans"
+			>
 				<TableCell
 					className="text-right font-semibold italic text-muted-foreground border-r"
 					colSpan={1}
@@ -96,7 +125,7 @@ function CoGroupSection({ coNum, group, filterText }: CoGroupSectionProps) {
 				</TableCell>
 				<TableCell className="text-right border-r">-</TableCell>
 				<TableCell />
-			</TableRow>
+			</motion.tr>
 		</Fragment>
 	);
 }
@@ -108,8 +137,8 @@ export function CourseExitSurveyMatrix({
 	onFilterTextChange,
 }: CourseExitSurveyMatrixProps) {
 	return (
-		<div className="border rounded-lg overflow-hidden">
-			<div className="px-5 py-4 border-b flex justify-between items-center bg-background">
+		<div className="border rounded-lg overflow-hidden bg-card">
+			<div className="px-5 py-4 border-b flex justify-between items-center bg-background/50 backdrop-blur-md">
 				<div>
 					<h2 className="font-semibold text-base">
 						Course Exit Survey Analysis Matrix
@@ -154,7 +183,11 @@ export function CourseExitSurveyMatrix({
 							</TableHead>
 						</TableRow>
 					</TableHeader>
-					<TableBody>
+					<motion.tbody
+						variants={listVariants}
+						initial="hidden"
+						animate="show"
+					>
 						{results?.question_analysis?.length ? (
 							CO_RANGE.map((coNum) => {
 								const group = coGroups[coNum];
@@ -181,7 +214,7 @@ export function CourseExitSurveyMatrix({
 								</TableCell>
 							</TableRow>
 						)}
-					</TableBody>
+					</motion.tbody>
 				</Table>
 			</div>
 

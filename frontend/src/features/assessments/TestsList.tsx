@@ -155,7 +155,7 @@ export function TestsList({
 			<motion.div 
 				initial={{ opacity: 0, y: 15 }}
 				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.5, type: "spring", bounce: 0.1 }}
+				transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45 }}
 				className="flex flex-col items-center justify-center py-24 gap-4 text-center"
 			>
 				<motion.div
@@ -189,7 +189,7 @@ export function TestsList({
 		<motion.div
 			initial={{ opacity: 0, y: 15 }}
 			animate={{ opacity: 1, y: 0 }}
-			transition={{ type: "spring", duration: 0.5, bounce: 0.1 }}
+			transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45 }}
 			className="w-full"
 		>
 			{/* Course header */}
@@ -236,7 +236,7 @@ export function TestsList({
 								initial={{ opacity: 0, scale: 0.95, y: 10 }}
 								animate={{ opacity: 1, scale: 1, y: 0 }}
 								exit={{ opacity: 0, scale: 0.95, y: 10 }}
-								transition={{ type: "spring", duration: 0.45, bounce: 0.15 }}
+								transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.4 }}
 								className="space-y-4"
 							>
 								<DialogHeader>

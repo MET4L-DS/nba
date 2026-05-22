@@ -20,11 +20,11 @@ interface QuickAccessCardProps {
 }
 
 const cardVariants = {
-	hidden: { opacity: 0, y: 15 },
+	hidden: { opacity: 0, y: 12 },
 	visible: { 
 		opacity: 1, 
 		y: 0,
-		transition: { type: "spring" as const, duration: 0.5, bounce: 0.15 } 
+		transition: { ease: [0.16, 1, 0.3, 1] as const, duration: 0.45 } 
 	}
 };
 
@@ -44,6 +44,7 @@ export function QuickAccessCard({
 				whileTap={{ scale: 0.98 }}
 				className="h-full cursor-pointer"
 				onClick={() => onClick(item.id)}
+				style={{ willChange: "transform, opacity" }}
 			>
 				<Card
 					className="h-full hover:shadow-xl border border-muted/20 relative overflow-hidden bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md rounded-xl"
@@ -79,6 +80,7 @@ export function QuickAccessCard({
 				whileTap={{ scale: 0.98 }}
 				className="h-full cursor-pointer"
 				onClick={() => onClick(item.id)}
+				style={{ willChange: "transform, opacity" }}
 			>
 				<Card
 					className={`h-full border border-muted/20 hover:border-${accentColor}-300 dark:hover:border-${accentColor}-700 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md rounded-xl relative overflow-hidden group`}
@@ -121,6 +123,7 @@ export function QuickAccessCard({
 			whileTap={{ scale: 0.98 }}
 			className="h-full cursor-pointer"
 			onClick={() => onClick(item.id)}
+			style={{ willChange: "transform, opacity" }}
 		>
 			<Card className="h-full border border-muted/20 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md rounded-xl relative overflow-hidden pl-1">
 				<div className={`absolute left-0 top-0 h-full w-[4px] bg-${accentColor}-500`} style={{ backgroundColor: `var(--${accentColor}-500, currentColor)` }} />

@@ -15,9 +15,9 @@ import type {
 } from "./types";
 
 export const deanApi = {
-	async getStats(): Promise<DeanStats> {
+	async getStats(options?: { bypassCache?: boolean }): Promise<DeanStats> {
 		debugLogger.info("deanApi", "getStats called");
-		return apiGet<DeanStats>("/dean/stats");
+		return apiGet<DeanStats>("/dean/stats", options);
 	},
 
 	async getAllDepartments(

@@ -34,7 +34,7 @@ export function AdminHome() {
 	const handleRefreshStats = async () => {
 		setStatsLoading(true);
 		try {
-			const statsData = await apiService.getAdminStats();
+			const statsData = await apiService.getAdminStats({ bypassCache: true });
 			setStats(statsData);
 			toast.success("Stats refreshed");
 		} catch {

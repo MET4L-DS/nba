@@ -89,9 +89,9 @@ export const hodApi = {
 		return apiPost<any, BaseCourse>("/hod/base-courses", data);
 	},
 
-	async getStats(): Promise<HODStats> {
+	async getStats(options?: { bypassCache?: boolean }): Promise<HODStats> {
 		debugLogger.info("hodApi", "getStats called");
-		return apiGet<HODStats>("/hod/stats");
+		return apiGet<HODStats>("/hod/stats", options);
 	},
 
 	async updateBaseCourse(courseId: number, data: any): Promise<void> {

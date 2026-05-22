@@ -324,10 +324,9 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 										initial={{ opacity: 0, y: 10 }}
 										animate={{ opacity: 1, y: 0 }}
 										transition={{
-											type: "spring",
-											stiffness: 110,
-											damping: 15,
-											delay: Math.min(idx * 0.035, 0.3)
+											ease: [0.16, 1, 0.3, 1],
+											duration: 0.4,
+											delay: Math.min(idx * 0.02, 0.2)
 										}}
 									>
 										{row.getVisibleCells().map((cell) => (

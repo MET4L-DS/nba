@@ -26,9 +26,9 @@ import type {
 } from "./types";
 
 export const adminApi = {
-	async getStats(): Promise<AdminStats> {
+	async getStats(options?: { bypassCache?: boolean }): Promise<AdminStats> {
 		debugLogger.info("adminApi", "getStats called");
-		return apiGet<AdminStats>("/admin/stats");
+		return apiGet<AdminStats>("/admin/stats", options);
 	},
 
 	async getAllUsers(

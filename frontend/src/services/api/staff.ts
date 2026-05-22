@@ -13,9 +13,9 @@ export const staffApi = {
 	/**
 	 * Get staff dashboard statistics
 	 */
-	async getStats(): Promise<StaffStats> {
+	async getStats(options?: { bypassCache?: boolean }): Promise<StaffStats> {
 		debugLogger.info("staffApi", "getStats called");
-		return apiGet<StaffStats>("/staff/stats");
+		return apiGet<StaffStats>("/staff/stats", options);
 	},
 
 	/**

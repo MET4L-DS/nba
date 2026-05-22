@@ -22,11 +22,11 @@ interface StatsCardProps {
 }
 
 const cardVariants = {
-	hidden: { opacity: 0, y: 15 },
+	hidden: { opacity: 0, y: 12 },
 	visible: { 
 		opacity: 1, 
 		y: 0,
-		transition: { type: "spring" as const, duration: 0.5, bounce: 0.15 } 
+		transition: { ease: [0.16, 1, 0.3, 1] as const, duration: 0.45 } 
 	}
 };
 
@@ -44,6 +44,7 @@ export function StatsCard({
 				whileHover={{ y: -5, scale: 1.015, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
 				whileTap={{ scale: 0.98 }}
 				className="h-full cursor-pointer"
+				style={{ willChange: "transform, opacity" }}
 			>
 				<Card
 					className={`bg-linear-to-br ${stat.gradient || "from-blue-500 to-blue-600"} text-white border-0 shadow-lg h-full`}
@@ -83,6 +84,7 @@ export function StatsCard({
 				whileHover={{ y: -5, scale: 1.015 }}
 				whileTap={{ scale: 0.98 }}
 				className="h-full cursor-pointer"
+				style={{ willChange: "transform, opacity" }}
 			>
 				<Card
 					className={`bg-linear-to-br ${stat.bgGradient || "from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30"} border border-muted/30 shadow-md h-full`}
@@ -121,6 +123,7 @@ export function StatsCard({
 			whileHover={{ y: -5, scale: 1.015 }}
 			whileTap={{ scale: 0.98 }}
 			className="h-full cursor-pointer"
+			style={{ willChange: "transform, opacity" }}
 		>
 			<Card className="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border border-white/20 dark:border-zinc-800/50 shadow-md h-full relative overflow-hidden group">
 				<div className="absolute top-0 left-0 w-1.5 h-full bg-linear-to-b from-primary/80 to-primary/20" />

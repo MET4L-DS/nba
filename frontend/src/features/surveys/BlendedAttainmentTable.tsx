@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import type { OfferingAttainmentCO } from "@/services/api/types";
 
 interface BlendedAttainmentTableProps {
@@ -10,6 +11,18 @@ function matchCoName(coName: string, coNum: number): boolean {
 	const n = coName.replace(/[^0-9]/g, "");
 	return n === String(coNum);
 }
+
+const rowVariants = {
+	hidden: { opacity: 0, y: 8 },
+	visible: {
+		opacity: 1,
+		y: 0,
+		transition: {
+			duration: 0.35,
+			ease: [0.16, 1, 0.3, 1] as const,
+		},
+	},
+};
 
 export function BlendedAttainmentTable({
 	attainmentCoData,
@@ -43,7 +56,17 @@ export function BlendedAttainmentTable({
 							</th>
 						</tr>
 					</thead>
-					<tbody>
+					<motion.tbody
+						initial="hidden"
+						animate="visible"
+						variants={{
+							visible: {
+								transition: {
+									staggerChildren: 0.04,
+								},
+							},
+						}}
+					>
 						{[1, 2, 3, 4, 5, 6].map((coNum) => {
 							const coData = attainmentCoData.find(
 								(c) => matchCoName(c.co_name, coNum),
@@ -56,8 +79,9 @@ export function BlendedAttainmentTable({
 							const finalVal =
 								coData.final_attainment_level ?? directVal;
 							return (
-								<tr
+								<motion.tr
 									key={coNum}
+									variants={rowVariants}
 									className="border-b last:border-0 hover:bg-muted/30 transition-colors"
 								>
 									<td className="p-2 border-r font-semibold">
@@ -72,11 +96,11 @@ export function BlendedAttainmentTable({
 									<td className="p-2 font-mono text-xs font-bold bg-primary/5">
 										{finalVal.toFixed(2)}
 									</td>
-								</tr>
+								</motion.tr>
 							);
 						})}
 						{!attainmentCoData.length && (
-							<tr>
+							<tr className="border-b last:border-0">
 								<td
 									colSpan={4}
 									className="p-4 text-center text-muted-foreground text-xs"
@@ -87,7 +111,7 @@ export function BlendedAttainmentTable({
 							</tr>
 						)}
 						{attainmentCoData.length > 0 && !hasMatchingData && (
-							<tr>
+							<tr className="border-b last:border-0">
 								<td
 									colSpan={4}
 									className="p-4 text-center text-muted-foreground text-xs"
@@ -96,7 +120,7 @@ export function BlendedAttainmentTable({
 								</td>
 							</tr>
 						)}
-					</tbody>
+					</motion.tbody>
 				</table>
 			</div>
 		</div>

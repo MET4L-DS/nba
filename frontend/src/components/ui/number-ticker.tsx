@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ComponentPropsWithoutRef } from "react";
-import { useInView, useMotionValue, useSpring } from "motion/react";
+import { useInView } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ interface NumberTickerProps extends ComponentPropsWithoutRef<"span"> {
 	direction?: "up" | "down";
 	delay?: number;
 	decimalPlaces?: number;
+	duration?: number;
 }
 
 export function NumberTicker({
@@ -19,39 +20,51 @@ export function NumberTicker({
 	delay = 0,
 	className,
 	decimalPlaces = 0,
+	duration = 1.5,
 	...props
 }: NumberTickerProps) {
 	const ref = useRef<HTMLSpanElement>(null);
-	const motionValue = useMotionValue(
-		direction === "down" ? value : startValue
-	);
-	const springValue = useSpring(motionValue, {
-		damping: 60,
-		stiffness: 100,
-	});
 	const isInView = useInView(ref, { once: true, margin: "0px" });
 
 	useEffect(() => {
-		if (isInView) {
-			const timer = setTimeout(() => {
-				motionValue.set(direction === "down" ? startValue : value);
-			}, delay * 1000);
-			return () => clearTimeout(timer);
-		}
-	}, [motionValue, isInView, delay, value, direction, startValue]);
+		if (!isInView) return;
 
-	useEffect(
-		() =>
-			springValue.on("change", (latest) => {
+		let rAFId: number;
+		const startVal = direction === "down" ? value : startValue;
+		const endVal = direction === "down" ? startValue : value;
+		
+		const timer = setTimeout(() => {
+			const startTime = performance.now();
+			const durationMs = duration * 1000;
+
+			const tick = (now: number) => {
+				const elapsed = now - startTime;
+				const progress = Math.min(elapsed / durationMs, 1);
+				
+				// easeOutExpo deceleration curve: f(p) = p === 1 ? 1 : 1 - 2^(-10p)
+				const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+				const current = startVal + (endVal - startVal) * ease;
+
 				if (ref.current) {
 					ref.current.textContent = Intl.NumberFormat("en-US", {
 						minimumFractionDigits: decimalPlaces,
 						maximumFractionDigits: decimalPlaces,
-					}).format(Number(latest.toFixed(decimalPlaces)));
+					}).format(current);
 				}
-			}),
-		[springValue, decimalPlaces]
-	);
+
+				if (progress < 1) {
+					rAFId = requestAnimationFrame(tick);
+				}
+			};
+
+			rAFId = requestAnimationFrame(tick);
+		}, delay * 1000);
+
+		return () => {
+			clearTimeout(timer);
+			if (rAFId) cancelAnimationFrame(rAFId);
+		};
+	}, [isInView, value, startValue, direction, delay, decimalPlaces, duration]);
 
 	return (
 		<span
@@ -62,7 +75,7 @@ export function NumberTicker({
 			)}
 			{...props}
 		>
-			{startValue}
+			{direction === "down" ? value : startValue}
 		</span>
 	);
 }

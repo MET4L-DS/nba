@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { motion } from "framer-motion";
 import {
 	useMarksEntryByCO,
 	ITEMS_PER_PAGE,
@@ -358,21 +359,52 @@ export function MarksEntryByCO({
 			</Pagination>
 		) : null;
 
+	const containerVariants = {
+		initial: {},
+		animate: {
+			transition: {
+				staggerChildren: 0.08,
+			},
+		},
+	};
+
+	const itemVariants = {
+		initial: { opacity: 0, y: 10 },
+		animate: {
+			opacity: 1,
+			y: 0,
+			transition: {
+				duration: 0.4,
+				ease: [0.16, 1, 0.3, 1] as const,
+			},
+		},
+	};
+
 	return (
-		<div className="space-y-2 w-full min-w-0">
+		<motion.div
+			variants={containerVariants}
+			initial="initial"
+			animate="animate"
+			className="space-y-2 w-full min-w-0"
+		>
 			{!embedded && (
-				<MarksEntryHeader
-					title="CO-wise Marks Entry"
-					course={course}
-					onBack={onBack}
-				/>
+				<motion.div variants={itemVariants}>
+					<MarksEntryHeader
+						title="CO-wise Marks Entry"
+						course={course}
+						onBack={onBack}
+					/>
+				</motion.div>
 			)}
 
 			{embedded ? (
 				// ── Flat embedded layout matching FacultyMarks by-question style ──
 				<div className="flex flex-col h-full bg-background -mt-px">
 					{/* Sub-toolbar */}
-					<div className="shrink-0 border-b bg-background px-6 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-border">
+					<motion.div
+						variants={itemVariants}
+						className="shrink-0 border-b bg-background px-6 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-border"
+					>
 						<div className="flex items-center gap-3 flex-wrap">
 							{headerContent}
 							{/* Stats chip */}
@@ -449,11 +481,14 @@ export function MarksEntryByCO({
 								{submitting ? "Saving…" : "Save"}
 							</Button>
 						</div>
-					</div>
+					</motion.div>
 
 					{/* Banners */}
 					{invalidCells.size > 0 && (
-						<div className="shrink-0 flex items-center gap-2 text-sm text-destructive bg-destructive/10 border-b border-destructive/20 px-6 py-2">
+						<motion.div
+							variants={itemVariants}
+							className="shrink-0 flex items-center gap-2 text-sm text-destructive bg-destructive/10 border-b border-destructive/20 px-6 py-2"
+						>
 							<AlertCircle className="w-4 h-4 shrink-0" />
 							<span className="font-medium">
 								{invalidCells.size} invalid mark(s)
@@ -461,10 +496,13 @@ export function MarksEntryByCO({
 							<span className="text-xs text-destructive/80">
 								— values exceed CO max marks
 							</span>
-						</div>
+						</motion.div>
 					)}
 					{dirtyRows.size > 0 && (
-						<div className="shrink-0 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-500/10 border-b border-amber-500/20 px-6 py-2">
+						<motion.div
+							variants={itemVariants}
+							className="shrink-0 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-500/10 border-b border-amber-500/20 px-6 py-2"
+						>
 							<AlertCircle className="w-4 h-4 shrink-0" />
 							<span className="font-medium">
 								{dirtyRows.size} student(s) modified
@@ -472,11 +510,14 @@ export function MarksEntryByCO({
 							<span className="text-xs text-amber-600/80 dark:text-amber-400/80">
 								— unsaved changes highlighted
 							</span>
-						</div>
+						</motion.div>
 					)}
 
 					{/* Table scroll area */}
-					<div className="flex-1 overflow-auto bg-background [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full">
+					<motion.div
+						variants={itemVariants}
+						className="flex-1 overflow-auto bg-background [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full"
+					>
 						{loading ? (
 							<div className="flex items-center justify-center h-full min-h-[200px] text-sm text-muted-foreground">
 								Loading students…
@@ -491,11 +532,14 @@ export function MarksEntryByCO({
 								{renderTableBody(paginated)}
 							</table>
 						)}
-					</div>
+					</motion.div>
 
 					{/* Footer */}
 					{!loading && filteredEnrollments.length > 0 && (
-						<div className="shrink-0 bg-background border-t border-border px-6 py-3 flex items-center justify-between gap-4">
+						<motion.div
+							variants={itemVariants}
+							className="shrink-0 bg-background border-t border-border px-6 py-3 flex items-center justify-between gap-4"
+						>
 							<p className="text-sm text-muted-foreground whitespace-nowrap">
 								Showing{" "}
 								{filteredEnrollments.length === 0
@@ -510,105 +554,107 @@ export function MarksEntryByCO({
 								of {filteredEnrollments.length} entries
 							</p>
 							{renderPagination()}
-						</div>
+						</motion.div>
 					)}
 				</div>
 			) : (
 				// ── Standalone card layout (non-embedded) ──────────────────────
-				<TestInfoCard
-					test={test}
-					onSave={handleSubmit}
-					isSaving={submitting}
-					isDisabled={enrollments.length === 0}
-					searchTerm={searchTerm}
-					onSearch={(v) => {
-						setSearchTerm(v);
-						setCurrentPage(1);
-					}}
-					searchPlaceholder="Search by roll no or name..."
-					extraActions={
-						<>
-							<div className="flex items-center space-x-2 mr-2">
-								<Switch
-									id="validate-marks-co"
-									checked={validateMarks}
-									onCheckedChange={setValidateMarks}
+				<motion.div variants={itemVariants}>
+					<TestInfoCard
+						test={test}
+						onSave={handleSubmit}
+						isSaving={submitting}
+						isDisabled={enrollments.length === 0}
+						searchTerm={searchTerm}
+						onSearch={(v) => {
+							setSearchTerm(v);
+							setCurrentPage(1);
+						}}
+						searchPlaceholder="Search by roll no or name..."
+						extraActions={
+							<>
+								<div className="flex items-center space-x-2 mr-2">
+									<Switch
+										id="validate-marks-co"
+										checked={validateMarks}
+										onCheckedChange={setValidateMarks}
+									/>
+									<Label
+										htmlFor="validate-marks-co"
+										className="whitespace-nowrap"
+									>
+										Validate Marks
+									</Label>
+								</div>
+								<input
+									type="file"
+									ref={fileInputRef}
+									className="hidden"
+									accept=".csv"
+									onChange={handleFileUpload}
 								/>
-								<Label
-									htmlFor="validate-marks-co"
-									className="whitespace-nowrap"
+								<Button
+									variant="outline"
+									onClick={() => fileInputRef.current?.click()}
+									className="gap-2"
 								>
-									Validate Marks
-								</Label>
+									<Upload className="w-4 h-4" />
+									Import CSV
+								</Button>
+							</>
+						}
+					>
+						{loading ? (
+							<div className="text-center py-8 text-muted-foreground">
+								Loading students...
 							</div>
-							<input
-								type="file"
-								ref={fileInputRef}
-								className="hidden"
-								accept=".csv"
-								onChange={handleFileUpload}
-							/>
-							<Button
-								variant="outline"
-								onClick={() => fileInputRef.current?.click()}
-								className="gap-2"
-							>
-								<Upload className="w-4 h-4" />
-								Import CSV
-							</Button>
-						</>
-					}
-				>
-					{loading ? (
-						<div className="text-center py-8 text-muted-foreground">
-							Loading students...
-						</div>
-					) : enrollments.length === 0 ? (
-						<div className="text-center py-8 text-muted-foreground">
-							No students enrolled in this course
-						</div>
-					) : (
-						<div className="px-6 py-0 space-y-4 grid grid-cols-1 w-full">
-							{invalidCells.size > 0 && (
-								<div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md px-4 py-2">
-									<span className="font-medium">
-										{invalidCells.size} invalid mark(s)
-									</span>
-									<span className="text-xs">
-										(Values must be ≥ 0 and within the CO
-										max marks)
-									</span>
-								</div>
-							)}
-							{dirtyRows.size > 0 && (
-								<div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-md px-4 py-2">
-									<span className="font-medium">
-										{dirtyRows.size} student(s) modified
-									</span>
-									<span className="text-xs">
-										(Highlighted rows will be saved)
-									</span>
-								</div>
-							)}
-
-							<div className="relative border rounded-md w-full overflow-hidden">
-								<div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] w-full [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full">
-									<table className="w-full caption-bottom text-sm min-w-max">
-										{renderTableHeader()}
-										{renderTableBody(paginated)}
-									</table>
-								</div>
+						) : enrollments.length === 0 ? (
+							<div className="text-center py-8 text-muted-foreground">
+								No students enrolled in this course
 							</div>
+						) : (
+							<div className="px-6 py-0 space-y-4 grid grid-cols-1 w-full">
+								{invalidCells.size > 0 && (
+									<div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md px-4 py-2">
+										<span className="font-medium">
+											{invalidCells.size} invalid mark(s)
+										</span>
+										<span className="text-xs">
+											(Values must be ≥ 0 and within the CO
+											max marks)
+										</span>
+									</div>
+								)}
+								{dirtyRows.size > 0 && (
+									<div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-md px-4 py-2">
+										<span className="font-medium">
+											{dirtyRows.size} student(s) modified
+										</span>
+										<span className="text-xs">
+											(Highlighted rows will be saved)
+										</span>
+									</div>
+								)}
 
-							{totalPages > 1 && (
-								<div className="flex justify-center">
-									{renderPagination()}
+								<div className="relative border rounded-md w-full overflow-hidden">
+									<div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] w-full [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full">
+										<table className="w-full caption-bottom text-sm min-w-max">
+											{renderTableHeader()}
+											{renderTableBody(paginated)}
+										</table>
+									</div>
 								</div>
-							)}
-						</div>
-					)}
-				</TestInfoCard>
+
+								{totalPages > 1 && (
+									<div className="flex justify-center">
+										{renderPagination()}
+									</div>
+								)}
+							</div>
+						)}
+					</TestInfoCard>
+				</motion.div>
 			)}
-		</div>
+		</motion.div>
 	);
 }

@@ -89,10 +89,9 @@ export function StudentMarksTable({
 							initial={{ opacity: 0, y: 8 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{
-								type: "spring",
-								stiffness: 280,
-								damping: 24,
-								delay: idx * 0.03,
+								ease: [0.16, 1, 0.3, 1],
+								duration: 0.4,
+								delay: Math.min(idx * 0.015, 0.15),
 							}}
 						>
 							<TableCell className="font-mono text-xs font-semibold text-foreground/80 py-3 px-4 border-r border-muted/20">

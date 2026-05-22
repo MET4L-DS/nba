@@ -13,6 +13,7 @@ import type { User, DeanUser, Department, School } from "@/services/api";
 import { adminApi } from "@/services/api";
 import { FormDialog } from "../shared/FormDialog";
 import { PhoneListInput } from "../shared/PhoneListInput";
+import { motion, AnimatePresence } from "framer-motion";
 
 export interface UserFormDialogProps {
 	mode: "create" | "edit";
@@ -369,37 +370,47 @@ export function UserFormDialog({
 						</Select>
 					</div>
 
-					<div className="space-y-1.5">
-						<Label
-							htmlFor="school_id"
-							className="text-sm font-medium"
-						>
-							School (For Dean/Directors)
-						</Label>
-						<Select
-							value={formData.school_id}
-							onValueChange={(value) =>
-								setFormData({ ...formData, school_id: value })
-							}
-							disabled={isLoading}
-						>
-							<SelectTrigger id="school_id">
-								<SelectValue placeholder="Select School" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="none">None</SelectItem>
-								{schools.map((school) => (
-									<SelectItem
-										key={school.school_id}
-										value={school.school_id.toString()}
-									>
-										{school.school_name} (
-										{school.school_code})
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+					<AnimatePresence>
+						{formData.role === "dean" && (
+							<motion.div
+								initial={{ opacity: 0, height: 0, scale: 0.95 }}
+								animate={{ opacity: 1, height: "auto", scale: 1 }}
+								exit={{ opacity: 0, height: 0, scale: 0.95 }}
+								transition={{ type: "spring", duration: 0.4, bounce: 0.1 }}
+								className="space-y-1.5 overflow-hidden col-span-1"
+							>
+								<Label
+									htmlFor="school_id"
+									className="text-sm font-medium"
+								>
+									School (For Dean/Directors)
+								</Label>
+								<Select
+									value={formData.school_id}
+									onValueChange={(value) =>
+										setFormData({ ...formData, school_id: value })
+									}
+									disabled={isLoading}
+								>
+									<SelectTrigger id="school_id" className="bg-white/50 dark:bg-zinc-900/50">
+										<SelectValue placeholder="Select School" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="none">None</SelectItem>
+										{schools.map((school) => (
+											<SelectItem
+												key={school.school_id}
+												value={school.school_id.toString()}
+											>
+												{school.school_name} (
+												{school.school_code})
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</motion.div>
+						)}
+					</AnimatePresence>
 
 					<div className="space-y-1.5">
 						<Label

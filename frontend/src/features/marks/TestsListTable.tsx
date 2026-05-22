@@ -17,6 +17,9 @@ import {
 	PaginationPrevious,
 } from "@/components/ui/pagination";
 import type { Test } from "@/services/api";
+import { motion } from "framer-motion";
+
+const MotionTableRow = motion(TableRow);
 
 interface TestsListTableProps {
 	tests: Test[];
@@ -52,26 +55,31 @@ export function TestsListTable({ tests, onTestSelect }: TestsListTableProps) {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{currentTests.map((test) => (
-						<TableRow
+					{currentTests.map((test, index) => (
+						<MotionTableRow
 							key={test.id}
-							className="cursor-pointer hover:bg-muted/50"
+							initial={{ opacity: 0, y: 10 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ type: "spring", stiffness: 260, damping: 25, delay: index * 0.03 }}
+							whileHover={{ scale: 1.006, backgroundColor: "var(--muted-color-opaque, rgba(0, 0, 0, 0.02))" }}
+							whileTap={{ scale: 0.994 }}
+							className="cursor-pointer transition-all duration-100 border-b border-muted/20"
 							onClick={() => onTestSelect(test)}
 						>
 							<TableCell className="font-medium">
 								{test.name}
 							</TableCell>
 							<TableCell className="text-center">
-								<Badge variant="outline" className="font-mono">
+								<Badge variant="outline" className="font-mono hover:scale-110 border-primary/20 hover:border-primary/50 transition-transform duration-150">
 									{test.full_marks}
 								</Badge>
 							</TableCell>
 							<TableCell className="text-center">
-								<Badge variant="outline" className="font-mono">
+								<Badge variant="outline" className="font-mono hover:scale-110 border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-50/10 transition-transform duration-150">
 									{test.pass_marks}
 								</Badge>
 							</TableCell>
-						</TableRow>
+						</MotionTableRow>
 					))}
 				</TableBody>
 			</Table>

@@ -99,6 +99,8 @@ interface DataTableProps<TData, TValue, F extends Record<string, any> = any> {
 	renderSubRow?: (row: Row<TData>) => React.ReactNode;
 }
 
+const MotionTableRow = motion(TableRow);
+
 export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 	columns,
 	data,
@@ -313,12 +315,20 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 								))}
 							</>
 						) : table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
+							table.getRowModel().rows.map((row, idx) => (
 								<React.Fragment key={row.id}>
-									<TableRow
+									<MotionTableRow
 										data-state={
 											row.getIsSelected() && "selected"
 										}
+										initial={{ opacity: 0, y: 10 }}
+										animate={{ opacity: 1, y: 0 }}
+										transition={{
+											type: "spring",
+											stiffness: 110,
+											damping: 15,
+											delay: Math.min(idx * 0.035, 0.3)
+										}}
 									>
 										{row.getVisibleCells().map((cell) => (
 											<TableCell
@@ -331,7 +341,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 												)}
 											</TableCell>
 										))}
-									</TableRow>
+									</MotionTableRow>
 									<AnimatePresence initial={false}>
 										{row.getIsExpanded() &&
 											renderSubRow && (

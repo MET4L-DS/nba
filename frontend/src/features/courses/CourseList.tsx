@@ -23,6 +23,7 @@ import { CourseFormDialog } from "./CourseFormDialog";
 import { DeleteCourseDialog } from "./DeleteCourseDialog";
 import { ReopenCourseDialog } from "./ReopenCourseDialog";
 import { createCourseColumns, type CourseListColumnConfig } from "./utils";
+import { motion } from "framer-motion";
 
 export interface CourseListProps {
 	// Data source
@@ -330,24 +331,38 @@ export function CourseList({
 		!!search;
 
 	return (
-		<div className="space-y-4 w-full">
+		<motion.div
+			initial={{ opacity: 0, y: 15 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ type: "spring", duration: 0.5, bounce: 0.1 }}
+			className="space-y-4 w-full"
+		>
 			{!hideHeader && (
 				<div className="flex items-center justify-between">
-					<div>
-						<h2 className="text-2xl font-bold tracking-tight">
+					<motion.div
+						initial={{ opacity: 0, x: -10 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ delay: 0.1, duration: 0.3 }}
+					>
+						<h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 							{title}
 						</h2>
-						<p className="text-muted-foreground">
-							Total: {courses.length} course
+						<p className="text-sm text-muted-foreground">
+							Total: <span className="font-semibold text-foreground/90">{courses.length}</span> course
 							{courses.length !== 1 ? "s" : ""}
 						</p>
-					</div>
-					<div className="flex gap-2">
+					</motion.div>
+					<motion.div
+						initial={{ opacity: 0, x: 10 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ delay: 0.15, duration: 0.3 }}
+						className="flex gap-2"
+					>
 						{permissions.canCreate && (
 							<Button
 								onClick={() => setCreateOpen(true)}
 								disabled={isLoading}
-								className="gap-2"
+								className="gap-2 active:scale-95 transition-transform duration-100 cursor-pointer shadow-sm hover:shadow"
 							>
 								<Plus className="h-4 w-4" />
 								New Course
@@ -358,18 +373,19 @@ export function CourseList({
 								variant="outline"
 								onClick={onRefresh}
 								disabled={isLoading}
+								className="active:scale-95 transition-transform duration-100 cursor-pointer hover:bg-muted/50"
 							>
 								Refresh
 							</Button>
 						)}
-					</div>
+					</motion.div>
 				</div>
 			)}
 
-			<Card className="bg-card/85 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 relative">
-				<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary/80 via-primary/50 to-transparent"></div>
-				<CardHeader className="py-4 border-b bg-muted/[.06]">
-					<CardTitle className="flex items-center gap-2 text-base font-bold bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">
+			<Card className="bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 relative">
+				<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-violet-500 via-primary/80 to-emerald-500"></div>
+				<CardHeader className="py-4 border-b border-muted/20 bg-muted/[.03]">
+					<CardTitle className="flex items-center gap-2 text-base font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 						<BookOpen className="h-5 w-5 text-primary" />
 						Offered Academic Courses
 					</CardTitle>
@@ -679,6 +695,6 @@ export function CourseList({
 				onConfirm={handleReopenConfirm}
 				isLoading={reopenSaving}
 			/>
-		</div>
+		</motion.div>
 	);
 }

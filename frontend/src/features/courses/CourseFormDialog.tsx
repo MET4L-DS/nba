@@ -20,6 +20,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { hodApi } from "@/services/api/hod";
 import type { DepartmentFaculty, BaseCourse, Programme } from "@/services/api/types";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 export interface CourseFormDialogProps {
 	mode: "create" | "edit";
@@ -217,437 +219,476 @@ export function CourseFormDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-2xl">
-				<DialogHeader>
-					<DialogTitle>{title}</DialogTitle>
-				</DialogHeader>
+			<DialogContent className="max-w-2xl bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-2xl rounded-xl p-6 overflow-hidden">
+				<AnimatePresence mode="wait">
+					{open && (
+						<motion.div
+							initial={{ opacity: 0, y: 15, scale: 0.98 }}
+							animate={{ opacity: 1, y: 0, scale: 1 }}
+							exit={{ opacity: 0, y: 15, scale: 0.98 }}
+							transition={{ type: "spring", duration: 0.45, bounce: 0.15 }}
+							className="space-y-4 w-full"
+						>
+							<DialogHeader>
+								<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+									{title}
+								</DialogTitle>
+							</DialogHeader>
 
-				<div className="space-y-4 py-2">
-					{mode === "create" && courseType === "offering" && (
-						<div className="space-y-1.5">
-							<div className="flex items-center justify-between">
-								<Label>Select from Course Catalog</Label>
-								{selectedBaseCourseid && (
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={() => {
-											setSelectedBaseCourseid(null);
-											setFormData((f) => ({
-												...f,
-												course_code: "",
-												course_name: "",
-												credit: "3",
-											}));
-										}}
-										disabled={isLoading}
-										className="text-xs"
+							<div className="space-y-4 py-2">
+								{mode === "create" && courseType === "offering" && (
+									<motion.div 
+										initial={{ opacity: 0, height: 0 }}
+										animate={{ opacity: 1, height: "auto" }}
+										transition={{ duration: 0.3 }}
+										className="space-y-1.5 overflow-hidden"
 									>
-										Clear Selection
-									</Button>
-								)}
-							</div>
-							<Select
-								value={
-									selectedBaseCourseid
-										? selectedBaseCourseid.toString()
-										: undefined
-								}
-								onValueChange={(value) => {
-									const selected = baseCourses.find(
-										(c) => c.course_id === parseInt(value),
-									);
-									if (selected) {
-										setSelectedBaseCourseid(
-											selected.course_id,
-										);
-										setFormData((f) => ({
-											...f,
-											course_code: selected.course_code,
-											course_name: selected.course_name,
-											credit: selected.credit.toString(),
-										}));
-									}
-								}}
-								disabled={isLoading || isFetchingCourses}
-							>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Browse available courses..." />
-								</SelectTrigger>
-								<SelectContent>
-									{baseCourses.map((course) => (
-										<SelectItem
-											key={course.course_id}
-											value={course.course_id.toString()}
-										>
-											{course.course_code} -{" "}
-											{course.course_name} (
-											{course.credit} cr.)
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							{selectedBaseCourseid === null && (
-								<p className="text-[10px] text-muted-foreground mt-1">
-									Or enter course details manually below
-								</p>
-							)}
-						</div>
-					)}
-
-					<div className="grid grid-cols-2 gap-4">
-						<div className="space-y-1.5">
-							<Label>Course Code *</Label>
-							<Input
-								value={formData.course_code}
-								onChange={(e) =>
-									setFormData((f) => ({
-										...f,
-										course_code: e.target.value,
-									}))
-								}
-								disabled={
-									isLoading ||
-									(mode === "create" &&
-										courseType === "offering" &&
-										selectedBaseCourseid !== null)
-								}
-								placeholder="e.g., BT101"
-							/>
-						</div>
-						<div className="space-y-1.5">
-							<Label>Credit</Label>
-							<Select
-								value={formData.credit}
-								onValueChange={(value) =>
-									setFormData((f) => ({
-										...f,
-										credit: value,
-									}))
-								}
-								disabled={
-									isLoading ||
-									(mode === "create" &&
-										courseType === "offering" &&
-										selectedBaseCourseid !== null)
-								}
-							>
-								<SelectTrigger>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectContent>
-									{[1, 2, 3, 4, 5, 6].map((c) => (
-										<SelectItem
-											key={c}
-											value={c.toString()}
-										>
-											{c}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-					</div>
-
-					<div className="space-y-1.5">
-						<Label>Course Name *</Label>
-						<Input
-							value={formData.course_name}
-							onChange={(e) =>
-								setFormData((f) => ({
-									...f,
-									course_name: e.target.value,
-								}))
-							}
-							disabled={
-								isLoading ||
-								(mode === "create" &&
-									courseType === "offering" &&
-									selectedBaseCourseid !== null)
-							}
-							placeholder="e.g., Biochemistry"
-						/>
-					</div>
-
-					{(mode === "edit" ||
-						courseType === "base" ||
-						(mode === "create" &&
-							courseType === "offering" &&
-							selectedBaseCourseid === null)) && (
-						<div className="grid grid-cols-2 gap-4">
-							<div className="space-y-1.5">
-								<Label>Course Type</Label>
-								<Select
-									value={formData.course_type}
-									onValueChange={(value) =>
-										setFormData((f) => ({
-											...f,
-											course_type: value,
-										}))
-									}
-									disabled={isLoading}
-								>
-									<SelectTrigger>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										{[
-											"Theory",
-											"Lab",
-											"Project",
-											"Seminar",
-										].map((t) => (
-											<SelectItem key={t} value={t}>
-												{t}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-							<div className="space-y-1.5">
-								<Label>Course Level</Label>
-								<Select
-									value={formData.course_level}
-									onValueChange={(value) =>
-										setFormData((f) => ({
-											...f,
-											course_level: value,
-										}))
-									}
-									disabled={isLoading}
-								>
-									<SelectTrigger>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										{[
-											"Undergraduate",
-											"Postgraduate",
-											"UG & PG",
-										].map((l) => (
-											<SelectItem key={l} value={l}>
-												{l}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-						</div>
-					)}
-
-					{courseType === "base" && (
-						<>
-							<div className="flex items-center space-x-2 pt-2">
-								<Checkbox
-									id="is_active"
-									checked={formData.is_active}
-									onCheckedChange={(checked: boolean) =>
-										setFormData((f) => ({
-											...f,
-											is_active: checked,
-										}))
-									}
-									disabled={isLoading}
-								/>
-								<Label htmlFor="is_active">
-									Active (Template visible for new offerings)
-								</Label>
-							</div>
-
-							<div className="space-y-2 pt-2 border-t">
-								<Label>Assign to Programmes</Label>
-								{isFetchingProgrammes ? (
-									<p className="text-sm text-muted-foreground">
-										Loading programmes...
-									</p>
-								) : programmes.length === 0 ? (
-									<p className="text-sm text-muted-foreground">
-										No programmes available for your
-										department
-									</p>
-								) : (
-									<ScrollArea className="h-32 rounded-md border p-2">
-										{programmes.map((prog) => {
-											const isChecked =
-												selectedProgrammeIds.includes(
-													prog.programme_id,
-												);
-											return (
-												<div
-													key={prog.programme_id}
-													className="flex items-center gap-2 py-1"
+										<div className="flex items-center justify-between">
+											<Label className="text-sm font-semibold">Select from Course Catalog</Label>
+											{selectedBaseCourseid && (
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => {
+														setSelectedBaseCourseid(null);
+														setFormData((f) => ({
+															...f,
+															course_code: "",
+															course_name: "",
+															credit: "3",
+														}));
+													}}
+													disabled={isLoading}
+													className="text-xs text-primary hover:bg-primary/10 active:scale-95 duration-100"
 												>
-													<Checkbox
-														id={`prog-${prog.programme_id}`}
-														checked={isChecked}
-														onCheckedChange={() => {
-															setProgrammeIdsModified(
-																true,
-															);
-															setSelectedProgrammeIds(
-																(prev) =>
-																	isChecked
-																		? prev.filter(
-																				(
-																					id,
-																				) =>
-																					id !==
-																					prog.programme_id,
-																			)
-																		: [
-																				...prev,
-																				prog.programme_id,
-																			],
-															);
-														}}
-														disabled={isLoading}
-													/>
-													<Label
-														htmlFor={`prog-${prog.programme_id}`}
-														className="text-sm cursor-pointer"
+													Clear Selection
+												</Button>
+											)}
+										</div>
+										<Select
+											value={
+												selectedBaseCourseid
+													? selectedBaseCourseid.toString()
+													: undefined
+											}
+											onValueChange={(value) => {
+												const selected = baseCourses.find(
+													(c) => c.course_id === parseInt(value),
+												);
+												if (selected) {
+													setSelectedBaseCourseid(
+														selected.course_id,
+													);
+													setFormData((f) => ({
+														...f,
+														course_code: selected.course_code,
+														course_name: selected.course_name,
+														credit: selected.credit.toString(),
+													}));
+												}
+											}}
+											disabled={isLoading || isFetchingCourses}
+										>
+											<SelectTrigger className="w-full bg-white/50 dark:bg-zinc-900/50">
+												<SelectValue placeholder="Browse available courses..." />
+											</SelectTrigger>
+											<SelectContent>
+												{baseCourses.map((course) => (
+													<SelectItem
+														key={course.course_id}
+														value={course.course_id.toString()}
 													>
-														{prog.programme_code} —{" "}
-														{prog.programme_name}
-													</Label>
-												</div>
-											);
-										})}
-									</ScrollArea>
+														{course.course_code} -{" "}
+														{course.course_name} (
+														{course.credit} cr.)
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										{selectedBaseCourseid === null && (
+											<p className="text-[10px] text-muted-foreground mt-1 font-medium">
+												Or enter course details manually below
+											</p>
+										)}
+									</motion.div>
 								)}
-							</div>
-						</>
-					)}
 
-					{courseType === "offering" && (
-						<>
-							<div className="grid grid-cols-3 gap-4 border-t pt-4">
+								<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-1.5">
+										<Label className="text-sm font-semibold">Course Code *</Label>
+										<Input
+											value={formData.course_code}
+											onChange={(e) =>
+												setFormData((f) => ({
+													...f,
+													course_code: e.target.value,
+												}))
+											}
+											disabled={
+												isLoading ||
+												(mode === "create" &&
+													courseType === "offering" &&
+													selectedBaseCourseid !== null)
+											}
+											placeholder="e.g., BT101"
+											className="bg-white/50 dark:bg-zinc-900/50 focus:scale-[1.01] transition-transform duration-100"
+										/>
+									</div>
+									<div className="space-y-1.5">
+										<Label className="text-sm font-semibold">Credit</Label>
+										<Select
+											value={formData.credit}
+											onValueChange={(value) =>
+												setFormData((f) => ({
+													...f,
+													credit: value,
+												}))
+											}
+											disabled={
+												isLoading ||
+												(mode === "create" &&
+													courseType === "offering" &&
+													selectedBaseCourseid !== null)
+											}
+										>
+											<SelectTrigger className="bg-white/50 dark:bg-zinc-900/50">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												{[1, 2, 3, 4, 5, 6].map((c) => (
+													<SelectItem
+														key={c}
+														value={c.toString()}
+													>
+														{c}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+								</div>
+
 								<div className="space-y-1.5">
-									<Label>Year</Label>
+									<Label className="text-sm font-semibold">Course Name *</Label>
 									<Input
-										type="number"
-										value={formData.year}
+										value={formData.course_name}
 										onChange={(e) =>
 											setFormData((f) => ({
 												...f,
-												year: e.target.value,
-											}))
-										}
-										disabled={isLoading}
-										min="2020"
-										max="2050"
-									/>
-								</div>
-								<div className="space-y-1.5">
-									<Label>Semester</Label>
-									<Select
-										value={formData.semester}
-										onValueChange={(value) =>
-											setFormData((f) => ({
-												...f,
-												semester: value,
-											}))
-										}
-										disabled={isLoading}
-									>
-										<SelectTrigger>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											{["Autumn", "Spring"].map((s) => (
-												<SelectItem key={s} value={s}>
-													{s}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div>
-								<div className="space-y-1.5">
-									<Label>Faculty *</Label>
-									<Select
-										value={formData.faculty_id}
-										onValueChange={(value) =>
-											setFormData((f) => ({
-												...f,
-												faculty_id: value,
+												course_name: e.target.value,
 											}))
 										}
 										disabled={
-											isLoading || isFetchingFaculties
+											isLoading ||
+											(mode === "create" &&
+												courseType === "offering" &&
+												selectedBaseCourseid !== null)
 										}
+										placeholder="e.g., Biochemistry"
+										className="bg-white/50 dark:bg-zinc-900/50 focus:scale-[1.005] transition-transform duration-100"
+									/>
+								</div>
+
+								{(mode === "edit" ||
+									courseType === "base" ||
+									(mode === "create" &&
+										courseType === "offering" &&
+										selectedBaseCourseid === null)) && (
+									<motion.div 
+										initial={{ opacity: 0, y: 10 }}
+										animate={{ opacity: 1, y: 0 }}
+										className="grid grid-cols-2 gap-4"
 									>
-										<SelectTrigger className="w-full">
-											<SelectValue placeholder="Select Faculty" />
-										</SelectTrigger>
-										<SelectContent className="max-h-[200px]">
-											{faculties.map((faculty) => (
-												<SelectItem
-													key={faculty.employee_id}
-													value={faculty.employee_id.toString()}
+										<div className="space-y-1.5">
+											<Label className="text-sm font-semibold">Course Type</Label>
+											<Select
+												value={formData.course_type}
+												onValueChange={(value) =>
+													setFormData((f) => ({
+														...f,
+														course_type: value,
+													}))
+												}
+												disabled={isLoading}
+											>
+												<SelectTrigger className="bg-white/50 dark:bg-zinc-900/50">
+													<SelectValue />
+												</SelectTrigger>
+												<SelectContent>
+													{[
+														"Theory",
+														"Lab",
+														"Project",
+														"Seminar",
+													].map((t) => (
+														<SelectItem key={t} value={t}>
+															{t}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-1.5">
+											<Label className="text-sm font-semibold">Course Level</Label>
+											<Select
+												value={formData.course_level}
+												onValueChange={(value) =>
+													setFormData((f) => ({
+														...f,
+														course_level: value,
+													}))
+												}
+												disabled={isLoading}
+											>
+												<SelectTrigger className="bg-white/50 dark:bg-zinc-900/50">
+													<SelectValue />
+												</SelectTrigger>
+												<SelectContent>
+													{[
+														"Undergraduate",
+														"Postgraduate",
+														"UG & PG",
+													].map((l) => (
+														<SelectItem key={l} value={l}>
+															{l}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+									</motion.div>
+								)}
+
+								{courseType === "base" && (
+									<motion.div 
+										initial={{ opacity: 0 }}
+										animate={{ opacity: 1 }}
+										className="space-y-4"
+									>
+										<div className="flex items-center space-x-2 pt-2">
+											<Checkbox
+												id="is_active"
+												checked={formData.is_active}
+												onCheckedChange={(checked: boolean) =>
+													setFormData((f) => ({
+														...f,
+														is_active: checked,
+													}))
+												}
+												disabled={isLoading}
+												className="cursor-pointer"
+											/>
+											<Label htmlFor="is_active" className="text-sm cursor-pointer select-none">
+												Active (Template visible for new offerings)
+											</Label>
+										</div>
+
+										<div className="space-y-2 pt-2 border-t border-muted/30">
+											<Label className="text-sm font-semibold">Assign to Programmes</Label>
+											{isFetchingProgrammes ? (
+												<p className="text-sm text-muted-foreground animate-pulse">
+													Loading programmes...
+												</p>
+											) : programmes.length === 0 ? (
+												<p className="text-sm text-muted-foreground">
+													No programmes available for your department
+												</p>
+											) : (
+												<ScrollArea className="h-32 rounded-md border border-muted/30 p-2 bg-white/30 dark:bg-zinc-900/30">
+													{programmes.map((prog) => {
+														const isChecked =
+															selectedProgrammeIds.includes(
+																prog.programme_id,
+															);
+														return (
+															<div
+																key={prog.programme_id}
+																className="flex items-center gap-2 py-1"
+															>
+																<Checkbox
+																	id={`prog-${prog.programme_id}`}
+																	checked={isChecked}
+																	onCheckedChange={() => {
+																		setProgrammeIdsModified(
+																			true,
+																		);
+																		setSelectedProgrammeIds(
+																			(prev) =>
+																				isChecked
+																					? prev.filter(
+																							(
+																								id,
+																							) =>
+																								id !==
+																								prog.programme_id,
+																						)
+																					: [
+																							...prev,
+																							prog.programme_id,
+																						],
+																		);
+																	}}
+																	disabled={isLoading}
+																	className="cursor-pointer"
+																/>
+																<Label
+																	htmlFor={`prog-${prog.programme_id}`}
+																	className="text-sm cursor-pointer select-none font-medium text-gray-700 dark:text-gray-300"
+																>
+																	{prog.programme_code} —{" "}
+																	{prog.programme_name}
+																</Label>
+															</div>
+														);
+													})}
+												</ScrollArea>
+											)}
+										</div>
+									</motion.div>
+								)}
+
+								{courseType === "offering" && (
+									<motion.div 
+										initial={{ opacity: 0, y: 10 }}
+										animate={{ opacity: 1, y: 0 }}
+										className="space-y-4"
+									>
+										<div className="grid grid-cols-3 gap-4 border-t border-muted/30 pt-4">
+											<div className="space-y-1.5">
+												<Label className="text-sm font-semibold">Year</Label>
+												<Input
+													type="number"
+													value={formData.year}
+													onChange={(e) =>
+														setFormData((f) => ({
+															...f,
+															year: e.target.value,
+														}))
+													}
+													disabled={isLoading}
+													min="2020"
+													max="2050"
+													className="bg-white/50 dark:bg-zinc-900/50"
+												/>
+											</div>
+											<div className="space-y-1.5">
+												<Label className="text-sm font-semibold">Semester</Label>
+												<Select
+													value={formData.semester}
+													onValueChange={(value) =>
+														setFormData((f) => ({
+															...f,
+															semester: value,
+														}))
+													}
+													disabled={isLoading}
 												>
-													{faculty.username} (
-													{faculty.employee_id})
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div>
+													<SelectTrigger className="bg-white/50 dark:bg-zinc-900/50">
+														<SelectValue />
+													</SelectTrigger>
+													<SelectContent>
+														{["Autumn", "Spring"].map((s) => (
+															<SelectItem key={s} value={s}>
+																{s}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+											<div className="space-y-1.5">
+												<Label className="text-sm font-semibold">Faculty *</Label>
+												<Select
+													value={formData.faculty_id}
+													onValueChange={(value) =>
+														setFormData((f) => ({
+															...f,
+															faculty_id: value,
+														}))
+													}
+													disabled={
+														isLoading || isFetchingFaculties
+													}
+												>
+													<SelectTrigger className="w-full bg-white/50 dark:bg-zinc-900/50">
+														<SelectValue placeholder="Select Faculty" />
+													</SelectTrigger>
+													<SelectContent className="max-h-[200px]">
+														{faculties.map((faculty) => (
+															<SelectItem
+																key={faculty.employee_id}
+																value={faculty.employee_id.toString()}
+															>
+																{faculty.username} (
+																{faculty.employee_id})
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+										</div>
+
+										<div className="grid grid-cols-2 gap-4">
+											<div className="space-y-1.5">
+												<Label className="text-sm font-semibold">CO Attainment Threshold (%)</Label>
+												<Input
+													type="number"
+													value={formData.co_threshold}
+													onChange={(e) =>
+														setFormData((f) => ({
+															...f,
+															co_threshold: e.target.value,
+														}))
+													}
+													disabled={isLoading}
+													className="bg-white/50 dark:bg-zinc-900/50"
+												/>
+											</div>
+											<div className="space-y-1.5">
+												<Label className="text-sm font-semibold">Passing Threshold (%)</Label>
+												<Input
+													type="number"
+													value={formData.passing_threshold}
+													onChange={(e) =>
+														setFormData((f) => ({
+															...f,
+															passing_threshold:
+																e.target.value,
+														}))
+													}
+													disabled={isLoading}
+													className="bg-white/50 dark:bg-zinc-900/50"
+												/>
+											</div>
+										</div>
+									</motion.div>
+								)}
 							</div>
 
-							<div className="grid grid-cols-2 gap-4">
-								<div className="space-y-1.5">
-									<Label>CO Attainment Threshold (%)</Label>
-									<Input
-										type="number"
-										value={formData.co_threshold}
-										onChange={(e) =>
-											setFormData((f) => ({
-												...f,
-												co_threshold: e.target.value,
-											}))
-										}
-										disabled={isLoading}
-									/>
-								</div>
-								<div className="space-y-1.5">
-									<Label>Passing Threshold (%)</Label>
-									<Input
-										type="number"
-										value={formData.passing_threshold}
-										onChange={(e) =>
-											setFormData((f) => ({
-												...f,
-												passing_threshold:
-													e.target.value,
-											}))
-										}
-										disabled={isLoading}
-									/>
-								</div>
-							</div>
-						</>
+							<DialogFooter className="border-t pt-4 border-muted/30">
+								<Button
+									variant="outline"
+									onClick={() => onOpenChange(false)}
+									disabled={isLoading}
+									className="active:scale-95 transition-transform duration-100 cursor-pointer"
+								>
+									Cancel
+								</Button>
+								<Button
+									onClick={handleSave}
+									disabled={
+										isLoading ||
+										!formData.course_code ||
+										!formData.course_name ||
+										(courseType === "offering" && !formData.faculty_id)
+									}
+									className="active:scale-95 transition-transform duration-100 cursor-pointer bg-primary"
+								>
+									{isLoading ? "Saving..." : "Save Changes"}
+								</Button>
+							</DialogFooter>
+						</motion.div>
 					)}
-				</div>
-
-				<DialogFooter>
-					<Button
-						variant="outline"
-						onClick={() => onOpenChange(false)}
-						disabled={isLoading}
-					>
-						Cancel
-					</Button>
-					<Button
-						onClick={handleSave}
-						disabled={
-							isLoading ||
-							!formData.course_code ||
-							!formData.course_name ||
-							(courseType === "offering" && !formData.faculty_id)
-						}
-					>
-						{isLoading ? "Saving..." : "Save Changes"}
-					</Button>
-				</DialogFooter>
+				</AnimatePresence>
 			</DialogContent>
 		</Dialog>
 	);

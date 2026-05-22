@@ -1,5 +1,6 @@
 import { TestList, getBaseTestColumns } from "@/features/shared";
 import type { ColumnDef } from "@tanstack/react-table";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -151,37 +152,63 @@ export function TestsList({
 
 	if (!course) {
 		return (
-			<div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-				<div className="p-4 rounded-2xl bg-muted">
-					<ClipboardList className="w-10 h-10 text-muted-foreground" />
-				</div>
-				<div>
-					<h3 className="text-base font-semibold">
+			<motion.div 
+				initial={{ opacity: 0, y: 15 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ duration: 0.5, type: "spring", bounce: 0.1 }}
+				className="flex flex-col items-center justify-center py-24 gap-4 text-center"
+			>
+				<motion.div
+					animate={{ y: [0, -8, 0] }}
+					transition={{
+						repeat: Infinity,
+						duration: 3.5,
+						ease: "easeInOut",
+					}}
+					className="p-4 rounded-2xl bg-white/70 dark:bg-zinc-900/50 backdrop-blur border border-white/20 dark:border-zinc-800/40 shadow-md"
+				>
+					<ClipboardList className="w-10 h-10 text-primary/80" />
+				</motion.div>
+				<motion.div
+					initial={{ opacity: 0, y: 5 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ delay: 0.15 }}
+				>
+					<h3 className="text-base font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 						No Course Selected
 					</h3>
-					<p className="text-sm text-muted-foreground mt-1">
-						Select a course from the dropdown above to view its
-						assessments
+					<p className="text-sm text-muted-foreground mt-1 max-w-sm">
+						Select a course from the dropdown above to view its assessments
 					</p>
-				</div>
-			</div>
+				</motion.div>
+			</motion.div>
 		);
 	}
 
 	return (
-		<>
+		<motion.div
+			initial={{ opacity: 0, y: 15 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ type: "spring", duration: 0.5, bounce: 0.1 }}
+			className="w-full"
+		>
 			{/* Course header */}
-			<div className="mb-6">
-				<h3 className="text-base font-semibold">
+			<motion.div 
+				initial={{ opacity: 0, x: -10 }}
+				animate={{ opacity: 1, x: 0 }}
+				transition={{ delay: 0.1, duration: 0.3 }}
+				className="mb-6"
+			>
+				<h3 className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 					{course.course_code} — {course.course_name}
 				</h3>
-				<p className="text-sm text-muted-foreground mt-0.5">
+				<p className="text-sm text-muted-foreground mt-0.5 font-medium">
 					{course.semester} Semester • Year {course.year}
 				</p>
-			</div>
+			</motion.div>
 
-			<Card className="shadow-sm">
-				<CardContent className="px-5">
+			<Card className="bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-xl rounded-xl overflow-hidden">
+				<CardContent className="px-5 pt-6">
 					<TestList
 						columns={columns}
 						data={tests}
@@ -202,84 +229,82 @@ export function TestsList({
 
 			{/* Delete Confirmation Dialog */}
 			<Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-				<DialogContent className="sm:max-w-[500px]">
-					<DialogHeader>
-						<DialogTitle className="flex items-center gap-2 text-red-600">
-							<Trash2 className="w-5 h-5" />
-							Delete Assessment
-						</DialogTitle>
-						<DialogDescription asChild>
-							<div className="space-y-3 pt-2">
-								<p className="font-semibold text-gray-900 dark:text-white">
-									Are you sure you want to delete "
-									{testToDelete?.name}"?
-								</p>
-								<div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md p-4">
-									<p className="text-sm text-red-800 dark:text-red-200 font-medium mb-2">
-										⚠️ Warning: This action cannot be
-										undone!
-									</p>
-									<p className="text-sm text-red-700 dark:text-red-300">
-										Deleting this test will permanently
-										remove:
-									</p>
-									<ul className="list-disc list-inside text-sm text-red-700 dark:text-red-300 mt-2 space-y-1">
-										<li>
-											All questions in this assessment
-										</li>
-										<li>
-											All student marks (raw and
-											CO-aggregated)
-										</li>
-										<li>All related test records</li>
-									</ul>
+				<DialogContent className="sm:max-w-[500px] bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border border-red-200 dark:border-red-950 shadow-2xl rounded-xl p-6">
+					<AnimatePresence mode="wait">
+						{showDeleteDialog && (
+							<motion.div
+								initial={{ opacity: 0, scale: 0.95, y: 10 }}
+								animate={{ opacity: 1, scale: 1, y: 0 }}
+								exit={{ opacity: 0, scale: 0.95, y: 10 }}
+								transition={{ type: "spring", duration: 0.45, bounce: 0.15 }}
+								className="space-y-4"
+							>
+								<DialogHeader>
+									<DialogTitle className="flex items-center gap-2 text-red-600 font-bold text-lg">
+										<Trash2 className="w-5 h-5 animate-pulse" />
+										Delete Assessment
+									</DialogTitle>
+									<DialogDescription asChild>
+										<div className="space-y-3 pt-2">
+											<p className="font-semibold text-gray-900 dark:text-white">
+												Are you sure you want to delete "{testToDelete?.name}"?
+											</p>
+											<div className="bg-red-50/50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg p-4 shadow-inner">
+												<p className="text-sm text-red-800 dark:text-red-200 font-bold mb-2 flex items-center gap-1.5">
+													<span>⚠️</span> Warning: This action cannot be undone!
+												</p>
+												<p className="text-xs text-red-700 dark:text-red-300 font-medium">
+													Deleting this test will permanently remove:
+												</p>
+												<ul className="list-disc list-inside text-xs text-red-700 dark:text-red-300 mt-2 space-y-1 pl-1">
+													<li>All questions in this assessment</li>
+													<li>All student marks (raw and CO-aggregated)</li>
+													<li>All related test records</li>
+												</ul>
+											</div>
+										</div>
+									</DialogDescription>
+								</DialogHeader>
+								<div className="space-y-2 py-2">
+									<Label htmlFor="confirm-delete" className="text-sm font-semibold">
+										Type <span className="font-mono font-bold text-red-600 bg-red-100 dark:bg-red-950/40 px-1.5 py-0.5 rounded">Yes</span> to confirm deletion
+									</Label>
+									<Input
+										id="confirm-delete"
+										value={deleteConfirmation}
+										onChange={(e) => setDeleteConfirmation(e.target.value)}
+										placeholder="Type Yes to confirm"
+										className="font-mono bg-white/50 dark:bg-zinc-900/50 focus:scale-[1.01] transition-transform duration-100"
+										autoComplete="off"
+									/>
 								</div>
-							</div>
-						</DialogDescription>
-					</DialogHeader>
-					<div className="space-y-4 py-4">
-						<div className="space-y-2">
-							<Label htmlFor="confirm-delete">
-								Type{" "}
-								<span className="font-mono font-bold">Yes</span>{" "}
-								to confirm deletion
-							</Label>
-							<Input
-								id="confirm-delete"
-								value={deleteConfirmation}
-								onChange={(e) =>
-									setDeleteConfirmation(e.target.value)
-								}
-								placeholder="Type Yes to confirm"
-								className="font-mono"
-								autoComplete="off"
-							/>
-						</div>
-					</div>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => {
-								setShowDeleteDialog(false);
-								setTestToDelete(null);
-								setDeleteConfirmation("");
-							}}
-							disabled={isDeleting}
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="destructive"
-							onClick={handleDeleteConfirm}
-							disabled={
-								deleteConfirmation !== "Yes" || isDeleting
-							}
-						>
-							{isDeleting ? "Deleting..." : "Delete Test"}
-						</Button>
-					</DialogFooter>
+								<DialogFooter className="pt-2 border-t border-muted/20">
+									<Button
+										variant="outline"
+										onClick={() => {
+											setShowDeleteDialog(false);
+											setTestToDelete(null);
+											setDeleteConfirmation("");
+										}}
+										disabled={isDeleting}
+										className="active:scale-95 transition-transform duration-100 cursor-pointer"
+									>
+										Cancel
+									</Button>
+									<Button
+										variant="destructive"
+										onClick={handleDeleteConfirm}
+										disabled={deleteConfirmation !== "Yes" || isDeleting}
+										className="active:scale-95 transition-transform duration-100 cursor-pointer shadow-sm shadow-red-500/20"
+									>
+										{isDeleting ? "Deleting..." : "Delete Test"}
+									</Button>
+								</DialogFooter>
+							</motion.div>
+						)}
+					</AnimatePresence>
 				</DialogContent>
 			</Dialog>
-		</>
+		</motion.div>
 	);
 }

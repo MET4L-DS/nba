@@ -122,10 +122,10 @@ export function getProgrammeColumns({
 							<Button
 								variant="outline"
 								size="sm"
-								className="gap-1.5 h-7 text-[11px] font-bold bg-background border-muted/80 text-foreground hover:bg-primary/[0.06] hover:text-primary hover:border-primary/40 transition-all hover:scale-105 active:scale-95 duration-200"
+								className="gap-1.5 h-7 text-[11px] font-bold bg-background border-muted/80 text-foreground hover:bg-indigo-500/[0.06] hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-500/40 transition-all hover:scale-105 active:scale-95 duration-200 hover:shadow-[0_0_12px_rgba(99,102,241,0.15)]"
 								onClick={() => onViewAttainment(prog)}
 							>
-								<BarChart3 className="w-3.5 h-3.5 text-primary/80" />
+								<BarChart3 className="w-3.5 h-3.5 text-indigo-500/85" />
 								View
 							</Button>
 						)}
@@ -145,7 +145,7 @@ export function getProgrammeColumns({
 								variant="ghost"
 								size="icon"
 								onClick={() => onManageCourses(prog)}
-								className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950"
+								className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-amber-500/20 hover:shadow-[0_0_12px_rgba(245,158,11,0.15)]"
 								title="Manage Courses"
 							>
 								<BookOpen className="w-4 h-4" />
@@ -156,7 +156,7 @@ export function getProgrammeColumns({
 								variant="ghost"
 								size="icon"
 								onClick={() => onEnroll(prog)}
-								className="text-green-600 hover:text-green-700 hover:bg-green-50"
+								className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-green-500/20 hover:shadow-[0_0_12px_rgba(34,197,94,0.15)]"
 								title="Bulk Enroll Students"
 							>
 								<UserPlus className="w-4 h-4" />
@@ -167,7 +167,8 @@ export function getProgrammeColumns({
 								variant="ghost"
 								size="icon"
 								onClick={() => onEdit(prog)}
-								className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+								className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-blue-500/20 hover:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+								title="Edit Programme"
 							>
 								<Pencil className="w-4 h-4" />
 							</Button>
@@ -187,7 +188,8 @@ export function getProgrammeColumns({
 									<Button
 										variant="ghost"
 										size="icon"
-										className="text-red-600 hover:text-red-700 hover:bg-red-50"
+										className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-red-500/20 hover:shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+										title="Delete Programme"
 									>
 										<Trash2 className="w-4 h-4" />
 									</Button>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useOutletContext, Outlet, useLocation } from "react-router-dom";
 import { facultyApi } from "@/services/api/faculty";
 import { apiService } from "@/services/api";
@@ -38,11 +38,14 @@ export function FacultyLayout() {
 	debugLogger.debug("FacultyLayout", "Courses loaded", { count: courses.length });
 
 	// Filter active courses
-	const activeCourses = courses.filter((c) => c.is_active !== 0);
+	const activeCourses = useMemo(
+		() => courses.filter((c) => c.is_active !== 0),
+		[courses],
+	);
 
 	const [selectedCourse, setSelectedCourseState] = useState<Course | null>(null);
 
-	const setSelectedCourse = (course: Course | null) => {
+	const setSelectedCourse = useCallback((course: Course | null) => {
 		setSelectedCourseState(course);
 		if (course) {
 			localStorage.setItem(
@@ -54,7 +57,7 @@ export function FacultyLayout() {
 				offeringId: course.offering_id,
 			});
 		}
-	};
+	}, []);
 
 	// Synchronize or restore course selection
 	useEffect(() => {
@@ -75,7 +78,7 @@ export function FacultyLayout() {
 			}
 			setSelectedCourse(activeCourse);
 		}
-	}, [courses, selectedCourse]);
+	}, [courses, selectedCourse, setSelectedCourse]);
 
 	// Dynamically calculate page title based on route
 	const getHeaderTitle = () => {
@@ -92,20 +95,49 @@ export function FacultyLayout() {
 	// Determine if course dropdown should be visible
 	const showCourseDropdown = !location.pathname.endsWith("/faculty/logs");
 
-	const handleRefresh = () => {
+	const handleRefresh = useCallback(() => {
 		refreshCourses({ bypassCache: true });
-	};
+	}, [refreshCourses]);
+
+	const handleToggleSidebar = useCallback(() => {
+		setSidebarOpen(!sidebarOpen);
+	}, [sidebarOpen, setSidebarOpen]);
+
+	const handleLogout = useCallback(async () => {
+		await apiService.logout().catch(() => {});
+		window.location.href = "/login";
+	}, []);
+
+	// Memoize the context object passed to Outlet to prevent downstream re-renders
+	const contextValue = useMemo(() => ({
+		user,
+		sidebarOpen,
+		setSidebarOpen,
+		courses,
+		activeCourses,
+		selectedCourse,
+		setSelectedCourse,
+		isLoadingCourses,
+		refreshCourses,
+	}), [
+		user,
+		sidebarOpen,
+		setSidebarOpen,
+		courses,
+		activeCourses,
+		selectedCourse,
+		setSelectedCourse,
+		isLoadingCourses,
+		refreshCourses,
+	]);
 
 	return (
 		<div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 			<AppHeader
 				title={getHeaderTitle()}
 				sidebarOpen={sidebarOpen}
-				onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-				onLogout={async () => {
-					await apiService.logout().catch(() => {});
-					window.location.href = "/login";
-				}}
+				onToggleSidebar={handleToggleSidebar}
+				onLogout={handleLogout}
 			>
 				<div className="flex items-center gap-2">
 					{showCourseDropdown && courses.length > 0 && (
@@ -151,19 +183,7 @@ export function FacultyLayout() {
 			</AppHeader>
 
 			<div className="flex-1 overflow-hidden flex flex-col relative bg-zinc-50/40 dark:bg-background/25">
-				<Outlet
-					context={{
-						user,
-						sidebarOpen,
-						setSidebarOpen,
-						courses,
-						activeCourses,
-						selectedCourse,
-						setSelectedCourse,
-						isLoadingCourses,
-						refreshCourses,
-					}}
-				/>
+				<Outlet context={contextValue} />
 			</div>
 		</div>
 	);

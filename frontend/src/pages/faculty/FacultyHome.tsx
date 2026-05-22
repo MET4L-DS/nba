@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
 import type { User, FacultyStats, Course } from "@/services/api";
@@ -32,6 +32,12 @@ export function FacultyHome() {
 		averageAttainment: 0,
 	});
 	const [statsLoading, setStatsLoading] = useState(true);
+
+	const facultyStats = useMemo(() => createFacultyStats(stats), [stats]);
+	const quickAccessItems = useMemo(() => createFacultyQuickAccess(), []);
+	const handleQuickAccessClick = useCallback((nav: string) => {
+		navigate(`/faculty/${nav}`);
+	}, [navigate]);
 
 	useEffect(() => {
 		loadStats();
@@ -99,14 +105,14 @@ export function FacultyHome() {
 			</div>
 
 			<StatsGrid
-				stats={createFacultyStats(stats)}
+				stats={facultyStats}
 				isLoading={statsLoading}
 				variant="solid"
 				columns={4}
 			/>
 			<QuickAccessGrid
-				items={createFacultyQuickAccess()}
-				onItemClick={(nav) => navigate(`/faculty/${nav}`)}
+				items={quickAccessItems}
+				onItemClick={handleQuickAccessClick}
 				variant="elevated"
 				columns={4}
 			/>

@@ -1,5 +1,5 @@
 import { ConcludeCourseDialog } from "./ConcludeCourseDialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, TrendingUp } from "lucide-react";
 import type { Course } from "@/services/api";
@@ -16,7 +16,7 @@ interface FacultyOverviewProps {
 	onRefresh?: () => void;
 }
 
-export function FacultyOverview({
+export const FacultyOverview = memo(function FacultyOverview({
 	courses,
 	isLoading,
 	onRefresh,
@@ -35,7 +35,7 @@ export function FacultyOverview({
 		incompleteTests: [],
 	});
 
-	const handleConcludeCourse = async () => {
+	const handleConcludeCourse = useCallback(async () => {
 		if (!concludeData.course || !concludeData.canConclude) return;
 		const offeringId =
 			concludeData.course.offering_id || concludeData.course.course_id;
@@ -63,9 +63,9 @@ export function FacultyOverview({
 			});
 			setConcludeData((prev) => ({ ...prev, isConcluding: false }));
 		}
-	};
+	}, [concludeData.course, concludeData.canConclude, onRefresh]);
 
-	const openConcludeDialog = async (course: Course) => {
+	const openConcludeDialog = useCallback(async (course: Course) => {
 		const offeringId = course.offering_id || course.course_id;
 		try {
 			const status =
@@ -81,7 +81,7 @@ export function FacultyOverview({
 			console.error("Failed to check course status", error);
 			toast.error("Failed to check course status");
 		}
-	};
+	}, []);
 
 	const columns = useMemo(
 		() => getFacultyOverviewColumns(openConcludeDialog),
@@ -97,11 +97,11 @@ export function FacultyOverview({
 		[courses],
 	);
 
-	const renderSubRow = (row: any) => {
+	const renderSubRow = useCallback((row: any) => {
 		const offeringId = row.original.offering_id;
 		if (!offeringId) return null;
 		return <OfferingTestAverages offeringId={offeringId} />;
-	};
+	}, []);
 
 	return (
 		<div className="space-y-6">
@@ -213,4 +213,4 @@ export function FacultyOverview({
 			/>
 		</div>
 	);
-}
+});

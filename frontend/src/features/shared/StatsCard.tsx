@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NumberTicker } from "@/components/ui/number-ticker";
 import type { LucideIcon } from "lucide-react";
@@ -30,7 +31,7 @@ const cardVariants = {
 	}
 };
 
-export function StatsCard({
+export const StatsCard = memo(function StatsCard({
 	stat,
 	isLoading = false,
 	variant = "outline",
@@ -156,7 +157,7 @@ export function StatsCard({
 			</Card>
 		</motion.div>
 	);
-}
+});
 
 interface StatsGridProps {
 	stats: StatItem[];
@@ -165,7 +166,7 @@ interface StatsGridProps {
 	columns?: 3 | 4 | 5;
 }
 
-export function StatsGrid({
+export const StatsGrid = memo(function StatsGrid({
 	stats,
 	isLoading = false,
 	variant = "outline",
@@ -200,7 +201,7 @@ export function StatsGrid({
 			))}
 		</motion.div>
 	);
-}
+});
 
 // Loading skeleton for stats
 export function StatsGridSkeleton({ count = 4 }: { count?: number }) {

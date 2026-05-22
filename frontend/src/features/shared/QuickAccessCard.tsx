@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -28,7 +29,7 @@ const cardVariants = {
 	}
 };
 
-export function QuickAccessCard({
+export const QuickAccessCard = memo(function QuickAccessCard({
 	item,
 	onClick,
 	variant = "default",
@@ -149,7 +150,7 @@ export function QuickAccessCard({
 			</Card>
 		</motion.div>
 	);
-}
+});
 
 interface QuickAccessGridProps {
 	items: QuickAccessItem[];
@@ -159,7 +160,7 @@ interface QuickAccessGridProps {
 	accentColor?: string;
 }
 
-export function QuickAccessGrid({
+export const QuickAccessGrid = memo(function QuickAccessGrid({
 	items,
 	onItemClick,
 	variant = "default",
@@ -198,5 +199,5 @@ export function QuickAccessGrid({
 			))}
 		</motion.div>
 	);
-}
+});
 

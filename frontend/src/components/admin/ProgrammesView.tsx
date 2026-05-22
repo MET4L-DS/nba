@@ -27,6 +27,9 @@ import type { Programme, Department } from "@/services/api";
 import { getProgrammeColumns } from "./ProgrammesView.columns";
 import { BulkEnrollStudentsDialog } from "./BulkEnrollStudentsDialog";
 import { ProgrammeCoursesDialog } from "./ProgrammeCoursesDialog";
+import { motion } from "framer-motion";
+
+const MotionButton = motion(Button);
 
 export function ProgrammesView() {
 	const {
@@ -187,10 +190,20 @@ export function ProgrammesView() {
 	};
 
 	return (
-		<div className="space-y-4">
-			<div className="flex flex-wrap gap-4 items-center justify-between bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden mb-4">
+		<motion.div
+			initial={{ opacity: 0, y: 12 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ type: "spring", duration: 0.5, bounce: 0.1 }}
+			className="space-y-4"
+		>
+			<motion.div
+				initial={{ opacity: 0, scale: 0.99 }}
+				animate={{ opacity: 1, scale: 1 }}
+				transition={{ delay: 0.05, duration: 0.4 }}
+				className="flex flex-wrap gap-4 items-center justify-between bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden mb-4"
+			>
 				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-indigo-500/20 pointer-events-none"></div>
-				<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent"></div>
+				<div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
 				<div className="flex items-center gap-3">
 					<div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
 						<GraduationCap className="w-5 h-5 text-white" />
@@ -204,10 +217,14 @@ export function ProgrammesView() {
 				</div>
 				<Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
 					<DialogTrigger asChild>
-						<Button className="gap-2 active:scale-95 duration-200 transition-all shadow-md hover:shadow-indigo-500/10">
+						<MotionButton
+							whileHover={{ scale: 1.02, y: -1 }}
+							whileTap={{ scale: 0.98 }}
+							className="gap-2 shadow-md hover:shadow-indigo-500/10 bg-indigo-600 hover:bg-indigo-700 text-white"
+						>
 							<Plus className="w-4 h-4" />
 							Add Programme
-						</Button>
+						</MotionButton>
 					</DialogTrigger>
 					<DialogContent className="sm:max-w-[450px] bg-card/95 backdrop-blur-md border border-muted/50 rounded-2xl shadow-xl">
 						<DialogHeader>
@@ -222,7 +239,7 @@ export function ProgrammesView() {
 									placeholder="e.g., Bachelor of Technology"
 									value={formData.programme_name}
 									onChange={(e) => setFormData({ ...formData, programme_name: e.target.value })}
-									className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+									className="bg-background/60 shadow-inner focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all duration-200"
 								/>
 							</div>
 							<div className="space-y-2">
@@ -232,7 +249,7 @@ export function ProgrammesView() {
 									placeholder="e.g., BTECH"
 									value={formData.programme_code}
 									onChange={(e) => setFormData({ ...formData, programme_code: e.target.value.toUpperCase() })}
-									className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+									className="bg-background/60 shadow-inner focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all duration-200"
 								/>
 							</div>
 							<div className="space-y-2">
@@ -241,7 +258,7 @@ export function ProgrammesView() {
 									value={formData.department_id}
 									onValueChange={(val) => setFormData({ ...formData, department_id: val })}
 								>
-									<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
+									<SelectTrigger className="bg-background/60 shadow-inner focus:ring-2 focus:ring-indigo-500/20 hover:border-indigo-500/50 transition-all duration-200">
 										<SelectValue placeholder="Select a department" />
 									</SelectTrigger>
 									<SelectContent>
@@ -260,7 +277,7 @@ export function ProgrammesView() {
 										value={formData.degree_level}
 										onValueChange={(val: any) => setFormData({ ...formData, degree_level: val })}
 									>
-										<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
+										<SelectTrigger className="bg-background/60 shadow-inner focus:ring-2 focus:ring-indigo-500/20 hover:border-indigo-500/50 transition-all duration-200">
 											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
@@ -280,7 +297,7 @@ export function ProgrammesView() {
 										max={10}
 										value={formData.duration_years}
 										onChange={(e) => setFormData({ ...formData, duration_years: parseInt(e.target.value) })}
-										className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+										className="bg-background/60 shadow-inner focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all duration-200"
 									/>
 								</div>
 							</div>
@@ -293,51 +310,57 @@ export function ProgrammesView() {
 						</DialogFooter>
 					</DialogContent>
 				</Dialog>
-			</div>
+			</motion.div>
 
-			<DataTable
-				columns={columns}
-				data={programmes || []}
-				searchPlaceholder="Search programmes..."
-				refreshing={refreshing}
-				serverPagination={{
-					pagination,
-					onNext: goNext,
-					onPrev: goPrev,
-					canPrev,
-					pageIndex,
-					search,
-					onSearch: setSearch,
-					filters,
-					setFilter,
-				}}
+			<motion.div
+				initial={{ opacity: 0, y: 15 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ delay: 0.1, type: "spring", duration: 0.5 }}
 			>
-				{(_, currentFilters, currentSetFilter) => (
-					<>
-						<Select
-							value={(currentFilters?.department_id as string) || "all"}
-							onValueChange={(val) => currentSetFilter?.("department_id", val === "all" ? undefined : val)}
-						>
-							<SelectTrigger className="w-[200px]">
-								<SelectValue placeholder="All Departments" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All Departments</SelectItem>
-								{departments.map((dept) => (
-									<SelectItem key={dept.department_id} value={dept.department_id.toString()}>
-										{dept.department_code}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-						{currentFilters?.department_id && (
-							<Button variant="ghost" onClick={() => currentSetFilter?.("department_id", undefined)} className="h-9 px-2 lg:px-3">
-								Reset <X className="ml-2 h-4 w-4" />
-							</Button>
-						)}
-					</>
-				)}
-			</DataTable>
+				<DataTable
+					columns={columns}
+					data={programmes || []}
+					searchPlaceholder="Search programmes..."
+					refreshing={refreshing}
+					serverPagination={{
+						pagination,
+						onNext: goNext,
+						onPrev: goPrev,
+						canPrev,
+						pageIndex,
+						search,
+						onSearch: setSearch,
+						filters,
+						setFilter,
+					}}
+				>
+					{(_, currentFilters, currentSetFilter) => (
+						<>
+							<Select
+								value={(currentFilters?.department_id as string) || "all"}
+								onValueChange={(val) => currentSetFilter?.("department_id", val === "all" ? undefined : val)}
+							>
+								<SelectTrigger className="w-[200px] bg-background/60 shadow-inner hover:border-indigo-500/50 transition-colors">
+									<SelectValue placeholder="All Departments" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">All Departments</SelectItem>
+									{departments.map((dept) => (
+										<SelectItem key={dept.department_id} value={dept.department_id.toString()}>
+											{dept.department_code}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							{currentFilters?.department_id && (
+								<Button variant="ghost" onClick={() => currentSetFilter?.("department_id", undefined)} className="h-9 px-2 lg:px-3 hover:bg-destructive/10 hover:text-destructive">
+									Reset <X className="ml-2 h-4 w-4" />
+								</Button>
+							)}
+						</>
+					)}
+				</DataTable>
+			</motion.div>
 
 			{/* Edit Dialog */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -353,7 +376,7 @@ export function ProgrammesView() {
 								id="edit_programme_name"
 								value={editFormData.programme_name}
 								onChange={(e) => setEditFormData({ ...editFormData, programme_name: e.target.value })}
-								className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+								className="bg-background/60 shadow-inner focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all duration-200"
 							/>
 						</div>
 						<div className="space-y-2">
@@ -362,7 +385,7 @@ export function ProgrammesView() {
 								id="edit_programme_code"
 								value={editFormData.programme_code}
 								onChange={(e) => setEditFormData({ ...editFormData, programme_code: e.target.value.toUpperCase() })}
-								className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+								className="bg-background/60 shadow-inner focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all duration-200"
 							/>
 						</div>
 						<div className="space-y-2">
@@ -371,7 +394,7 @@ export function ProgrammesView() {
 								value={editFormData.department_id}
 								onValueChange={(val) => setEditFormData({ ...editFormData, department_id: val })}
 							>
-								<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
+								<SelectTrigger className="bg-background/60 shadow-inner focus:ring-2 focus:ring-indigo-500/20 hover:border-indigo-500/50 transition-all duration-200">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
@@ -390,7 +413,7 @@ export function ProgrammesView() {
 									value={editFormData.degree_level}
 									onValueChange={(val: any) => setEditFormData({ ...editFormData, degree_level: val })}
 								>
-									<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
+									<SelectTrigger className="bg-background/60 shadow-inner focus:ring-2 focus:ring-indigo-500/20 hover:border-indigo-500/50 transition-all duration-200">
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent>
@@ -410,7 +433,7 @@ export function ProgrammesView() {
 									max={10}
 									value={editFormData.duration_years}
 									onChange={(e) => setEditFormData({ ...editFormData, duration_years: parseInt(e.target.value) })}
-									className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+									className="bg-background/60 shadow-inner focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 transition-all duration-200"
 								/>
 							</div>
 						</div>
@@ -440,6 +463,6 @@ export function ProgrammesView() {
 				programme={selectedProgramme}
 				onSuccess={onDataRefresh}
 			/>
-		</div>
+		</motion.div>
 	);
 }

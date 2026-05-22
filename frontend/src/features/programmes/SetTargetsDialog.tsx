@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
 	Dialog,
 	DialogContent,
@@ -20,6 +21,8 @@ interface SetTargetsDialogProps {
 	poList: string[];
 	onSaved: () => void;
 }
+
+const MotionButton = motion(Button);
 
 export function SetTargetsDialog({
 	programmeId,
@@ -82,53 +85,83 @@ export function SetTargetsDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="outline" size="sm">
-					<Target className="w-4 h-4 mr-1" />
+				<MotionButton
+					variant="outline"
+					size="sm"
+					whileHover={{ scale: 1.03 }}
+					whileTap={{ scale: 0.97 }}
+					transition={{ type: "spring" as const, stiffness: 400, damping: 15 }}
+				>
+					<Target className="w-4 h-4 mr-1.5 text-primary animate-pulse" />
 					Set Targets
-				</Button>
+				</MotionButton>
 			</DialogTrigger>
-			<DialogContent className="max-w-lg">
-				<DialogHeader>
-					<DialogTitle>Set PO/PSO Target Levels</DialogTitle>
-				</DialogHeader>
-				<div className="space-y-3 py-2">
-					<p className="text-sm text-muted-foreground">
-						Set the target attainment level (0-3) for each PO/PSO.
-					</p>
-					<ScrollArea className="max-h-[300px] pr-3">
-						<div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-							{poList.map((po) => (
-								<div key={po} className="space-y-1">
-									<Label className="font-medium text-xs">{po}</Label>
-								<Input
-									type="number"
-									step="0.1"
-									min="0"
-									max="3"
-									placeholder="e.g. 2.5"
-									value={targets[po] ?? ""}
-									onChange={(e) => {
-										const raw = e.target.value;
-										const clamped = raw.startsWith('-') ? '0' : raw;
-										setTargets((prev) => ({
-											...prev,
-											[po]: clamped,
-										}));
-									}}
-								/>
-								</div>
-							))}
-						</div>
-					</ScrollArea>
-					<Button
-						onClick={handleSave}
-						disabled={loading}
-						className="w-full"
-					>
-						{loading ? "Saving..." : "Save Targets"}
-					</Button>
-				</div>
+			<DialogContent className="max-w-lg border border-muted/80 bg-background/95 backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden p-6">
+				<motion.div
+					initial={{ opacity: 0, y: 15, scale: 0.98 }}
+					animate={{ opacity: 1, y: 0, scale: 1 }}
+					transition={{ type: "spring" as const, stiffness: 280, damping: 22 }}
+					className="space-y-4"
+				>
+					<DialogHeader>
+						<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+							Set PO/PSO Target Levels
+						</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-1">
+						<p className="text-sm text-muted-foreground">
+							Set the target attainment level (0-3) for each PO/PSO.
+						</p>
+						<ScrollArea className="max-h-[300px] pr-3 -mr-3">
+							<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
+								{poList.map((po, index) => (
+									<motion.div
+										key={po}
+										initial={{ opacity: 0, y: 10 }}
+										animate={{ opacity: 1, y: 0 }}
+										transition={{
+											delay: index * 0.03,
+											type: "spring" as const,
+											stiffness: 260,
+											damping: 20,
+										}}
+										className="space-y-1.5 p-3 rounded-xl bg-muted/20 border border-muted/40 transition-all hover:bg-muted/30 hover:border-primary/20"
+									>
+										<Label className="font-semibold text-xs text-foreground/85">{po}</Label>
+										<Input
+											type="number"
+											step="0.1"
+											min="0"
+											max="3"
+											placeholder="e.g. 2.5"
+											value={targets[po] ?? ""}
+											className="focus-visible:ring-indigo-500/30 transition-all font-mono font-bold bg-background/50 h-9"
+											onChange={(e) => {
+												const raw = e.target.value;
+												const clamped = raw.startsWith('-') ? '0' : raw;
+												setTargets((prev) => ({
+													...prev,
+													[po]: clamped,
+												}));
+											}}
+										/>
+									</motion.div>
+								))}
+							</div>
+						</ScrollArea>
+						<MotionButton
+							onClick={handleSave}
+							disabled={loading}
+							className="w-full font-semibold shadow-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 border-none h-11"
+							whileHover={{ scale: 1.01 }}
+							whileTap={{ scale: 0.99 }}
+						>
+							{loading ? "Saving..." : "Save Targets"}
+						</MotionButton>
+					</div>
+				</motion.div>
 			</DialogContent>
 		</Dialog>
 	);
 }
+

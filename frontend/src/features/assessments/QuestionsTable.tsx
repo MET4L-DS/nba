@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { QuestionTableRow } from "./QuestionTableRow";
 import type { Question } from "@/services/api";
+import { AnimatePresence } from "framer-motion";
 
 interface QuestionsTableProps {
 	questions: Question[];
@@ -63,18 +64,20 @@ export function QuestionsTable({
 				</TableRow>
 			</TableHeader>
 			<TableBody className="divide-y divide-slate-100 dark:divide-slate-800">
-				{questions.map((question, index) => (
-					<QuestionTableRow
-						key={`${question.question_number}-${question.sub_question}-${index}`}
-						question={question}
-						index={index}
-						onUpdate={(updates) => onUpdateQuestion(index, updates)}
-						onRemove={() => onRemoveQuestion(index)}
-						onAddSubQuestion={() =>
-							onAddSubQuestion(question.question_number)
-						}
-					/>
-				))}
+				<AnimatePresence initial={false}>
+					{questions.map((question, index) => (
+						<QuestionTableRow
+							key={`${question.question_number}-${question.sub_question}-${index}`}
+							question={question}
+							index={index}
+							onUpdate={(updates) => onUpdateQuestion(index, updates)}
+							onRemove={() => onRemoveQuestion(index)}
+							onAddSubQuestion={() =>
+								onAddSubQuestion(question.question_number)
+							}
+						/>
+					))}
+				</AnimatePresence>
 			</TableBody>
 		</Table>
 	);

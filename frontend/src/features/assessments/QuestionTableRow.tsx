@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,7 +9,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TableCell, TableRow } from "@/components/ui/table";
+import { TableCell } from "@/components/ui/table";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import type { Question } from "@/services/api";
 
@@ -19,6 +20,8 @@ interface QuestionTableRowProps {
 	onRemove: () => void;
 	onAddSubQuestion: () => void;
 }
+
+const MotionButton = motion(Button);
 
 export function QuestionTableRow({
 	question,
@@ -31,13 +34,26 @@ export function QuestionTableRow({
 		? `Q${question.question_number}${question.sub_question}`
 		: `Q${question.question_number}`;
 
+	const rowVariants = {
+		hidden: { opacity: 0, x: -15, scale: 0.98 },
+		show: { opacity: 1, x: 0, scale: 1, transition: { type: "spring" as const, stiffness: 280, damping: 22 } },
+		exit: { opacity: 0, x: 15, scale: 0.98, transition: { duration: 0.15 } },
+	};
+
 	return (
-		<TableRow className="hover:bg-slate-50/50 transition-colors">
+		<motion.tr
+			variants={rowVariants}
+			initial="hidden"
+			animate="show"
+			exit="exit"
+			layout
+			className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors border-b last:border-0"
+		>
 			{/* Q. No. */}
 			<TableCell className="py-4 pl-8 border-r-0">
 				<Badge
 					variant="outline"
-					className="font-mono font-bold h-7 px-3 flex items-center bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm"
+					className="font-mono font-bold h-7 px-3 flex items-center bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs hover:border-primary/45 transition-colors cursor-default"
 				>
 					{questionLabel}
 				</Badge>
@@ -52,7 +68,7 @@ export function QuestionTableRow({
 						onChange={(e) =>
 							onUpdate({ sub_question: e.target.value })
 						}
-						className="w-16 h-10 text-center font-medium shadow-sm bg-white dark:bg-slate-950 focus-visible:ring-1 border-slate-200 dark:border-slate-800"
+						className="w-16 h-10 text-center font-bold shadow-xs bg-white dark:bg-slate-950 focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 border-slate-200 dark:border-slate-800 transition-all"
 						placeholder="-"
 						maxLength={2}
 					/>
@@ -64,26 +80,29 @@ export function QuestionTableRow({
 				<div className="flex justify-center">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button
+							<MotionButton
 								type="button"
 								variant="outline"
 								size="sm"
-								className="rounded-full h-8 px-4 text-[11px] font-bold bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100/80 hover:text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 shadow-sm gap-1.5 transition-all"
+								whileHover={{ scale: 1.04 }}
+								whileTap={{ scale: 0.96 }}
+								className="rounded-full h-8 px-4.5 text-[11px] font-bold bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 shadow-xs gap-1.5 transition-all"
 							>
 								CO{question.co}
 								<ChevronDown className="w-3 h-3 opacity-60" />
-							</Button>
+							</MotionButton>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent align="center">
+						<DropdownMenuContent align="center" className="rounded-xl p-1 shadow-lg border border-muted/80 backdrop-blur-md">
 							{[1, 2, 3, 4, 5, 6].map((co) => (
 								<DropdownMenuItem
 									key={co}
 									onSelect={() => onUpdate({ co })}
+									className="rounded-lg py-1.5 px-3 font-semibold text-xs gap-2"
 								>
-									<span className="font-semibold text-xs mr-2">
+									<span className="font-bold text-primary">
 										CO{co}
 									</span>
-									<span className="text-xs text-muted-foreground">
+									<span className="text-muted-foreground font-medium">
 										Course Outcome {co}
 									</span>
 								</DropdownMenuItem>
@@ -107,7 +126,7 @@ export function QuestionTableRow({
 							})
 						}
 						onFocus={(e) => e.target.select()}
-						className="w-24 h-10 text-center font-medium shadow-sm focus-visible:ring-1 border-slate-200 dark:border-slate-800"
+						className="w-24 h-10 text-center font-bold font-mono shadow-xs focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 border-slate-200 dark:border-slate-800 transition-all"
 						required
 					/>
 				</div>
@@ -122,7 +141,7 @@ export function QuestionTableRow({
 						onCheckedChange={(checked) =>
 							onUpdate({ is_optional: !!checked })
 						}
-						className="h-5 w-5 rounded-md border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+						className="h-5 w-5 rounded-md border-slate-300 dark:border-slate-700 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-transform active:scale-95"
 					/>
 				</div>
 			</TableCell>
@@ -130,28 +149,33 @@ export function QuestionTableRow({
 			{/* Actions */}
 			<TableCell className="py-4 pr-8">
 				<div className="flex items-center justify-center gap-1.5">
-					<Button
+					<MotionButton
 						type="button"
 						variant="ghost"
 						size="icon"
 						onClick={onAddSubQuestion}
 						title="Add sub-question"
-						className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-md"
+						whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.08)", color: "rgb(59, 130, 246)" }}
+						whileTap={{ scale: 0.9 }}
+						className="h-8 w-8 text-muted-foreground rounded-full transition-all"
 					>
-						<Plus className="h-4 w-4" />
-					</Button>
-					<Button
+						<Plus className="h-4.5 w-4.5" />
+					</MotionButton>
+					<MotionButton
 						type="button"
 						variant="ghost"
 						size="icon"
 						onClick={onRemove}
 						title="Remove question"
-						className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-md"
+						whileHover={{ scale: 1.1, backgroundColor: "rgba(239, 68, 68, 0.08)", color: "rgb(239, 68, 68)" }}
+						whileTap={{ scale: 0.9 }}
+						className="h-8 w-8 text-muted-foreground rounded-full transition-all"
 					>
 						<Trash2 className="h-4 w-4" />
-					</Button>
+					</MotionButton>
 				</div>
 			</TableCell>
-		</TableRow>
+		</motion.tr>
 	);
 }
+

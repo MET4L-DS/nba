@@ -30,6 +30,22 @@ import { Target, FileText, TrendingUp, ChevronDown, BarChart3, ExternalLink } fr
 import { SetTargetsDialog } from "@/features/programmes/SetTargetsDialog";
 import { ActionPlansSection } from "@/features/programmes/ActionPlansSection";
 import { AttainmentComparisonCharts } from "@/features/programmes/AttainmentComparisonCharts";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+	hidden: { opacity: 0 },
+	show: {
+		opacity: 1,
+		transition: {
+			staggerChildren: 0.05
+		}
+	}
+};
+
+const itemVariants = {
+	hidden: { opacity: 0, y: 15 },
+	show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
+};
 
 interface ProgrammeAttainmentRouteState {
 	programmeId: number;
@@ -230,12 +246,23 @@ export function ProgrammeAttainmentDashboard() {
 	const poList = data?.po_list ?? [];
 
 	return (
-		<div className="space-y-6">
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			transition={{ duration: 0.4 }}
+			className="space-y-6"
+		>
 			{/* Header Section */}
-			<div className="flex flex-wrap gap-4 items-end bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden">
+			<motion.div
+				initial={{ opacity: 0, y: -12 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ type: "spring", duration: 0.5, bounce: 0.1 }}
+				className="flex flex-wrap gap-4 items-end bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden"
+			>
 				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20 pointer-events-none"></div>
+				<div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
 				<div className="flex-1 min-w-[280px]">
-					<h1 className="text-xl font-bold tracking-tight text-foreground">
+					<h1 className="text-xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 						Executive Analytics Dashboard
 					</h1>
 					<p className="text-xs text-muted-foreground mt-1">
@@ -267,7 +294,7 @@ export function ProgrammeAttainmentDashboard() {
 							}}
 							disabled={programmesLoading}
 						>
-							<SelectTrigger className="w-[260px] bg-background/60 shadow-inner">
+							<SelectTrigger className="w-[260px] bg-background/60 shadow-inner hover:border-primary/50 transition-colors">
 								<SelectValue placeholder="Select programme..." />
 							</SelectTrigger>
 							<SelectContent>
@@ -300,7 +327,7 @@ export function ProgrammeAttainmentDashboard() {
 							onClick={handleCalculate}
 							disabled={calculating || !selectedProgrammeId || !batchYear.trim()}
 							variant="outline"
-							className="gap-1.5 h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200"
+							className="gap-1.5 h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95 duration-200"
 						>
 							<BarChart3 className="w-3.5 h-3.5" />
 							{calculating ? "Calculating..." : "Recalculate"}
@@ -315,16 +342,24 @@ export function ProgrammeAttainmentDashboard() {
 						)}
 					</div>
 				</div>
-			</div>
+			</motion.div>
 
 			{error && (
-				<div className="text-sm text-red-500 bg-red-50 border border-red-200 rounded px-3 py-2">
+				<motion.div
+					initial={{ opacity: 0, scale: 0.95 }}
+					animate={{ opacity: 1, scale: 1 }}
+					className="text-sm text-red-500 bg-red-50 dark:bg-rose-950/20 border border-red-200 dark:border-rose-900/30 rounded px-3 py-2"
+				>
 					{error}
-				</div>
+				</motion.div>
 			)}
 
 			{loading && (
-				<div className="space-y-6">
+				<motion.div
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					className="space-y-6"
+				>
 					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 						{[...Array(4)].map((_, i) => (
 							<Card key={i} className="p-6 space-y-3">
@@ -332,15 +367,15 @@ export function ProgrammeAttainmentDashboard() {
 									<Skeleton className="h-10 w-10 rounded-lg" />
 									<Skeleton className="h-5 w-20 rounded-full" />
 								</div>
-								<Skeleton className="h-4 w-32" />
-								<Skeleton className="h-8 w-20" />
+								<Skeleton className="h-4 w-32 animate-pulse" />
+								<Skeleton className="h-8 w-20 animate-pulse" />
 							</Card>
 						))}
 					</div>
 					<Card className="border border-outline-variant shadow-sm overflow-hidden">
 						<div className="p-4 border-b bg-muted/20">
-							<Skeleton className="h-6 w-48" />
-							<Skeleton className="h-4 w-64 mt-2" />
+							<Skeleton className="h-6 w-48 animate-pulse" />
+							<Skeleton className="h-4 w-64 mt-2 animate-pulse" />
 						</div>
 						<div className="p-4 space-y-3">
 							{[...Array(5)].map((_, i) => (
@@ -355,113 +390,149 @@ export function ProgrammeAttainmentDashboard() {
 							))}
 						</div>
 					</Card>
-				</div>
+				</motion.div>
 			)}
 
 			{/* KPI Stats */}
 			{data && kpiStats.length > 0 && data.courses.length > 0 && (
-				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+				<motion.div
+					variants={containerVariants}
+					initial="hidden"
+					animate="show"
+					className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+				>
 					{kpiStats.map((stat, idx) => (
-						<AttainmentStatCard
-							key={idx}
-							stat={stat}
-							isLoading={loading}
-						/>
+						<motion.div key={idx} variants={itemVariants}>
+							<AttainmentStatCard
+								stat={stat}
+								isLoading={loading}
+							/>
+						</motion.div>
 					))}
-				</div>
+				</motion.div>
 			)}
 
 			{data && data.courses.length === 0 && (
-				<Card className="border border-dashed p-8 text-center">
-					<div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-						<BarChart3 className="w-6 h-6 text-muted-foreground" />
-					</div>
-					<p className="text-sm font-medium text-foreground">No Courses Found</p>
-					<p className="text-xs text-muted-foreground mt-1">
-						No courses are mapped to this programme for batch {batchYear}. Add course offerings to see attainment data.
-					</p>
-				</Card>
+				<motion.div
+					initial={{ opacity: 0, scale: 0.98 }}
+					animate={{ opacity: 1, scale: 1 }}
+					transition={{ type: "spring" }}
+				>
+					<Card className="border border-dashed p-8 text-center bg-card/50 backdrop-blur-xs">
+						<div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+							<BarChart3 className="w-6 h-6 text-muted-foreground" />
+						</div>
+						<p className="text-sm font-medium text-foreground">No Courses Found</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							No courses are mapped to this programme for batch {batchYear}. Add course offerings to see attainment data.
+						</p>
+					</Card>
+				</motion.div>
 			)}
 
 			{/* Course × PO/PSO Matrix */}
-			{data && <ArticulationMatrix data={data} poList={poList} />}
+			{data && (
+				<motion.div
+					initial={{ opacity: 0, y: 15 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ type: "spring", delay: 0.1, duration: 0.5 }}
+				>
+					<ArticulationMatrix data={data} poList={poList} />
+				</motion.div>
+			)}
 
 			{/* Stakeholder Surveys Link */}
 			{selectedProgrammeId && batchYear && (
-				<Card className="border border-outline-variant shadow-sm overflow-hidden">
-					<div className="p-4 border-b bg-muted/20">
-						<h3 className="text-lg font-semibold flex items-center gap-2">
-							<div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-								<FileText className="h-4 w-4 text-emerald-600" />
-							</div>
-							Stakeholder Surveys
-						</h3>
-						<p className="text-sm text-muted-foreground mt-1 ml-10">
-							Configure surveys, import responses, and review consolidated indirect attainment.
-						</p>
-					</div>
-					<div className="p-6 flex items-center justify-between">
-						<div className="text-sm text-muted-foreground">
-							Batch {batchYear} — Manage alumni, employer, graduate exit, parent, and academic peer surveys.
+				<motion.div
+					initial={{ opacity: 0, y: 15 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ type: "spring", delay: 0.15, duration: 0.5 }}
+				>
+					<Card className="border border-outline-variant shadow-sm overflow-hidden bg-card/60 backdrop-blur-md relative hover:shadow-md transition-all duration-300 hover:border-primary/20 group">
+						<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-emerald-500/80 to-transparent"></div>
+						<div className="p-4 border-b bg-muted/20">
+							<h3 className="text-lg font-semibold flex items-center gap-2">
+								<div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center border border-emerald-500/20">
+									<FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+								</div>
+								Stakeholder Surveys
+							</h3>
+							<p className="text-sm text-muted-foreground mt-1 ml-10">
+								Configure surveys, import responses, and review consolidated indirect attainment.
+							</p>
 						</div>
-						<Button
-							variant="default"
-							size="sm"
-							onClick={() => {
-								navigate(`/hod/stakeholder-surveys?programmeId=${selectedProgrammeId}&batchYear=${batchYear}`);
-							}}
-						>
-							<ExternalLink className="h-4 w-4 mr-1.5" />
-							View Surveys
-						</Button>
-					</div>
-				</Card>
+						<div className="p-6 flex flex-wrap gap-4 items-center justify-between">
+							<div className="text-sm text-muted-foreground">
+								Batch {batchYear} — Manage alumni, employer, graduate exit, parent, and academic peer surveys.
+							</div>
+							<Button
+								variant="default"
+								size="sm"
+								className="active:scale-95 duration-200 transition-all shadow-sm hover:shadow-md"
+								onClick={() => {
+									navigate(`/hod/stakeholder-surveys?programmeId=${selectedProgrammeId}&batchYear=${batchYear}`);
+								}}
+							>
+								<ExternalLink className="h-4 w-4 mr-1.5" />
+								View Surveys
+							</Button>
+						</div>
+					</Card>
+				</motion.div>
 			)}
 
 			{/* Comparison Charts */}
-			<Collapsible
-				open={chartsOpen}
-				onOpenChange={setChartsOpen}
-				className="space-y-2"
-			>
-				<Card>
-					<CollapsibleTrigger asChild>
-						<Button
-							variant="ghost"
-							className="flex w-full justify-between p-4 h-auto"
-						>
-							<div className="flex items-center gap-2">
-								<BarChart3 className="h-5 w-5 text-muted-foreground" />
-								<span className="font-semibold">
-									Attainment Comparison Charts
-								</span>
-							</div>
-							<ChevronDown
-								className={`h-4 w-4 transition-transform ${
-									chartsOpen ? "rotate-180" : ""
-								}`}
-							/>
-						</Button>
-					</CollapsibleTrigger>
-					<CollapsibleContent className="px-4 pb-4">
-						{data ? (
-							<AttainmentComparisonCharts data={data} />
-						) : (
-							<p className="text-sm text-muted-foreground text-center py-8">
-								Load attainment data to view charts.
-							</p>
-						)}
-					</CollapsibleContent>
-				</Card>
-			</Collapsible>
+			{data && (
+				<motion.div
+					initial={{ opacity: 0, y: 15 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ type: "spring", delay: 0.2, duration: 0.5 }}
+				>
+					<Collapsible
+						open={chartsOpen}
+						onOpenChange={setChartsOpen}
+						className="space-y-2"
+					>
+						<Card className="bg-card/60 backdrop-blur-md border border-muted/50">
+							<CollapsibleTrigger asChild>
+								<Button
+									variant="ghost"
+									className="flex w-full justify-between p-4 h-auto hover:bg-muted/10 transition-colors"
+								>
+									<div className="flex items-center gap-2">
+										<BarChart3 className="h-5 w-5 text-muted-foreground" />
+										<span className="font-semibold text-foreground/90">
+											Attainment Comparison Charts
+										</span>
+									</div>
+									<ChevronDown
+										className={`h-4 w-4 transition-transform ${
+											chartsOpen ? "rotate-180" : ""
+										}`}
+									/>
+								</Button>
+							</CollapsibleTrigger>
+							<CollapsibleContent className="px-4 pb-4">
+								<AttainmentComparisonCharts data={data} />
+							</CollapsibleContent>
+						</Card>
+					</Collapsible>
+				</motion.div>
+			)}
 
 			{/* Action Plans */}
 			{selectedProgrammeId && batchYear.trim() && !loading && (
-				<ActionPlansSection
-					programmeId={selectedProgrammeId}
-					batchYear={batchYear}
-				/>
+				<motion.div
+					initial={{ opacity: 0, y: 15 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ type: "spring", delay: 0.25, duration: 0.5 }}
+				>
+					<ActionPlansSection
+						programmeId={selectedProgrammeId}
+						batchYear={batchYear}
+					/>
+				</motion.div>
 			)}
-		</div>
+		</motion.div>
 	);
 }

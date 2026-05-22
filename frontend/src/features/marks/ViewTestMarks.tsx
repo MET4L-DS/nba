@@ -5,6 +5,7 @@ import type { Course, Test } from "@/services/api";
 import { BarChart2 } from "lucide-react";
 import { TestHeader } from "./TestHeader";
 import { StudentMarksTable } from "./StudentMarksTable";
+import { motion } from "framer-motion";
 
 interface ViewTestMarksProps {
 	test: Test;
@@ -51,7 +52,12 @@ export function ViewTestMarks({
 	};
 
 	return (
-		<div className="space-y-4">
+		<motion.div
+			className="space-y-4"
+			initial={{ opacity: 0, y: 16 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ type: "spring", stiffness: 280, damping: 26 }}
+		>
 			{!embedded && (
 				<TestHeader test={test} course={course} onBack={onBack} />
 			)}
@@ -64,25 +70,26 @@ export function ViewTestMarks({
 					</div>
 				</div>
 			) : (
-				<Card>
-					<CardHeader>
+				<Card className="bg-card/80 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 relative">
+					<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-violet-600 via-purple-500 to-transparent" />
+					<CardHeader className="pb-4 border-b bg-muted/[0.06]">
 						<div className="flex flex-row items-center gap-3">
-							<div className="w-10 h-10 rounded-lg bg-linear-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
+							<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md">
 								<BarChart2 className="w-5 h-5 text-white" />
 							</div>
 							<div>
-								<CardTitle>Student Marks Summary</CardTitle>
-								<p className="text-sm text-muted-foreground mt-0.5">
+								<CardTitle className="text-base font-bold">Student Marks Summary</CardTitle>
+								<p className="text-xs text-muted-foreground mt-0.5">
 									CO-aggregated marks for all students
 								</p>
 							</div>
 						</div>
 					</CardHeader>
-					<CardContent>
+					<CardContent className="pt-5">
 						<StudentMarksTable marks={marks} loading={loading} />
 					</CardContent>
 				</Card>
 			)}
-		</div>
+		</motion.div>
 	);
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -19,6 +20,9 @@ const LIKERT_OPTIONS = [
 	{ value: "2", label: "2 - Disagree" },
 	{ value: "1", label: "1 - Strongly Disagree" },
 ];
+
+const MotionCard = motion(Card);
+const MotionButton = motion(Button);
 
 export function ManualSurveyEntry({ offeringId, onSaved }: ManualSurveyEntryProps) {
 	const [enrollments, setEnrollments] = useState<SurveyEnrollment[]>([]);
@@ -93,99 +97,156 @@ export function ManualSurveyEntry({ offeringId, onSaved }: ManualSurveyEntryProp
 		}
 	};
 
+	const tableBodyVariants = {
+		hidden: { opacity: 0 },
+		show: {
+			opacity: 1,
+			transition: {
+				staggerChildren: 0.03,
+			},
+		},
+	};
+
+	const rowVariants = {
+		hidden: { opacity: 0, y: 10 },
+		show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 280, damping: 22 } },
+	};
+
 	if (loading) {
-		return <div className="text-muted-foreground p-4">Loading enrollments...</div>;
+		return (
+			<div className="flex flex-col items-center justify-center p-12 text-muted-foreground gap-3">
+				<div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+				<p className="text-sm font-medium animate-pulse">Loading enrollments...</p>
+			</div>
+		);
 	}
 
 	if (!hasConfig) {
 		return (
-			<Card>
-				<CardHeader><CardTitle className="text-base">Manual Data Entry</CardTitle></CardHeader>
-				<CardContent>
-					<p className="text-sm text-amber-600">Configure survey questions first before entering data.</p>
+			<MotionCard
+				initial={{ opacity: 0, scale: 0.98 }}
+				animate={{ opacity: 1, scale: 1 }}
+				className="bg-card/75 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-md"
+			>
+				<CardHeader className="border-b bg-muted/[0.05]"><CardTitle className="text-base font-bold text-foreground/80">Manual Data Entry</CardTitle></CardHeader>
+				<CardContent className="pt-6">
+					<p className="text-sm text-amber-600 dark:text-amber-400 font-medium">⚠️ Configure survey questions first before entering data.</p>
 				</CardContent>
-			</Card>
+			</MotionCard>
 		);
 	}
 
 	if (enrollments.length === 0) {
 		return (
-			<Card>
-				<CardHeader><CardTitle className="text-base">Manual Data Entry</CardTitle></CardHeader>
-				<CardContent>
-					<p className="text-sm text-muted-foreground">No students enrolled in this course.</p>
+			<MotionCard
+				initial={{ opacity: 0, scale: 0.98 }}
+				animate={{ opacity: 1, scale: 1 }}
+				className="bg-card/75 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-md"
+			>
+				<CardHeader className="border-b bg-muted/[0.05]"><CardTitle className="text-base font-bold text-foreground/80">Manual Data Entry</CardTitle></CardHeader>
+				<CardContent className="pt-6">
+					<p className="text-sm text-muted-foreground font-medium">🚫 No students enrolled in this course.</p>
 				</CardContent>
-			</Card>
+			</MotionCard>
 		);
 	}
 
 	return (
-		<Card>
-			<CardHeader className="flex flex-row items-center justify-between pb-2">
-				<CardTitle className="text-base font-semibold">Manual Data Entry</CardTitle>
-				<Button onClick={handleSave} disabled={saving}>
+		<MotionCard
+			initial={{ opacity: 0, y: 15 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ type: "spring" as const, stiffness: 260, damping: 20 }}
+			className="bg-card/75 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-md"
+		>
+			<CardHeader className="flex flex-row items-center justify-between pb-3 border-b bg-muted/[0.08]">
+				<CardTitle className="text-base font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+					Manual Data Entry
+				</CardTitle>
+				<MotionButton
+					onClick={handleSave}
+					disabled={saving}
+					whileHover={{ scale: 1.02 }}
+					whileTap={{ scale: 0.98 }}
+					className="bg-primary text-primary-foreground font-semibold shadow-sm rounded-lg"
+				>
 					<Save className="w-4 h-4 mr-2" />
 					{saving ? "Saving..." : "Save All Responses"}
-				</Button>
+				</MotionButton>
 			</CardHeader>
-			<CardContent className="overflow-x-auto">
+			<CardContent className="pt-6 overflow-x-auto">
 				<table className="w-full text-sm whitespace-nowrap">
 					<thead>
-						<tr className="border-b bg-muted/50">
-							<th className="text-left py-2 px-3 sticky left-0 bg-muted/50 z-10 dark:bg-muted/50">S.No</th>
-							<th className="text-left py-2 px-3 sticky left-10 bg-muted/50 z-10 dark:bg-muted/50">Student</th>
+						<tr className="border-b bg-muted/30">
+							<th className="text-left py-2.5 px-3 sticky left-0 bg-background/95 backdrop-blur z-10 font-bold text-foreground/85">S.No</th>
+							<th className="text-left py-2.5 px-3 sticky left-10 bg-background/95 backdrop-blur z-10 font-bold text-foreground/85">Student</th>
 							{questions.map((q) => (
-								<th key={q.question_id} className="text-center py-2 px-2 min-w-[120px]">
-									<div className="text-xs font-medium">Q{q.question_number}</div>
-									<div className="text-[10px] font-normal text-muted-foreground truncate max-w-[120px]">
-										{q.question_text.length > 25
-											? q.question_text.slice(0, 25) + "..."
-											: q.question_text}
+								<th key={q.question_id} className="text-center py-2.5 px-3 min-w-[130px] font-bold text-foreground/80">
+									<div className="text-xs font-bold">Q{q.question_number}</div>
+									<div className="text-[10px] font-normal text-muted-foreground truncate max-w-[130px] mt-0.5" title={q.question_text}>
+										{q.question_text}
 									</div>
-									<div className="text-[10px] font-normal text-muted-foreground">
-										CO{q.co_number} (w={Number(q.mapping_weight).toFixed(1)})
+									<div className="text-[10px] font-semibold text-primary mt-0.5">
+										CO{q.co_number} <span className="opacity-60">(w={Number(q.mapping_weight).toFixed(1)})</span>
 									</div>
 								</th>
 							))}
 						</tr>
 					</thead>
-					<tbody>
+					<motion.tbody
+						variants={tableBodyVariants}
+						initial="hidden"
+						animate="show"
+						className="divide-y divide-muted/20"
+					>
 						{enrollments.map((e, idx) => (
-							<tr key={e.roll_no} className="border-b last:border-0 hover:bg-muted/10">
-								<td className="py-2 px-3 text-muted-foreground text-xs sticky left-0 bg-background z-10">{idx + 1}</td>
-								<td className="py-2 px-3 font-medium text-xs sticky left-10 bg-background z-10">
-									<div>{e.roll_no}</div>
-									<div className="text-muted-foreground font-normal">{e.student_name}</div>
+							<motion.tr
+								key={e.roll_no}
+								variants={rowVariants}
+								className="hover:bg-muted/10 transition-colors"
+							>
+								<td className="py-2.5 px-3 text-muted-foreground text-xs sticky left-0 bg-background/95 backdrop-blur z-10 border-r border-muted/10">{idx + 1}</td>
+								<td className="py-2.5 px-3 font-medium text-xs sticky left-10 bg-background/95 backdrop-blur z-10 border-r border-muted/10">
+									<div className="font-bold text-foreground/90">{e.roll_no}</div>
+									<div className="text-muted-foreground text-[10px] font-normal mt-0.5">{e.student_name}</div>
 								</td>
 								{questions.map((q) => {
 									const qid = q.question_id!;
 									const val = entries[e.roll_no]?.[qid] ?? "";
 									return (
-										<td key={qid} className="py-2 px-2 text-center">
-											<select
-												className="h-8 w-20 rounded-md border border-input bg-background px-1 text-xs text-center shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-[color,box-shadow]"
+										<td key={qid} className="py-2 px-3 text-center">
+											<motion.select
+												whileHover={{ scale: 1.05 }}
+												whileFocus={{ scale: 1.05 }}
+												className="h-8 w-24 rounded-md border border-muted/80 bg-background/50 px-2 text-xs text-center shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all font-medium cursor-pointer"
 												value={val}
 												onChange={(ev) => updateEntry(e.roll_no, qid, ev.target.value)}
 											>
 												<option value="">—</option>
 												{LIKERT_OPTIONS.map((opt) => (
-													<option key={opt.value} value={opt.value}>{opt.label}</option>
+													<option key={opt.value} value={opt.value} className="text-left font-medium">{opt.label}</option>
 												))}
-											</select>
+											</motion.select>
 										</td>
 									);
 								})}
-							</tr>
+							</motion.tr>
 						))}
-					</tbody>
+					</motion.tbody>
 				</table>
-				<div className="mt-4 flex justify-end">
-					<Button onClick={handleSave} disabled={saving}>
+				<div className="mt-6 flex justify-end gap-2 border-t pt-4 border-muted/30">
+					<MotionButton
+						onClick={handleSave}
+						disabled={saving}
+						whileHover={{ scale: 1.02 }}
+						whileTap={{ scale: 0.98 }}
+						className="bg-primary text-primary-foreground font-semibold shadow-md rounded-lg px-6 h-10"
+					>
 						<Save className="w-4 h-4 mr-2" />
 						{saving ? "Saving..." : "Save All Responses"}
-					</Button>
+					</MotionButton>
 				</div>
 			</CardContent>
-		</Card>
+		</MotionCard>
 	);
 }
+

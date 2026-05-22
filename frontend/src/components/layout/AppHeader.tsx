@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
-import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, LogOut } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface AppHeaderProps {
 	sidebarOpen: boolean;
@@ -20,45 +21,71 @@ export function AppHeader({
 	children,
 }: AppHeaderProps) {
 	return (
-		<header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 shrink-0">
-			<div className="flex items-center gap-4">
-				<Button
-					variant="ghost"
-					size="icon"
-					onClick={onToggleSidebar}
-					className="text-gray-700 dark:text-gray-300"
-				>
-					{sidebarOpen ? (
-						<ChevronLeft className="w-5 h-5" />
-					) : (
-						<ChevronRight className="w-5 h-5" />
-					)}
-				</Button>
-				<div>
-					<h1 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
+		<header className="h-14 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800/80 flex items-center justify-between px-4 shrink-0 z-20">
+			{/* Left: Sidebar toggle + Title */}
+			<div className="flex items-center gap-3 min-w-0">
+				<motion.div whileTap={{ scale: 0.88 }} transition={{ type: "spring", stiffness: 420, damping: 22 }}>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={onToggleSidebar}
+						className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/70 rounded-lg h-8 w-8 shrink-0"
+					>
+						<motion.div
+							animate={{ rotate: sidebarOpen ? 0 : 180 }}
+							transition={{ type: "spring", stiffness: 300, damping: 24 }}
+						>
+							{sidebarOpen ? (
+								<PanelLeftClose className="w-4 h-4" />
+							) : (
+								<PanelLeftOpen className="w-4 h-4" />
+							)}
+						</motion.div>
+					</Button>
+				</motion.div>
+
+				{/* Title area */}
+				<div className="min-w-0">
+					<motion.h1
+						className="text-base font-bold text-gray-900 dark:text-white capitalize leading-tight truncate"
+						key={title}
+						initial={{ opacity: 0, y: -6 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ type: "spring", stiffness: 340, damping: 26 }}
+					>
 						{title}
-					</h1>
+					</motion.h1>
 					{description && (
-						<p className="text-sm text-gray-500 dark:text-gray-400">
+						<motion.p
+							className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate"
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							transition={{ delay: 0.1 }}
+						>
 							{description}
-						</p>
+						</motion.p>
 					)}
 				</div>
 			</div>
 
-			<div className="flex items-center gap-3">
+			{/* Right: Actions */}
+			<div className="flex items-center gap-2 shrink-0">
 				{children}
-				<AnimatedThemeToggler />
+				<motion.div whileTap={{ scale: 0.88 }} transition={{ type: "spring", stiffness: 420, damping: 22 }}>
+					<AnimatedThemeToggler />
+				</motion.div>
 				{onLogout && (
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={onLogout}
-						className="text-gray-700 dark:text-gray-300 ml-2"
-						title="Logout"
-					>
-						<LogOut className="w-5 h-5" />
-					</Button>
+					<motion.div whileTap={{ scale: 0.88 }} transition={{ type: "spring", stiffness: 420, damping: 22 }}>
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={onLogout}
+							className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg h-8 w-8"
+							title="Logout"
+						>
+							<LogOut className="w-4 h-4" />
+						</Button>
+					</motion.div>
 				)}
 			</div>
 		</header>

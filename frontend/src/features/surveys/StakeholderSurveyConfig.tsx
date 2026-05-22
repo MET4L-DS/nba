@@ -51,7 +51,11 @@ export function StakeholderSurveyConfig({
 				stakeholderType,
 			);
 			if (data && data.questions && data.questions.length > 0) {
-				setQuestions(data.questions.map((q, i) => ({ ...q, _key: `${q.question_id || i}` })));
+				setQuestions(data.questions.map((q, i) => ({
+					...q,
+					mapping_weight: Number(q.mapping_weight),
+					_key: `${q.question_id || i}`,
+				})));
 			} else {
 				setQuestions(DEFAULT_PO_TEMPLATE.map((q, i) => ({ ...q, _key: `tmpl_${i}` })));
 			}

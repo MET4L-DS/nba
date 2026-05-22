@@ -27,7 +27,12 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 		try {
 			const data = await surveyApi.getCourseExitSurvey(offeringId);
 			if (data && data.questions && data.questions.length > 0) {
-				setQuestions(data.questions);
+				const normalized = data.questions.map((q: CourseSurveyQuestion) => ({
+					...q,
+					mapping_weight: Number(q.mapping_weight),
+					co_number: Number(q.co_number),
+				}));
+				setQuestions(normalized);
 			} else {
 				// Default template: 1 question per CO
 				setQuestions([
@@ -55,16 +60,17 @@ export function CourseSurveyConfig({ offeringId, onConfigSaved }: CourseSurveyCo
 	};
 
 	const removeQuestion = (idx: number) => {
-		const newQ = [...questions];
-		newQ.splice(idx, 1);
-		// renumber
-		setQuestions(newQ.map((q, i) => ({ ...q, question_number: i + 1 })));
+		setQuestions((prev) =>
+			prev
+				.filter((_, i) => i !== idx)
+				.map((q, i) => ({ ...q, question_number: i + 1 })),
+		);
 	};
 
 	const updateQuestion = (idx: number, field: keyof CourseSurveyQuestion, value: any) => {
-		const newQ = [...questions];
-		newQ[idx] = { ...newQ[idx], [field]: value };
-		setQuestions(newQ);
+		setQuestions((prev) =>
+			prev.map((q, i) => (i === idx ? { ...q, [field]: value } : q)),
+		);
 	};
 
 	const handleSave = async () => {

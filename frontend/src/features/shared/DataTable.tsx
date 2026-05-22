@@ -196,22 +196,22 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 					{isServerMode && (
 						<div className="relative">
 							{refreshing ? (
-								<Loader2 className="absolute left-2 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+								<Loader2 className="absolute left-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
 							) : (
-								<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+								<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
 							)}
 							<Input
 								placeholder={searchPlaceholder}
 								value={sp!.search}
 								onChange={(e) => sp!.onSearch(e.target.value)}
-								className="pl-8 h-9 w-[150px] lg:w-[250px]"
+								className="pl-9 h-9 w-[150px] lg:w-[250px] bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 							/>
 						</div>
 					)}
 					{/* Client-side search input */}
 					{!isServerMode && searchKey && (
 						<div className="relative">
-							<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+							<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
 							<Input
 								placeholder={searchPlaceholder}
 								value={
@@ -224,7 +224,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 										.getColumn(searchKey)
 										?.setFilterValue(event.target.value)
 								}
-								className="pl-8 h-9 w-[150px] lg:w-[250px]"
+								className="pl-9 h-9 w-[150px] lg:w-[250px] bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 							/>
 						</div>
 					)}
@@ -235,7 +235,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 						<Button
 							variant="ghost"
 							onClick={() => table.resetColumnFilters()}
-							className="h-9 px-2 lg:px-3 shrink-0"
+							className="h-9 px-3 shrink-0 rounded-xl active:scale-95 duration-200 transition-all hover:bg-muted/50 text-muted-foreground hover:text-foreground"
 						>
 							Reset
 							<X className="ml-2 h-4 w-4" />
@@ -244,14 +244,14 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 				</div>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant="outline" className="ml-auto shrink-0">
+						<Button variant="outline" className="ml-auto shrink-0 bg-background/60 border-muted/50 rounded-xl active:scale-95 duration-200 transition-all shadow-sm">
 							{refreshing && (
 								<RefreshCw className="mr-2 h-4 w-4 animate-spin" />
 							)}
 							Columns <ChevronDown className="ml-2 h-4 w-4" />
 						</Button>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
+					<DropdownMenuContent align="end" className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
 						{table
 							.getAllColumns()
 							.filter((column) => column.getCanHide())
@@ -259,7 +259,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 								return (
 									<DropdownMenuCheckboxItem
 										key={column.id}
-										className="capitalize"
+										className="capitalize rounded-lg focus:bg-muted/60"
 										checked={column.getIsVisible()}
 										onCheckedChange={(value) =>
 											column.toggleVisibility(!!value)
@@ -272,7 +272,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
-			<div className="rounded-md border bg-white dark:bg-slate-950">
+			<div className="rounded-2xl border border-muted/50 bg-card/45 backdrop-blur-md shadow-lg overflow-hidden transition-all duration-300 relative group">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -426,7 +426,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 							<div className="flex items-center space-x-2">
 								<Button
 									variant="outline"
-									className="h-8 w-8 p-0"
+									className="h-8 w-8 p-0 bg-background/60 border-muted/50 rounded-lg active:scale-95 duration-200 transition-all shadow-sm"
 									onClick={sp!.onPrev}
 									disabled={!serverCanPrev}
 								>
@@ -437,7 +437,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 								</Button>
 								<Button
 									variant="outline"
-									className="h-8 w-8 p-0"
+									className="h-8 w-8 p-0 bg-background/60 border-muted/50 rounded-lg active:scale-95 duration-200 transition-all shadow-sm"
 									onClick={sp!.onNext}
 									disabled={!serverCanNext}
 								>
@@ -465,7 +465,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 									<DropdownMenuTrigger asChild>
 										<Button
 											variant="outline"
-											className="h-8 w-[70px] justify-between"
+											className="h-8 w-[70px] justify-between bg-background/60 border-muted/50 rounded-lg active:scale-95 duration-200 transition-all shadow-sm"
 										>
 											{
 												table.getState().pagination
@@ -474,7 +474,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 											<ChevronDown className="ml-2 h-4 w-4 opacity-50" />
 										</Button>
 									</DropdownMenuTrigger>
-									<DropdownMenuContent align="end">
+									<DropdownMenuContent align="end" className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
 										{[10, 20, 30, 40, 50].map(
 											(pageSize) => (
 												<DropdownMenuCheckboxItem
@@ -490,6 +490,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 															pageSize,
 														)
 													}
+													className="rounded-lg focus:bg-muted/60"
 												>
 													{pageSize}
 												</DropdownMenuCheckboxItem>
@@ -505,7 +506,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 							<div className="flex items-center space-x-2">
 								<Button
 									variant="outline"
-									className="hidden h-8 w-8 p-0 lg:flex"
+									className="hidden h-8 w-8 p-0 lg:flex bg-background/60 border-muted/50 rounded-lg active:scale-95 duration-200 transition-all shadow-sm"
 									onClick={() => table.setPageIndex(0)}
 									disabled={!table.getCanPreviousPage()}
 								>
@@ -516,7 +517,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 								</Button>
 								<Button
 									variant="outline"
-									className="h-8 w-8 p-0"
+									className="h-8 w-8 p-0 bg-background/60 border-muted/50 rounded-lg active:scale-95 duration-200 transition-all shadow-sm"
 									onClick={() => table.previousPage()}
 									disabled={!table.getCanPreviousPage()}
 								>
@@ -527,7 +528,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 								</Button>
 								<Button
 									variant="outline"
-									className="h-8 w-8 p-0"
+									className="h-8 w-8 p-0 bg-background/60 border-muted/50 rounded-lg active:scale-95 duration-200 transition-all shadow-sm"
 									onClick={() => table.nextPage()}
 									disabled={!table.getCanNextPage()}
 								>
@@ -538,7 +539,7 @@ export function DataTable<TData, TValue, F extends Record<string, any> = any>({
 								</Button>
 								<Button
 									variant="outline"
-									className="hidden h-8 w-8 p-0 lg:flex"
+									className="hidden h-8 w-8 p-0 lg:flex bg-background/60 border-muted/50 rounded-lg active:scale-95 duration-200 transition-all shadow-sm"
 									onClick={() =>
 										table.setPageIndex(
 											table.getPageCount() - 1,

@@ -9,7 +9,7 @@ export function getDeanDepartmentColumns(): ColumnDef<DeanDepartment>[] {
 			accessorKey: "department_code",
 			header: sortableHeader("Code"),
 			cell: ({ row }) => (
-				<Badge variant="outline">
+				<Badge variant="outline" className="border-muted/50 text-muted-foreground shadow-sm font-semibold rounded-md">
 					{row.getValue("department_code")}
 				</Badge>
 			),
@@ -18,22 +18,30 @@ export function getDeanDepartmentColumns(): ColumnDef<DeanDepartment>[] {
 			accessorKey: "department_name",
 			header: sortableHeader("Department Name", "text-left"),
 			cell: ({ row }) => (
-				<div className="font-medium text-left">
+				<div className="font-semibold text-left text-foreground/90">
 					{row.getValue("department_name")}
 				</div>
 			),
 		},
 		{
 			accessorKey: "hod_name",
-			header: "HOD",
+			header: "Serving HOD",
 			cell: ({ row }) => {
 				const hodName = row.original.hod_name;
 				return hodName ? (
-					<span className="text-left">{hodName}</span>
+					<Badge
+						variant="outline"
+						className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold shadow-none rounded-md"
+					>
+						{hodName}
+					</Badge>
 				) : (
-					<span className="text-muted-foreground italic text-left">
-						Not assigned
-					</span>
+					<Badge
+						variant="outline"
+						className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-semibold shadow-none rounded-md"
+					>
+						Not Assigned
+					</Badge>
 				);
 			},
 		},
@@ -44,7 +52,7 @@ export function getDeanDepartmentColumns(): ColumnDef<DeanDepartment>[] {
 				<div className="text-center">
 					<Badge
 						variant="secondary"
-						className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+						className="bg-blue-500/10 text-blue-600 border border-blue-500/20 font-semibold rounded-md"
 					>
 						{row.getValue("faculty_count")}
 					</Badge>
@@ -58,7 +66,7 @@ export function getDeanDepartmentColumns(): ColumnDef<DeanDepartment>[] {
 				<div className="text-center">
 					<Badge
 						variant="secondary"
-						className="bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
+						className="bg-amber-500/10 text-amber-600 border border-amber-500/20 font-semibold rounded-md"
 					>
 						{row.getValue("staff_count")}
 					</Badge>
@@ -72,7 +80,7 @@ export function getDeanDepartmentColumns(): ColumnDef<DeanDepartment>[] {
 				<div className="text-center">
 					<Badge
 						variant="secondary"
-						className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+						className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-semibold rounded-md"
 					>
 						{row.getValue("course_count")}
 					</Badge>
@@ -86,7 +94,7 @@ export function getDeanDepartmentColumns(): ColumnDef<DeanDepartment>[] {
 				<div className="text-center">
 					<Badge
 						variant="secondary"
-						className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+						className="bg-purple-500/10 text-purple-600 border border-purple-500/20 font-semibold rounded-md"
 					>
 						{row.getValue("student_count")}
 					</Badge>

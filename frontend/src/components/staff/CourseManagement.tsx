@@ -196,21 +196,22 @@ export function CourseManagement() {
 	};
 
 	return (
-		<Card>
-			<CardHeader className="flex flex-row items-center justify-between">
+		<Card className="bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden">
+			<div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-orange-500 to-transparent" />
+			<CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-muted/20 pt-6">
 				<div className="flex items-center gap-3">
-					<div className="w-10 h-10 rounded-lg bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-						<BookOpen className="w-5 h-5 text-white" />
+					<div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+						<BookOpen className="w-5 h-5" />
 					</div>
 					<div>
-						<CardTitle>Department Courses</CardTitle>
-						<p className="text-sm text-muted-foreground">
+						<CardTitle className="text-lg font-bold text-foreground">Department Courses</CardTitle>
+						<p className="text-xs font-medium text-muted-foreground mt-0.5">
 							Manage courses for your department
 						</p>
 					</div>
 				</div>
 				<Button
-					className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+					className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl active:scale-95 duration-200 transition-all border border-orange-500/30 shadow-md shadow-orange-500/10 h-10 px-4"
 					onClick={() => setIsAddDialogOpen(true)}
 				>
 					<Plus className="w-4 h-4" />
@@ -234,7 +235,7 @@ export function CourseManagement() {
 					semesters={semesters}
 				/>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="pt-6">
 				<DataTable
 					columns={columns}
 					data={courses || []}
@@ -251,66 +252,71 @@ export function CourseManagement() {
 				>
 					{() => (
 						<div className="flex items-center gap-2 flex-wrap">
-							<Select
-								value={
-									filters.year !== undefined
-										? String(filters.year)
-										: ""
-								}
-								onValueChange={(v) =>
-									setFilter("year", v ? Number(v) : undefined)
-								}
-							>
-								<SelectTrigger className="w-[120px]">
-									<SelectValue placeholder="All Years" />
-								</SelectTrigger>
-								<SelectContent>
-									{years.map((y) => (
-										<SelectItem key={y} value={String(y)}>
-											{y}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							{filters.year !== undefined && (
-								<Button
-									variant="ghost"
-									size="icon"
-									className="h-8 w-8"
-									onClick={() => setFilter("year", undefined)}
-								>
-									<X className="h-4 w-4" />
-								</Button>
-							)}
-							<Select
-								value={filters.semester ?? ""}
-								onValueChange={(v) =>
-									setFilter("semester", v || undefined)
-								}
-							>
-								<SelectTrigger className="w-[140px]">
-									<SelectValue placeholder="All Semesters" />
-								</SelectTrigger>
-								<SelectContent>
-									{semesters.map((s) => (
-										<SelectItem key={s} value={s}>
-											{s} Semester
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							{filters.semester !== undefined && (
-								<Button
-									variant="ghost"
-									size="icon"
-									className="h-8 w-8"
-									onClick={() =>
-										setFilter("semester", undefined)
+							<div className="flex items-center gap-1.5 bg-background/60 shadow-inner rounded-xl border border-muted/50 px-2 py-1">
+								<Select
+									value={
+										filters.year !== undefined
+											? String(filters.year)
+											: ""
+									}
+									onValueChange={(v) =>
+										setFilter("year", v ? Number(v) : undefined)
 									}
 								>
-									<X className="h-4 w-4" />
-								</Button>
-							)}
+									<SelectTrigger className="w-[100px] bg-transparent border-0 shadow-none focus:ring-0 h-7 text-xs font-semibold focus-visible:ring-0">
+										<SelectValue placeholder="All Years" />
+									</SelectTrigger>
+									<SelectContent className="bg-card/95 backdrop-blur-md border border-muted/50 rounded-xl">
+										{years.map((y) => (
+											<SelectItem key={y} value={String(y)} className="focus:bg-amber-500/10 focus:text-amber-600 dark:focus:text-amber-400 rounded-lg text-xs py-1.5">
+												{y}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+								{filters.year !== undefined && (
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-6 w-6 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-md active:scale-95 duration-200 transition-all shrink-0"
+										onClick={() => setFilter("year", undefined)}
+									>
+										<X className="h-3 w-3" />
+									</Button>
+								)}
+							</div>
+
+							<div className="flex items-center gap-1.5 bg-background/60 shadow-inner rounded-xl border border-muted/50 px-2 py-1">
+								<Select
+									value={filters.semester ?? ""}
+									onValueChange={(v) =>
+										setFilter("semester", v || undefined)
+									}
+								>
+									<SelectTrigger className="w-[130px] bg-transparent border-0 shadow-none focus:ring-0 h-7 text-xs font-semibold focus-visible:ring-0">
+										<SelectValue placeholder="All Semesters" />
+									</SelectTrigger>
+									<SelectContent className="bg-card/95 backdrop-blur-md border border-muted/50 rounded-xl">
+										{semesters.map((s) => (
+											<SelectItem key={s} value={s} className="focus:bg-amber-500/10 focus:text-amber-600 dark:focus:text-amber-400 rounded-lg text-xs py-1.5">
+												{s} Semester
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+								{filters.semester !== undefined && (
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-6 w-6 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-md active:scale-95 duration-200 transition-all shrink-0"
+										onClick={() =>
+											setFilter("semester", undefined)
+										}
+									>
+										<X className="h-3 w-3" />
+									</Button>
+								)}
+							</div>
 						</div>
 					)}
 				</DataTable>

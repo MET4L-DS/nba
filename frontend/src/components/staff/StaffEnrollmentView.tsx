@@ -11,9 +11,6 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
-
-
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -25,11 +22,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-	BookOpen,
-		Users,
-	Trash2,
-} from "lucide-react";
+import { BookOpen, Users, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { staffApi } from "@/services/api";
 import type { StaffCourse, Enrollment } from "@/services/api";
@@ -72,23 +65,30 @@ export function StaffEnrollmentView() {
 				accessorKey: "student_rollno",
 				header: "Roll No",
 				cell: ({ row }) => (
-					<Badge variant="outline">
+					<span className="font-mono bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md text-xs font-semibold shadow-sm">
 						{row.original.student_rollno}
-					</Badge>
+					</span>
 				),
 			},
 			{
 				accessorKey: "student_name",
 				header: "Name",
+				cell: ({ row }) => (
+					<span className="font-semibold text-foreground">{row.original.student_name}</span>
+				),
 			},
 			{
 				accessorKey: "enrolled_at",
 				header: "Enrolled At",
 				cell: ({ row }) => (
-					<span className="text-sm text-gray-500">
+					<span className="text-sm font-medium text-muted-foreground">
 						{new Date(
 							row.original.enrolled_at,
-						).toLocaleDateString()}
+						).toLocaleDateString(undefined, {
+							year: "numeric",
+							month: "short",
+							day: "numeric",
+						})}
 					</span>
 				),
 			},
@@ -103,27 +103,27 @@ export function StaffEnrollmentView() {
 								<Button
 									variant="ghost"
 									size="icon"
-									className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+									className="h-8 w-8 text-rose-500 hover:text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 active:scale-95 duration-200 transition-all rounded-lg"
 								>
 									<Trash2 className="w-4 h-4" />
 								</Button>
 							</AlertDialogTrigger>
-							<AlertDialogContent>
+							<AlertDialogContent className="bg-card/90 backdrop-blur-lg border border-muted/50 rounded-2xl max-w-md">
 								<AlertDialogHeader>
-									<AlertDialogTitle>
+									<AlertDialogTitle className="text-lg font-bold text-foreground">
 										Remove Student
 									</AlertDialogTitle>
-									<AlertDialogDescription>
+									<AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
 										Are you sure you want to remove{" "}
-										<strong>
+										<strong className="text-foreground font-semibold">
 											{enrollment.student_name}
 										</strong>{" "}
 										({enrollment.student_rollno}) from this
 										course? This action cannot be undone.
 									</AlertDialogDescription>
 								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>
+								<AlertDialogFooter className="mt-4 gap-2">
+									<AlertDialogCancel className="bg-background/60 shadow-sm border-muted/50 rounded-xl active:scale-95 duration-200 transition-all font-semibold">
 										Cancel
 									</AlertDialogCancel>
 									<AlertDialogAction
@@ -132,7 +132,7 @@ export function StaffEnrollmentView() {
 												enrollment.student_rollno,
 											)
 										}
-										className="bg-red-500 hover:bg-red-600"
+										className="bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-semibold rounded-xl active:scale-95 duration-200 transition-all border border-red-500/30 shadow-md shadow-red-500/10"
 									>
 										Remove
 									</AlertDialogAction>
@@ -145,8 +145,6 @@ export function StaffEnrollmentView() {
 		],
 		[selectedCourse],
 	);
-
-
 
 	const handleCourseChange = async (courseId: string) => {
 		const course = courses.find((c) => c.course_id.toString() === courseId);
@@ -175,7 +173,7 @@ export function StaffEnrollmentView() {
 		}
 	};
 
-const handleEnroll = async () => {
+	const handleEnroll = async () => {
 		if (!selectedCourse) {
 			toast.error("No course selected");
 			return;
@@ -238,11 +236,10 @@ const handleEnroll = async () => {
 		}
 	};
 
-	
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-64">
-				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
 			</div>
 		);
 	}
@@ -250,10 +247,11 @@ const handleEnroll = async () => {
 	return (
 		<div className="space-y-6">
 			{/* Course Selection */}
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						<BookOpen className="w-5 h-5" />
+			<Card className="bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden">
+				<div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-orange-500 to-transparent" />
+				<CardHeader className="pb-3">
+					<CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
+						<BookOpen className="w-5 h-5 text-amber-500" />
 						Select Course
 					</CardTitle>
 				</CardHeader>
@@ -262,19 +260,20 @@ const handleEnroll = async () => {
 						value={selectedCourse?.course_id.toString() || ""}
 						onValueChange={handleCourseChange}
 					>
-						<SelectTrigger className="w-full md:w-[400px]">
+						<SelectTrigger className="w-full md:w-[400px] bg-background/60 shadow-inner focus:ring-1 focus:ring-amber-500/30 transition-all rounded-xl border-muted/50 h-10">
 							<SelectValue placeholder="Select a course to manage enrollments" />
 						</SelectTrigger>
-						<SelectContent>
+						<SelectContent className="bg-card/95 backdrop-blur-md border border-muted/50 rounded-xl">
 							{courses.map((course) => (
 								<SelectItem
 									key={course.offering_id || course.course_id}
 									value={course.course_id.toString()}
+									className="focus:bg-amber-500/10 focus:text-amber-600 dark:focus:text-amber-400 rounded-lg py-2"
 								>
-									<span className="font-mono mr-2">
+									<span className="font-mono mr-2 font-semibold text-amber-600 dark:text-amber-400">
 										{course.course_code}
 									</span>
-									- {course.course_name}
+									<span className="text-muted-foreground font-medium">- {course.course_name}</span>
 								</SelectItem>
 							))}
 						</SelectContent>
@@ -285,13 +284,14 @@ const handleEnroll = async () => {
 			{selectedCourse && (
 				<>
 					{/* Enrollment Section */}
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Users className="w-5 h-5" />
+					<Card className="bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden">
+						<div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-orange-500 to-transparent" />
+						<CardHeader className="pb-3">
+							<CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
+								<Users className="w-5 h-5 text-amber-500" />
 								Add Students to Course
 							</CardTitle>
-							<p className="text-sm text-muted-foreground">
+							<p className="text-xs font-medium text-muted-foreground mt-0.5">
 								Enroll students using CSV upload or manual entry
 							</p>
 						</CardHeader>
@@ -303,43 +303,51 @@ const handleEnroll = async () => {
 								/>
 							</div>
 							{students.length > 0 && (
-								<Button onClick={handleEnroll} disabled={enrolling} className="w-full mt-4">
+								<Button
+									onClick={handleEnroll}
+									disabled={enrolling}
+									className="w-full mt-4 h-12 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl active:scale-95 duration-200 transition-all border border-orange-500/30 shadow-md shadow-orange-500/10"
+								>
 									{enrolling ? (
-										<>
-											<span className="animate-spin mr-2">?</span>Enrolling...
-										</>
+										<div className="flex items-center justify-center gap-2">
+											<div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+											<span>Enrolling Students...</span>
+										</div>
 									) : (
-										<>
-											<Users className="w-4 h-4 mr-2" />Enroll {students.length} Students
-										</>
+										<div className="flex items-center justify-center gap-2">
+											<Users className="w-4 h-4" />
+											<span>Enroll {students.length} Students</span>
+										</div>
 									)}
 								</Button>
 							)}
 						</CardContent>
 					</Card>
 
-										{/* Current Enrollments */}
-					<Card>
-						<CardHeader>
+					{/* Current Enrollments */}
+					<Card className="bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden">
+						<div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-orange-500 to-transparent" />
+						<CardHeader className="pb-3 border-b border-muted/20">
 							<div className="flex items-center justify-between">
-								<div>
-									<CardTitle className="flex items-center gap-2">
-										<Users className="w-5 h-5" />
+								<div className="space-y-1">
+									<CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
+										<Users className="w-5 h-5 text-amber-500" />
 										Current Enrollments
 									</CardTitle>
-									<p className="text-sm text-muted-foreground mt-1">
+									<p className="text-xs font-medium text-muted-foreground">
 										Students enrolled in{" "}
-										{selectedCourse.course_code} -{" "}
-										{selectedCourse.course_name}
+										<span className="font-semibold font-mono text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+											{selectedCourse.course_code}
+										</span>
+										{" "}- {selectedCourse.course_name}
 									</p>
 								</div>
-								<Badge variant="secondary">
-									{enrollments.length} Student
-									{enrollments.length !== 1 ? "s" : ""}
+								<Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shadow-sm font-semibold rounded-lg">
+									{enrollments.length} Student{enrollments.length !== 1 ? "s" : ""}
 								</Badge>
 							</div>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="pt-4">
 							<DataTable
 								columns={enrollmentColumns}
 								data={enrollments}
@@ -351,15 +359,15 @@ const handleEnroll = async () => {
 			)}
 
 			{!selectedCourse && (
-				<Card>
-					<CardContent className="flex flex-col items-center justify-center py-12">
-						<BookOpen className="w-12 h-12 text-gray-400 mb-4" />
-						<h3 className="text-lg font-medium text-gray-900 dark:text-white">
+				<Card className="bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden">
+					<div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-orange-500 to-transparent" />
+					<CardContent className="flex flex-col items-center justify-center py-16">
+						<BookOpen className="w-12 h-12 text-amber-500/40 mb-4 animate-pulse" />
+						<h3 className="text-lg font-bold text-foreground">
 							Select a Course
 						</h3>
-						<p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-							Choose a course from the dropdown above to manage
-							student enrollments
+						<p className="text-xs font-medium text-muted-foreground mt-2 max-w-sm text-center leading-relaxed">
+							Choose a course from the dropdown above to manage student enrollments, upload CSV cohorts, or update manual lists
 						</p>
 					</CardContent>
 				</Card>

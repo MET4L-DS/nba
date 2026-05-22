@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 
 import { Trash2, UserPlus, Pencil, School as SchoolIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -112,10 +111,12 @@ export function SchoolsView() {
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center justify-between">
+			<div className="flex flex-wrap gap-4 items-center justify-between bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden mb-2">
+				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-indigo-500/20 pointer-events-none"></div>
+				<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent"></div>
 				<div>
-					<h2 className="text-2xl font-bold">Schools Management</h2>
-					<p className="text-gray-500 dark:text-gray-400">
+					<h2 className="text-2xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Schools Management</h2>
+					<p className="text-sm text-muted-foreground mt-1">
 						Manage schools and appoint Deans
 					</p>
 				</div>
@@ -147,7 +148,7 @@ export function SchoolsView() {
 					placeholder="Search schools..."
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
-					className="max-w-sm"
+					className="max-w-sm bg-background/60 shadow-inner active:scale-98 transition-all"
 				/>
 			</div>
 
@@ -190,11 +191,12 @@ export function SchoolsView() {
 					filteredSchools.map((school) => (
 						<Card
 							key={school.school_id}
-							className="overflow-hidden"
+							className="bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 relative group"
 						>
-							<CardHeader className="bg-slate-50 dark:bg-slate-900/50 pb-4">
-								<CardTitle className="text-lg flex items-start justify-between">
-									<span>{school.school_name}</span>
+							<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-500 to-indigo-300"></div>
+							<CardHeader className="bg-muted/[0.08] pb-4 border-b border-muted/40">
+								<CardTitle className="text-lg flex items-start justify-between text-foreground">
+									<span className="font-bold truncate pr-2">{school.school_name}</span>
 									<div className="flex gap-1">
 										<Button
 											variant="ghost"
@@ -202,6 +204,7 @@ export function SchoolsView() {
 											onClick={() =>
 												openEditSchoolDialog(school)
 											}
+											className="h-8 w-8 active:scale-95 duration-200 transition-all rounded-lg"
 										>
 											<Pencil className="h-4 w-4 text-blue-500" />
 										</Button>
@@ -211,37 +214,33 @@ export function SchoolsView() {
 											onClick={() =>
 												handleDeleteSchool(school)
 											}
+											className="h-8 w-8 active:scale-95 duration-200 transition-all rounded-lg hover:bg-red-500/10"
 										>
 											<Trash2 className="h-4 w-4 text-red-500" />
 										</Button>
 									</div>
 								</CardTitle>
-								<div className="text-sm text-gray-500 flex justify-between">
-									<span>Code: {school.school_code}</span>
+								<div className="text-xs text-muted-foreground flex justify-between mt-1">
+									<span className="font-semibold tracking-wider uppercase">Code: {school.school_code}</span>
 								</div>
 							</CardHeader>
 							<CardContent className="pt-4 space-y-4">
 								<div>
-									<Label className="text-xs text-muted-foreground uppercase tracking-wider">
+									<Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
 										Current Dean
 									</Label>
-									<div className="mt-1 flex items-center justify-between">
+									<div className="mt-1 flex items-center justify-between min-h-[40px]">
 										{school.dean ? (
-											<div className="flex items-center gap-2">
-												<div>
-													<p className="font-medium flex px-2">
-														{school.dean.username}
-													</p>
-													<Badge
-														variant="outline"
-														className="flex"
-													>
-														{school.dean.email}
-													</Badge>
-												</div>
+											<div className="flex flex-col gap-1">
+												<p className="font-semibold text-sm text-foreground">
+													{school.dean.username}
+												</p>
+												<span className="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 truncate max-w-[180px]">
+													{school.dean.email}
+												</span>
 											</div>
 										) : (
-											<span className="text-sm text-yellow-600 dark:text-yellow-500 italic">
+											<span className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/20 italic">
 												Vacant
 											</span>
 										)}
@@ -250,7 +249,7 @@ export function SchoolsView() {
 											<Button
 												variant="ghost"
 												size="sm"
-												className="text-red-600 hover:text-red-700 hover:bg-red-50"
+												className="text-red-600 hover:text-red-700 hover:bg-red-500/10 active:scale-95 duration-200 transition-all rounded-lg"
 												onClick={() =>
 													handleDemoteDean(
 														school.dean!,
@@ -263,7 +262,7 @@ export function SchoolsView() {
 											<Button
 												variant="outline"
 												size="sm"
-												className="h-8"
+												className="h-8 active:scale-95 duration-200 transition-all rounded-lg bg-card hover:bg-muted"
 												onClick={() =>
 													openAppointDeanDialog(
 														school,
@@ -276,11 +275,11 @@ export function SchoolsView() {
 										)}
 									</div>
 								</div>
-								<div className="flex justify-between items-center text-sm pt-2 border-t">
-									<span className="text-muted-foreground">
+								<div className="flex justify-between items-center text-sm pt-3 border-t border-muted/50">
+									<span className="text-muted-foreground font-medium">
 										Departments
 									</span>
-									<span className="font-medium bg-secondary px-2 py-0.5 rounded-full text-xs">
+									<span className="font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full text-xs">
 										{school.departments_count || 0}
 									</span>
 								</div>

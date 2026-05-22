@@ -275,18 +275,19 @@ export function BulkEnrollStudentsDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-[600px]">
-				<DialogHeader>
-					<DialogTitle>Bulk Enroll Students</DialogTitle>
-					<DialogDescription>
-						Upload a CSV file to enroll students in{" "}
-						{programme?.programme_name || "the selected programme"}
+			<DialogContent className="sm:max-w-[600px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
+				<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent" />
+				<DialogHeader className="pt-2">
+					<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Bulk Enroll Students</DialogTitle>
+					<DialogDescription className="text-muted-foreground text-sm">
+						Upload a CSV file or manually add students to enroll in{" "}
+						<span className="font-semibold text-foreground">{programme?.programme_name || "the selected programme"}</span>
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="space-y-4 py-4">
+				<div className="space-y-5 py-2">
 					<div className="space-y-2">
-						<Label>Batch <span className="text-muted-foreground">(optional)</span></Label>
+						<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Batch <span className="text-muted-foreground/60">(optional)</span></Label>
 						<BatchSelector
 							programmeId={programme?.programme_id ?? null}
 							value={null}
@@ -294,23 +295,23 @@ export function BulkEnrollStudentsDialog({
 								setBatchYear(batch?.batch_year ? String(batch.batch_year) : "");
 							}}
 						/>
-						<p className="text-xs text-muted-foreground">
-							Applies to all students in this enrollment
+						<p className="text-[11px] text-muted-foreground font-medium">
+							Applies to all students in this enrollment run
 						</p>
 					</div>
 
 					<Tabs defaultValue="csv" className="w-full">
-						<TabsList className="grid w-full grid-cols-2 mb-4">
+						<TabsList className="grid w-full grid-cols-2 p-1 bg-muted/40 backdrop-blur-sm border border-muted/50 rounded-xl mb-4">
 							<TabsTrigger
 								value="csv"
-								className="flex items-center gap-2"
+								className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm"
 							>
 								<Upload className="w-4 h-4" />
 								CSV Upload
 							</TabsTrigger>
 							<TabsTrigger
 								value="manual"
-								className="flex items-center gap-2"
+								className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm"
 							>
 								<UserPlus className="w-4 h-4" />
 								Manual Entry
@@ -318,7 +319,7 @@ export function BulkEnrollStudentsDialog({
 						</TabsList>
 
 						{/* CSV Upload Tab */}
-						<TabsContent value="csv" className="space-y-4">
+						<TabsContent value="csv" className="space-y-4 focus-visible:outline-none">
 							<CSVFormatInfo
 								onDownloadTemplate={downloadTemplate}
 							/>
@@ -331,22 +332,23 @@ export function BulkEnrollStudentsDialog({
 						</TabsContent>
 
 						{/* Manual Entry Tab */}
-						<TabsContent value="manual" className="space-y-4">
-							<div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-4">
-								<h4 className="text-sm font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
-									<UserPlus className="w-4 h-4" />
-									Manual Student Entry
-								</h4>
-								<p className="text-sm text-green-700 dark:text-green-300 mt-1">
-									Add students one by one to the enrollment
-									list
-								</p>
+						<TabsContent value="manual" className="space-y-4 focus-visible:outline-none">
+							<div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-start gap-3">
+								<UserPlus className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+								<div>
+									<h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
+										Manual Student Entry
+									</h4>
+									<p className="text-xs text-emerald-700/95 dark:text-emerald-300/80 mt-0.5 leading-relaxed">
+										Add students one by one to the list below, then click "Enroll Students" to commit.
+									</p>
+								</div>
 							</div>
 
 							<div className="grid grid-cols-1 gap-4">
 								<div className="grid grid-cols-2 gap-4">
 									<div className="space-y-2">
-										<Label htmlFor="rollno">
+										<Label htmlFor="rollno" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
 											Roll Number
 										</Label>
 										<Input
@@ -366,10 +368,11 @@ export function BulkEnrollStudentsDialog({
 														?.focus();
 												}
 											}}
+											className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all font-mono"
 										/>
 									</div>
 									<div className="space-y-2">
-										<Label htmlFor="studentName">
+										<Label htmlFor="studentName" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
 											Student Name
 										</Label>
 										<Input
@@ -385,12 +388,13 @@ export function BulkEnrollStudentsDialog({
 													handleAddManualStudent();
 												}
 											}}
+											className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 										/>
 									</div>
 								</div>
 								<Button
 									onClick={handleAddManualStudent}
-									className="w-full"
+									className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl active:scale-95 duration-200 transition-all border border-indigo-500/30 shadow-md shadow-indigo-500/10"
 								>
 									<UserPlus className="w-4 h-4 mr-2" />
 									Add Student
@@ -401,9 +405,9 @@ export function BulkEnrollStudentsDialog({
 
 					{/* Preview Table - Shows for both tabs */}
 					{students.length > 0 && (
-						<div className="space-y-4 pt-4 border-t">
+						<div className="space-y-4 pt-4 border-t border-muted/30">
 							<div className="flex items-center justify-between">
-								<div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+								<div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/15">
 									<CheckCircle2 className="w-4 h-4" />
 									<span>
 										Ready to enroll {students.length}{" "}
@@ -415,36 +419,37 @@ export function BulkEnrollStudentsDialog({
 									variant="ghost"
 									size="sm"
 									onClick={clearAllStudents}
+									className="h-8 rounded-lg text-xs font-bold hover:bg-muted/50 text-muted-foreground hover:text-foreground active:scale-95 duration-200 transition-all"
 								>
 									Clear All
 								</Button>
 							</div>
 
-							<div className="max-h-48 overflow-y-auto rounded-md border">
+							<div className="max-h-48 overflow-y-auto rounded-xl border border-muted/50 bg-background/40">
 								<Table>
 									<TableHeader>
-										<TableRow>
-											<TableHead>Roll No</TableHead>
-											<TableHead>Name</TableHead>
-											<TableHead className="w-16">
+										<TableRow className="hover:bg-transparent border-muted/40">
+											<TableHead className="text-xs uppercase tracking-wider font-bold">Roll No</TableHead>
+											<TableHead className="text-xs uppercase tracking-wider font-bold">Name</TableHead>
+											<TableHead className="w-16 text-center text-xs uppercase tracking-wider font-bold">
 												Remove
 											</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
 										{students.map((student, index) => (
-											<TableRow key={index}>
-												<TableCell className="font-mono">
+											<TableRow key={index} className="border-muted/30 hover:bg-muted/10">
+												<TableCell className="font-mono text-sm py-2">
 													{student.rollno}
 												</TableCell>
-												<TableCell>
+												<TableCell className="text-sm py-2 font-medium">
 													{student.name}
 												</TableCell>
-												<TableCell>
+												<TableCell className="py-2 text-center">
 													<Button
 														variant="ghost"
 														size="icon"
-														className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+														className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 active:scale-95 duration-200 transition-all rounded-xl"
 														onClick={() =>
 															handleRemoveFromList(
 																student.rollno,
@@ -463,11 +468,12 @@ export function BulkEnrollStudentsDialog({
 					)}
 				</div>
 
-				<DialogFooter>
+				<DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-muted/30">
 					<Button
 						variant="outline"
 						onClick={handleClose}
 						disabled={enrolling}
+						className="rounded-xl active:scale-95 duration-200 transition-all border-muted/50 bg-background/40 hover:bg-muted/50"
 					>
 						Cancel
 					</Button>
@@ -476,6 +482,7 @@ export function BulkEnrollStudentsDialog({
 						disabled={
 							students.length === 0 || uploading || enrolling
 						}
+						className="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold rounded-xl shadow-md shadow-indigo-500/10 hover:shadow-lg active:scale-95 duration-200 transition-all border border-indigo-500/30"
 					>
 						{enrolling ? "Enrolling..." : "Enroll Students"}
 					</Button>

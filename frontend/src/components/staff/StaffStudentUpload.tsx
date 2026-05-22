@@ -216,17 +216,17 @@ export function StaffStudentUpload({
 	return (
 		<div className="space-y-4 w-full">
 			<Tabs defaultValue="csv" className="w-full">
-				<TabsList className="grid w-full grid-cols-2 mb-4">
+				<TabsList className="grid w-full grid-cols-2 p-1 bg-muted/40 backdrop-blur-sm border border-muted/50 rounded-xl mb-4">
 					<TabsTrigger
 						value="csv"
-						className="flex items-center gap-2"
+						className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm"
 					>
 						<Upload className="w-4 h-4" />
 						CSV Upload
 					</TabsTrigger>
 					<TabsTrigger
 						value="manual"
-						className="flex items-center gap-2"
+						className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm"
 					>
 						<UserPlus className="w-4 h-4" />
 						Manual Entry
@@ -234,36 +234,31 @@ export function StaffStudentUpload({
 				</TabsList>
 
 				{/* CSV Upload Tab */}
-				<TabsContent value="csv" className="space-y-4">
-					<div className="flex items-center justify-between">
-						<div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 flex-1">
-							<h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
-								<FileText className="w-4 h-4" />
+				<TabsContent value="csv" className="space-y-4 focus-visible:outline-none">
+					<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+						<div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex-1">
+							<h4 className="text-sm font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+								<FileText className="w-4 h-4 text-amber-500" />
 								CSV Format Requirements
 							</h4>
-							<ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-disc list-inside">
-								<li>
-									First row should be headers: rollno,name
-								</li>
-								<li>
-									Each subsequent row should contain:
-									roll_number,student_name
-								</li>
-								<li>Example: CS101,John Doe</li>
+							<ul className="text-xs text-amber-700/90 dark:text-amber-300/80 mt-2 space-y-1 list-disc list-inside leading-relaxed font-medium">
+								<li>First row should contain column headers: <code className="font-bold font-mono text-[11px] bg-amber-500/10 px-1 py-0.5 rounded text-amber-600 dark:text-amber-400">rollno,name</code></li>
+								<li>Each subsequent row: <code className="font-bold font-mono text-[11px] bg-amber-500/10 px-1 py-0.5 rounded text-amber-600 dark:text-amber-400">roll_number,student_name</code></li>
+								<li>Example: <code className="font-mono text-[11px]">CS101,John Doe</code></li>
 							</ul>
 						</div>
 						<Button
 							variant="outline"
 							size="sm"
 							onClick={downloadTemplate}
-							className="ml-4"
+							className="bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all active:scale-95 duration-200 flex items-center justify-center gap-2 self-start sm:self-center h-10 px-4"
 						>
-							<Download className="w-4 h-4 mr-2" />
+							<Download className="w-4 h-4 text-amber-500" />
 							Template
 						</Button>
 					</div>
 
-					<div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6">
+					<div className="border-2 border-dashed border-amber-500/25 hover:border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10 dark:bg-amber-500/5 dark:hover:bg-amber-500/10 rounded-2xl p-8 transition-all duration-300 group cursor-pointer relative overflow-hidden">
 						<input
 							ref={fileInputRef}
 							type="file"
@@ -274,34 +269,36 @@ export function StaffStudentUpload({
 						/>
 						<label
 							htmlFor="csv-upload"
-							className="flex flex-col items-center cursor-pointer"
+							className="flex flex-col items-center cursor-pointer w-full"
 						>
-							<Upload className="w-10 h-10 text-gray-400 mb-2" />
-							<span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+							<Upload className="w-10 h-10 text-amber-500/70 group-hover:text-amber-500 group-hover:scale-110 mb-3 transition-all duration-300" />
+							<span className="text-sm font-bold text-foreground">
 								{file ? file.name : "Click to upload CSV file"}
 							</span>
-							<span className="text-xs text-gray-500 mt-1">
-								or drag and drop
+							<span className="text-xs text-muted-foreground mt-1 font-medium">
+								or drag and drop here
 							</span>
 						</label>
 					</div>
 				</TabsContent>
 
 				{/* Manual Entry Tab */}
-				<TabsContent value="manual" className="space-y-4">
-					<div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-4">
-						<h4 className="text-sm font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
-							<UserPlus className="w-4 h-4" />
-							Manual Student Entry
-						</h4>
-						<p className="text-sm text-green-700 dark:text-green-300 mt-1">
-							Add students one by one to the enrollment list
-						</p>
+				<TabsContent value="manual" className="space-y-4 focus-visible:outline-none">
+					<div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
+						<UserPlus className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+						<div>
+							<h4 className="text-sm font-bold text-amber-800 dark:text-amber-300">
+								Manual Student Entry
+							</h4>
+							<p className="text-xs text-amber-700/95 dark:text-amber-300/80 mt-0.5 leading-relaxed font-medium">
+								Add students one by one to the list. Use this for quick enrollments or small batches.
+							</p>
+						</div>
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-end">
 						<div className="space-y-2">
-							<Label htmlFor="rollno">Roll Number</Label>
+							<Label htmlFor="rollno" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Roll Number</Label>
 							<Input
 								id="rollno"
 								placeholder="e.g., CS101"
@@ -317,10 +314,11 @@ export function StaffStudentUpload({
 											?.focus();
 									}
 								}}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-amber-500/30 rounded-xl border-muted/50 transition-all font-mono"
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="studentName">Student Name</Label>
+							<Label htmlFor="studentName" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Student Name</Label>
 							<Input
 								id="studentName"
 								placeholder="e.g., John Doe"
@@ -332,34 +330,40 @@ export function StaffStudentUpload({
 										handleAddManualStudent();
 									}
 								}}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-amber-500/30 rounded-xl border-muted/50 transition-all"
 							/>
 						</div>
 						<Button
 							onClick={handleAddManualStudent}
-							className="h-10"
+							className="h-10 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl active:scale-95 duration-200 transition-all border border-orange-500/30 shadow-md shadow-orange-500/10 px-6 shrink-0"
 						>
 							<UserPlus className="w-4 h-4 mr-2" />
-							Add
+							Add Student
 						</Button>
 					</div>
 				</TabsContent>
 			</Tabs>
 
 			{students.length > 0 && (
-				<div className="space-y-4 mt-6 pt-6 border-t">
+				<div className="space-y-4 mt-6 pt-6 border-t border-muted/30">
 					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<CheckCircle2 className="w-5 h-5 text-green-500" />
-							<span className="font-medium">
-								{students.length} students ready to enroll
+						<div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/15">
+							<CheckCircle2 className="w-4 h-4" />
+							<span>
+								{students.length} student{students.length > 1 ? "s" : ""} ready to enroll
 							</span>
 						</div>
-						<Button variant="ghost" size="sm" onClick={clearUpload}>
+						<Button 
+							variant="ghost" 
+							size="sm" 
+							onClick={clearUpload}
+							className="h-8 rounded-lg text-xs font-bold hover:bg-muted/50 text-muted-foreground hover:text-foreground active:scale-95 duration-200 transition-all"
+						>
 							Clear All
 						</Button>
 					</div>
 
-					<div className="max-h-64 overflow-y-auto rounded-md border">
+					<div className="max-h-64 overflow-y-auto rounded-xl border border-muted/50 bg-background/40">
 						<DataTable columns={studentColumns} data={students} />
 					</div>
 				</div>

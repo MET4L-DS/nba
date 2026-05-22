@@ -27,8 +27,7 @@ export function getProgrammeColumns({
 			header: sortableHeader("Code"),
 			cell: ({ row }) => (
 				<Badge
-					variant="outline"
-					className="font-mono font-bold tracking-tight text-[11px] bg-primary/[0.04] text-primary border-primary/20 dark:border-primary/30"
+					className="font-mono font-bold tracking-tight text-[11px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shadow-none"
 				>
 					{row.getValue("programme_code")}
 				</Badge>
@@ -51,8 +50,7 @@ export function getProgrammeColumns({
 				if (!batchYear) return <span className="text-muted-foreground/40 text-xs">—</span>;
 				return (
 					<Badge 
-						variant="outline" 
-						className="font-mono font-bold text-[10px] bg-muted/40 border-muted/80 text-muted-foreground"
+						className="font-mono font-bold text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-none"
 					>
 						{batchYear}
 					</Badge>
@@ -64,8 +62,7 @@ export function getProgrammeColumns({
 			header: "Level",
 			cell: ({ row }) => (
 				<Badge 
-					variant="outline"
-					className="font-bold text-[10px] bg-background/50 border-muted text-muted-foreground/90"
+					className="font-bold text-[10px] bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 shadow-none"
 				>
 					{row.getValue("degree_level")}
 				</Badge>

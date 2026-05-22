@@ -21,7 +21,7 @@ export function getStatusColumns({
 			cell: ({ row }) => (
 				<Badge
 					variant="secondary"
-					className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+					className="bg-blue-500/10 text-blue-600 border border-blue-500/20 shadow-none font-semibold rounded-md"
 				>
 					{row.getValue("department_code")}
 				</Badge>
@@ -31,7 +31,7 @@ export function getStatusColumns({
 			accessorKey: "department_name",
 			header: sortableHeader("Department", "text-left"),
 			cell: ({ row }) => (
-				<div className="font-medium text-left">
+				<div className="font-semibold text-left text-foreground/90">
 					{row.getValue("department_name")}
 				</div>
 			),
@@ -43,17 +43,17 @@ export function getStatusColumns({
 				const hod = row.getValue("hod_name") as string;
 				return hod ? (
 					<Badge
-						variant="secondary"
-						className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+						variant="outline"
+						className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold shadow-none rounded-md"
 					>
 						{hod}
 					</Badge>
 				) : (
 					<Badge
-						variant="secondary"
-						className="bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300 border-gray-200 dark:border-gray-800"
+						variant="outline"
+						className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-semibold shadow-none rounded-md"
 					>
-						No HOD
+						No HOD Recorded
 					</Badge>
 				);
 			},
@@ -62,8 +62,8 @@ export function getStatusColumns({
 			accessorKey: "faculty_count",
 			header: sortableHeader("Faculty Count"),
 			cell: ({ row }) => (
-				<div className="flex items-center gap-2 ml-4">
-					<Users className="w-4 h-4 text-muted-foreground" />
+				<div className="flex items-center gap-2 ml-4 font-medium text-muted-foreground">
+					<Users className="w-4 h-4 text-blue-500/70" />
 					{row.getValue("faculty_count")}
 				</div>
 			),
@@ -79,6 +79,7 @@ export function getStatusColumns({
 								size="sm"
 								variant="outline"
 								onClick={() => onDemoteClick(dept)}
+								className="h-8 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 active:scale-95 duration-200 transition-all font-semibold rounded-lg"
 							>
 								Replace Serving HOD
 							</Button>
@@ -86,6 +87,7 @@ export function getStatusColumns({
 							<Button
 								size="sm"
 								onClick={() => onAppointClick(dept)}
+								className="h-8 bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-500 hover:to-teal-500 text-white shadow-sm hover:shadow-md active:scale-95 duration-200 transition-all border-none font-semibold rounded-lg"
 							>
 								<UserPlus className="w-4 h-4 mr-2" />
 								Record Serving HOD
@@ -106,7 +108,7 @@ export function getHistoryColumns(): ColumnDef<HODHistoryRecord>[] {
 			cell: ({ row }) => (
 				<Badge
 					variant="secondary"
-					className="bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+					className="bg-blue-500/10 text-blue-600 border border-blue-500/20 shadow-none font-semibold rounded-md"
 				>
 					{row.getValue("department_code")}
 				</Badge>
@@ -116,7 +118,7 @@ export function getHistoryColumns(): ColumnDef<HODHistoryRecord>[] {
 			accessorKey: "username",
 			header: sortableHeader("Faculty Name", "text-left"),
 			cell: ({ row }) => (
-				<div className="font-medium text-left">
+				<div className="font-semibold text-left text-foreground/90">
 					{row.getValue("username")}
 					<div className="text-xs text-muted-foreground font-normal">
 						{(row.original as HODHistoryRecord).email}
@@ -138,7 +140,7 @@ export function getHistoryColumns(): ColumnDef<HODHistoryRecord>[] {
 			accessorKey: "start_date",
 			header: sortableHeader("Start Date"),
 			cell: ({ row }) => (
-				<span className="text-sm">
+				<span className="text-sm text-muted-foreground font-medium">
 					{new Date(
 						row.getValue("start_date") as string,
 					).toLocaleDateString()}
@@ -151,7 +153,7 @@ export function getHistoryColumns(): ColumnDef<HODHistoryRecord>[] {
 			cell: ({ row }) => {
 				const end = row.getValue("end_date") as string | null;
 				return (
-					<span className="text-sm">
+					<span className="text-sm text-muted-foreground font-medium">
 						{end ? new Date(end).toLocaleDateString() : "—"}
 					</span>
 				);
@@ -163,15 +165,15 @@ export function getHistoryColumns(): ColumnDef<HODHistoryRecord>[] {
 			cell: ({ row }) => {
 				const current = row.getValue("is_current") as number;
 				return current ? (
-					<Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-						Current
+					<Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold shadow-none rounded-md">
+						Current HOD
 					</Badge>
 				) : (
 					<Badge
 						variant="secondary"
-						className="bg-gray-50 text-gray-600 dark:bg-gray-950 dark:text-gray-400"
+						className="bg-muted text-muted-foreground border border-muted/50 shadow-none font-semibold rounded-md"
 					>
-						Past
+						Past HOD
 					</Badge>
 				);
 			},

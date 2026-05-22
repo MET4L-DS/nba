@@ -45,17 +45,18 @@ export function AdminCreateUserDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[500px]">
-				<DialogHeader>
-					<DialogTitle>Add New User</DialogTitle>
-					<DialogDescription>
-						Create a new user account. Fill in all required fields.
+			<DialogContent className="sm:max-w-[500px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
+				<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent" />
+				<DialogHeader className="pt-2">
+					<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Add New User</DialogTitle>
+					<DialogDescription className="text-muted-foreground text-sm">
+						Create a new system user account. Fields marked with * are required.
 					</DialogDescription>
 				</DialogHeader>
 				<div className="grid gap-4 py-4">
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-2">
-							<Label htmlFor="employee_id">Employee ID *</Label>
+							<Label htmlFor="employee_id" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Employee ID *</Label>
 							<Input
 								id="employee_id"
 								type="number"
@@ -68,10 +69,11 @@ export function AdminCreateUserDialog({
 											parseInt(e.target.value) || 0,
 									})
 								}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="role">Role *</Label>
+							<Label htmlFor="role" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Role *</Label>
 							<Select
 								value={newUser.role}
 								onValueChange={(val) =>
@@ -81,25 +83,25 @@ export function AdminCreateUserDialog({
 									})
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all focus:ring-1 focus:ring-indigo-500/30 active:scale-95 duration-200">
 									<SelectValue placeholder="Select role" />
 								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="admin">Admin</SelectItem>
-									<SelectItem value="hod">
+								<SelectContent className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
+									<SelectItem value="admin" className="rounded-lg focus:bg-muted/60">Admin</SelectItem>
+									<SelectItem value="hod" className="rounded-lg focus:bg-muted/60">
 										HOD (Dedicated Account)
 									</SelectItem>
-									<SelectItem value="dean">
+									<SelectItem value="dean" className="rounded-lg focus:bg-muted/60">
 										Dean (Dedicated Account)
 									</SelectItem>
-									<SelectItem value="faculty">
+									<SelectItem value="faculty" className="rounded-lg focus:bg-muted/60">
 										Faculty
 									</SelectItem>
-									<SelectItem value="staff">Staff</SelectItem>
+									<SelectItem value="staff" className="rounded-lg focus:bg-muted/60">Staff</SelectItem>
 								</SelectContent>
 							</Select>
 							{newUser.role === "hod" && (
-								<p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+								<p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 leading-normal font-medium bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
 									Creates a permanent HOD login account (e.g.
 									hod_cse@tezu.ac.in). Faculty serving as HOD
 									are tracked separately via Dean's HOD
@@ -109,7 +111,7 @@ export function AdminCreateUserDialog({
 						</div>
 					</div>
 					<div className="space-y-2">
-						<Label htmlFor="username">Full Name *</Label>
+						<Label htmlFor="username" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Full Name *</Label>
 						<Input
 							id="username"
 							placeholder="e.g., Dr. John Doe"
@@ -120,10 +122,11 @@ export function AdminCreateUserDialog({
 									username: e.target.value,
 								})
 							}
+							className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 						/>
 					</div>
 					<div className="space-y-2">
-						<Label htmlFor="email">Email *</Label>
+						<Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email *</Label>
 						<Input
 							id="email"
 							type="email"
@@ -135,11 +138,12 @@ export function AdminCreateUserDialog({
 									email: e.target.value,
 								})
 							}
+							className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 						/>
 					</div>
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-2">
-							<Label htmlFor="designation">Designation</Label>
+							<Label htmlFor="designation" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Designation</Label>
 							<Input
 								id="designation"
 								placeholder="e.g., Professor"
@@ -150,10 +154,11 @@ export function AdminCreateUserDialog({
 										designation: e.target.value,
 									})
 								}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label>Phone Numbers</Label>
+							<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone Numbers</Label>
 							<div className="flex flex-col gap-2">
 								{(newUser.phones?.length
 									? newUser.phones
@@ -184,6 +189,7 @@ export function AdminCreateUserDialog({
 													phones: newPhones,
 												});
 											}}
+											className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all font-mono"
 										/>
 										{(newUser.phones?.length
 											? newUser.phones.length
@@ -192,7 +198,7 @@ export function AdminCreateUserDialog({
 												type="button"
 												variant="ghost"
 												size="icon"
-												className="text-red-500 hover:text-red-700 hover:bg-red-50"
+												className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 active:scale-95 duration-200 transition-all rounded-xl shrink-0"
 												onClick={() => {
 													let newPhones = (
 														newUser.phones || []
@@ -217,7 +223,7 @@ export function AdminCreateUserDialog({
 								type="button"
 								variant="outline"
 								size="sm"
-								className="w-full mt-2"
+								className="w-full mt-2 border-dashed border-muted/80 bg-background/30 rounded-xl hover:bg-muted/40 active:scale-95 duration-200 transition-all text-xs font-semibold"
 								onClick={() => {
 									setNewUser({
 										...newUser,
@@ -225,7 +231,7 @@ export function AdminCreateUserDialog({
 									});
 								}}
 							>
-								<Plus className="w-4 h-4 mr-2" />
+								<Plus className="w-3.5 h-3.5 mr-1.5" />
 								Add Phone
 							</Button>
 						</div>
@@ -233,7 +239,7 @@ export function AdminCreateUserDialog({
 
 					{["faculty", "staff", "hod"].includes(newUser.role) && (
 						<div className="space-y-2">
-							<Label htmlFor="department_id">Department *</Label>
+							<Label htmlFor="department_id" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Department *</Label>
 							<Select
 								value={
 									newUser.department_id
@@ -250,17 +256,17 @@ export function AdminCreateUserDialog({
 									})
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all focus:ring-1 focus:ring-indigo-500/30 active:scale-95 duration-200">
 									<SelectValue placeholder="Select department" />
 								</SelectTrigger>
-								<SelectContent>
+								<SelectContent className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
 									{departments.map((dept) => (
 										<SelectItem
 											key={`dept-${dept.department_id}`}
 											value={String(dept.department_id)}
+											className="rounded-lg focus:bg-muted/60"
 										>
-											{dept.department_name} (
-											{dept.department_code})
+											{dept.department_name} ({dept.department_code})
 										</SelectItem>
 									))}
 								</SelectContent>
@@ -270,7 +276,7 @@ export function AdminCreateUserDialog({
 
 					{newUser.role === "dean" && (
 						<div className="space-y-2">
-							<Label htmlFor="school_id">School *</Label>
+							<Label htmlFor="school_id" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">School *</Label>
 							<Select
 								value={
 									newUser.school_id
@@ -285,14 +291,15 @@ export function AdminCreateUserDialog({
 									})
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all focus:ring-1 focus:ring-indigo-500/30 active:scale-95 duration-200">
 									<SelectValue placeholder="Select school" />
 								</SelectTrigger>
-								<SelectContent>
+								<SelectContent className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
 									{schools.map((school) => (
 										<SelectItem
 											key={`school-${school.school_id}`}
 											value={String(school.school_id)}
+											className="rounded-lg focus:bg-muted/60"
 										>
 											{school.school_name}
 										</SelectItem>
@@ -303,7 +310,7 @@ export function AdminCreateUserDialog({
 					)}
 
 					<div className="space-y-2">
-						<Label htmlFor="password">Password *</Label>
+						<Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Password *</Label>
 						<div className="relative">
 							<Input
 								id="password"
@@ -316,31 +323,37 @@ export function AdminCreateUserDialog({
 										password: e.target.value,
 									})
 								}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all pr-10"
 							/>
 							<Button
 								type="button"
 								variant="ghost"
 								size="sm"
-								className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+								className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground active:scale-95 duration-200 transition-all rounded-r-xl"
 								onClick={() => setShowPassword(!showPassword)}
 							>
 								{showPassword ? (
-									<EyeOff className="h-4 w-4 text-muted-foreground" />
+									<EyeOff className="h-4 w-4" />
 								) : (
-									<Eye className="h-4 w-4 text-muted-foreground" />
+									<Eye className="h-4 w-4" />
 								)}
 							</Button>
 						</div>
 					</div>
 				</div>
-				<DialogFooter>
+				<DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-muted/30">
 					<Button
 						variant="outline"
 						onClick={() => onOpenChange(false)}
+						className="rounded-xl active:scale-95 duration-200 transition-all border-muted/50 bg-background/40 hover:bg-muted/50"
 					>
 						Cancel
 					</Button>
-					<Button onClick={onSubmit} disabled={isSubmitting}>
+					<Button 
+						onClick={onSubmit} 
+						disabled={isSubmitting}
+						className="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold rounded-xl shadow-md shadow-indigo-500/10 hover:shadow-lg active:scale-95 duration-200 transition-all border border-indigo-500/30"
+					>
 						{isSubmitting ? (
 							<>
 								<RefreshCw className="mr-2 h-4 w-4 animate-spin" />

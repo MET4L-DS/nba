@@ -117,38 +117,39 @@ export function ProgrammeCoursesDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-[600px]">
-				<DialogHeader>
-					<DialogTitle className="flex items-center gap-2">
-						<BookOpen className="w-5 h-5" />
+			<DialogContent className="sm:max-w-[600px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
+				<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent" />
+				<DialogHeader className="pt-2">
+					<DialogTitle className="flex items-center gap-2 text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+						<BookOpen className="w-5 h-5 text-indigo-500" />
 						Programme Courses
 					</DialogTitle>
-					<DialogDescription>
-						Manage courses assigned to{" "}
-						{programme?.programme_name || "the selected programme"}
+					<DialogDescription className="text-muted-foreground text-sm">
+						Manage academic courses assigned to{" "}
+						<span className="font-semibold text-foreground">{programme?.programme_name || "the selected programme"}</span>
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="space-y-4 py-4">
+				<div className="space-y-5 py-2">
 					{/* Add Course Section */}
-					<div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4">
-						<h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2 mb-3">
-							<Plus className="w-4 h-4" />
+					<div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4">
+						<h4 className="text-sm font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2 mb-3">
+							<Plus className="w-4 h-4 text-indigo-500" />
 							Assign Course
 						</h4>
-						<div className="flex gap-2 items-end">
-							<div className="flex-1 space-y-2">
-								<Label htmlFor="add-course">Select Course</Label>
+						<div className="flex gap-3 items-end">
+							<div className="flex-1 space-y-1.5">
+								<Label htmlFor="add-course" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Course</Label>
 								<Select
 									value={selectedCourseId}
 									onValueChange={setSelectedCourseId}
 								>
-									<SelectTrigger id="add-course">
+									<SelectTrigger id="add-course" className="bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all focus:ring-1 focus:ring-indigo-500/30 active:scale-95 duration-200">
 										<SelectValue placeholder="Choose a course..." />
 									</SelectTrigger>
-									<SelectContent>
+									<SelectContent className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
 										{availableCourses.length === 0 ? (
-											<SelectItem value="__none__" disabled>
+											<SelectItem value="__none__" disabled className="rounded-lg">
 												No courses available
 											</SelectItem>
 										) : (
@@ -156,6 +157,7 @@ export function ProgrammeCoursesDialog({
 												<SelectItem
 													key={c.course_id}
 													value={c.course_id.toString()}
+													className="rounded-lg focus:bg-muted/60"
 												>
 													{c.course_code} — {c.course_name}
 												</SelectItem>
@@ -167,7 +169,7 @@ export function ProgrammeCoursesDialog({
 							<Button
 								onClick={handleAddCourse}
 								disabled={!selectedCourseId || saving}
-								className="mb-0.5"
+								className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl active:scale-95 duration-200 transition-all border border-indigo-500/30 shadow-md shadow-indigo-500/10 h-10 px-4 shrink-0"
 							>
 								<Plus className="w-4 h-4 mr-1" />
 								Add
@@ -177,25 +179,28 @@ export function ProgrammeCoursesDialog({
 
 					{/* Assigned Courses Table */}
 					<div>
-						<h4 className="text-sm font-medium mb-2">
-							Assigned Courses ({courses.length})
+						<h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center justify-between">
+							<span>Assigned Courses</span>
+							<Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 font-bold rounded-lg font-mono">
+								{courses.length}
+							</Badge>
 						</h4>
 						{loading ? (
-							<div className="text-center py-8 text-muted-foreground">
-								Loading...
+							<div className="text-center py-12 text-muted-foreground text-sm font-medium">
+								Loading assigned courses...
 							</div>
 						) : courses.length === 0 ? (
-							<div className="text-center py-8 text-muted-foreground border rounded-md">
-								No courses assigned yet
+							<div className="text-center py-12 text-muted-foreground text-sm font-medium border border-dashed rounded-xl bg-background/20 border-muted/50">
+								No courses assigned to this programme yet
 							</div>
 						) : (
-							<div className="max-h-64 overflow-y-auto rounded-md border">
+							<div className="max-h-64 overflow-y-auto rounded-xl border border-muted/50 bg-background/40">
 								<Table>
 									<TableHeader>
-										<TableRow>
-											<TableHead>Code</TableHead>
-											<TableHead>Course Name</TableHead>
-											<TableHead className="w-20 text-center">
+										<TableRow className="hover:bg-transparent border-muted/40">
+											<TableHead className="text-xs uppercase tracking-wider font-bold">Code</TableHead>
+											<TableHead className="text-xs uppercase tracking-wider font-bold">Course Name</TableHead>
+											<TableHead className="w-20 text-center text-xs uppercase tracking-wider font-bold">
 												Credits
 											</TableHead>
 											<TableHead className="w-16" />
@@ -203,26 +208,26 @@ export function ProgrammeCoursesDialog({
 									</TableHeader>
 									<TableBody>
 										{courses.map((course) => (
-											<TableRow key={course.id}>
-												<TableCell>
+											<TableRow key={course.id} className="border-muted/30 hover:bg-muted/10">
+												<TableCell className="py-2">
 													<Badge
-														variant="secondary"
-														className="font-mono"
+														variant="outline"
+														className="font-mono bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-bold"
 													>
 														{course.course_code}
 													</Badge>
 												</TableCell>
-												<TableCell className="font-medium">
+												<TableCell className="font-medium text-sm py-2">
 													{course.course_name}
 												</TableCell>
-												<TableCell className="text-center">
+												<TableCell className="text-center text-sm py-2 font-semibold">
 													{course.credits ?? "—"}
 												</TableCell>
-												<TableCell>
+												<TableCell className="py-2 text-center">
 													<Button
 														variant="ghost"
 														size="icon"
-														className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+														className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 active:scale-95 duration-200 transition-all rounded-xl"
 														onClick={() =>
 															handleRemoveCourse(course)
 														}
@@ -239,8 +244,12 @@ export function ProgrammeCoursesDialog({
 					</div>
 				</div>
 
-				<DialogFooter>
-					<Button variant="outline" onClick={handleClose}>
+				<DialogFooter className="pt-2 border-t border-muted/30">
+					<Button
+						variant="outline"
+						onClick={handleClose}
+						className="rounded-xl active:scale-95 duration-200 transition-all border-muted/50 bg-background/40 hover:bg-muted/50"
+					>
 						Close
 					</Button>
 				</DialogFooter>

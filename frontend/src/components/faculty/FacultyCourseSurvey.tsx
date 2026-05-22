@@ -119,18 +119,17 @@ export function FacultyCourseSurvey({
 
 	return (
 		<div className="flex flex-col min-w-0 h-full">
-			<div className="h-14 bg-background border-b flex items-center justify-between px-6 shrink-0 z-10">
+			<div className="h-16 bg-card/45 backdrop-blur-md border-b border-muted/50 flex items-center justify-between px-6 shrink-0 z-10">
 				<div className="flex items-center gap-3">
 					<div className="flex items-center gap-2">
-						<Database className="w-5 h-5 text-muted-foreground" />
-						<h2 className="font-semibold text-base">
+						<Database className="w-5 h-5 text-violet-500" />
+						<h2 className="font-bold text-base bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 							Survey Integration Console
 						</h2>
 					</div>
 					<Separator orientation="vertical" className="h-5" />
 					<Badge
-						variant="secondary"
-						className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5"
+						className="bg-violet-500/10 text-violet-600 border border-violet-500/20 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
 					>
 						Live Sync
 					</Badge>
@@ -144,6 +143,7 @@ export function FacultyCourseSurvey({
 						variant="outline"
 						size="sm"
 						onClick={() => setConfigOpen(true)}
+						className="border-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200 active:scale-95"
 					>
 						<Settings2 className="w-4 h-4 mr-1.5" />
 						Question Config
@@ -152,15 +152,23 @@ export function FacultyCourseSurvey({
 						variant="outline"
 						size="sm"
 						onClick={() => setShowManualEntry(true)}
+						className="border-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200 active:scale-95"
 					>
 						<Pen className="w-4 h-4 mr-1.5" />
 						Manual Entry
 					</Button>
-					<Button variant="outline" size="sm">
+					<Button 
+						variant="outline" 
+						size="sm"
+						className="border-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200 active:scale-95"
+					>
 						<Download className="w-4 h-4 mr-1.5" />
 						Export CSV
 					</Button>
-					<Button size="sm">
+					<Button 
+						size="sm"
+						className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 border-none"
+					>
 						<RefreshCw className="w-4 h-4 mr-1.5" />
 						Sync Survey Platform
 					</Button>
@@ -174,6 +182,7 @@ export function FacultyCourseSurvey({
 							variant="ghost"
 							size="sm"
 							onClick={() => setShowManualEntry(false)}
+							className="hover:bg-muted/30 transition-all duration-200 active:scale-95"
 						>
 							<ArrowLeft className="w-4 h-4 mr-2" />
 							Back to Survey Dashboard
@@ -191,14 +200,15 @@ export function FacultyCourseSurvey({
 				</div>
 			) : (
 				<>
-					<div className="flex-1 overflow-y-auto p-6 space-y-4">
+					<div className="flex-1 overflow-y-auto p-6 space-y-6">
 						{loading ? (
 							<div className="flex items-center justify-center h-32 text-muted-foreground">
+								<RefreshCw className="w-5 h-5 animate-spin mr-2 text-violet-500" />
 								Loading survey data...
 							</div>
 						) : (
 							<>
-								<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+								<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 									<CourseExitSurveyCSVImport
 										offeringId={offeringId}
 										config={config}
@@ -213,29 +223,36 @@ export function FacultyCourseSurvey({
 									/>
 								</div>
 
-								<Card>
+								<Card className="bg-card/85 backdrop-blur-md border border-muted/50 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 relative">
+									<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent"></div>
 									<button
-										className="w-full flex items-center justify-between px-5 py-3 hover:bg-muted/50 transition-colors border-b cursor-pointer group"
+										className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/[0.04] transition-colors border-b border-muted/50 cursor-pointer group text-left relative"
 										onClick={() =>
 											setMetricsOpen(!metricsOpen)
 										}
 									>
-										<div className="flex items-center gap-2">
-											<BarChart3 className="w-5 h-5 text-primary group-hover:text-primary/80 transition-colors" />
-											<h3 className="font-semibold text-sm">
-												Metrics Overview: Blended
-												Attainment
-											</h3>
+										<div className="flex items-center gap-3">
+											<div className="w-9 h-9 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400 group-hover:scale-105 transition-transform duration-200">
+												<BarChart3 className="w-4 h-4" />
+											</div>
+											<div>
+												<h3 className="font-bold text-sm bg-gradient-to-r from-foreground to-foreground/85 bg-clip-text">
+													Metrics Overview: Blended Attainment
+												</h3>
+												<p className="text-xs text-muted-foreground font-normal mt-0.5">
+													View blended results combining direct exams and survey feedback.
+												</p>
+											</div>
 										</div>
 										{metricsOpen ? (
-											<ChevronDown className="w-5 h-5 text-muted-foreground transition-transform" />
+											<ChevronDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
 										) : (
-											<ChevronRight className="w-5 h-5 text-muted-foreground transition-transform" />
+											<ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
 										)}
 									</button>
 
 									{metricsOpen && (
-										<div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
+										<div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-6 bg-muted/[0.02]">
 											<BlendedAttainmentTable
 												attainmentCoData={
 													attainmentCoData

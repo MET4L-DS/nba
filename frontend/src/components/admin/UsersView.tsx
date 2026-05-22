@@ -150,29 +150,32 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 	};
 
 	return (
-		<div className="space-y-4">
-			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-				<div>
-					<h2 className="text-2xl font-bold">Users Management</h2>
-					<p className="text-gray-500 dark:text-gray-400">
-						Manage all system users
-					</p>
-				</div>
-				<div className="flex items-center gap-2">
-					<Button
-						className="gap-2"
-						onClick={() => setIsAddUserOpen(true)}
-					>
-						<Plus className="h-4 w-4" />
-						Add User
-					</Button>
+		<div className="space-y-6">
+			<div className="relative overflow-hidden p-6 rounded-2xl border border-muted/50 bg-card/45 backdrop-blur-md shadow-lg group transition-all duration-300">
+				<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent" />
+				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+					<div>
+						<h2 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Users Management</h2>
+						<p className="text-muted-foreground text-sm mt-0.5">
+							Manage all system users, credentials, and academic roles
+						</p>
+					</div>
+					<div className="flex items-center gap-2">
+						<Button
+							className="gap-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-medium rounded-xl shadow-md shadow-indigo-500/10 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95 duration-200 transition-all border border-indigo-500/30"
+							onClick={() => setIsAddUserOpen(true)}
+						>
+							<Plus className="h-4 w-4" />
+							Add User
+						</Button>
+					</div>
 				</div>
 			</div>
 
 			<UserList
 				columns={columns}
 				data={users}
-				searchPlaceholder="Search users..."
+				searchPlaceholder="Search users by name, email or employee ID..."
 				refreshing={refreshing}
 				serverPagination={{
 					pagination,
@@ -201,17 +204,18 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 								)
 							}
 						>
-							<SelectTrigger className="w-[180px]">
+							<SelectTrigger className="w-[180px] bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all focus:ring-1 focus:ring-indigo-500/30 active:scale-95 duration-200">
 								<SelectValue placeholder="All Departments" />
 							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">
+							<SelectContent className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
+								<SelectItem value="all" className="rounded-lg focus:bg-muted/60">
 									All Departments
 								</SelectItem>
 								{departments.map((dept) => (
 									<SelectItem
 										key={dept.department_id}
 										value={dept.department_id.toString()}
+										className="rounded-lg focus:bg-muted/60"
 									>
 										{dept.department_code}
 									</SelectItem>
@@ -231,14 +235,14 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 								)
 							}
 						>
-							<SelectTrigger className="w-[140px]">
+							<SelectTrigger className="w-[140px] bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all focus:ring-1 focus:ring-indigo-500/30 active:scale-95 duration-200">
 								<SelectValue placeholder="All Roles" />
 							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All Roles</SelectItem>
-								<SelectItem value="admin">Admin</SelectItem>
-								<SelectItem value="faculty">Faculty</SelectItem>
-								<SelectItem value="staff">Staff</SelectItem>
+							<SelectContent className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
+								<SelectItem value="all" className="rounded-lg focus:bg-muted/60">All Roles</SelectItem>
+								<SelectItem value="admin" className="rounded-lg focus:bg-muted/60">Admin</SelectItem>
+								<SelectItem value="faculty" className="rounded-lg focus:bg-muted/60">Faculty</SelectItem>
+								<SelectItem value="staff" className="rounded-lg focus:bg-muted/60">Staff</SelectItem>
 							</SelectContent>
 						</Select>
 
@@ -253,7 +257,7 @@ export function UsersView({ currentUser }: { currentUser?: User | null }) {
 									);
 									currentSetFilter?.("role", undefined);
 								}}
-								className="h-9 px-2 lg:px-3"
+								className="h-9 px-3 rounded-xl active:scale-95 duration-200 transition-all hover:bg-muted/50 text-muted-foreground hover:text-foreground"
 							>
 								Reset
 								<X className="ml-2 h-4 w-4" />

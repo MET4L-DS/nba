@@ -99,14 +99,20 @@ export function EditStudentDialog({
 			open={!!student}
 			onOpenChange={(open: boolean) => !open && onClose()}
 		>
-			<DialogContent className="max-w-md">
+			<DialogContent className="max-w-md bg-background/95 backdrop-blur-md border border-muted/50 shadow-2xl rounded-2xl p-6 relative overflow-hidden">
+				<div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent" />
 				<DialogHeader>
-					<DialogTitle>Edit Student — {student?.roll_no}</DialogTitle>
+					<DialogTitle className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+						Edit Student Info
+					</DialogTitle>
+					<p className="text-xs text-indigo-500 font-semibold uppercase tracking-wider mt-0.5">
+						Roll No: {student?.roll_no}
+					</p>
 				</DialogHeader>
 
-				<div className="space-y-4 py-2">
+				<div className="space-y-4 py-3">
 					<div className="space-y-1.5">
-						<Label>Full Name</Label>
+						<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Full Name</Label>
 						<Input
 							value={editForm.student_name ?? ""}
 							onChange={(e) =>
@@ -115,11 +121,12 @@ export function EditStudentDialog({
 									student_name: e.target.value,
 								}))
 							}
+							className="rounded-xl border-muted/65 bg-background/50 focus-visible:ring-violet-500/25 h-10"
 						/>
 					</div>
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-1.5">
-							<Label>Email</Label>
+							<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email</Label>
 							<Input
 								type="email"
 								value={editForm.email ?? ""}
@@ -129,10 +136,11 @@ export function EditStudentDialog({
 										email: e.target.value || null,
 									}))
 								}
+								className="rounded-xl border-muted/65 bg-background/50 focus-visible:ring-violet-500/25 h-10"
 							/>
 						</div>
 						<div className="space-y-1.5">
-							<Label>Phone Numbers</Label>
+							<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phones</Label>
 							{(editForm.phones?.length
 								? editForm.phones
 								: [""]
@@ -143,7 +151,7 @@ export function EditStudentDialog({
 										maxLength={10}
 										pattern="\d{10}"
 										value={phone}
-										placeholder="10-digit phone number"
+										placeholder="10-digit phone"
 										onChange={(e) => {
 											const val = e.target.value.replace(
 												/\D/g,
@@ -156,13 +164,14 @@ export function EditStudentDialog({
 												phones: newPhones,
 											}));
 										}}
+										className="rounded-xl border-muted/65 bg-background/50 focus-visible:ring-violet-500/25 h-10"
 									/>
 									{arr.length > 1 && (
 										<Button
 											type="button"
 											variant="ghost"
 											size="icon"
-											className="shrink-0 text-destructive hover:bg-destructive/10"
+											className="shrink-0 text-destructive hover:bg-destructive/10 rounded-xl"
 											onClick={() => {
 												const newPhones = arr.filter(
 													(_, i) => i !== index,
@@ -182,7 +191,7 @@ export function EditStudentDialog({
 								type="button"
 								variant="outline"
 								size="sm"
-								className="mt-1 flex items-center gap-1 w-full border-dashed"
+								className="mt-1 flex items-center gap-1 w-full border-dashed rounded-xl active:scale-95 duration-200 transition-all font-semibold text-xs py-2"
 								onClick={() => {
 									setEditForm((f) => ({
 										...f,
@@ -190,14 +199,14 @@ export function EditStudentDialog({
 									}));
 								}}
 							>
-								<Plus className="h-4 w-4" />
+								<Plus className="h-3.5 w-3.5 text-violet-500" />
 								Add Phone Number
 							</Button>
 						</div>
 					</div>
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-1.5">
-							<Label>Batch Year</Label>
+							<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Batch Year</Label>
 							<Input
 								type="number"
 								value={editForm.batch_year ?? ""}
@@ -209,10 +218,11 @@ export function EditStudentDialog({
 											: undefined,
 									}))
 								}
+								className="rounded-xl border-muted/65 bg-background/50 focus-visible:ring-violet-500/25 h-10"
 							/>
 						</div>
 						<div className="space-y-1.5">
-							<Label>Status</Label>
+							<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
 							<Select
 								value={editForm.student_status ?? "Active"}
 								onValueChange={(v) =>
@@ -222,10 +232,10 @@ export function EditStudentDialog({
 									}))
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="rounded-xl border-muted/65 bg-background/50 focus:ring-violet-500/20 h-10">
 									<SelectValue />
 								</SelectTrigger>
-								<SelectContent>
+								<SelectContent className="rounded-xl">
 									{STATUS_OPTIONS.map((s) => (
 										<SelectItem key={s} value={s}>
 											{s}
@@ -237,15 +247,20 @@ export function EditStudentDialog({
 					</div>
 				</div>
 
-				<DialogFooter>
+				<DialogFooter className="mt-4 gap-2">
 					<Button
 						variant="outline"
 						onClick={onClose}
 						disabled={editSaving}
+						className="rounded-xl active:scale-95 duration-200 transition-all font-semibold"
 					>
 						Cancel
 					</Button>
-					<Button onClick={handleEditSave} disabled={editSaving}>
+					<Button 
+						onClick={handleEditSave} 
+						disabled={editSaving}
+						className="rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold shadow-md shadow-violet-600/10 active:scale-95 duration-200 transition-all"
+					>
 						{editSaving ? "Saving…" : "Save Changes"}
 					</Button>
 				</DialogFooter>

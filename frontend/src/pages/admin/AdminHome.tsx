@@ -4,12 +4,8 @@ import { apiService } from "@/services/api";
 import type { AdminStats } from "@/services/api";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import {
-	StatsGrid,
-	QuickAccessGrid,
-createAdminQuickAccess,
-} from "@/features/shared";
-import { createAdminStats } from "@/features/shared/statsFactory";
+import { StatsCards } from "@/components/admin/StatsCards";
+import { QuickAccessCards } from "@/components/admin/QuickAccessCards";
 import { AppHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 
@@ -60,13 +56,15 @@ export function AdminHome() {
 				}}
 			/>
 			<div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-				<div className="flex items-center justify-between mb-2">
+				<div className="flex flex-wrap gap-4 items-center justify-between bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl p-5 shadow-lg relative overflow-hidden mb-2">
+					<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-indigo-500/25 pointer-events-none"></div>
+					<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent"></div>
 					<div>
-						<h1 className="text-2xl font-bold tracking-tight">
+						<h1 className="text-2xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 							Overview
 						</h1>
-						<p className="text-muted-foreground">
-							System-wide metrics and management.
+						<p className="text-xs font-semibold text-muted-foreground mt-1">
+							System-wide metrics and administrative actions.
 						</p>
 					</div>
 					<Button
@@ -74,10 +72,10 @@ export function AdminHome() {
 						size="sm"
 						onClick={handleRefreshStats}
 						disabled={statsLoading}
-						className="hidden sm:flex"
+						className="hidden sm:flex active:scale-95 duration-200 transition-all bg-background/60 shadow-sm border-muted/50 rounded-xl h-10 px-4"
 					>
 						<RefreshCw
-							className={`w-4 h-4 mr-2 ${statsLoading ? "animate-spin" : ""}`}
+							className={`w-4 h-4 mr-2 ${statsLoading ? "animate-spin text-indigo-500" : "text-indigo-500"}`}
 						/>
 						Refresh
 					</Button>
@@ -85,20 +83,20 @@ export function AdminHome() {
 
 				{statsLoading ? (
 					<div className="flex items-center justify-center h-64">
-						<RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+						<RefreshCw className="w-8 h-8 animate-spin text-indigo-500" />
 					</div>
 				) : (
 					<>
-						<StatsGrid
-							stats={createAdminStats(stats)}
+						<StatsCards
+							stats={stats}
 							isLoading={statsLoading}
-							variant="gradient"
-							columns={4}
 						/>
-						<QuickAccessGrid
-							items={createAdminQuickAccess(stats)}
-							onItemClick={(nav) => navigate(`/dashboard/${nav}`)}
-						/>
+						<div className="pt-2">
+							<QuickAccessCards
+								stats={stats}
+								onNavChange={(nav) => navigate(`/dashboard/${nav}`)}
+							/>
+						</div>
 					</>
 				)}
 			</div>

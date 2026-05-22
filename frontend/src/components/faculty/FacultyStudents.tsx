@@ -11,7 +11,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 import { getFacultyStudentsColumns } from "./FacultyStudents.columns";
@@ -154,14 +153,26 @@ export function FacultyStudents({
 				)}
 
 				{/* Table card */}
-				<Card>
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2">
-							<GraduationCap className="w-5 h-5" />
-							All Students
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
+				<div className="bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl overflow-hidden shadow-lg shadow-black/5 hover:shadow-xl transition-all duration-300 relative">
+					<div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent" />
+					<div className="p-6 border-b border-muted/50 flex items-center justify-between">
+						<h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+							<GraduationCap className="w-5 h-5 text-indigo-500" />
+							All Enrolled Students
+						</h3>
+						<Button
+							variant="outline"
+							size="icon"
+							onClick={loadStudents}
+							disabled={loading}
+							className="rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all"
+						>
+							<RefreshCw
+								className={`h-4 w-4 text-violet-500 ${loading ? "animate-spin" : ""}`}
+							/>
+						</Button>
+					</div>
+					<div className="p-6">
 						<DataTable
 							columns={columns}
 							data={filtered || []}
@@ -177,10 +188,10 @@ export function FacultyStudents({
 									setBatchInput(actualVal);
 								}}
 							>
-								<SelectTrigger className="h-9 w-[130px]">
+								<SelectTrigger className="h-9 w-[130px] rounded-xl border-muted/65 bg-background/50 focus:ring-violet-500/20">
 									<SelectValue placeholder="Batch Year" />
 								</SelectTrigger>
-								<SelectContent>
+								<SelectContent className="rounded-xl">
 									<SelectItem value="all">
 										All Batches
 									</SelectItem>
@@ -200,10 +211,10 @@ export function FacultyStudents({
 								value={statusFilter}
 								onValueChange={setStatusFilter}
 							>
-								<SelectTrigger className="h-9 w-[140px]">
+								<SelectTrigger className="h-9 w-[140px] rounded-xl border-muted/65 bg-background/50 focus:ring-violet-500/20">
 									<SelectValue placeholder="All Status" />
 								</SelectTrigger>
-								<SelectContent>
+								<SelectContent className="rounded-xl">
 									<SelectItem value="all">
 										All Status
 									</SelectItem>
@@ -219,16 +230,16 @@ export function FacultyStudents({
 							{hasFilters && (
 								<Button
 									variant="ghost"
-									className="h-9 px-2 shrink-0"
+									className="h-9 px-3 shrink-0 rounded-xl hover:bg-rose-500/5 hover:text-rose-600 active:scale-95 duration-200 transition-all font-medium text-xs uppercase tracking-wider"
 									onClick={resetFilters}
 								>
 									Reset
-									<X className="ml-2 h-4 w-4" />
+									<X className="ml-1.5 h-3.5 w-3.5 text-rose-500" />
 								</Button>
 							)}
 						</DataTable>
-					</CardContent>
-				</Card>
+					</div>
+				</div>
 			</div>
 
 			{/* -- Edit Dialog -- */}

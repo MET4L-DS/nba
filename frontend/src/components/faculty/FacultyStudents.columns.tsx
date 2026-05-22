@@ -31,7 +31,7 @@ export function getFacultyStudentsColumns(
 			accessorKey: "roll_no",
 			header: sortableHeader("Roll No"),
 			cell: ({ row }) => (
-				<Badge variant="outline" className="font-mono text-xs">
+				<Badge variant="outline" className="font-mono text-xs rounded-xl bg-background/50 border-muted-foreground/20 font-semibold px-2.5 py-0.5">
 					{row.original.roll_no}
 				</Badge>
 			),
@@ -40,7 +40,7 @@ export function getFacultyStudentsColumns(
 			accessorKey: "student_name",
 			header: sortableHeader("Name", "text-left"),
 			cell: ({ row }) => (
-				<div className="font-medium text-left max-w-[180px] truncate">{row.original.student_name}</div>
+				<div className="font-semibold text-left max-w-[180px] truncate text-foreground/90">{row.original.student_name}</div>
 			),
 		},
 		{
@@ -48,8 +48,8 @@ export function getFacultyStudentsColumns(
 			header: "Department",
 			cell: ({ row }) => (
 				<Badge
-					variant="secondary"
-					className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300"
+					variant="outline"
+					className="bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20 font-bold rounded-xl px-2.5 py-0.5"
 				>
 					{row.original.department_code ??
 						row.original.department_name}
@@ -59,13 +59,13 @@ export function getFacultyStudentsColumns(
 		{
 			accessorKey: "batch_year",
 			header: sortableHeader("Batch"),
-			cell: ({ row }) => row.original.batch_year ?? "—",
+			cell: ({ row }) => <span className="font-medium text-foreground/80">{row.original.batch_year ?? "—"}</span>,
 		},
 		{
 			accessorKey: "email",
 			header: sortableHeader("Email", "text-left"),
 			cell: ({ row }) => (
-				<div className="text-sm text-muted-foreground text-left max-w-[200px] truncate">
+				<div className="text-xs text-muted-foreground text-left max-w-[200px] truncate font-medium">
 					{row.original.email ?? "—"}
 				</div>
 			),
@@ -80,7 +80,7 @@ export function getFacultyStudentsColumns(
 						? [(row.original as any).phone]
 						: [];
 				if (!phones || phones.length === 0) {
-					return <div className="text-muted-foreground">—</div>;
+					return <div className="text-muted-foreground font-medium text-xs">—</div>;
 				}
 				return (
 					<div className="flex flex-wrap gap-1">
@@ -88,7 +88,7 @@ export function getFacultyStudentsColumns(
 							<Badge
 								key={i}
 								variant="outline"
-								className="font-mono text-xs"
+								className="font-mono text-xs rounded-lg bg-background/40 font-medium px-1.5"
 							>
 								{p}
 							</Badge>
@@ -100,11 +100,19 @@ export function getFacultyStudentsColumns(
 		{
 			accessorKey: "student_status",
 			header: "Status",
-			cell: ({ row }) => (
-				<Badge variant={statusVariant(row.original.student_status)}>
-					{row.original.student_status}
-				</Badge>
-			),
+			cell: ({ row }) => {
+				const status = row.original.student_status?.toLowerCase();
+				let badgeStyle = "bg-muted/40 text-muted-foreground border-muted-foreground/20";
+				if (status === "active") badgeStyle = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-bold";
+				else if (status === "graduated") badgeStyle = "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 font-bold";
+				else if (status === "inactive" || status === "dropped") badgeStyle = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 font-bold";
+				
+				return (
+					<Badge variant="outline" className={`rounded-xl px-2.5 py-0.5 border ${badgeStyle}`}>
+						{row.original.student_status}
+					</Badge>
+				);
+			},
 		},
 		{
 			accessorKey: "enrolled_courses",
@@ -145,7 +153,7 @@ export function getFacultyStudentsColumns(
 											<div className="pb-1">
 												<Badge
 													variant="outline"
-													className="px-1.5 py-0 font-normal"
+													className="px-1.5 py-0 font-normal rounded-lg border-muted/50 bg-background/50"
 												>
 													{course}
 												</Badge>
@@ -163,7 +171,7 @@ export function getFacultyStudentsColumns(
 							<Button
 								variant="ghost"
 								size="sm"
-								className="h-5 w-5 p-0 mt-0.5 group hover:bg-primary/5 hover:text-primary transition-colors shrink-0"
+								className="h-5 w-5 p-0 mt-0.5 group hover:bg-violet-500/10 hover:text-violet-600 transition-colors shrink-0 rounded-lg active:scale-95"
 								onClick={row.getToggleExpandedHandler()}
 								title={
 									isExpanded
@@ -172,7 +180,7 @@ export function getFacultyStudentsColumns(
 								}
 							>
 								<ChevronDown
-									className={`h-4 w-4 text-muted-foreground group-hover:text-primary transition-transform duration-200 ${
+									className={`h-4 w-4 text-muted-foreground group-hover:text-violet-600 transition-transform duration-200 ${
 										isExpanded ? "rotate-180" : ""
 									}`}
 								/>
@@ -190,7 +198,7 @@ export function getFacultyStudentsColumns(
 					<Button
 						variant="ghost"
 						size="icon"
-						className="h-8 w-8"
+						className="h-8 w-8 rounded-xl active:scale-95 duration-200 transition-all hover:bg-violet-500/10 hover:text-violet-600"
 						onClick={() => handleEditOpen(row.original)}
 					>
 						<Pencil className="h-4 w-4" />
@@ -198,7 +206,7 @@ export function getFacultyStudentsColumns(
 					<Button
 						variant="ghost"
 						size="icon"
-						className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+						className="h-8 w-8 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 active:scale-95 duration-200 transition-all"
 						onClick={() => setDeleteTarget(row.original)}
 					>
 						<Trash2 className="h-4 w-4" />

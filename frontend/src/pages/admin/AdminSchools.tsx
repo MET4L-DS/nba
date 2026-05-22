@@ -24,12 +24,12 @@ export function AdminSchools() {
 			/>
 			<div className="flex-1 overflow-y-auto p-4 md:p-6">
 				<Tabs defaultValue="management" className="space-y-4">
-					<TabsList>
-						<TabsTrigger value="management">
+					<TabsList className="bg-muted/60 p-1 rounded-xl border border-muted/50 backdrop-blur-md">
+						<TabsTrigger value="management" className="rounded-lg active:scale-95 duration-200 transition-all">
 							<Building2 className="w-4 h-4 mr-2" />
 							Schools & Deans
 						</TabsTrigger>
-						<TabsTrigger value="history">
+						<TabsTrigger value="history" className="rounded-lg active:scale-95 duration-200 transition-all">
 							<History className="w-4 h-4 mr-2" />
 							Dean Assignment History
 						</TabsTrigger>

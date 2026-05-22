@@ -1,6 +1,5 @@
 import { DataTable } from "@/features/shared/DataTable";
 import { useState, useEffect, useMemo } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -198,156 +197,159 @@ export function DepartmentsView() {
 
 	return (
 		<div className="space-y-4">
-			<Card className="border-none shadow-none bg-transparent">
-				<div className="flex flex-row items-center justify-between p-0 mb-4">
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-lg bg-linear-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-							<Building2 className="w-5 h-5 text-white" />
-						</div>
-						<div>
-							<h3 className="text-xl font-bold">Departments</h3>
-							<p className="text-sm text-muted-foreground">
-								Manage university departments
-							</p>
-						</div>
+			<div className="flex flex-wrap gap-4 items-center justify-between bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden mb-4">
+				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-indigo-500/20 pointer-events-none"></div>
+				<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent"></div>
+				<div className="flex items-center gap-3">
+					<div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
+						<Building2 className="w-5 h-5 text-white" />
 					</div>
-					<div className="flex items-center gap-2">
-						<Dialog
-							open={isAddDialogOpen}
-							onOpenChange={setIsAddDialogOpen}
-						>
-							<DialogTrigger asChild>
-								<Button className="gap-2 bg-blue-600 hover:bg-blue-700">
-									<Plus className="w-4 h-4" />
-									Add Department
-								</Button>
-							</DialogTrigger>
-							<DialogContent className="sm:max-w-[450px]">
-								<DialogHeader>
-									<DialogTitle>
-										Add New Department
-									</DialogTitle>
-									<DialogDescription>
-										Create a new department in the system
-									</DialogDescription>
-								</DialogHeader>
-								<div className="grid gap-4 py-4">
-									<div className="space-y-2">
-										<Label htmlFor="department_name">
-											Department Name *
-										</Label>
-										<Input
-											id="department_name"
-											placeholder="e.g., Computer Science & Engineering"
-											value={formData.department_name}
-											onChange={(e) =>
-												setFormData({
-													...formData,
-													department_name:
-														e.target.value,
-												})
-											}
-										/>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="department_code">
-											Department Code *
-										</Label>
-										<Input
-											id="department_code"
-											placeholder="e.g., CSE"
-											maxLength={10}
-											value={formData.department_code}
-											onChange={(e) =>
-												setFormData({
-													...formData,
-													department_code:
-														e.target.value.toUpperCase(),
-												})
-											}
-										/>
-										<p className="text-xs text-muted-foreground">
-											Short code (max 10 characters), will
-											be auto-capitalized
-										</p>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="school_id">
-											School
-										</Label>
-										<Select
-											value={formData.school_id || "none"}
-											onValueChange={(val) =>
-												setFormData({
-													...formData,
-													school_id:
-														val === "none"
-															? ""
-															: val,
-												})
-											}
-										>
-											<SelectTrigger>
-												<SelectValue placeholder="Select a school" />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="none">
-													None
-												</SelectItem>
-												{schools.map((school) => (
-													<SelectItem
-														key={school.school_id}
-														value={school.school_id.toString()}
-													>
-														{school.school_name} (
-														{school.school_code})
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="description">
-											Description (Optional)
-										</Label>
-										<Input
-											id="description"
-											placeholder="Department description"
-											value={formData.description}
-											onChange={(e) =>
-												setFormData({
-													...formData,
-													description: e.target.value,
-												})
-											}
-										/>
-									</div>
-								</div>
-								<DialogFooter>
-									<Button
-										variant="outline"
-										onClick={() => {
-											setIsAddDialogOpen(false);
-											resetForm();
-										}}
-									>
-										Cancel
-									</Button>
-									<Button
-										onClick={handleCreateDepartment}
-										disabled={isSubmitting}
-										className="bg-blue-600 hover:bg-blue-700"
-									>
-										{isSubmitting
-											? "Creating..."
-											: "Create Department"}
-									</Button>
-								</DialogFooter>
-							</DialogContent>
-						</Dialog>
+					<div>
+						<h3 className="text-xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Departments</h3>
+						<p className="text-sm text-muted-foreground mt-0.5">
+							Manage university departments
+						</p>
 					</div>
 				</div>
-			</Card>
+				<div className="flex items-center gap-2">
+					<Dialog
+						open={isAddDialogOpen}
+						onOpenChange={setIsAddDialogOpen}
+					>
+						<DialogTrigger asChild>
+							<Button className="gap-2 active:scale-95 duration-200 transition-all shadow-md hover:shadow-indigo-500/10">
+								<Plus className="w-4 h-4" />
+								Add Department
+							</Button>
+						</DialogTrigger>
+						<DialogContent className="sm:max-w-[450px] bg-card/95 backdrop-blur-md border border-muted/50 rounded-2xl shadow-xl">
+							<DialogHeader>
+								<DialogTitle className="text-xl font-bold tracking-tight">
+									Add New Department
+								</DialogTitle>
+								<DialogDescription className="text-muted-foreground">
+									Create a new department in the system
+								</DialogDescription>
+							</DialogHeader>
+							<div className="grid gap-4 py-4">
+								<div className="space-y-2">
+									<Label htmlFor="department_name" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+										Department Name *
+									</Label>
+									<Input
+										id="department_name"
+										placeholder="e.g., Computer Science & Engineering"
+										value={formData.department_name}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												department_name:
+													e.target.value,
+											})
+										}
+										className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+									/>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="department_code" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+										Department Code *
+									</Label>
+									<Input
+										id="department_code"
+										placeholder="e.g., CSE"
+										maxLength={10}
+										value={formData.department_code}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												department_code:
+													e.target.value.toUpperCase(),
+											})
+										}
+										className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+									/>
+									<p className="text-[10px] text-muted-foreground">
+										Short code (max 10 characters), will be auto-capitalized
+									</p>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="school_id" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+										School
+									</Label>
+									<Select
+										value={formData.school_id || "none"}
+										onValueChange={(val) =>
+											setFormData({
+												...formData,
+												school_id:
+													val === "none"
+														? ""
+														: val,
+											})
+										}
+									>
+										<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
+											<SelectValue placeholder="Select a school" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="none">
+												None
+											</SelectItem>
+											{schools.map((school) => (
+												<SelectItem
+													key={school.school_id}
+													value={school.school_id.toString()}
+												>
+													{school.school_name} (
+													{school.school_code})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="space-y-2">
+									<Label htmlFor="description" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+										Description (Optional)
+									</Label>
+									<Input
+										id="description"
+										placeholder="Department description"
+										value={formData.description}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												description: e.target.value,
+											})
+										}
+										className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+									/>
+								</div>
+							</div>
+							<DialogFooter className="gap-2 sm:gap-0">
+								<Button
+									variant="outline"
+									onClick={() => {
+										setIsAddDialogOpen(false);
+										resetForm();
+									}}
+									className="active:scale-95 duration-200 transition-all"
+								>
+									Cancel
+								</Button>
+								<Button
+									onClick={handleCreateDepartment}
+									disabled={isSubmitting}
+									className="active:scale-95 duration-200 transition-all bg-indigo-600 hover:bg-indigo-700 text-white"
+								>
+									{isSubmitting
+										? "Creating..."
+										: "Create Department"}
+								</Button>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
+				</div>
+			</div>
 
 			<DataTable
 				columns={columns}
@@ -412,16 +414,16 @@ export function DepartmentsView() {
 
 			{/* Edit Dialog */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-				<DialogContent className="sm:max-w-[450px]">
+				<DialogContent className="sm:max-w-[450px] bg-card/95 backdrop-blur-md border border-muted/50 rounded-2xl shadow-xl">
 					<DialogHeader>
-						<DialogTitle>Edit Department</DialogTitle>
-						<DialogDescription>
+						<DialogTitle className="text-xl font-bold tracking-tight">Edit Department</DialogTitle>
+						<DialogDescription className="text-muted-foreground">
 							Update department information
 						</DialogDescription>
 					</DialogHeader>
 					<div className="grid gap-4 py-4">
 						<div className="space-y-2">
-							<Label htmlFor="edit_department_name">
+							<Label htmlFor="edit_department_name" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
 								Department Name *
 							</Label>
 							<Input
@@ -433,10 +435,11 @@ export function DepartmentsView() {
 										department_name: e.target.value,
 									})
 								}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="edit_department_code">
+							<Label htmlFor="edit_department_code" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
 								Department Code *
 							</Label>
 							<Input
@@ -450,13 +453,14 @@ export function DepartmentsView() {
 											e.target.value.toUpperCase(),
 									})
 								}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
 							/>
-							<p className="text-xs text-muted-foreground">
+							<p className="text-[10px] text-muted-foreground">
 								Short code (max 10 characters)
 							</p>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="edit_school_id">School</Label>
+							<Label htmlFor="edit_school_id" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">School</Label>
 							<Select
 								value={editFormData.school_id || "none"}
 								onValueChange={(val) =>
@@ -466,7 +470,7 @@ export function DepartmentsView() {
 									})
 								}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
 									<SelectValue placeholder="Select a school" />
 								</SelectTrigger>
 								<SelectContent>
@@ -484,7 +488,7 @@ export function DepartmentsView() {
 							</Select>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="edit_description">
+							<Label htmlFor="edit_description" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
 								Description (Optional)
 							</Label>
 							<Input
@@ -497,23 +501,25 @@ export function DepartmentsView() {
 										description: e.target.value,
 									})
 								}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
 							/>
 						</div>
 					</div>
-					<DialogFooter>
+					<DialogFooter className="gap-2 sm:gap-0">
 						<Button
 							variant="outline"
 							onClick={() => {
 								setIsEditDialogOpen(false);
 								setSelectedDepartment(null);
 							}}
+							className="active:scale-95 duration-200 transition-all"
 						>
 							Cancel
 						</Button>
 						<Button
 							onClick={handleUpdateDepartment}
 							disabled={isSubmitting}
-							className="bg-blue-600 hover:bg-blue-700"
+							className="active:scale-95 duration-200 transition-all bg-indigo-600 hover:bg-indigo-700 text-white"
 						>
 							{isSubmitting ? "Saving..." : "Save Changes"}
 						</Button>

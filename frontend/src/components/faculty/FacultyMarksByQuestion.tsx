@@ -376,38 +376,39 @@ export function FacultyMarksByQuestion({
 	return (
 		<>
 			{/* Toolbar */}
-			<div className="px-6 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-border shrink-0">
-				<div className="flex items-center gap-3 flex-wrap">
+			<div className="px-6 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-muted/50 bg-muted/10 shrink-0">
+				<div className="flex items-center gap-3.5 flex-wrap">
 					{headerContent}
 					{enrollments.length > 0 && (
 						<div className="flex items-center gap-2">
 							<Badge
 								variant="outline"
-								className="gap-1 font-normal text-xs py-1.5 px-3 rounded-lg"
+								className="gap-1.5 font-bold text-xs py-1.5 px-3 rounded-xl bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400 shadow-sm"
 							>
 								<BarChart2 className="w-3.5 h-3.5 text-blue-500" />
 								Avg: {averageTotal}
 							</Badge>
 							<Badge
 								variant="outline"
-								className="gap-1 font-normal text-xs py-1.5 px-3 rounded-lg"
+								className="gap-1.5 font-bold text-xs py-1.5 px-3 rounded-xl bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400 shadow-sm"
 							>
-								<CheckCircle className="w-3.5 h-3.5 text-green-500" />
+								<CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
 								{enteredCount}/{enrollments.length} Entered
 							</Badge>
 						</div>
 					)}
 				</div>
-				<div className="flex items-center gap-2">
-					<div className="flex items-center space-x-2 mr-2">
+				<div className="flex items-center gap-3 flex-wrap">
+					<div className="flex items-center space-x-2 mr-1">
 						<Switch
 							id="validate-marks-question"
 							checked={validateMarks}
 							onCheckedChange={setValidateMarks}
+							className="data-[state=checked]:bg-violet-600"
 						/>
 						<Label
 							htmlFor="validate-marks-question"
-							className="whitespace-nowrap flex text-sm items-center h-full"
+							className="whitespace-nowrap flex text-xs font-semibold uppercase tracking-wider text-muted-foreground items-center h-full cursor-pointer"
 						>
 							Validate Marks
 						</Label>
@@ -415,13 +416,13 @@ export function FacultyMarksByQuestion({
 					<div className="relative">
 						<Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
 						<Input
-							placeholder="Search Student…"
+							placeholder="Search student..."
 							value={searchTerm}
 							onChange={(e) => {
 								setSearchTerm(e.target.value);
 								setCurrentPage(1);
 							}}
-							className="pl-9 h-8 text-sm w-56"
+							className="pl-9 h-9 text-sm w-52 rounded-xl border-muted/65 bg-background/50 focus-visible:ring-violet-500/30"
 						/>
 					</div>
 					<input
@@ -435,16 +436,16 @@ export function FacultyMarksByQuestion({
 						variant="outline"
 						size="sm"
 						onClick={() => fileInputRef.current?.click()}
-						className="gap-1.5 text-xs h-8"
+						className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
 					>
-						<Upload className="w-3.5 h-3.5" />
+						<Upload className="w-3.5 h-3.5 text-violet-500" />
 						Import
 					</Button>
 					<Button
 						size="sm"
 						onClick={handleSubmit}
 						disabled={readOnly || submitting || dirtyRows.size === 0}
-						className="gap-1.5 text-xs h-8"
+						className="gap-1.5 text-xs h-9 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-medium shadow-md shadow-violet-600/10 active:scale-95 duration-200 transition-all"
 					>
 						<Save className="w-3.5 h-3.5" />
 						{submitting ? "Saving…" : "Save"}
@@ -453,19 +454,19 @@ export function FacultyMarksByQuestion({
 			</div>
 			{/* Content Area */}
 			{dirtyRows.size > 0 && (
-				<div className="shrink-0 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900 px-6 py-2">
-					<AlertCircle className="w-4 h-4 shrink-0" />
-					<span className="font-medium">
+				<div className="shrink-0 flex items-center gap-2.5 text-sm text-amber-700 dark:text-amber-400 bg-amber-500/5 border-b border-amber-500/20 px-6 py-2.5">
+					<AlertCircle className="w-4 h-4 shrink-0 text-amber-500 animate-pulse" />
+					<span className="font-bold">
 						{dirtyRows.size} student(s) modified
 					</span>
-					<span className="text-xs text-amber-600 dark:text-amber-500">
-						— unsaved changes highlighted
+					<span className="text-xs font-medium text-amber-600/80 dark:text-amber-500/80">
+						— unsaved changes highlighted in table. Remember to click Save!
 					</span>
 				</div>
 			)}
-			<div className="flex-1 overflow-auto bg-background [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full">
+			<div className="flex-1 overflow-auto bg-background/30 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full">
 				{marksLoading ? (
-					<div className="flex items-center justify-center h-full min-h-[200px] text-sm text-muted-foreground">
+					<div className="flex items-center justify-center h-full min-h-[200px] text-sm text-muted-foreground animate-pulse">
 						Loading students and questions…
 					</div>
 				) : enrollments.length === 0 ? (
@@ -473,9 +474,8 @@ export function FacultyMarksByQuestion({
 						No students enrolled in this course
 					</div>
 				) : questions.length === 0 ? (
-					<div className="flex items-center justify-center h-full min-h-[200px] text-sm text-muted-foreground">
-						No questions found — add questions to this assessment
-						first
+					<div className="flex items-center justify-center h-full min-h-[200px] text-sm text-muted-foreground text-center p-6">
+						No questions found — add questions to this assessment first
 					</div>
 				) : (
 					<BulkMarksTable
@@ -489,8 +489,8 @@ export function FacultyMarksByQuestion({
 				)}
 			</div>
 			{!marksLoading && filteredEnrollments.length > 0 && (
-				<div className="shrink-0 bg-background border-t border-border px-6 py-3 flex items-center justify-between gap-4">
-					<p className="text-sm text-muted-foreground whitespace-nowrap">
+				<div className="shrink-0 bg-background/50 border-t border-muted/50 px-6 py-3.5 flex items-center justify-between gap-4">
+					<p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
 						Showing{" "}
 						{filteredEnrollments.length === 0 ? 0 : startIndex + 1}{" "}
 						to{" "}
@@ -513,7 +513,7 @@ export function FacultyMarksByQuestion({
 										className={
 											currentPage === 1
 												? "pointer-events-none opacity-50"
-												: "cursor-pointer"
+												: "cursor-pointer rounded-xl border border-muted/65 hover:bg-muted/40"
 										}
 									/>
 								</PaginationItem>
@@ -550,7 +550,7 @@ export function FacultyMarksByQuestion({
 														isActive={
 															currentPage === page
 														}
-														className="cursor-pointer"
+														className="cursor-pointer rounded-xl border border-muted/65 hover:bg-muted/40 data-[active=true]:bg-violet-600 data-[active=true]:text-white"
 													>
 														{page}
 													</PaginationLink>
@@ -568,7 +568,7 @@ export function FacultyMarksByQuestion({
 										className={
 											currentPage === totalPages
 												? "pointer-events-none opacity-50"
-												: "cursor-pointer"
+												: "cursor-pointer rounded-xl border border-muted/65 hover:bg-muted/40"
 										}
 									/>
 								</PaginationItem>

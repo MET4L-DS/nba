@@ -38,12 +38,16 @@ export function DeanCourses() {
 					onValueChange={(v) => setActiveTab(v as "current" | "all")}
 					className="w-full"
 				>
-					<TabsList>
-						<TabsTrigger value="current">
-							Current Semester
-						</TabsTrigger>
-						<TabsTrigger value="all">All Offerings</TabsTrigger>
-					</TabsList>
+					<div className="flex flex-wrap gap-4 items-center justify-between mb-4 bg-card/40 border border-muted/50 rounded-xl p-2 backdrop-blur-sm w-fit">
+						<TabsList className="bg-muted/50 p-1 rounded-lg">
+							<TabsTrigger value="current" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">
+								Current Semester
+							</TabsTrigger>
+							<TabsTrigger value="all" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">
+								All Offerings
+							</TabsTrigger>
+						</TabsList>
+					</div>
 
 					{/* Current Semester tab — year/semester fixed, so hide those columns */}
 					<TabsContent value="current" className="space-y-4">

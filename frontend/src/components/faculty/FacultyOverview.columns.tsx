@@ -73,36 +73,40 @@ export function getFacultyOverviewColumns(
 		{
 			accessorKey: "enrollment_count",
 			header: sortableHeader("Enrolled"),
-			cell: ({ row }) => (
-				<div className="flex gap-2">
+			cell: ({ row }) => {
+				const count = row.original.enrollment_count;
+				return (
 					<Badge
-						variant={
-							row.original.enrollment_count === 0
-								? "secondary"
-								: "default"
+						variant="outline"
+						className={
+							count === 0
+								? "bg-muted text-muted-foreground border-muted/50 shadow-sm"
+								: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-semibold shadow-sm"
 						}
 					>
-						{row.original.enrollment_count} Students
+						{count} Students
 					</Badge>
-				</div>
-			),
+				);
+			},
 		},
 		{
 			accessorKey: "test_count",
 			header: sortableHeader("Tests"),
-			cell: ({ row }) => (
-				<div className="flex gap-2">
+			cell: ({ row }) => {
+				const count = row.original.test_count;
+				return (
 					<Badge
-						variant={
-							row.original.test_count === 0
-								? "secondary"
-								: "outline"
+						variant="outline"
+						className={
+							count === 0
+								? "bg-muted text-muted-foreground border-muted/50 shadow-sm"
+								: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold shadow-sm"
 						}
 					>
-						{row.original.test_count} Tests
+						{count} Tests
 					</Badge>
-				</div>
-			),
+				);
+			},
 		},
 		{
 			accessorKey: "avg_score_pct",
@@ -111,12 +115,12 @@ export function getFacultyOverviewColumns(
 				const avg = row.original.avg_score_pct;
 				if (avg == null)
 					return <span className="text-muted-foreground">—</span>;
-				let color = "bg-emerald-50 text-emerald-700";
-				if (avg < 50) color = "bg-rose-50 text-rose-700";
-				else if (avg < 70) color = "bg-amber-50 text-amber-700";
+				let badgeClass = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-semibold shadow-sm";
+				if (avg < 50) badgeClass = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 font-semibold shadow-sm";
+				else if (avg < 70) badgeClass = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-semibold shadow-sm";
 
 				return (
-					<Badge variant="secondary" className={color}>
+					<Badge variant="outline" className={badgeClass}>
 						{avg}%
 					</Badge>
 				);
@@ -132,9 +136,9 @@ export function getFacultyOverviewColumns(
 
 				if (course.is_active === 0 || course.cfa_is_active === 0) {
 					return (
-						<div className="flex justify-center gap-2">
+						<div className="flex justify-start gap-2">
 							<Button
-								variant="outline"
+								variant="ghost"
 								size="sm"
 								title="View CO-PO Mapping"
 								onClick={() =>
@@ -142,19 +146,22 @@ export function getFacultyOverviewColumns(
 										`/faculty/copo?offering_id=${offeringId}`,
 									)
 								}
+								className="h-8 gap-2 text-primary hover:bg-primary/[0.06] hover:text-primary font-semibold active:scale-95 duration-200 transition-all border border-muted/50 hover:border-primary/20"
 							>
-								<Eye className="h-4 w-4" />
+								<Eye className="h-4 w-4 text-primary" />
+								CO-PO
 							</Button>
 						</div>
 					);
 				}
 				return (
 					<Button
-						variant="destructive"
+						variant="ghost"
 						size="sm"
 						onClick={() => openConcludeDialog(course)}
+						className="h-8 gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 active:scale-95 duration-200 transition-all font-semibold border border-rose-500/20"
 					>
-						<Archive className="h-4 w-4 mr-2" />
+						<Archive className="h-4 w-4 text-rose-500" />
 						Conclude
 					</Button>
 				);

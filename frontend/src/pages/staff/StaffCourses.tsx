@@ -29,11 +29,19 @@ export function StaffCourses() {
 					onValueChange={(v) => setActiveTab(v as "current" | "all")}
 					className="w-full"
 				>
-					<TabsList>
-						<TabsTrigger value="current">
+					<TabsList className="p-1 bg-muted/40 backdrop-blur-sm border border-muted/50 rounded-xl mb-4 w-fit flex gap-1 h-auto">
+						<TabsTrigger 
+							value="current"
+							className="rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm px-4 py-2"
+						>
 							Current Semester
 						</TabsTrigger>
-						<TabsTrigger value="all">All Offerings</TabsTrigger>
+						<TabsTrigger 
+							value="all"
+							className="rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm px-4 py-2"
+						>
+							All Offerings
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="current" className="space-y-4">

@@ -1,4 +1,3 @@
-import { StatsGrid, type StatItem } from "@/features/shared";
 import { BookOpen, GraduationCap, UserPlus } from "lucide-react";
 import type { StaffStats } from "@/services/api";
 
@@ -8,39 +7,83 @@ interface StaffStatsCardsProps {
 }
 
 export function StaffStatsCards({ stats, isLoading }: StaffStatsCardsProps) {
-	const statItems: StatItem[] = [
+	if (isLoading) {
+		return (
+			<div className="grid gap-6 md:grid-cols-3">
+				{[1, 2, 3].map((i) => (
+					<div
+						key={i}
+						className="bg-card/40 backdrop-blur-md border border-muted/30 rounded-2xl p-6 h-[120px] relative overflow-hidden animate-pulse"
+					>
+						<div className="absolute top-0 left-0 right-0 h-[3px] bg-muted/20" />
+						<div className="flex items-center justify-between">
+							<div className="space-y-3 flex-1">
+								<div className="h-4 bg-muted/50 rounded-md w-2/3" />
+								<div className="h-8 bg-muted/50 rounded-md w-1/3" />
+							</div>
+							<div className="h-12 w-12 rounded-xl bg-muted/50" />
+						</div>
+					</div>
+				))}
+			</div>
+		);
+	}
+
+	const statItems = [
 		{
 			label: "Department Courses",
 			value: stats.totalCourses,
 			icon: BookOpen,
-			gradient: "from-blue-500 to-indigo-600",
-			bgGradient:
-				"from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30",
+			theme: "from-blue-500 to-indigo-500",
+			iconColor: "text-blue-500 dark:text-blue-400",
+			iconBg: "bg-blue-500/10 border-blue-500/20",
 		},
 		{
 			label: "Students",
 			value: stats.totalStudents,
 			icon: GraduationCap,
-			gradient: "from-purple-500 to-pink-600",
-			bgGradient:
-				"from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30",
+			theme: "from-amber-500 to-orange-500",
+			iconColor: "text-amber-500 dark:text-amber-400",
+			iconBg: "bg-amber-500/10 border-amber-500/20",
 		},
 		{
 			label: "Total Enrollments",
 			value: stats.totalEnrollments,
 			icon: UserPlus,
-			gradient: "from-emerald-500 to-teal-600",
-			bgGradient:
-				"from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30",
+			theme: "from-emerald-500 to-teal-500",
+			iconColor: "text-emerald-500 dark:text-emerald-400",
+			iconBg: "bg-emerald-500/10 border-emerald-500/20",
 		},
 	];
 
 	return (
-		<StatsGrid
-			stats={statItems}
-			isLoading={isLoading}
-			variant="solid"
-			columns={3}
-		/>
+		<div className="grid gap-6 md:grid-cols-3">
+			{statItems.map((item, idx) => {
+				const Icon = item.icon;
+				return (
+					<div
+						key={idx}
+						className="bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 relative group overflow-hidden"
+					>
+						{/* Subtle scale hover top highlight */}
+						<div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${item.theme}`} />
+						
+						<div className="flex items-center justify-between relative z-10">
+							<div className="space-y-1">
+								<p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+									{item.label}
+								</p>
+								<h3 className="text-3xl font-extrabold tracking-tight text-foreground transition-transform duration-300 group-hover:scale-105 origin-left">
+									{item.value}
+								</h3>
+							</div>
+							<div className={`p-3 rounded-xl border transition-all duration-300 group-hover:scale-110 ${item.iconBg}`}>
+								<Icon className={`w-6 h-6 ${item.iconColor}`} />
+							</div>
+						</div>
+					</div>
+				);
+			})}
+		</div>
 	);
 }

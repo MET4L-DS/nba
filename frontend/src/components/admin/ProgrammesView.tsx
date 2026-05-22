@@ -1,6 +1,5 @@
 import { DataTable } from "@/features/shared/DataTable";
 import { useState, useEffect, useMemo } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -189,109 +188,112 @@ export function ProgrammesView() {
 
 	return (
 		<div className="space-y-4">
-			<Card className="border-none shadow-none bg-transparent">
-				<div className="flex flex-row items-center justify-between p-0 mb-4">
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-							<GraduationCap className="w-5 h-5 text-white" />
-						</div>
-						<div>
-							<h3 className="text-xl font-bold">Programmes</h3>
-							<p className="text-sm text-muted-foreground">
-								Manage academic programmes
-							</p>
-						</div>
+			<div className="flex flex-wrap gap-4 items-center justify-between bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden mb-4">
+				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-indigo-500/20 pointer-events-none"></div>
+				<div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent"></div>
+				<div className="flex items-center gap-3">
+					<div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
+						<GraduationCap className="w-5 h-5 text-white" />
 					</div>
-					<Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-						<DialogTrigger asChild>
-							<Button className="gap-2 bg-blue-600 hover:bg-blue-700">
-								<Plus className="w-4 h-4" />
-								Add Programme
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="sm:max-w-[450px]">
-							<DialogHeader>
-								<DialogTitle>Add New Programme</DialogTitle>
-								<DialogDescription>Create a new academic programme</DialogDescription>
-							</DialogHeader>
-							<div className="grid gap-4 py-4">
+					<div>
+						<h3 className="text-xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Programmes</h3>
+						<p className="text-sm text-muted-foreground mt-0.5">
+							Manage academic programmes
+						</p>
+					</div>
+				</div>
+				<Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+					<DialogTrigger asChild>
+						<Button className="gap-2 active:scale-95 duration-200 transition-all shadow-md hover:shadow-indigo-500/10">
+							<Plus className="w-4 h-4" />
+							Add Programme
+						</Button>
+					</DialogTrigger>
+					<DialogContent className="sm:max-w-[450px] bg-card/95 backdrop-blur-md border border-muted/50 rounded-2xl shadow-xl">
+						<DialogHeader>
+							<DialogTitle className="text-xl font-bold tracking-tight">Add New Programme</DialogTitle>
+							<DialogDescription className="text-muted-foreground">Create a new academic programme</DialogDescription>
+						</DialogHeader>
+						<div className="grid gap-4 py-4">
+							<div className="space-y-2">
+								<Label htmlFor="programme_name" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Programme Name *</Label>
+								<Input
+									id="programme_name"
+									placeholder="e.g., Bachelor of Technology"
+									value={formData.programme_name}
+									onChange={(e) => setFormData({ ...formData, programme_name: e.target.value })}
+									className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="programme_code" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Programme Code *</Label>
+								<Input
+									id="programme_code"
+									placeholder="e.g., BTECH"
+									value={formData.programme_code}
+									onChange={(e) => setFormData({ ...formData, programme_code: e.target.value.toUpperCase() })}
+									className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="department_id" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Department *</Label>
+								<Select
+									value={formData.department_id}
+									onValueChange={(val) => setFormData({ ...formData, department_id: val })}
+								>
+									<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
+										<SelectValue placeholder="Select a department" />
+									</SelectTrigger>
+									<SelectContent>
+										{departments.map((dept) => (
+											<SelectItem key={dept.department_id} value={dept.department_id.toString()}>
+												{dept.department_name} ({dept.department_code})
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+							<div className="grid grid-cols-2 gap-4">
 								<div className="space-y-2">
-									<Label htmlFor="programme_name">Programme Name *</Label>
-									<Input
-										id="programme_name"
-										placeholder="e.g., Bachelor of Technology"
-										value={formData.programme_name}
-										onChange={(e) => setFormData({ ...formData, programme_name: e.target.value })}
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="programme_code">Programme Code *</Label>
-									<Input
-										id="programme_code"
-										placeholder="e.g., BTECH"
-										value={formData.programme_code}
-										onChange={(e) => setFormData({ ...formData, programme_code: e.target.value.toUpperCase() })}
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="department_id">Department *</Label>
+									<Label htmlFor="degree_level" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Degree Level</Label>
 									<Select
-										value={formData.department_id}
-										onValueChange={(val) => setFormData({ ...formData, department_id: val })}
+										value={formData.degree_level}
+										onValueChange={(val: any) => setFormData({ ...formData, degree_level: val })}
 									>
-										<SelectTrigger>
-											<SelectValue placeholder="Select a department" />
+										<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
+											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
-											{departments.map((dept) => (
-												<SelectItem key={dept.department_id} value={dept.department_id.toString()}>
-													{dept.department_name} ({dept.department_code})
-												</SelectItem>
-											))}
+											<SelectItem value="UG">UG</SelectItem>
+											<SelectItem value="PG">PG</SelectItem>
+											<SelectItem value="Diploma">Diploma</SelectItem>
+											<SelectItem value="PhD">PhD</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>
-								<div className="grid grid-cols-2 gap-4">
-									<div className="space-y-2">
-										<Label htmlFor="degree_level">Degree Level</Label>
-										<Select
-											value={formData.degree_level}
-											onValueChange={(val: any) => setFormData({ ...formData, degree_level: val })}
-										>
-											<SelectTrigger>
-												<SelectValue />
-											</SelectTrigger>
-											<SelectContent>
-												<SelectItem value="UG">UG</SelectItem>
-												<SelectItem value="PG">PG</SelectItem>
-												<SelectItem value="Diploma">Diploma</SelectItem>
-												<SelectItem value="PhD">PhD</SelectItem>
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="duration_years">Duration (Years)</Label>
-										<Input
-											id="duration_years"
-											type="number"
-											min={1}
-											max={10}
-											value={formData.duration_years}
-											onChange={(e) => setFormData({ ...formData, duration_years: parseInt(e.target.value) })}
-										/>
-									</div>
+								<div className="space-y-2">
+									<Label htmlFor="duration_years" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Duration (Years)</Label>
+									<Input
+										id="duration_years"
+										type="number"
+										min={1}
+										max={10}
+										value={formData.duration_years}
+										onChange={(e) => setFormData({ ...formData, duration_years: parseInt(e.target.value) })}
+										className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
+									/>
 								</div>
 							</div>
-							<DialogFooter>
-								<Button variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }}>Cancel</Button>
-								<Button onClick={handleCreateProgramme} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
-									{isSubmitting ? "Creating..." : "Create Programme"}
-								</Button>
-							</DialogFooter>
-						</DialogContent>
-					</Dialog>
-				</div>
-			</Card>
+						</div>
+						<DialogFooter className="gap-2 sm:gap-0">
+							<Button variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }} className="active:scale-95 duration-200 transition-all">Cancel</Button>
+							<Button onClick={handleCreateProgramme} disabled={isSubmitting} className="active:scale-95 duration-200 transition-all bg-indigo-600 hover:bg-indigo-700 text-white">
+								{isSubmitting ? "Creating..." : "Create Programme"}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
+			</div>
 
 			<DataTable
 				columns={columns}
@@ -339,35 +341,37 @@ export function ProgrammesView() {
 
 			{/* Edit Dialog */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-				<DialogContent className="sm:max-w-[450px]">
+				<DialogContent className="sm:max-w-[450px] bg-card/95 backdrop-blur-md border border-muted/50 rounded-2xl shadow-xl">
 					<DialogHeader>
-						<DialogTitle>Edit Programme</DialogTitle>
-						<DialogDescription>Update programme information</DialogDescription>
+						<DialogTitle className="text-xl font-bold tracking-tight">Edit Programme</DialogTitle>
+						<DialogDescription className="text-muted-foreground">Update programme information</DialogDescription>
 					</DialogHeader>
 					<div className="grid gap-4 py-4">
 						<div className="space-y-2">
-							<Label htmlFor="edit_programme_name">Programme Name *</Label>
+							<Label htmlFor="edit_programme_name" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Programme Name *</Label>
 							<Input
 								id="edit_programme_name"
 								value={editFormData.programme_name}
 								onChange={(e) => setEditFormData({ ...editFormData, programme_name: e.target.value })}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="edit_programme_code">Programme Code *</Label>
+							<Label htmlFor="edit_programme_code" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Programme Code *</Label>
 							<Input
 								id="edit_programme_code"
 								value={editFormData.programme_code}
 								onChange={(e) => setEditFormData({ ...editFormData, programme_code: e.target.value.toUpperCase() })}
+								className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="edit_department_id">Department *</Label>
+							<Label htmlFor="edit_department_id" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Department *</Label>
 							<Select
 								value={editFormData.department_id}
 								onValueChange={(val) => setEditFormData({ ...editFormData, department_id: val })}
 							>
-								<SelectTrigger>
+								<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
@@ -381,12 +385,12 @@ export function ProgrammesView() {
 						</div>
 						<div className="grid grid-cols-2 gap-4">
 							<div className="space-y-2">
-								<Label htmlFor="edit_degree_level">Degree Level</Label>
+								<Label htmlFor="edit_degree_level" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Degree Level</Label>
 								<Select
 									value={editFormData.degree_level}
 									onValueChange={(val: any) => setEditFormData({ ...editFormData, degree_level: val })}
 								>
-									<SelectTrigger>
+									<SelectTrigger className="bg-background/60 shadow-inner focus:ring-1 transition-all">
 										<SelectValue />
 									</SelectTrigger>
 									<SelectContent>
@@ -398,7 +402,7 @@ export function ProgrammesView() {
 								</Select>
 							</div>
 							<div className="space-y-2">
-								<Label htmlFor="edit_duration_years">Duration (Years)</Label>
+								<Label htmlFor="edit_duration_years" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Duration (Years)</Label>
 								<Input
 									id="edit_duration_years"
 									type="number"
@@ -406,13 +410,14 @@ export function ProgrammesView() {
 									max={10}
 									value={editFormData.duration_years}
 									onChange={(e) => setEditFormData({ ...editFormData, duration_years: parseInt(e.target.value) })}
+									className="bg-background/60 shadow-inner focus-visible:ring-1 transition-all"
 								/>
 							</div>
 						</div>
 					</div>
-					<DialogFooter>
-						<Button variant="outline" onClick={() => { setIsEditDialogOpen(false); setSelectedProgramme(null); }}>Cancel</Button>
-						<Button onClick={handleUpdateProgramme} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+					<DialogFooter className="gap-2 sm:gap-0">
+						<Button variant="outline" onClick={() => { setIsEditDialogOpen(false); setSelectedProgramme(null); }} className="active:scale-95 duration-200 transition-all">Cancel</Button>
+						<Button onClick={handleUpdateProgramme} disabled={isSubmitting} className="active:scale-95 duration-200 transition-all bg-indigo-600 hover:bg-indigo-700 text-white">
 							{isSubmitting ? "Saving..." : "Save Changes"}
 						</Button>
 					</DialogFooter>

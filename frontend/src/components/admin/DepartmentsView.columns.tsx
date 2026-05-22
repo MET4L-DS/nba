@@ -26,8 +26,7 @@ export function getDepartmentColumns({
 			header: sortableHeader("Code"),
 			cell: ({ row }) => (
 				<Badge
-					variant="secondary"
-					className="font-mono bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+					className="font-mono bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-none"
 				>
 					{row.getValue("department_code")}
 				</Badge>
@@ -72,8 +71,7 @@ export function getDepartmentColumns({
 				return hodName ? (
 					<div className="text-sm flex flex-col items-start">
 						<Badge
-							variant="secondary"
-							className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+							className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-none font-semibold"
 						>
 							{hodName}
 						</Badge>
@@ -85,8 +83,7 @@ export function getDepartmentColumns({
 					</div>
 				) : (
 					<Badge
-						variant="outline"
-						className="text-muted-foreground border-dashed"
+						className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/20 shadow-none font-medium italic"
 					>
 						Not Assigned
 					</Badge>
@@ -102,24 +99,21 @@ export function getDepartmentColumns({
 					<div className="flex flex-wrap gap-1.5 justify-center max-w-[150px] mx-auto">
 						{typeof dept.faculty_count !== "undefined" && (
 							<Badge
-								variant="outline"
-								className="text-[10px] px-1.5 py-0"
+								className="text-[10px] px-1.5 py-0.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 shadow-none"
 							>
 								👨‍🏫 {dept.faculty_count}
 							</Badge>
 						)}
 						{typeof dept.student_count !== "undefined" && (
 							<Badge
-								variant="outline"
-								className="text-[10px] px-1.5 py-0"
+								className="text-[10px] px-1.5 py-0.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shadow-none"
 							>
 								🎓 {dept.student_count}
 							</Badge>
 						)}
 						{typeof dept.course_count !== "undefined" && (
 							<Badge
-								variant="outline"
-								className="text-[10px] px-1.5 py-0"
+								className="text-[10px] px-1.5 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-none"
 							>
 								📚 {dept.course_count}
 							</Badge>
@@ -141,8 +135,7 @@ export function getDepartmentColumns({
 				return (
 					<div className="text-center flex flex-col items-center">
 						<Badge
-							variant="secondary"
-							className="font-semibold px-2"
+							className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-semibold px-2 py-0.5 shadow-none"
 						>
 							{count} Courses
 						</Badge>

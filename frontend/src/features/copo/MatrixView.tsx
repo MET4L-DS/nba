@@ -6,6 +6,7 @@ import { Settings } from "lucide-react";
 import { useState } from "react";
 import { CSVUploader } from "@/features/shared/CSVUploader";
 import { AttainmentSettingsPanel } from "./AttainmentSettingsPanel";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { AttainmentCriteriaCard } from "./AttainmentCriteriaCard";
 import { PassingMarksCard } from "./PassingMarksCard";
 import { StudentMarksTable } from "./StudentMarksTable";
@@ -255,18 +256,22 @@ export function MatrixView({
 			</Card>
 
 			{/* Settings Panel */}
-			<AttainmentSettingsPanel
-				showSettings={showSettings}
-				coThreshold={coThreshold}
-				setCoThreshold={setCoThreshold}
-				passingThreshold={passingThreshold}
-				setPassingThreshold={setPassingThreshold}
-				attainmentThresholds={attainmentThresholds}
-				addThreshold={addThreshold}
-				updateThreshold={updateThreshold}
-				removeThreshold={removeThreshold}
-				saveSettings={saveSettings}
-			/>
+			<Sheet open={showSettings} onOpenChange={setShowSettings}>
+				<SheetContent className="w-[500px] sm:w-[600px] md:w-[700px] lg:w-[850px] sm:max-w-none max-w-full overflow-y-auto h-full p-6 border-l border-muted/50 bg-background/95 backdrop-blur-md">
+					<AttainmentSettingsPanel
+						showSettings={showSettings}
+						coThreshold={coThreshold}
+						setCoThreshold={setCoThreshold}
+						passingThreshold={passingThreshold}
+						setPassingThreshold={setPassingThreshold}
+						attainmentThresholds={attainmentThresholds}
+						addThreshold={addThreshold}
+						updateThreshold={updateThreshold}
+						removeThreshold={removeThreshold}
+						saveSettings={saveSettings}
+					/>
+				</SheetContent>
+			</Sheet>
 
 			{/* Attainment Criteria Card */}
 			<AttainmentCriteriaCard

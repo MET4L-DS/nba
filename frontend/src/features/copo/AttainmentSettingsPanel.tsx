@@ -107,13 +107,11 @@ export function AttainmentSettingsPanel({
 
 	return (
 		<motion.div
-			className="flex flex-col gap-6 bg-card/75 backdrop-blur-md p-6 rounded-2xl border border-muted/50 shadow-xl relative overflow-hidden"
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
+			className="flex flex-col gap-6 w-full h-full relative"
+			initial={{ opacity: 0, x: 20 }}
+			animate={{ opacity: 1, x: 0 }}
 			transition={{ type: "spring", stiffness: 260, damping: 26 }}
 		>
-			{/* Accent top bar */}
-			<div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500" />
 
 			{/* Header */}
 			<div className="flex items-start justify-between gap-4">

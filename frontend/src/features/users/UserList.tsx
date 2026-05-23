@@ -110,6 +110,7 @@ export function UserList({
 		sort,
 		sortDir,
 		setSort,
+		setLimit,
 	} = usePaginatedData<User | DeanUser>({
 		fetchFn,
 		limit: pageSize,
@@ -321,6 +322,7 @@ export function UserList({
 							sort,
 							sortDir,
 							setSort,
+							onLimitChange: setLimit,
 						},
 					})}
 				>

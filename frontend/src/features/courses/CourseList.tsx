@@ -150,6 +150,7 @@ export function CourseList({
 		sortDir,
 		setSort,
 		refresh,
+		setLimit,
 	} = usePaginatedData<
 		AdminCourse,
 		Record<string, string | number | undefined>
@@ -410,6 +411,7 @@ export function CourseList({
 								sort,
 								sortDir,
 								setSort,
+								onLimitChange: setLimit,
 							},
 						})}
 					>

@@ -151,6 +151,7 @@ export function StudentList({
 		setSearch,
 		filters,
 		setFilter,
+		setLimit,
 	} = usePaginatedData<Student>({
 		fetchFn:
 			fetchFn ||
@@ -310,6 +311,7 @@ export function StudentList({
 								onPrev: goPrev,
 								canPrev: canPrev && pageIndex > 0,
 								pagination: pagination,
+								onLimitChange: setLimit,
 							},
 						})}
 					>

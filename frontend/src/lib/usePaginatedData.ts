@@ -64,6 +64,10 @@ export interface UsePaginatedDataReturn<
 	setSort: (field: string, dir?: "ASC" | "DESC") => void;
 	/** Current zero-based page index (for display) */
 	pageIndex: number;
+	/** Current page size limit */
+	limit: number;
+	/** Change the page size limit dynamically */
+	setLimit: (limit: number) => void;
 }
 
 /**
@@ -110,6 +114,7 @@ export function usePaginatedData<
 	);
 	const [sort, setSort] = useState(defaultSort);
 	const [sortDir, setSortDir] = useState<"ASC" | "DESC">(defaultSortDir);
+	const [limitState, setLimitState] = useState(limit);
 
 	const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const fetchFnRef = useRef(fetchFn);
@@ -124,7 +129,7 @@ export function usePaginatedData<
 	const doFetch = useCallback(async (options?: { bypassCache?: boolean }) => {
 		debugLogger.debug("usePaginatedData", "doFetch triggering", {
 			pageIndex,
-			limit,
+			limit: limitState,
 			search,
 			filters,
 			options,
@@ -133,7 +138,7 @@ export function usePaginatedData<
 		setError(null);
 		try {
 			const params: PaginationParams = {
-				limit,
+				limit: limitState,
 				// Include required sort props even if they are empty
 				sort: sort || undefined,
 				sort_dir: sortDir || undefined,
@@ -162,12 +167,12 @@ export function usePaginatedData<
 		} finally {
 			setLoading(false);
 		}
-	}, [limit, currentCursor, sort, sortDir, search, filters]); // removed fetchFn dependency
+	}, [limitState, currentCursor, sort, sortDir, search, filters]); // removed fetchFn dependency
 
 	useEffect(() => {
 		// Only run when pagination state changes
 		doFetch();
-	}, [limit, currentCursor, sort, sortDir, search, filters]);
+	}, [limitState, currentCursor, sort, sortDir, search, filters]);
 
 	const goNext = useCallback(() => {
 		if (!pagination?.next_cursor) return;
@@ -232,6 +237,12 @@ export function usePaginatedData<
 	// but swap search ref to debounced value via setSearch
 	void searchInput; // consumed via setSearch / setSearchInput path
 
+	const setLimit = useCallback((newLimit: number) => {
+		setLimitState(newLimit);
+		setCursorStack([undefined]);
+		setPageIndex(0);
+	}, []);
+
 	return {
 		data,
 		loading,
@@ -250,5 +261,7 @@ export function usePaginatedData<
 		sortDir,
 		setSort: setSortFn,
 		pageIndex,
+		limit: limitState,
+		setLimit,
 	};
 }

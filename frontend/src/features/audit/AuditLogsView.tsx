@@ -23,20 +23,23 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 	const [logs, setLogs] = useState<AuditLog[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [page, setPage] = useState(1);
-	const [totalPages, setTotalPages] = useState(1);
+	const [totalItems, setTotalItems] = useState(0);
+	const [limit, setLimit] = useState(15);
+	const totalPages = Math.ceil(totalItems / limit) || 1;
 	const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [actionFilter, setActionFilter] =
 		useState<(typeof ACTION_FILTERS)[number]>("ALL");
 
-	const fetchLogs = async (p = page) => {
+	const fetchLogs = async (p = page, l = limit) => {
 		setIsLoading(true);
 		try {
-			const res: any = await fetchFn({ page: p, limit: 15 });
+			const res: any = await fetchFn({ page: p, limit: l });
 			if (res.success) {
 				setLogs(res.data);
 				if (res.pagination) {
-					setTotalPages(res.pagination.total_pages);
+					const total = res.pagination.total ?? res.pagination.total_records ?? res.pagination.total_items ?? 0;
+					setTotalItems(total);
 				}
 			}
 		} catch (error) {
@@ -52,7 +55,13 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 
 	const handlePageChange = (newPage: number) => {
 		setPage(newPage);
-		fetchLogs(newPage);
+		fetchLogs(newPage, limit);
+	};
+
+	const handleLimitChange = (newLimit: number) => {
+		setLimit(newLimit);
+		setPage(1);
+		fetchLogs(1, newLimit);
 	};
 
 	const filteredLogs = useMemo(() => {
@@ -225,8 +234,8 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 					searchPlaceholder="Search actor, entity, or action..."
 					serverPagination={{
 						pagination: {
-							total: totalPages * 15,
-							limit: 15,
+							total: totalItems,
+							limit: limit,
 							next_cursor: page < totalPages ? "next" : null,
 							prev_cursor: page > 1 ? "prev" : null,
 							has_more: page < totalPages,
@@ -234,9 +243,10 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 						onNext: () => handlePageChange(page + 1),
 						onPrev: () => handlePageChange(page - 1),
 						canPrev: page > 1,
-						pageIndex: page,
+						pageIndex: page - 1,
 						search: searchTerm,
 						onSearch: setSearchTerm,
+						onLimitChange: handleLimitChange,
 					}}
 				/>
 

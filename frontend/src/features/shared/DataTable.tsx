@@ -61,6 +61,7 @@ export interface ServerPaginationProps<F extends Record<string, any> = any> {
 	sort?: string;
 	sortDir?: "ASC" | "DESC";
 	setSort?: (field: string, dir?: "ASC" | "DESC") => void;
+	onLimitChange?: (limit: number) => void;
 }
 
 interface DataTableProps<TData, TValue, F extends Record<string, any> = any> {
@@ -310,20 +311,46 @@ function TablePagination<TData>({
 	const serverLimit = sp?.pagination?.limit ?? null;
 
 	return (
-		<div className="flex items-center justify-between px-2 py-4">
+		<div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
 			{isServerMode ? (
 				<>
-					<div className="flex-1 text-sm text-muted-foreground hidden sm:block">
+					<div className="flex-1 text-sm text-muted-foreground hidden md:block">
 						{serverTotal !== null ? `${serverTotal.toLocaleString()} row(s) total.` : null}
 					</div>
-					<div className="flex items-center space-x-6 lg:space-x-8">
+					<div className="flex flex-wrap items-center justify-center sm:justify-end gap-4 sm:gap-6 lg:gap-8 w-full sm:w-auto">
 						{serverTotal !== null && serverLimit !== null && (
-							<div className="flex items-center space-x-2 hidden sm:flex">
-								<p className="text-sm font-medium text-muted-foreground">Rows per page</p>
-								<div className="text-sm font-medium border rounded px-2 py-1 bg-muted/20">{serverLimit}</div>
+							<div className="flex items-center space-x-2">
+								<p className="text-sm font-medium text-muted-foreground hidden sm:inline-block">Rows per page</p>
+								{sp?.onLimitChange ? (
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<Button
+												variant="outline"
+												className="h-8 w-[70px] justify-between bg-background/60 border-muted/50 rounded-lg active:scale-95 duration-200 transition-all shadow-sm"
+											>
+												{serverLimit}
+												<ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+											</Button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent align="end" className="bg-popover/90 backdrop-blur-md border-muted/50 rounded-xl">
+											{[10, 15, 20, 30, 40, 50].map((pageSize) => (
+												<DropdownMenuCheckboxItem
+													key={pageSize}
+													checked={serverLimit === pageSize}
+													onCheckedChange={() => sp.onLimitChange!(pageSize)}
+													className="rounded-lg focus:bg-muted/60"
+												>
+													{pageSize}
+												</DropdownMenuCheckboxItem>
+											))}
+										</DropdownMenuContent>
+									</DropdownMenu>
+								) : (
+									<div className="text-sm font-medium border rounded px-2 py-1 bg-muted/20">{serverLimit}</div>
+								)}
 							</div>
 						)}
-						<div className="flex w-[100px] items-center justify-center text-sm font-medium">
+						<div className="flex items-center justify-center text-sm font-medium">
 							Page {serverPage} {serverTotal !== null && serverLimit !== null ? `of ${Math.ceil(serverTotal / serverLimit)}` : ""}
 						</div>
 						<div className="flex items-center space-x-2">
@@ -348,14 +375,14 @@ function TablePagination<TData>({
 				</>
 			) : (
 				<>
-					<div className="flex-1 text-sm text-muted-foreground hidden sm:block">
+					<div className="flex-1 text-sm text-muted-foreground hidden md:block">
 						{table.getFilteredSelectedRowModel().rows.length > 0
 							? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected.`
 							: `${table.getFilteredRowModel().rows.length} row(s) total.`}
 					</div>
-					<div className="flex items-center space-x-6 lg:space-x-8">
-						<div className="flex items-center space-x-2 hidden sm:flex">
-							<p className="text-sm font-medium text-muted-foreground">Rows per page</p>
+					<div className="flex flex-wrap items-center justify-center sm:justify-end gap-4 sm:gap-6 lg:gap-8 w-full sm:w-auto">
+						<div className="flex items-center space-x-2">
+							<p className="text-sm font-medium text-muted-foreground hidden sm:inline-block">Rows per page</p>
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button
@@ -380,7 +407,7 @@ function TablePagination<TData>({
 								</DropdownMenuContent>
 							</DropdownMenu>
 						</div>
-						<div className="flex w-[100px] items-center justify-center text-sm font-medium">
+						<div className="flex items-center justify-center text-sm font-medium">
 							Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
 						</div>
 						<div className="flex items-center space-x-2">

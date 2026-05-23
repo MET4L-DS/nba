@@ -216,9 +216,9 @@ export function HODProgrammes() {
 			now.getMonth() < 6 ? now.getFullYear() - 1 : now.getFullYear();
 
 		return hodApi.getDepartmentProgrammes({
+			limit: 20,
 			...params,
 			year: String(academicYear),
-			limit: 100,
 		});
 	}, []);
 
@@ -228,18 +228,18 @@ export function HODProgrammes() {
 			now.getMonth() < 6 ? now.getFullYear() - 1 : now.getFullYear();
 
 		return hodApi.getDepartmentProgrammes({
+			limit: 20,
 			...params,
 			has_batches: "1",
 			batch_year_max: String(academicYear),
-			limit: 100,
 		});
 	}, []);
 
 	const fetchAll = useCallback(
 		(params: PaginationParams) =>
 			hodApi.getDepartmentProgrammes({
+				limit: 20,
 				...params,
-				limit: 100,
 			}),
 		[],
 	);

@@ -78,8 +78,8 @@ class FacultyController
                 "pagination" => [
                     "current_page" => $page,
                     "per_page" => $limit,
-                    "total_records" => $result['total'],
-                    "total_pages" => ceil($result['total'] / $limit)
+                    "total_records" => $result['pagination']['total_items'] ?? 0,
+                    "total_pages" => $result['pagination']['total_pages'] ?? 1
                 ]
             ]);
         } catch (\Exception $e) {

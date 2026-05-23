@@ -1,9 +1,10 @@
 import { TestList, getBaseTestColumns } from "@/features/shared";
 import type { ColumnDef } from "@tanstack/react-table";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Dialog,
 	DialogContent,
@@ -35,7 +36,12 @@ export function TestsList({
 	onCountChange,
 }: TestsListProps) {
 	const [tests, setTests] = useState<Test[]>([]);
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(!!course);
+	const hasInitialLoadedRef = useRef(false);
+
+	if (!loading && course) {
+		hasInitialLoadedRef.current = true;
+	}
 	const [selectedTestId, setSelectedTestId] = useState<number | null>(null);
 	const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -81,9 +87,11 @@ export function TestsList({
 
 	useEffect(() => {
 		if (course) {
+			hasInitialLoadedRef.current = false;
 			loadTests();
 		} else {
 			setTests([]);
+			hasInitialLoadedRef.current = false;
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [course, refreshTrigger]);
@@ -209,13 +217,31 @@ export function TestsList({
 
 			<Card className="bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-xl rounded-xl overflow-hidden">
 				<CardContent className="px-5 pt-6">
-					<TestList
-						columns={columns}
-						data={tests}
-						searchKey="test_label"
-						searchPlaceholder="Search by test name..."
-						refreshing={loading}
-					/>
+					{hasInitialLoadedRef.current ? (
+						<TestList
+							columns={columns}
+							data={tests}
+							searchKey="test_label"
+							searchPlaceholder="Search by test name..."
+							refreshing={loading}
+						/>
+					) : (
+						<div className="space-y-3 pt-2">
+							<div className="flex gap-4 items-center mb-4">
+								<Skeleton className="h-9 w-40 rounded-lg shrink-0" />
+								<Skeleton className="h-9 w-24 rounded-lg ml-auto shrink-0" />
+							</div>
+							{Array.from({ length: 3 }).map((_, i) => (
+								<div key={i} className="flex gap-4 items-center">
+									<Skeleton className="h-9 w-16 rounded-lg shrink-0" />
+									<Skeleton className="h-9 flex-1 rounded-lg" />
+									<Skeleton className="h-9 w-20 rounded-lg shrink-0" />
+									<Skeleton className="h-9 w-20 rounded-lg shrink-0" />
+									<Skeleton className="h-9 w-28 rounded-lg shrink-0" />
+								</div>
+							))}
+						</div>
+					)}
 				</CardContent>
 			</Card>
 

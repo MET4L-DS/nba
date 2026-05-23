@@ -93,7 +93,7 @@ export function usePaginatedData<
 	searchDebounceMs = 300,
 }: UsePaginatedDataOptions<F>): UsePaginatedDataReturn<T, F> {
 	const [data, setData] = useState<T[]>([]);
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [pagination, setPagination] = useState<PaginationMeta | null>(null);
 

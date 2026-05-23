@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight, Archive, Eye } from "lucide-react";
 import { sortableHeader } from "../../features/shared/tableUtils";
-import { useNavigate } from "react-router-dom";
+import type { NavigateFunction } from "react-router-dom";
 
 export function getFacultyOverviewColumns(
 	openConcludeDialog: (course: Course) => void,
+	navigate: NavigateFunction,
 ): ColumnDef<Course>[] {
 	return [
 		// ── Expand toggle ──────────────────────────────────────────────────
@@ -130,7 +131,6 @@ export function getFacultyOverviewColumns(
 			id: "actions",
 			header: "Actions",
 			cell: ({ row }) => {
-				const navigate = useNavigate();
 				const course = row.original;
 				const offeringId = course.offering_id || course.course_id;
 

@@ -29,6 +29,10 @@ const cardVariants = {
 	}
 };
 
+const hoverEffectElevated = { y: -6, scale: 1.015 };
+const hoverEffectDefault = { y: -4, scale: 1.015 };
+const tapEffect = { scale: 0.98 };
+
 export const QuickAccessCard = memo(function QuickAccessCard({
 	item,
 	onClick,
@@ -41,8 +45,8 @@ export const QuickAccessCard = memo(function QuickAccessCard({
 		return (
 			<motion.div
 				variants={cardVariants}
-				whileHover={{ y: -6, scale: 1.015 }}
-				whileTap={{ scale: 0.98 }}
+				whileHover={hoverEffectElevated}
+				whileTap={tapEffect}
 				className="h-full cursor-pointer"
 				onClick={() => onClick(item.id)}
 				style={{ willChange: "transform, opacity" }}
@@ -77,8 +81,8 @@ export const QuickAccessCard = memo(function QuickAccessCard({
 		return (
 			<motion.div
 				variants={cardVariants}
-				whileHover={{ y: -4, scale: 1.015 }}
-				whileTap={{ scale: 0.98 }}
+				whileHover={hoverEffectDefault}
+				whileTap={tapEffect}
 				className="h-full cursor-pointer"
 				onClick={() => onClick(item.id)}
 				style={{ willChange: "transform, opacity" }}
@@ -120,8 +124,8 @@ export const QuickAccessCard = memo(function QuickAccessCard({
 	return (
 		<motion.div
 			variants={cardVariants}
-			whileHover={{ y: -4, scale: 1.015 }}
-			whileTap={{ scale: 0.98 }}
+			whileHover={hoverEffectDefault}
+			whileTap={tapEffect}
 			className="h-full cursor-pointer"
 			onClick={() => onClick(item.id)}
 			style={{ willChange: "transform, opacity" }}
@@ -160,6 +164,15 @@ interface QuickAccessGridProps {
 	accentColor?: string;
 }
 
+const gridVariants = {
+	hidden: {},
+	visible: {
+		transition: {
+			staggerChildren: 0.08
+		}
+	}
+};
+
 export const QuickAccessGrid = memo(function QuickAccessGrid({
 	items,
 	onItemClick,
@@ -179,13 +192,7 @@ export const QuickAccessGrid = memo(function QuickAccessGrid({
 		<motion.div 
 			initial="hidden"
 			animate="visible"
-			variants={{
-				visible: {
-					transition: {
-						staggerChildren: 0.08
-					}
-				}
-			}}
+			variants={gridVariants}
 			className={`grid gap-4 ${gridCols[columns]}`}
 		>
 			{items.map((item) => (

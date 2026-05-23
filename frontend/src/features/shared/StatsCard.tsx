@@ -31,6 +31,10 @@ const cardVariants = {
 	}
 };
 
+const hoverEffectSolid = { y: -5, scale: 1.015 };
+const hoverEffectGradient = { y: -5, scale: 1.015, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" };
+const tapEffect = { scale: 0.98 };
+
 export const StatsCard = memo(function StatsCard({
 	stat,
 	isLoading = false,
@@ -42,8 +46,8 @@ export const StatsCard = memo(function StatsCard({
 		return (
 			<motion.div
 				variants={cardVariants}
-				whileHover={{ y: -5, scale: 1.015, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-				whileTap={{ scale: 0.98 }}
+				whileHover={hoverEffectGradient}
+				whileTap={tapEffect}
 				className="h-full cursor-pointer"
 				style={{ willChange: "transform, opacity" }}
 			>
@@ -82,8 +86,8 @@ export const StatsCard = memo(function StatsCard({
 		return (
 			<motion.div
 				variants={cardVariants}
-				whileHover={{ y: -5, scale: 1.015 }}
-				whileTap={{ scale: 0.98 }}
+				whileHover={hoverEffectSolid}
+				whileTap={tapEffect}
 				className="h-full cursor-pointer"
 				style={{ willChange: "transform, opacity" }}
 			>
@@ -121,8 +125,8 @@ export const StatsCard = memo(function StatsCard({
 	return (
 		<motion.div
 			variants={cardVariants}
-			whileHover={{ y: -5, scale: 1.015 }}
-			whileTap={{ scale: 0.98 }}
+			whileHover={hoverEffectSolid}
+			whileTap={tapEffect}
 			className="h-full cursor-pointer"
 			style={{ willChange: "transform, opacity" }}
 		>
@@ -166,6 +170,15 @@ interface StatsGridProps {
 	columns?: 3 | 4 | 5;
 }
 
+const gridVariants = {
+	hidden: {},
+	visible: {
+		transition: {
+			staggerChildren: 0.08
+		}
+	}
+};
+
 export const StatsGrid = memo(function StatsGrid({
 	stats,
 	isLoading = false,
@@ -182,13 +195,7 @@ export const StatsGrid = memo(function StatsGrid({
 		<motion.div 
 			initial="hidden"
 			animate="visible"
-			variants={{
-				visible: {
-					transition: {
-						staggerChildren: 0.08
-					}
-				}
-			}}
+			variants={gridVariants}
 			className={`grid gap-4 ${gridCols[columns]}`}
 		>
 			{stats.map((stat) => (

@@ -142,6 +142,13 @@ export function DashboardLayout() {
 		}
 	}, [user?.role, user?.is_dean]);
 
+	// Memoize the context object to prevent downstream re-renders on every layout tick
+	const contextValue = useMemo(() => ({
+		user,
+		sidebarOpen,
+		setSidebarOpen,
+	}), [user, sidebarOpen]);
+
 	if (!user) return null;
 
 	// Determine active ID from URL
@@ -176,7 +183,7 @@ export function DashboardLayout() {
 			/>
 			<main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 				<Suspense fallback={<PageLoader />}>
-					<Outlet context={{ user, sidebarOpen, setSidebarOpen }} />
+					<Outlet context={contextValue} />
 				</Suspense>
 			</main>
 		</div>

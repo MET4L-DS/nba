@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDeferredMount } from "@/lib/useDeferredMount";
 import {
 	Plus,
 	Users,
@@ -23,6 +24,7 @@ interface FacultyAssessmentsProps {
 export function FacultyAssessments({
 	selectedCourse,
 }: FacultyAssessmentsProps) {
+	const isListMounted = useDeferredMount(120);
 	const [showCreateForm, setShowCreateForm] = useState(false);
 	const [showEnrollDialog, setShowEnrollDialog] = useState(false);
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -249,12 +251,28 @@ export function FacultyAssessments({
 							<div className="bg-card/70 backdrop-blur-sm border border-muted/50 rounded-2xl overflow-hidden shadow-lg shadow-black/5 hover:shadow-xl transition-all duration-300">
 								<div className="h-[2px] bg-gradient-to-r from-violet-500/60 to-indigo-500/60" />
 								<div className="p-6">
-									<TestsList
-										course={selectedCourse}
-										refreshTrigger={refreshTrigger}
-										onGoToMarks={handleGoToMarks}
-										onCountChange={setTestsCount}
-									/>
+									{isListMounted ? (
+										<TestsList
+											course={selectedCourse}
+											refreshTrigger={refreshTrigger}
+											onGoToMarks={handleGoToMarks}
+											onCountChange={setTestsCount}
+										/>
+									) : (
+										<div className="space-y-4">
+											<Skeleton className="h-8 w-1/3 rounded-lg" />
+											<div className="space-y-3">
+												{Array.from({ length: 4 }).map((_, i) => (
+													<div key={i} className="flex gap-4 items-center">
+														<Skeleton className="h-9 w-24 rounded-lg shrink-0" />
+														<Skeleton className="h-9 flex-1 rounded-lg" />
+														<Skeleton className="h-9 w-16 rounded-lg shrink-0" />
+														<Skeleton className="h-9 w-16 rounded-lg shrink-0" />
+													</div>
+												))}
+											</div>
+										</div>
+									)}
 								</div>
 							</div>
 						</div>

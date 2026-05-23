@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { facultyApi } from "@/services/api/faculty";
@@ -16,7 +16,7 @@ const TEST_TYPE_COLORS: Record<string, string> = {
 };
 
 /** Expanded sub-row: lazy-loads per-test averages for a course offering */
-export function OfferingTestAverages({ offeringId }: { offeringId: number }) {
+export const OfferingTestAverages = memo(function OfferingTestAverages({ offeringId }: { offeringId: number }) {
 	const [averages, setAverages] = useState<TestAverage[] | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -110,4 +110,4 @@ export function OfferingTestAverages({ offeringId }: { offeringId: number }) {
 			</div>
 		</div>
 	);
-}
+});

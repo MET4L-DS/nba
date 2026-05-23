@@ -43,7 +43,25 @@ export function FacultyLayout() {
 		[courses],
 	);
 
-	const [selectedCourse, setSelectedCourseState] = useState<Course | null>(null);
+	const [selectedCourseState, setSelectedCourseState] = useState<Course | null>(null);
+
+	// Derive the selected course immediately during render if not explicitly set
+	const selectedCourse = useMemo(() => {
+		if (selectedCourseState) return selectedCourseState;
+		if (courses.length === 0) return null;
+
+		let activeCourse = courses.find((c) => c.is_active !== 0) || courses[0];
+		const savedCourseId = localStorage.getItem("faculty_last_course");
+		if (savedCourseId) {
+			const foundCourse = courses.find(
+				(c) => String(c.offering_id || c.course_id) === savedCourseId,
+			);
+			if (foundCourse) {
+				activeCourse = foundCourse;
+			}
+		}
+		return activeCourse;
+	}, [selectedCourseState, courses]);
 
 	const setSelectedCourse = useCallback((course: Course | null) => {
 		setSelectedCourseState(course);
@@ -59,9 +77,9 @@ export function FacultyLayout() {
 		}
 	}, []);
 
-	// Synchronize or restore course selection
+	// Commit derived selection back to state asynchronously to keep it synchronized
 	useEffect(() => {
-		if (courses.length > 0 && !selectedCourse) {
+		if (courses.length > 0 && !selectedCourseState) {
 			let activeCourse = courses.find((c) => c.is_active !== 0) || courses[0];
 			const savedCourseId = localStorage.getItem("faculty_last_course");
 
@@ -76,12 +94,12 @@ export function FacultyLayout() {
 					});
 				}
 			}
-			setSelectedCourse(activeCourse);
+			setSelectedCourseState(activeCourse);
 		}
-	}, [courses, selectedCourse, setSelectedCourse]);
+	}, [courses, selectedCourseState]);
 
-	// Dynamically calculate page title based on route
-	const getHeaderTitle = () => {
+	// Dynamically calculate page title based on route using useMemo
+	const headerTitle = useMemo(() => {
 		const path = location.pathname;
 		if (path.endsWith("/faculty/assessments")) return "Assessments";
 		if (path.endsWith("/faculty/students")) return "Enrolled Students";
@@ -90,7 +108,7 @@ export function FacultyLayout() {
 		if (path.endsWith("/faculty/copo")) return "CO-PO Mapping";
 		if (path.endsWith("/faculty/logs")) return "My Audit Logs";
 		return "Faculty Dashboard";
-	};
+	}, [location.pathname]);
 
 	// Determine if course dropdown should be visible
 	const showCourseDropdown = !location.pathname.endsWith("/faculty/logs");
@@ -131,55 +149,67 @@ export function FacultyLayout() {
 		refreshCourses,
 	]);
 
+	// Memoize the header actions grid to prevent AppHeader from re-rendering
+	const headerActions = useMemo(() => (
+		<div className="flex items-center gap-2">
+			{showCourseDropdown && courses.length > 0 && (
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button
+							variant="outline"
+							size="sm"
+							className="hover:bg-primary/[0.02] active:scale-95 duration-200"
+						>
+							{selectedCourse
+								? selectedCourse.course_code
+								: "Select Course"}
+							<ChevronDown className="ml-2 h-4 w-4" />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						{courses.map((course) => (
+							<DropdownMenuItem
+								key={course.offering_id || course.course_id}
+								onClick={() => setSelectedCourse(course)}
+								className="font-medium cursor-pointer"
+							>
+								{course.course_code} - {course.course_name}
+								{course.is_active === 0 ? " (Locked)" : ""}
+							</DropdownMenuItem>
+						))}
+					</DropdownMenuContent>
+				</DropdownMenu>
+			)}
+			<Button
+				variant="outline"
+				size="icon"
+				onClick={handleRefresh}
+				disabled={isLoadingCourses}
+				className="hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95 h-8 w-8 shrink-0"
+			>
+				<RefreshCw
+					className={`h-4 w-4 ${isLoadingCourses ? "animate-spin" : ""}`}
+				/>
+			</Button>
+		</div>
+	), [
+		showCourseDropdown,
+		courses,
+		selectedCourse,
+		setSelectedCourse,
+		handleRefresh,
+		isLoadingCourses,
+	]);
+
 	return (
 		<div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 			<AppHeader
-				title={getHeaderTitle()}
+				title={headerTitle}
 				sidebarOpen={sidebarOpen}
 				onToggleSidebar={handleToggleSidebar}
 				onLogout={handleLogout}
 			>
-				<div className="flex items-center gap-2">
-					{showCourseDropdown && courses.length > 0 && (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="outline"
-									size="sm"
-									className="hover:bg-primary/[0.02] active:scale-95 duration-200"
-								>
-									{selectedCourse
-										? selectedCourse.course_code
-										: "Select Course"}
-									<ChevronDown className="ml-2 h-4 w-4" />
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								{courses.map((course) => (
-									<DropdownMenuItem
-										key={course.offering_id || course.course_id}
-										onClick={() => setSelectedCourse(course)}
-										className="font-medium cursor-pointer"
-									>
-										{course.course_code} - {course.course_name}
-										{course.is_active === 0 ? " (Locked)" : ""}
-									</DropdownMenuItem>
-								))}
-							</DropdownMenuContent>
-						</DropdownMenu>
-					)}
-					<Button
-						variant="outline"
-						size="icon"
-						onClick={handleRefresh}
-						disabled={isLoadingCourses}
-						className="hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95 h-8 w-8 shrink-0"
-					>
-						<RefreshCw
-							className={`h-4 w-4 ${isLoadingCourses ? "animate-spin" : ""}`}
-						/>
-					</Button>
-				</div>
+				{headerActions}
 			</AppHeader>
 
 			<div className="flex-1 overflow-hidden flex flex-col relative bg-zinc-50/40 dark:bg-background/25">

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -21,7 +22,7 @@ interface ConcludeCourseDialogProps {
 	onConclude: () => void;
 }
 
-export function ConcludeCourseDialog({
+export const ConcludeCourseDialog = memo(function ConcludeCourseDialog({
 	open,
 	onOpenChange,
 	canConclude,
@@ -131,4 +132,4 @@ export function ConcludeCourseDialog({
 			</AlertDialogContent>
 		</AlertDialog>
 	);
-}
+});

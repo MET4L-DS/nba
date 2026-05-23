@@ -2,7 +2,7 @@
 
 **Base URL:** `http://localhost/nba/api/`  
 **Authentication:** All endpoints (except login) require: `Authorization: Bearer <jwt_token>`
-**Version:** 7.0 (Attainment Snapshots + Programme Module)
+**Version:** 8.0 (Surveys, Action Plans, Programme Batches, Staff Enrollment)
 
 ---
 
@@ -26,7 +26,9 @@ Users have a fixed **base role** (`admin`, `faculty`, `hod`, `dean`, `staff`). A
 10. [Enrollment Management](#enrollment-management)
 11. [Attainment Configuration](#attainment-configuration)
 12. [Attainment Snapshots](#attainment-snapshots)
-13. [Error Codes](#error-codes)
+13. [Survey Management](#survey-management)
+14. [Action Plan Management](#action-plan-management)
+15. [Error Codes](#error-codes)
 
 ---
 
@@ -198,7 +200,10 @@ Query params: `page`, `limit`, `action` (CREATE|UPDATE|DELETE|LOGIN), `entity_ty
 
 ### 11. Manage Departments
 
-**GET** `/admin/departments` | **POST** `/admin/departments`
+**GET** `/admin/departments` — List all  
+**POST** `/admin/departments` — Create  
+**PUT** `/admin/departments/{id}` — Update  
+**DELETE** `/admin/departments/{id}` — Delete
 
 ```json
 // POST Request
@@ -209,18 +214,29 @@ Query params: `page`, `limit`, `action` (CREATE|UPDATE|DELETE|LOGIN), `entity_ty
 
 ### 12. Manage Programmes
 
-**GET** `/admin/programmes` | **POST** `/admin/programmes`
+**GET** `/admin/programmes` — List all  
+**POST** `/admin/programmes` — Create  
+**PUT** `/admin/programmes/{id}` — Update  
+**DELETE** `/admin/programmes/{id}` — Delete
 
 ```json
 // POST Request
 { "department_id": 1, "programme_code": "CSE-MTECH", "programme_name": "M.Tech CSE", "degree_level": "PG", "duration_years": 2 }
 ```
 
+**GET** `/admin/programmes/{id}/courses` — List courses in programme  
+**POST** `/admin/programmes/{id}/courses` — Add course to programme  
+**DELETE** `/admin/programmes/{id}/courses/{courseId}` — Remove course from programme  
+**POST** `/admin/programmes/{id}/students/bulk` — Bulk enroll students into programme
+
 ---
 
 ### 13. Manage Schools
 
-**GET** `/admin/schools` | **POST** `/admin/schools` | **PUT** `/admin/schools/{id}` | **DELETE** `/admin/schools/{id}`
+**GET** `/admin/schools` — List all  
+**POST** `/admin/schools` — Create  
+**PUT** `/admin/schools/{id}` — Update  
+**DELETE** `/admin/schools/{id}` — Delete
 
 ```json
 // POST Request
@@ -343,18 +359,38 @@ Same query params as admin logs, scoped to HOD's department.
 **POST** `/hod/programmes` — Create programme  
 **PUT** `/hod/programmes/{id}` — Update programme  
 **DELETE** `/hod/programmes/{id}` — Delete programme  
+**GET** `/hod/programmes/with-batches` — List programmes that have batches
+
 **GET** `/hod/programmes/{id}/courses` — List courses in programme  
 **POST** `/hod/programmes/{id}/courses` — Add course to programme  
-**POST** `/hod/programmes/{id}/students/bulk` — Bulk enroll students into programme
+**DELETE** `/hod/programmes/{id}/courses/{courseId}` — Remove course from programme  
+**POST** `/hod/programmes/{id}/students/bulk` — Bulk enroll students into programme  
+**PUT** `/hod/programmes/{id}/weightage` — Update programme weightage
 
 ```json
 // POST Programme
 { "programme_code": "CSE-BTECH", "programme_name": "B.Tech CSE", "degree_level": "UG", "duration_years": 4 }
+
+// PUT Weightage
+{ "co_weightage": 40, "po_weightage": 60 }
 ```
 
 ---
 
-### 23. Course Completion Workflow
+### 23. Manage Programme Batches
+
+**GET** `/hod/programmes/{programmeId}/batches` — List batches for a programme  
+**POST** `/hod/programmes/{programmeId}/batches` — Create a new batch  
+**GET** `/hod/batches/{batchId}` — Get batch details
+
+```json
+// POST Request
+{ "batch_year": 2024, "academic_year": "2024-2028" }
+```
+
+---
+
+### 24. Course Completion Workflow
 
 **GET** `/hod/offerings/{offeringId}/test-averages` — View test averages  
 **POST** `/hod/offerings/{offeringId}/reopen` — Reopen a concluded course (clears snapshot, sets `is_active = 1`)
@@ -365,7 +401,7 @@ Same query params as admin logs, scoped to HOD's department.
 
 **Role Required:** `is_dean: true`
 
-### 24. Get Dean Stats
+### 25. Get Dean Stats
 
 **GET** `/dean/stats`
 
@@ -375,13 +411,13 @@ Same query params as admin logs, scoped to HOD's department.
 
 ---
 
-### 25. View All Data
+### 26. View All Data
 
 **GET** `/dean/departments` | **GET** `/dean/users` | **GET** `/dean/courses` | **GET** `/dean/students` | **GET** `/dean/tests`
 
 ---
 
-### 26. Department Analytics
+### 27. Department Analytics
 
 **GET** `/dean/analytics`
 
@@ -391,7 +427,7 @@ Same query params as admin logs, scoped to HOD's department.
 
 ---
 
-### 27. Manage HODs
+### 28. Manage HODs
 
 **GET** `/dean/departments/{departmentId}/faculty` — List faculty in department  
 **POST** `/dean/departments/{departmentId}/hod` — Appoint HOD  
@@ -412,7 +448,7 @@ Same query params as admin logs, scoped to HOD's department.
 
 **Role Required:** `faculty` or `hod`
 
-### 28. Get Faculty Stats
+### 29. Get Faculty Stats
 
 **GET** `/faculty/stats`
 
@@ -422,13 +458,13 @@ Same query params as admin logs, scoped to HOD's department.
 
 ---
 
-### 29. View Audit Logs
+### 30. View Audit Logs
 
 **GET** `/faculty/logs?page=1&limit=20`
 
 ---
 
-### 30. Get Faculty Courses
+### 31. Get Faculty Courses
 
 **GET** `/faculty/courses`
 
@@ -445,7 +481,7 @@ Returns courses assigned to the authenticated faculty member.
 
 ---
 
-### 31. Get Enrolled Students
+### 32. Get Enrolled Students
 
 **GET** `/faculty/students`
 
@@ -453,14 +489,14 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 32. Manage Students
+### 33. Manage Students
 
 **PUT** `/faculty/students/{rollno}` — Update student  
 **DELETE** `/faculty/students/{rollno}` — Remove student from all courses
 
 ---
 
-### 33. Course Completion Workflow
+### 34. Course Completion Workflow
 
 **GET** `/faculty/courses/{offeringId}/check-completion` — Check whether course can be concluded  
 **POST** `/faculty/courses/{offeringId}/conclude` — Conclude (lock) course, computing & persisting attainment snapshots  
@@ -469,7 +505,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 34. Delete Test
+### 35. Delete Test
 
 **DELETE** `/tests/{id}`
 
@@ -483,7 +519,7 @@ Returns students enrolled in the faculty's courses.
 
 **Role Required:** `staff`
 
-### 35. Get Staff Stats
+### 36. Get Staff Stats
 
 **GET** `/staff/stats`
 
@@ -493,14 +529,29 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 36. Manage Courses
+### 37. Manage Courses
 
 **GET** `/staff/courses` — List department courses  
-**POST** `/staff/courses` — Create course offering
+**POST** `/staff/courses` — Create course offering  
+**PUT** `/staff/courses/{id}` — Update offering  
+**DELETE** `/staff/courses/{id}` — Delete offering
 
 ---
 
-### 37. View Data
+### 38. Manage Course Enrollments (Staff)
+
+**GET** `/staff/courses/{courseId}/enrollments` — List enrollments for a course  
+**POST** `/staff/courses/{courseId}/enrollments` — Bulk enroll students  
+**DELETE** `/staff/courses/{courseId}/enrollments/{rollno}` — Remove a single enrollment
+
+```json
+// POST Request
+{ "students": [ { "roll_no": "2024CSE001", "student_name": "Alice Johnson", "programme_id": 1 } ] }
+```
+
+---
+
+### 39. View Data
 
 **GET** `/staff/faculty` — List department faculty  
 **GET** `/staff/students` — List department students
@@ -509,7 +560,7 @@ Returns students enrolled in the faculty's courses.
 
 ## Course & Offering Management
 
-### 38. Get Courses (Available to all authenticated users)
+### 40. Get Courses (Available to all authenticated users)
 
 **GET** `/courses`
 
@@ -526,7 +577,7 @@ Returns students enrolled in the faculty's courses.
 
 ## Assessment Management
 
-### 39. Create Assessment
+### 41. Create Assessment
 
 **POST** `/assessment`
 
@@ -550,7 +601,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 40. Get Assessment Details
+### 42. Get Assessment Details
 
 **GET** `/assessment?test_id=1`
 
@@ -574,7 +625,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 41. Get Course Tests
+### 43. Get Course Tests
 
 **GET** `/course-tests?offering_id=1`
 
@@ -589,7 +640,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 42. Update Question
+### 44. Update Question
 
 **PUT** `/questions/{id}`
 
@@ -600,7 +651,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 43. Delete Question
+### 45. Delete Question
 
 **DELETE** `/questions/{id}`
 
@@ -612,7 +663,7 @@ Returns students enrolled in the faculty's courses.
 
 ## Marks Management
 
-### 44. Save Marks by Question
+### 46. Save Marks by Question
 
 **POST** `/marks/by-question`
 
@@ -626,7 +677,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 45. Save Marks by CO
+### 47. Save Marks by CO
 
 **POST** `/marks/by-co`
 
@@ -640,7 +691,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 46. Bulk Save Marks
+### 48. Bulk Save Marks
 
 **POST** `/marks/bulk`
 
@@ -654,7 +705,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 47. Get Student Marks
+### 49. Get Student Marks
 
 **GET** `/marks?test_id=1&student_id=2024CSE001`
 
@@ -665,7 +716,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 48. Get Test Marks (All Students)
+### 50. Get Test Marks (All Students)
 
 **GET** `/marks/test?test_id=1&include_raw=true`
 
@@ -681,7 +732,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 49. Update Raw Marks Entry
+### 51. Update Raw Marks Entry
 
 **PUT** `/marks/raw/{id}`
 
@@ -692,7 +743,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 50. Delete Raw Marks Entry
+### 52. Delete Raw Marks Entry
 
 **DELETE** `/marks/raw/{id}`
 
@@ -702,7 +753,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 51. Delete All Student Marks
+### 53. Delete All Student Marks
 
 **DELETE** `/marks/student/{testId}/{studentId}`
 
@@ -714,7 +765,7 @@ Returns students enrolled in the faculty's courses.
 
 ## Enrollment Management
 
-### 52. Bulk Enroll Students
+### 54. Bulk Enroll Students
 
 **POST** `/offerings/{offeringId}/enroll`
 
@@ -728,7 +779,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 53. Get Course Enrollments
+### 55. Get Course Enrollments
 
 **GET** `/offerings/{offeringId}/enrollments?test_id=1`
 
@@ -743,7 +794,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 54. Remove Enrollment
+### 56. Remove Enrollment
 
 **DELETE** `/offerings/{offeringId}/enroll/{rollno}`
 
@@ -755,7 +806,7 @@ Returns students enrolled in the faculty's courses.
 
 ## Attainment Configuration
 
-### 55. Get Attainment Config
+### 57. Get Attainment Config
 
 **GET** `/offerings/{offeringId}/attainment-config`
 
@@ -779,7 +830,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 56. Save Attainment Config
+### 58. Save Attainment Config
 
 **POST** `/offerings/{offeringId}/attainment-config`
 
@@ -807,17 +858,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 57. Delete Attainment Config
-
-**DELETE** `/attainment/config/{offeringId}`
-
-```json
-{ "success": true, "message": "Attainment configuration deleted successfully" }
-```
-
----
-
-### 58. Get CO-PO Matrix
+### 59. Get CO-PO Matrix
 
 **GET** `/offerings/{offeringId}/copo-matrix`
 
@@ -834,7 +875,7 @@ Returns students enrolled in the faculty's courses.
 
 ---
 
-### 59. Save CO-PO Matrix
+### 60. Save CO-PO Matrix
 
 **POST** `/offerings/{offeringId}/copo-matrix`
 
@@ -857,7 +898,7 @@ Returns students enrolled in the faculty's courses.
 
 ## Attainment Snapshots
 
-### 60. Get Offering Attainment
+### 61. Get Offering Attainment
 
 **GET** `/offerings/{offeringId}/attainment`
 
@@ -891,7 +932,7 @@ Returns persisted snapshot data when the course is concluded/locked, otherwise c
 
 ---
 
-### 61. Get Programme Attainment
+### 62. Get Programme Attainment
 
 **GET** `/programmes/{programmeId}/attainment?batch_year=2024`
 
@@ -913,6 +954,51 @@ Returns PO attainment averaged across all locked offerings whose enrolled studen
 ```
 
 `batch_year` query param is optional — omit to include all batches.
+
+---
+
+### 63. Calculate Programme Attainment
+
+**POST** `/programmes/{programmeId}/attainment?batch_year=2024`
+
+Triggers a fresh calculation of programme-level attainment (PO attainment averaged across locked offerings).
+
+```json
+// RESPONSE (200)
+{
+  "success": true,
+  "message": "Programme attainment calculated successfully",
+  "data": {
+    "programme_id": 1,
+    "batch_year": 2024,
+    "po_attainment": [ ... ]
+  }
+}
+```
+
+---
+
+### 64. Get Course-Level Programme Attainment
+
+**GET** `/programmes/{programmeId}/attainment/courses?batch_year=2024`
+
+Returns course-level CO/PO attainment for a programme. Shows which courses contributed to programme PO attainment.
+
+```json
+// RESPONSE (200)
+{
+  "success": true,
+  "data": [
+    {
+      "offering_id": 10,
+      "course_code": "CS101",
+      "course_name": "Intro to Programming",
+      "co_attainment": [ ... ],
+      "po_attainment": [ ... ]
+    }
+  ]
+}
+```
 
 ---
 
@@ -946,6 +1032,103 @@ Clears attainment snapshots and sets `course_faculty_assignments.is_active = 1`.
 ```json
 // RESPONSE (200)
 { "success": true, "message": "Course offering reopened successfully" }
+```
+
+---
+
+## Survey Management
+
+### 65. Course Exit Survey
+
+**GET** `/offerings/{offeringId}/survey/course-exit` — Get course exit survey data  
+**DELETE** `/offerings/{offeringId}/survey/course-exit` — Clear course exit survey data
+
+**GET** `/offerings/{offeringId}/survey/course-exit/enrollments` — Get students eligible for course exit survey
+
+**POST** `/offerings/{offeringId}/survey/course-exit/questions` — Save manually defined course exit questions
+
+```json
+// POST /questions Request
+{
+  "questions": [
+    { "question_text": "Rate the course content", "question_type": "rating", "max_rating": 5 }
+  ]
+}
+```
+
+**POST** `/offerings/{offeringId}/survey/course-exit/responses/manual` — Save manual responses for course exit survey
+
+```json
+{
+  "responses": [
+    { "student_rollno": "2024CSE001", "question_id": 1, "response_value": 4 }
+  ]
+}
+```
+
+**POST** `/offerings/{offeringId}/survey/course-exit/import` — Import course exit CSV
+
+**GET** `/offerings/{offeringId}/survey/course-exit/results` — Get course exit survey results
+
+---
+
+### 66. Stakeholder Survey (Programme Level)
+
+**GET** `/programmes/{programmeId}/survey/stakeholder` — Get stakeholder survey data  
+**DELETE** `/programmes/{programmeId}/survey/stakeholder` — Clear stakeholder survey data
+
+**POST** `/programmes/{programmeId}/survey/stakeholder/questions` — Save stakeholder survey questions
+
+**POST** `/programmes/{programmeId}/survey/stakeholder/import` — Import stakeholder survey CSV
+
+**GET** `/programmes/{programmeId}/survey/stakeholder/responses/manual` — Get manual stakeholder responses  
+**POST** `/programmes/{programmeId}/survey/stakeholder/responses/manual` — Save manual stakeholder responses
+
+**GET** `/programmes/{programmeId}/survey/stakeholder/results` — Get stakeholder survey results
+
+---
+
+## Action Plan Management
+
+### 67. Manage Action Plans
+
+**GET** `/programmes/{programmeId}/action-plans` — List action plans for a programme  
+**POST** `/programmes/{programmeId}/action-plans` — Create a new action plan
+
+```json
+// POST Request
+{
+  "po_name": "PO1",
+  "target_value": 2.5,
+  "strategy": "Improve lab assessments",
+  "timeline": "2026-2027",
+  "responsible_person": "Dr. Sharma"
+}
+```
+
+**PUT** `/action-plans/{planId}` — Update an action plan  
+**DELETE** `/action-plans/{planId}` — Delete an action plan
+
+```json
+// PUT Request
+{ "strategy": "Updated strategy", "target_value": 2.8, "status": "in_progress" }
+```
+
+---
+
+### 68. Programme Attainment Targets
+
+**GET** `/programmes/{programmeId}/attainment/targets` — Get attainment targets for a programme  
+**POST** `/programmes/{programmeId}/attainment/targets` — Set/update attainment targets
+
+```json
+// POST Request
+{
+  "targets": [
+    { "po_name": "PO1", "target_value": 2.5 },
+    { "po_name": "PO2", "target_value": 2.0 }
+  ]
+}
 ```
 
 ---

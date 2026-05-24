@@ -9,6 +9,7 @@ import type {
 	BulkMarksEntry,
 } from "@/services/api";
 import { ITEMS_PER_PAGE } from "../constants";
+import { calculateRowTotal } from "../utils";
 
 interface UseFacultyMarksByQuestionProps {
 	selectedCourse: Course;
@@ -324,10 +325,7 @@ export function useFacultyMarksByQuestion({
 	}, [enrollments, questions, marks]);
 
 	const rowTotal = useCallback((rollno: string) => {
-		return questions.reduce((sum, q) => {
-			const v = parseFloat(marks[rollno]?.[q.question_identifier] || "");
-			return isNaN(v) ? sum : sum + v;
-		}, 0);
+		return calculateRowTotal(rollno, questions, marks);
 	}, [questions, marks]);
 
 	const averageTotal = useMemo(() => {

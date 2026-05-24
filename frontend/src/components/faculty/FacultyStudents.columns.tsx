@@ -2,25 +2,13 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { EnrolledStudent } from "@/services/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ChevronDown } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { sortableHeader } from "../../features/shared/tableUtils";
-import { motion, AnimatePresence } from "framer-motion";
+import { EnrolledCoursesCell } from "./components/EnrolledCoursesCell";
+import { statusVariant } from "./utils";
 
 export { STATUS_OPTIONS } from "./constants";
-
-export const statusVariant = (status: string) => {
-	switch (status?.toLowerCase()) {
-		case "active":
-			return "default";
-		case "graduated":
-			return "secondary";
-		case "inactive":
-		case "dropped":
-			return "destructive";
-		default:
-			return "outline";
-	}
-};
+export { statusVariant };
 
 export function getFacultyStudentsColumns(
 	handleEditOpen: (s: EnrolledStudent) => void,
@@ -101,15 +89,12 @@ export function getFacultyStudentsColumns(
 			accessorKey: "student_status",
 			header: "Status",
 			cell: ({ row }) => {
-				const status = row.original.student_status?.toLowerCase();
-				let badgeStyle = "bg-muted/40 text-muted-foreground border-muted-foreground/20";
-				if (status === "active") badgeStyle = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 font-bold";
-				else if (status === "graduated") badgeStyle = "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 font-bold";
-				else if (status === "inactive" || status === "dropped") badgeStyle = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 font-bold";
+				const status = row.original.student_status ?? "Active";
+				const variant = statusVariant(status);
 				
 				return (
-					<Badge variant="outline" className={`rounded-xl px-2.5 py-0.5 border ${badgeStyle}`}>
-						{row.original.student_status}
+					<Badge variant={variant} className="rounded-xl px-2.5 py-0.5 font-bold">
+						{status}
 					</Badge>
 				);
 			},
@@ -118,75 +103,12 @@ export function getFacultyStudentsColumns(
 			accessorKey: "enrolled_courses",
 			header: "Enrolled In",
 			cell: ({ row }) => {
-				const courses = row.original.enrolled_courses
-					? row.original.enrolled_courses.split(", ")
-					: [];
-				const isExpanded = row.getIsExpanded();
-				const visibleCourses = isExpanded
-					? courses
-					: courses.slice(0, 2);
-				const hasMore = courses.length > 2;
-
 				return (
-					<div className="flex items-start gap-2 py-1">
-						<div className="flex flex-col items-start">
-							<AnimatePresence initial={false}>
-								{visibleCourses.length > 0 ? (
-									visibleCourses.map((course, idx) => (
-										<motion.div
-											key={`${course}-${idx}`}
-											initial={{
-												opacity: 0,
-												height: 0,
-												overflow: "hidden",
-											}}
-											animate={{
-												opacity: 1,
-												height: "auto",
-											}}
-											exit={{ opacity: 0, height: 0 }}
-											transition={{
-												duration: 0.2,
-												ease: "easeInOut",
-											}}
-										>
-											<div className="pb-1">
-												<Badge
-													variant="outline"
-													className="px-1.5 py-0 font-normal rounded-lg border-muted/50 bg-background/50"
-												>
-													{course}
-												</Badge>
-											</div>
-										</motion.div>
-									))
-								) : (
-									<span className="text-xs text-muted-foreground pb-1">
-										—
-									</span>
-								)}
-							</AnimatePresence>
-						</div>
-						{hasMore && (
-							<Button
-								variant="ghost"
-								size="sm"
-								className="h-5 w-5 p-0 mt-0.5 group hover:bg-violet-500/10 hover:text-violet-600 transition-colors shrink-0 rounded-lg active:scale-95"
-								onClick={row.getToggleExpandedHandler()}
-								title={
-									isExpanded
-										? "Show less"
-										: `Show ${courses.length - 2} more`
-								}
-							>
-								<ChevronDown
-									className={`h-4 w-4 text-muted-foreground group-hover:text-violet-600 transition-transform duration-200 ${
-										isExpanded ? "rotate-180" : ""
-									}`}
-								/>
-							</Button>
-						)}
-					</div>
+					<EnrolledCoursesCell
+						enrolledCourses={row.original.enrolled_courses}
+						isExpanded={row.getIsExpanded()}
+						onToggleExpand={row.getToggleExpandedHandler()}
+					/>
 				);
 			},
 		},

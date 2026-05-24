@@ -2,9 +2,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { Course } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Archive, Eye } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { sortableHeader } from "../../features/shared/tableUtils";
 import type { NavigateFunction } from "react-router-dom";
+import { CourseActionsCell } from "./components/CourseActionsCell";
 
 export function getFacultyOverviewColumns(
 	openConcludeDialog: (course: Course) => void,
@@ -130,42 +131,13 @@ export function getFacultyOverviewColumns(
 		{
 			id: "actions",
 			header: "Actions",
-			cell: ({ row }) => {
-				const course = row.original;
-				const offeringId = course.offering_id || course.course_id;
-
-				if (course.is_active === 0 || course.cfa_is_active === 0) {
-					return (
-						<div className="flex justify-start gap-2">
-							<Button
-								variant="ghost"
-								size="sm"
-								title="View CO-PO Mapping"
-								onClick={() =>
-									navigate(
-										`/faculty/copo?offering_id=${offeringId}`,
-									)
-								}
-								className="h-8 gap-2 text-primary hover:bg-primary/[0.06] hover:text-primary font-semibold active:scale-95 duration-200 transition-all border border-muted/50 hover:border-primary/20"
-							>
-								<Eye className="h-4 w-4 text-primary" />
-								CO-PO
-							</Button>
-						</div>
-					);
-				}
-				return (
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => openConcludeDialog(course)}
-						className="h-8 gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 active:scale-95 duration-200 transition-all font-semibold border border-rose-500/20"
-					>
-						<Archive className="h-4 w-4 text-rose-500" />
-						Conclude
-					</Button>
-				);
-			},
+			cell: ({ row }) => (
+				<CourseActionsCell
+					course={row.original}
+					onConclude={openConcludeDialog}
+					onNavigate={navigate}
+				/>
+			),
 		},
 	];
 }

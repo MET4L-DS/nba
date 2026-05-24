@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { GraduationCap, RefreshCw, X } from "lucide-react";
 import { getFacultyStudentsColumns } from "./FacultyStudents.columns";
-import { EditStudentDialog } from "./EditStudentDialog";
+import { EditStudentDialog } from "./components/EditStudentDialog";
 import { useFacultyStudents } from "./hooks/useFacultyStudents";
 import { BATCH_OPTIONS, STATUS_OPTIONS } from "./constants";
 

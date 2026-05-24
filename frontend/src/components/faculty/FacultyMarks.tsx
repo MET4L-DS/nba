@@ -1,11 +1,11 @@
-import { useState, useEffect, lazy, Suspense } from "react";
-import { apiService } from "@/services/api";
-import type { Course, Test } from "@/services/api";
+import { lazy, Suspense, memo } from "react";
+import type { Course } from "@/services/api";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FacultyMarksByQuestion } from "./FacultyMarksByQuestion";
+import { useFacultyMarks } from "./hooks/useFacultyMarks";
 
 const MarksEntryByCO = lazy(() =>
 	import("@/features/marks/MarksEntryByCO").then((m) => ({
@@ -19,94 +19,30 @@ const ViewTestMarks = lazy(() =>
 	}))
 );
 
-type ViewMode = "by-question" | "by-co" | "bulk";
-
 interface FacultyMarksProps {
 	selectedCourse: Course | null;
 	readOnly?: boolean;
 }
 
-export function FacultyMarks({ selectedCourse, readOnly = false }: FacultyMarksProps) {
-	const [tests, setTests] = useState<Test[]>([]);
-	const [testsLoading, setTestsLoading] = useState(false);
-	const [selectedTest, setSelectedTest] = useState<Test | null>(null);
-	const [viewMode, setViewMode] = useState<ViewMode>("by-question");
-	const [stats, setStats] = useState<{
-		entered: number;
-		total: number;
-		average: string;
-	} | null>(null);
-
-	useEffect(() => {
-		if (selectedCourse) {
-			loadTests();
-		} else {
-			setTests([]);
-			setSelectedTest(null);
-		}
-	}, [selectedCourse]);
-
-	const loadTests = async () => {
-		if (!selectedCourse) return;
-		setTestsLoading(true);
-		try {
-			const testsData = await apiService.getCourseTests(
-				selectedCourse.offering_id ?? selectedCourse.course_id,
-			);
-			const list: Test[] = Array.isArray(testsData) ? testsData : [];
-			setTests(list);
-			if (list.length > 0) {
-				setSelectedTest(list[0]);
-			}
-		} catch (err) {
-			console.error("Failed to load tests:", err);
-			setTests([]);
-		} finally {
-			setTestsLoading(false);
-		}
-	};
-
-	const handleTabSelect = (test: Test) => {
-		if (test.id === selectedTest?.id) return;
-		setSelectedTest(test);
-		setStats(null);
-	};
-
-	const getTabStatus = (test: Test) => {
-		if (
-			test.id !== selectedTest?.id ||
-			viewMode !== "by-question" ||
-			!stats ||
-			stats.total === 0
-		) {
-			return {
-				dot: "bg-muted-foreground/30",
-				subtitle: `Full Marks: ${test.full_marks || "?"}`,
-			};
-		}
-		const pct = Math.round((stats.entered / stats.total) * 100);
-		const dot =
-			stats.entered === 0
-				? "bg-muted-foreground/30"
-				: stats.entered === stats.total
-					? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-					: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]";
-		const label =
-			stats.entered === 0
-				? "Pending"
-				: stats.entered === stats.total
-					? "Completed"
-					: `${pct}% Entered`;
-		return {
-			dot,
-			subtitle: `${label} | Full: ${test.full_marks || "?"}`,
-		};
-	};
+export const FacultyMarks = memo(function FacultyMarks({
+	selectedCourse,
+	readOnly = false,
+}: FacultyMarksProps) {
+	const {
+		tests,
+		testsLoading,
+		selectedTest,
+		viewMode,
+		setViewMode,
+		setStats,
+		handleTabSelect,
+		getTabStatus,
+	} = useFacultyMarks({ selectedCourse });
 
 	if (!selectedCourse) {
 		return (
 			<div className="flex flex-col items-center justify-center h-[400px] text-center p-6 bg-card/45 backdrop-blur-md border border-muted/50 rounded-2xl shadow-lg relative overflow-hidden">
-				<div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 to-indigo-500" />
+				<div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 to-indigo-50" />
 				<div className="p-4 rounded-full bg-muted/40 mb-4 border border-muted/60">
 					<FileText className="w-8 h-8 text-muted-foreground/40" />
 				</div>
@@ -121,7 +57,7 @@ export function FacultyMarks({ selectedCourse, readOnly = false }: FacultyMarksP
 	const renderTabs = () => (
 		<Tabs
 			value={viewMode}
-			onValueChange={(v) => setViewMode(v as ViewMode)}
+			onValueChange={(v) => setViewMode(v as any)}
 		>
 			<TabsList className="bg-muted/50 border border-muted/80 backdrop-blur-sm rounded-xl p-1 h-auto gap-0.5">
 				<TabsTrigger
@@ -271,4 +207,4 @@ export function FacultyMarks({ selectedCourse, readOnly = false }: FacultyMarksP
 			</div>
 		</div>
 	);
-}
+});

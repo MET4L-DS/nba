@@ -2,7 +2,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import type { User } from "@/services/api";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export interface NavItem {
 	id: string;
@@ -76,18 +76,13 @@ export function AppSidebar({
 							return (
 								<div key={item.id} className="relative">
 									{/* Sliding capsule background */}
-									<AnimatePresence>
-										{isActive && (
-											<motion.div
-												layoutId="activeNavIndicator"
-												className="absolute inset-0 bg-indigo-50 dark:bg-indigo-950/60 rounded-xl border border-indigo-100 dark:border-indigo-900/40"
-												initial={{ opacity: 0 }}
-												animate={{ opacity: 1 }}
-												exit={{ opacity: 0 }}
-												transition={{ type: "spring", stiffness: 380, damping: 30 }}
-											/>
-										)}
-									</AnimatePresence>
+									{isActive && (
+										<motion.div
+											layoutId="activeNavIndicator"
+											className="absolute inset-0 bg-indigo-50 dark:bg-indigo-950/60 rounded-xl border border-indigo-100 dark:border-indigo-900/40"
+											transition={{ type: "spring", stiffness: 380, damping: 30 }}
+										/>
+									)}
 									<motion.button
 										onClick={() => onNavigate(item.id)}
 										className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors z-10 ${

@@ -153,7 +153,19 @@ export function DashboardLayout() {
 
 	// Determine active ID from URL
 	const pathParts = location.pathname.split("/");
-	const activeId = pathParts[pathParts.length - 1] || "dashboard";
+	const lastPart = pathParts[pathParts.length - 1];
+	
+	let activeId = "dashboard";
+	if (
+		lastPart &&
+		lastPart !== "faculty" &&
+		lastPart !== "hod" &&
+		lastPart !== "dean" &&
+		lastPart !== "staff" &&
+		lastPart !== "dashboard"
+	) {
+		activeId = lastPart;
+	}
 
 	const onNavigate = (id: string) => {
 		let rolePath = `/${user.role}`;

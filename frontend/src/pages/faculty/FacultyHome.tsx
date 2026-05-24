@@ -1,5 +1,5 @@
-import { useFacultyHome } from "./hooks/useFacultyHome";
-import { FacultyWelcomeCard } from "./components/FacultyWelcomeCard";
+import { useFacultyHome } from "@/components/faculty/hooks/useFacultyHome";
+import { FacultyWelcomeCard } from "@/components/faculty/components/FacultyWelcomeCard";
 import { StatsGrid } from "@/features/shared/StatsCard";
 import { QuickAccessGrid } from "@/features/shared/QuickAccessCard";
 import { FacultyOverview } from "@/components/faculty/FacultyOverview";

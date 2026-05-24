@@ -20,7 +20,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
-import { STATUS_OPTIONS } from "./FacultyStudents.columns";
+import { STATUS_OPTIONS } from "./constants";
 
 interface EditStudentDialogProps {
 	student: EnrolledStudent | null;

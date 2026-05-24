@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { memo, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,8 +21,6 @@ import {
 	Pen,
 	ArrowLeft,
 } from "lucide-react";
-import { surveyApi } from "@/services/api/surveys";
-import { debugLogger } from "@/lib/debugLogger";
 import { ClearSurveyConfirm } from "@/features/surveys/ClearSurveyConfirm";
 import { CourseExitSurveyCSVImport } from "@/features/surveys/CourseExitSurveyCSVImport";
 import { AttainmentWeightageConfig } from "@/features/surveys/AttainmentWeightageConfig";
@@ -46,80 +44,40 @@ const AttainmentBarChart = lazy(() =>
 		default: m.AttainmentBarChart,
 	}))
 );
-import { attainmentApi } from "@/services/api/attainment";
-import { coursesApi } from "@/services/api/courses";
 import type { Course } from "@/services/api";
-import type { OfferingAttainmentCO, AttainmentConfig } from "@/services/api/types";
-import type {
-	CourseExitSurveyResultsResponse,
-	CourseExitSurveyQuestionAnalysis,
-	CourseExitSurveyConfig as CourseExitSurveyConfigType,
-} from "@/services/api";
 import { motion } from "framer-motion";
+import { useFacultyCourseSurvey } from "./hooks/useFacultyCourseSurvey";
 
 interface FacultyCourseSurveyProps {
 	selectedCourse: Course;
 }
 
-export function FacultyCourseSurvey({
+export const FacultyCourseSurvey = memo(function FacultyCourseSurvey({
 	selectedCourse,
 }: FacultyCourseSurveyProps) {
 	const offeringId = selectedCourse.offering_id;
-	const [loadError, setLoadError] = useState<string | null>(null);
 
-	const [results, setResults] =
-		useState<CourseExitSurveyResultsResponse | null>(null);
-	const [loading, setLoading] = useState(false);
-	const [config, setConfig] = useState<CourseExitSurveyConfigType | null>(
-		null,
-	);
-	const [attainmentCoData, setAttainmentCoData] = useState<
-		OfferingAttainmentCO[]
-	>([]);
-	const [attainmentConfig, setAttainmentConfig] =
-		useState<AttainmentConfig | null>(null);
-	const [refreshTrigger, setRefreshTrigger] = useState(0);
-	const refresh = useCallback(() => setRefreshTrigger((p) => p + 1), []);
-
-	const [directWeight, setDirectWeight] = useState(80);
-
-	const [metricsOpen, setMetricsOpen] = useState(true);
-	const [configOpen, setConfigOpen] = useState(false);
-	const [showManualEntry, setShowManualEntry] = useState(false);
-	const [filterText, setFilterText] = useState("");
-
-	useEffect(() => {
-		if (!offeringId) {
-			setLoadError("Course offering not available");
-			return;
-		}
-		setLoadError(null);
-		setLoading(true);
-		Promise.all([
-			surveyApi.getCourseExitResults(offeringId),
-			surveyApi.getCourseExitSurvey(offeringId),
-			attainmentApi.getOfferingAttainment(offeringId),
-			coursesApi.getAttainmentConfig(offeringId),
-		])
-			.then(([res, cfg, attainResp, attainCfg]) => {
-				setResults(res);
-				setConfig(cfg);
-				setAttainmentCoData(attainResp.co_attainment ?? []);
-				setAttainmentConfig(attainCfg);
-				setDirectWeight(attainCfg.direct_weightage ?? 80);
-			})
-			.catch((err) => {
-				debugLogger.error(
-					"FacultyCourseSurvey",
-					"Failed to load data",
-					err,
-				);
-				setLoadError("Failed to load survey data. Please try again.");
-			})
-			.finally(() => setLoading(false));
-	}, [offeringId, refreshTrigger]);
-
-	const indirectWeight = 100 - directWeight;
+	const {
+		loading,
+		loadError,
+		results,
+		config,
+		attainmentCoData,
+		attainmentConfig,
+		directWeight,
+		setDirectWeight,
+		indirectWeight,
+		metricsOpen,
+		setMetricsOpen,
+		configOpen,
+		setConfigOpen,
+		showManualEntry,
+		setShowManualEntry,
+		filterText,
+		setFilterText,
+		coGroups,
+		refresh,
+	} = useFacultyCourseSurvey({ offeringId });
 
 	if (!offeringId) {
 		return (
@@ -355,34 +313,12 @@ export function FacultyCourseSurvey({
 								</motion.div>
 
 								<motion.div variants={itemVariants}>
-									{(() => {
-										const coGroups: Record<
-											number,
-											{ questions: CourseExitSurveyQuestionAnalysis[]; avg: number | null }
-										> = {};
-										if (results?.question_analysis) {
-											for (const q of results.question_analysis) {
-												if (!coGroups[q.co_number]) {
-													const coResult = results.co_results.find(
-														(c) => c.co_number === q.co_number,
-													);
-													coGroups[q.co_number] = {
-														questions: [],
-														avg: coResult?.normalized_rating ?? null,
-													};
-												}
-												coGroups[q.co_number].questions.push(q);
-											}
-										}
-										return (
-											<CourseExitSurveyMatrix
-												results={results}
-												coGroups={coGroups}
-												filterText={filterText}
-												onFilterTextChange={setFilterText}
-											/>
-										);
-									})()}
+									<CourseExitSurveyMatrix
+										results={results}
+										coGroups={coGroups}
+										filterText={filterText}
+										onFilterTextChange={setFilterText}
+									/>
 								</motion.div>
 							</motion.div>
 						)}
@@ -424,4 +360,4 @@ export function FacultyCourseSurvey({
 			)}
 		</div>
 	);
-}
+});

@@ -1,7 +1,7 @@
 import { TestList, getBaseTestColumns } from "@/features/shared";
 import type { ColumnDef } from "@tanstack/react-table";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,7 +49,7 @@ export function TestsList({
 	const [deleteConfirmation, setDeleteConfirmation] = useState("");
 	const [isDeleting, setIsDeleting] = useState(false);
 
-	const columns: ColumnDef<Test>[] = [
+	const columns = useMemo<ColumnDef<Test>[]>(() => [
 		...getBaseTestColumns<Test>(),
 		{
 			id: "actions",
@@ -83,7 +83,7 @@ export function TestsList({
 				);
 			},
 		},
-	];
+	], []);
 
 	useEffect(() => {
 		if (course) {

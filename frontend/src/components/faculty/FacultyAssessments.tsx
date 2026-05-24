@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { lazy, Suspense, useCallback, memo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 
 import { TestsList } from "@/features/assessments/TestsList";
-import { apiService } from "@/services/api";
-import type { Course, Test, CourseStats } from "@/services/api";
+import type { Course, Test } from "@/services/api";
+import { useFacultyAssessments } from "./hooks/useFacultyAssessments";
 
 const CreateAssessmentForm = lazy(() =>
 	import("@/features/assessments/CreateAssessmentForm").then((m) => ({
@@ -31,85 +31,35 @@ interface FacultyAssessmentsProps {
 	selectedCourse: Course | null;
 }
 
-export function FacultyAssessments({
+export const FacultyAssessments = memo(function FacultyAssessments({
 	selectedCourse,
 }: FacultyAssessmentsProps) {
 	const isListMounted = useDeferredMount(120);
-	const [showCreateForm, setShowCreateForm] = useState(false);
-	const [showEnrollDialog, setShowEnrollDialog] = useState(false);
-	const [refreshTrigger, setRefreshTrigger] = useState(0);
-	const [testsCount, setTestsCount] = useState(0);
-	const [courseStats, setCourseStats] = useState<CourseStats | null>(null);
-	const [statsLoading, setStatsLoading] = useState(false);
 
-	useEffect(() => {
-		console.log(
-			"[FacultyAssessments] selectedCourse changed:",
-			selectedCourse?.offering_id ?? null,
-		);
-		if (!selectedCourse?.offering_id) {
-			console.log(
-				"[FacultyAssessments] No course selected — clearing stats",
-			);
-			setCourseStats(null);
-			return;
-		}
-		let cancelled = false;
-		setStatsLoading(true);
-		console.log(
-			"[FacultyAssessments] Fetching stats for offering_id:",
-			selectedCourse.offering_id,
-		);
-		apiService
-			.getFacultyCourseStats(selectedCourse.offering_id)
-			.then((data) => {
-				console.log("[FacultyAssessments] Stats fetched:", data);
-				if (!cancelled) setCourseStats(data);
-			})
-			.catch((err) => {
-				console.error("[FacultyAssessments] Stats fetch failed:", err);
-				if (!cancelled) setCourseStats(null);
-			})
-			.finally(() => {
-				if (!cancelled) setStatsLoading(false);
-			});
-		return () => {
-			cancelled = true;
-		};
-	}, [selectedCourse?.offering_id]);
+	const {
+		showCreateForm,
+		setShowCreateForm,
+		showEnrollDialog,
+		setShowEnrollDialog,
+		refreshTrigger,
+		testsCount,
+		setTestsCount,
+		courseStats,
+		statsLoading,
+		triggerRefresh,
+	} = useFacultyAssessments({ selectedCourse });
 
-	// Re-fetch stats when assessments list changes (create/delete)
-	useEffect(() => {
-		if (!selectedCourse?.offering_id || refreshTrigger === 0) return;
-		console.log(
-			"[FacultyAssessments] Refreshing stats after assessment change, trigger:",
-			refreshTrigger,
-		);
-		apiService
-			.getFacultyCourseStats(selectedCourse.offering_id)
-			.then((data) => {
-				console.log("[FacultyAssessments] Stats refreshed:", data);
-				setCourseStats(data);
-			})
-			.catch((err) =>
-				console.error(
-					"[FacultyAssessments] Stats refresh failed:",
-					err,
-				),
-			);
-	}, [refreshTrigger, selectedCourse?.offering_id]);
-
-	const handleAssessmentCreated = () => {
+	const handleAssessmentCreated = useCallback(() => {
 		console.log(
 			"[FacultyAssessments] Assessment created — triggering refresh",
 		);
 		setShowCreateForm(false);
-		setRefreshTrigger((prev) => prev + 1);
-	};
+		triggerRefresh();
+	}, [setShowCreateForm, triggerRefresh]);
 
-	const handleGoToMarks = (_test: Test) => {
+	const handleGoToMarks = useCallback((_test: Test) => {
 		// Navigate to marks entry — parent handles this via nav
-	};
+	}, []);
 
 	return (
 		<div className="h-full flex flex-col">
@@ -310,4 +260,4 @@ export function FacultyAssessments({
 			)}
 		</div>
 	);
-}
+});

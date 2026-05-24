@@ -1,56 +1,27 @@
-import { StatsGrid, type StatItem } from "@/features/shared";
-import {
-	BookOpen,
-	ClipboardList,
-	GraduationCap,
-	TrendingUp,
-} from "lucide-react";
+import { memo, useMemo } from "react";
+import { StatsGrid } from "@/features/shared";
 import type { FacultyStats } from "@/services/api";
+import { STAT_ITEMS_TEMPLATES } from "./constants";
 
 interface FacultyStatsCardsProps {
 	stats: FacultyStats;
 	isLoading: boolean;
 }
 
-export function FacultyStatsCards({
+export const FacultyStatsCards = memo(function FacultyStatsCards({
 	stats,
 	isLoading,
 }: FacultyStatsCardsProps) {
-	const statItems: StatItem[] = [
-		{
-			label: "My Courses",
-			value: stats.totalCourses,
-			icon: BookOpen,
-			gradient: "from-blue-500 to-indigo-600",
-			bgGradient:
-				"from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30",
-		},
-		{
-			label: "Assessments Created",
-			value: stats.totalAssessments,
-			icon: ClipboardList,
-			gradient: "from-purple-500 to-pink-600",
-			bgGradient:
-				"from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30",
-		},
-		{
-			label: "Total Students",
-			value: stats.totalStudents,
-			icon: GraduationCap,
-			gradient: "from-emerald-500 to-teal-600",
-			bgGradient:
-				"from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30",
-		},
-		{
-			label: "Avg. Attainment",
-			value: stats.averageAttainment,
-			suffix: "%",
-			icon: TrendingUp,
-			gradient: "from-orange-500 to-red-600",
-			bgGradient:
-				"from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30",
-		},
-	];
+	const statItems = useMemo(() => {
+		return STAT_ITEMS_TEMPLATES.map((item) => ({
+			label: item.label,
+			value: stats[item.key] ?? 0,
+			suffix: item.suffix,
+			icon: item.icon,
+			gradient: item.gradient,
+			bgGradient: item.bgGradient,
+		}));
+	}, [stats]);
 
 	return (
 		<StatsGrid
@@ -60,4 +31,4 @@ export function FacultyStatsCards({
 			columns={4}
 		/>
 	);
-}
+});

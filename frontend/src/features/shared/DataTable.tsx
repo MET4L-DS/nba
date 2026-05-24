@@ -48,6 +48,44 @@ import {
 import type { PaginationMeta } from "@/services/api/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
+function DebouncedSearchInput({
+	value: initialValue,
+	onChange,
+	debounce = 150,
+	...props
+}: {
+	value: string | number;
+	onChange: (value: string | number) => void;
+	debounce?: number;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+	const [value, setValue] = React.useState(initialValue);
+	const onChangeRef = React.useRef(onChange);
+
+	React.useEffect(() => {
+		onChangeRef.current = onChange;
+	}, [onChange]);
+
+	React.useEffect(() => {
+		setValue(initialValue);
+	}, [initialValue]);
+
+	React.useEffect(() => {
+		const timeout = setTimeout(() => {
+			onChangeRef.current(value);
+		}, debounce);
+
+		return () => clearTimeout(timeout);
+	}, [value, debounce]);
+
+	return (
+		<Input
+			{...props}
+			value={value}
+			onChange={(e) => setValue(e.target.value)}
+		/>
+	);
+}
+
 export interface ServerPaginationProps<F extends Record<string, any> = any> {
 	pagination: PaginationMeta | null;
 	onNext: () => void;
@@ -123,10 +161,10 @@ function TableToolbar<TData, F extends Record<string, any> = any>({
 						) : (
 							<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
 						)}
-						<Input
+						<DebouncedSearchInput
 							placeholder={searchPlaceholder}
 							value={sp!.search}
-							onChange={(e) => sp!.onSearch(e.target.value)}
+							onChange={(val) => sp!.onSearch(String(val))}
 							className="pl-9 h-9 w-[150px] lg:w-[250px] bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 						/>
 					</div>
@@ -135,11 +173,11 @@ function TableToolbar<TData, F extends Record<string, any> = any>({
 				{!isServerMode && searchKey && (
 					<div className="relative">
 						<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-						<Input
+						<DebouncedSearchInput
 							placeholder={searchPlaceholder}
 							value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-							onChange={(event) =>
-								table.getColumn(searchKey)?.setFilterValue(event.target.value)
+							onChange={(val) =>
+								table.getColumn(searchKey)?.setFilterValue(String(val))
 							}
 							className="pl-9 h-9 w-[150px] lg:w-[250px] bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-indigo-500/30 rounded-xl border-muted/50 transition-all"
 						/>

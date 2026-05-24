@@ -1,6 +1,75 @@
-import { useState } from "react";
+import { useState, useEffect, memo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+
+const COPOMatrixCellInput = memo(function COPOMatrixCellInput({
+	co,
+	po,
+	initialValue,
+	maxVal,
+	updateCOPOMapping,
+	setFocusedCell,
+	setHoveredCell,
+	isIntersection,
+	isRowActive,
+	isColActive,
+	readOnly,
+}: {
+	co: string;
+	po: string;
+	initialValue: number | string;
+	maxVal: number;
+	updateCOPOMapping: (co: string, po: string, value: number) => void;
+	setFocusedCell: (cell: { co: string; col: string } | null) => void;
+	setHoveredCell: (cell: { co: string; col: string } | null) => void;
+	isIntersection: boolean;
+	isRowActive: boolean;
+	isColActive: boolean;
+	readOnly: boolean;
+}) {
+	const [value, setValue] = useState(initialValue);
+
+	useEffect(() => {
+		setValue(initialValue);
+	}, [initialValue]);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setValue(e.target.value);
+	};
+
+	const handleBlur = () => {
+		setFocusedCell(null);
+		const numVal = Number(value);
+		if (numVal !== Number(initialValue)) {
+			updateCOPOMapping(co, po, numVal);
+		}
+	};
+
+	return (
+		<Input
+			type="number"
+			min="0"
+			max={maxVal}
+			disabled={readOnly}
+			value={value}
+			onChange={handleChange}
+			onFocus={(e) => {
+				e.target.select();
+				setFocusedCell({ co, col: po });
+			}}
+			onBlur={handleBlur}
+			onMouseEnter={() => setHoveredCell({ co, col: po })}
+			onMouseLeave={() => setHoveredCell(null)}
+			className={`w-16 h-8 text-center transition-all duration-150 font-medium ${
+				isIntersection
+					? "ring-2 ring-primary border-primary font-bold shadow-lg"
+					: isRowActive || isColActive
+						? "border-primary/30"
+						: ""
+			}`}
+		/>
+	);
+});
 import { Badge } from "@/components/ui/badge";
 import { debugLogger } from "@/lib/debugLogger";
 import type { COPOMatrixState, AttainmentData } from "./types";
@@ -240,37 +309,18 @@ export function COPOMatrixGrid({
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 											className="inline-block"
 										>
-											<Input
-												type="number"
-												min="0"
-												max={attainmentThresholds.length}
-												disabled={readOnly}
-												value={
-													copoMatrix[
-														co as keyof COPOMatrixState
-													][po]
-												}
-												onChange={(e) =>
-													updateCOPOMapping(
-														co,
-														po,
-														Number(e.target.value),
-													)
-												}
-												onFocus={(e) => {
-													e.target.select();
-													setFocusedCell({ co, col: po });
-												}}
-												onBlur={() => setFocusedCell(null)}
-												onMouseEnter={() => setHoveredCell({ co, col: po })}
-												onMouseLeave={() => setHoveredCell(null)}
-												className={`w-16 h-8 text-center transition-all duration-150 font-medium ${
-													isIntersection
-														? "ring-2 ring-primary border-primary font-bold shadow-lg"
-														: isRowActive || isColActive
-															? "border-primary/30"
-															: ""
-												}`}
+											<COPOMatrixCellInput
+												co={co}
+												po={po}
+												initialValue={copoMatrix[co as keyof COPOMatrixState][po]}
+												maxVal={attainmentThresholds.length}
+												updateCOPOMapping={updateCOPOMapping}
+												setFocusedCell={setFocusedCell}
+												setHoveredCell={setHoveredCell}
+												isIntersection={isIntersection}
+												isRowActive={isRowActive}
+												isColActive={isColActive}
+												readOnly={readOnly}
 											/>
 										</motion.div>
 									</TableCell>
@@ -297,37 +347,18 @@ export function COPOMatrixGrid({
 											transition={{ type: "spring", stiffness: 300, damping: 15 }}
 											className="inline-block"
 										>
-											<Input
-												type="number"
-												min="0"
-												max={attainmentThresholds.length}
-												disabled={readOnly}
-												value={
-													copoMatrix[
-														co as keyof COPOMatrixState
-													][pso]
-												}
-												onChange={(e) =>
-													updateCOPOMapping(
-														co,
-														pso,
-														Number(e.target.value),
-													)
-												}
-												onFocus={(e) => {
-													e.target.select();
-													setFocusedCell({ co, col: pso });
-												}}
-												onBlur={() => setFocusedCell(null)}
-												onMouseEnter={() => setHoveredCell({ co, col: pso })}
-												onMouseLeave={() => setHoveredCell(null)}
-												className={`w-16 h-8 text-center transition-all duration-150 font-medium ${
-													isIntersection
-														? "ring-2 ring-primary border-primary font-bold shadow-lg"
-														: isRowActive || isColActive
-															? "border-primary/30"
-															: ""
-												}`}
+											<COPOMatrixCellInput
+												co={co}
+												po={pso}
+												initialValue={copoMatrix[co as keyof COPOMatrixState][pso]}
+												maxVal={attainmentThresholds.length}
+												updateCOPOMapping={updateCOPOMapping}
+												setFocusedCell={setFocusedCell}
+												setHoveredCell={setHoveredCell}
+												isIntersection={isIntersection}
+												isRowActive={isRowActive}
+												isColActive={isColActive}
+												readOnly={readOnly}
 											/>
 										</motion.div>
 									</TableCell>

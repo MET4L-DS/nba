@@ -3,17 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { facultyApi } from "@/services/api/faculty";
 import type { TestAverage } from "@/services/api/types";
-
-// ── Test type colour map ─────────────────────────────────────────────────────
-const TEST_TYPE_COLORS: Record<string, string> = {
-	"Mid Sem":
-		"bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300 border-violet-200 dark:border-violet-800",
-	"End Sem":
-		"bg-rose-50   text-rose-700   dark:bg-rose-950   dark:text-rose-300   border-rose-200   dark:border-rose-800",
-	Assignment:
-		"bg-amber-50  text-amber-700  dark:bg-amber-950  dark:text-amber-300  border-amber-200  dark:border-amber-800",
-	Quiz: "bg-sky-50    text-sky-700    dark:bg-sky-950    dark:text-sky-300    border-sky-200    dark:border-sky-800",
-};
+import { TEST_TYPE_COLORS } from "./constants";
 
 /** Expanded sub-row: lazy-loads per-test averages for a course offering */
 export const OfferingTestAverages = memo(function OfferingTestAverages({ offeringId }: { offeringId: number }) {

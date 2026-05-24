@@ -1,7 +1,5 @@
 import { ConfirmDeleteDialog } from "@/features/shared";
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { facultyApi } from "@/services/api/faculty";
-import type { EnrolledStudent } from "@/services/api";
+import { useMemo, memo } from "react";
 import { DataTable } from "@/features/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,114 +10,42 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { GraduationCap, RefreshCw, X } from "lucide-react";
-import { toast } from "sonner";
 import { getFacultyStudentsColumns } from "./FacultyStudents.columns";
 import { EditStudentDialog } from "./EditStudentDialog";
-
-const STATUS_OPTIONS = ["Active", "Inactive", "Graduated", "Dropped"];
-const BATCH_OPTIONS = Array.from(
-	{ length: 10 },
-	(_, i) => new Date().getFullYear() - 4 + i,
-);
+import { useFacultyStudents } from "./hooks/useFacultyStudents";
+import { BATCH_OPTIONS, STATUS_OPTIONS } from "./constants";
 
 interface FacultyStudentsProps {
 	hideHeader?: boolean;
 }
 
-export function FacultyStudents({
+export const FacultyStudents = memo(function FacultyStudents({
 	hideHeader = false,
 }: FacultyStudentsProps = {}) {
-	// -- Data ------------------------------------------------------------------
-	const [allStudents, setAllStudents] = useState<EnrolledStudent[]>([]);
-	const [loading, setLoading] = useState(true);
-
-	// -- Filters ---------------------------------------------------------------
-	const [statusFilter, setStatusFilter] = useState<string>("all");
-	const [batchInput, setBatchInput] = useState("");
-	const [batchFilter, setBatchFilter] = useState("");
-
-	// Debounce batch year
-	useEffect(() => {
-		const t = setTimeout(() => setBatchFilter(batchInput), 500);
-		return () => clearTimeout(t);
-	}, [batchInput]);
-
-	const hasFilters = statusFilter !== "all" || batchFilter !== "";
-
-	// -- Edit state ------------------------------------------------------------
-	const [editTarget, setEditTarget] = useState<EnrolledStudent | null>(null);
-
-	// -- Delete state ----------------------------------------------------------
-	const [deleteTarget, setDeleteTarget] = useState<EnrolledStudent | null>(
-		null,
-	);
-	const [deleteLoading, setDeleteLoading] = useState(false);
-
-	// -- Load ------------------------------------------------------------------
-	const loadStudents = useCallback(async () => {
-		setLoading(true);
-		try {
-			const response = await facultyApi.getEnrolledStudents({
-				limit: 1000,
-			});
-			const data = response.data;
-			setAllStudents(data);
-		} catch {
-			toast.error("Failed to load students");
-		} finally {
-			setLoading(false);
-		}
-	}, []);
-
-	useEffect(() => {
-		loadStudents();
-	}, [loadStudents]);
-
-	// -- Client-side filter ----------------------------------------------------
-	const filtered = useMemo(() => {
-		let result = allStudents;
-		if (statusFilter !== "all")
-			result = result.filter(
-				(s) =>
-					s.student_status?.toLowerCase() ===
-					statusFilter.toLowerCase(),
-			);
-		if (batchFilter)
-			result = result.filter((s) => String(s.batch_year) === batchFilter);
-		return result;
-	}, [allStudents, statusFilter, batchFilter]);
-
-	const resetFilters = () => {
-		setStatusFilter("all");
-		setBatchInput("");
-		setBatchFilter("");
-	};
-
-	const handleDelete = async () => {
-		if (!deleteTarget) return;
-		setDeleteLoading(true);
-		try {
-			await facultyApi.removeStudentEnrollment(deleteTarget.roll_no);
-			toast.success(
-				`${deleteTarget.student_name} removed from your course enrollments`,
-			);
-			setAllStudents((prev) =>
-				prev.filter((s) => s.roll_no !== deleteTarget.roll_no),
-			);
-			setDeleteTarget(null);
-		} catch {
-			toast.error("Failed to remove student");
-		} finally {
-			setDeleteLoading(false);
-		}
-	};
+	const {
+		loading,
+		statusFilter,
+		setStatusFilter,
+		batchInput,
+		setBatchInput,
+		hasFilters,
+		editTarget,
+		setEditTarget,
+		deleteTarget,
+		setDeleteTarget,
+		deleteLoading,
+		filtered,
+		loadStudents,
+		resetFilters,
+		handleDelete,
+		handleEditSuccess,
+	} = useFacultyStudents();
 
 	const columns = useMemo(
 		() => getFacultyStudentsColumns(setEditTarget, setDeleteTarget),
-		[],
+		[setEditTarget, setDeleteTarget],
 	);
 
-	// -- Render ------------------------------------------------------------------
 	return (
 		<div className="h-full">
 			<div className="px-6 pt-4 pb-8 space-y-6">
@@ -243,19 +169,13 @@ export function FacultyStudents({
 			</div>
 
 			{/* -- Edit Dialog -- */}
-			<EditStudentDialog
-				student={editTarget}
-				onClose={() => setEditTarget(null)}
-				onSuccess={(updatedStudent) => {
-					setAllStudents((prev) =>
-						prev.map((s) =>
-							s.roll_no === updatedStudent.roll_no
-								? ({ ...s, ...updatedStudent } as any)
-								: s,
-						),
-					);
-				}}
-			/>
+			{editTarget && (
+				<EditStudentDialog
+					student={editTarget}
+					onClose={() => setEditTarget(null)}
+					onSuccess={handleEditSuccess}
+				/>
+			)}
 
 			{/* -- Delete Confirm -- */}
 			<ConfirmDeleteDialog
@@ -277,4 +197,4 @@ export function FacultyStudents({
 			/>
 		</div>
 	);
-}
+});

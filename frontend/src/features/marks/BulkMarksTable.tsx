@@ -1,6 +1,58 @@
+import { useState, useEffect, memo } from "react";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+
+const BulkMarksCellInput = memo(function BulkMarksCellInput({
+	rollno,
+	questionIdentifier,
+	initialValue,
+	maxMarks,
+	onMarkChange,
+	invalid,
+}: {
+	rollno: string;
+	questionIdentifier: string;
+	initialValue: string;
+	maxMarks: number;
+	onMarkChange: (rollno: string, qId: string, val: string) => void;
+	invalid: boolean;
+}) {
+	const [value, setValue] = useState(initialValue);
+
+	useEffect(() => {
+		setValue(initialValue);
+	}, [initialValue]);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setValue(e.target.value);
+	};
+
+	const handleBlur = () => {
+		if (value !== initialValue) {
+			onMarkChange(rollno, questionIdentifier, value);
+		}
+	};
+
+	return (
+		<Input
+			type="number"
+			step="0.5"
+			min="0"
+			max={maxMarks}
+			value={value}
+			onChange={handleChange}
+			onBlur={handleBlur}
+			onFocus={(e) => e.target.select()}
+			placeholder="-"
+			className={cn(
+				"w-16 h-8 p-1.5 text-center text-sm bg-background/50",
+				invalid &&
+					"border-destructive border-2 text-destructive focus-visible:ring-destructive/30",
+			)}
+		/>
+	);
+});
 import { Badge } from "@/components/ui/badge";
 import {
 	TableBody,
@@ -200,30 +252,13 @@ export function BulkMarksTable({
 										key={q.id}
 										className="px-4 py-3 text-center border-r border-border"
 									>
-										<Input
-											type="number"
-											step="0.5"
-											min="0"
-											max={q.max_marks}
-											value={
-												marks[rollno]?.[
-													q.question_identifier
-												] || ""
-											}
-											onChange={(e) =>
-												onMarkChange(
-													rollno,
-													q.question_identifier,
-													e.target.value,
-												)
-											}
-											onFocus={(e) => e.target.select()}
-											placeholder="-"
-											className={cn(
-												"w-16 h-8 p-1.5 text-center text-sm bg-background/50",
-												invalid &&
-													"border-destructive border-2 text-destructive focus-visible:ring-destructive/30",
-											)}
+										<BulkMarksCellInput
+											rollno={rollno}
+											questionIdentifier={q.question_identifier}
+											initialValue={marks[rollno]?.[q.question_identifier] || ""}
+											maxMarks={q.max_marks}
+											onMarkChange={onMarkChange}
+											invalid={invalid}
 										/>
 									</TableCell>
 								);

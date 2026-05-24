@@ -6,7 +6,7 @@ import { Pencil, Trash2, ChevronDown } from "lucide-react";
 import { sortableHeader } from "../../features/shared/tableUtils";
 import { motion, AnimatePresence } from "framer-motion";
 
-export const STATUS_OPTIONS = ["Active", "Inactive", "Graduated", "Dropped"];
+export { STATUS_OPTIONS } from "./constants";
 
 export const statusVariant = (status: string) => {
 	switch (status?.toLowerCase()) {

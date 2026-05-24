@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { PanelLeftClose, PanelLeftOpen, LogOut } from "lucide-react";
@@ -12,7 +13,7 @@ interface AppHeaderProps {
 	children?: React.ReactNode; // For custom actions like Refresh, Course Selector
 }
 
-export function AppHeader({
+export const AppHeader = memo(function AppHeader({
 	sidebarOpen,
 	onToggleSidebar,
 	title,
@@ -90,4 +91,4 @@ export function AppHeader({
 			</div>
 		</header>
 	);
-}
+});

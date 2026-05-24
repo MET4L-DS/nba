@@ -159,7 +159,7 @@ export const FacultyMarks = memo(function FacultyMarks({
 						readOnly={readOnly}
 					/>
 				) : viewMode === "by-co" ? (
-					<div className="flex-1 overflow-auto flex flex-col min-h-0">
+					<div className="flex-1 flex flex-col min-h-0">
 						<Suspense
 							fallback={
 								<div className="p-6 space-y-4 flex-1">

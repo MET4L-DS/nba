@@ -3,7 +3,7 @@ import { useOutletContext, Outlet, useLocation } from "react-router-dom";
 import { facultyApi } from "@/services/api/faculty";
 import { apiService } from "@/services/api";
 import type { Course, User } from "@/services/api";
-import { AppHeader } from "@/components/layout";
+import { AppHeader } from "./AppHeader";
 import { usePaginatedData } from "@/lib/usePaginatedData";
 import { Button } from "@/components/ui/button";
 import {

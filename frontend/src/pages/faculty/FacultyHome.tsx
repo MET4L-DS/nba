@@ -1,27 +1,8 @@
-import { lazy, Suspense } from "react";
 import { useFacultyHome } from "./hooks/useFacultyHome";
 import { FacultyWelcomeCard } from "./components/FacultyWelcomeCard";
-import { StatsGrid, QuickAccessGrid } from "@/features/shared";
-import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
-
-const pageVariants = {
-	initial: { opacity: 0, y: 15 },
-	animate: { opacity: 1, y: 0 },
-	exit: { opacity: 0, y: -15 },
-};
-
-const pageTransition = {
-	duration: 0.45,
-	ease: [0.16, 1, 0.3, 1] as const,
-};
-
-// Lazy load heavy FacultyOverview component for improved code-splitting and faster initial page hydration
-const FacultyOverview = lazy(() =>
-	import("@/components/faculty").then((module) => ({
-		default: module.FacultyOverview,
-	})),
-);
+import { StatsGrid } from "@/features/shared/StatsCard";
+import { QuickAccessGrid } from "@/features/shared/QuickAccessCard";
+import { FacultyOverview } from "@/components/faculty/FacultyOverview";
 
 export function FacultyHome() {
 	const {
@@ -36,14 +17,7 @@ export function FacultyHome() {
 	} = useFacultyHome();
 
 	return (
-		<motion.div
-			initial="initial"
-			animate="animate"
-			exit="exit"
-			variants={pageVariants}
-			transition={pageTransition}
-			className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6"
-		>
+		<div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
 			{/* Extracted static UI header: prevents unnecessary rerenders when stats load */}
 			<FacultyWelcomeCard
 				user={user}
@@ -66,20 +40,11 @@ export function FacultyHome() {
 				columns={4}
 			/>
 
-			{/* Heavy table/analytics section loaded asynchronously */}
-			<Suspense
-				fallback={
-					<div className="space-y-4">
-						<Skeleton className="h-10 w-48 rounded-lg" />
-						<Skeleton className="h-64 w-full rounded-xl" />
-					</div>
-				}
-			>
-				<FacultyOverview
-					courses={courses}
-					isLoading={isLoadingCourses}
-				/>
-			</Suspense>
-		</motion.div>
+			{/* Heavy table/analytics section */}
+			<FacultyOverview
+				courses={courses}
+				isLoading={isLoadingCourses}
+			/>
+		</div>
 	);
 }

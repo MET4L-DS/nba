@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Sheet,
 	SheetContent,
@@ -22,14 +23,29 @@ import {
 } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
 import { debugLogger } from "@/lib/debugLogger";
-import { CourseSurveyConfig } from "@/features/surveys/CourseSurveyConfig";
-import { ManualSurveyEntry } from "@/features/surveys/ManualSurveyEntry";
 import { ClearSurveyConfirm } from "@/features/surveys/ClearSurveyConfirm";
 import { CourseExitSurveyCSVImport } from "@/features/surveys/CourseExitSurveyCSVImport";
 import { AttainmentWeightageConfig } from "@/features/surveys/AttainmentWeightageConfig";
 import { BlendedAttainmentTable } from "@/features/surveys/BlendedAttainmentTable";
-import { AttainmentBarChart } from "@/features/surveys/AttainmentBarChart";
 import { CourseExitSurveyMatrix } from "@/features/surveys/CourseExitSurveyMatrix";
+
+const CourseSurveyConfig = lazy(() =>
+	import("@/features/surveys/CourseSurveyConfig").then((m) => ({
+		default: m.CourseSurveyConfig,
+	}))
+);
+
+const ManualSurveyEntry = lazy(() =>
+	import("@/features/surveys/ManualSurveyEntry").then((m) => ({
+		default: m.ManualSurveyEntry,
+	}))
+);
+
+const AttainmentBarChart = lazy(() =>
+	import("@/features/surveys/AttainmentBarChart").then((m) => ({
+		default: m.AttainmentBarChart,
+	}))
+);
 import { attainmentApi } from "@/services/api/attainment";
 import { coursesApi } from "@/services/api/courses";
 import type { Course } from "@/services/api";
@@ -226,13 +242,22 @@ export function FacultyCourseSurvey({
 						</Button>
 					</div>
 					<div className="flex-1 overflow-y-auto p-6">
-						<ManualSurveyEntry
-							offeringId={offeringId}
-							onSaved={() => {
-								refresh();
-								setShowManualEntry(false);
-							}}
-						/>
+						<Suspense
+							fallback={
+								<div className="space-y-4">
+									<Skeleton className="h-10 w-full animate-pulse" />
+									<Skeleton className="h-64 w-full animate-pulse" />
+								</div>
+							}
+						>
+							<ManualSurveyEntry
+								offeringId={offeringId}
+								onSaved={() => {
+									refresh();
+									setShowManualEntry(false);
+								}}
+							/>
+						</Suspense>
 					</div>
 				</div>
 			) : (
@@ -310,11 +335,20 @@ export function FacultyCourseSurvey({
 													directWeight={directWeight}
 													indirectWeight={indirectWeight}
 												/>
-												<AttainmentBarChart
-													attainmentCoData={
-														attainmentCoData
+												<Suspense
+													fallback={
+														<div className="h-[300px] flex items-center justify-center bg-muted/10 rounded-xl border border-dashed border-muted/80">
+															<RefreshCw className="w-5 h-5 animate-spin text-violet-500 mr-2" />
+															<span className="text-xs text-muted-foreground font-semibold">Loading chart analytics...</span>
+														</div>
 													}
-												/>
+												>
+													<AttainmentBarChart
+														attainmentCoData={
+															attainmentCoData
+														}
+													/>
+												</Suspense>
 											</div>
 										)}
 									</Card>
@@ -365,13 +399,24 @@ export function FacultyCourseSurvey({
 								</SheetTitle>
 							</SheetHeader>
 							<div className="flex-1 overflow-y-auto px-5 py-4">
-								<CourseSurveyConfig
-									offeringId={offeringId}
-									onConfigSaved={() => {
-										refresh();
-										setConfigOpen(false);
-									}}
-								/>
+								{configOpen && (
+									<Suspense
+										fallback={
+											<div className="space-y-4">
+												<Skeleton className="h-10 w-full animate-pulse" />
+												<Skeleton className="h-32 w-full animate-pulse" />
+											</div>
+										}
+									>
+										<CourseSurveyConfig
+											offeringId={offeringId}
+											onConfigSaved={() => {
+												refresh();
+												setConfigOpen(false);
+											}}
+										/>
+									</Suspense>
+								)}
 							</div>
 						</SheetContent>
 					</Sheet>

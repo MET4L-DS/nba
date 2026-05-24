@@ -65,10 +65,7 @@ export function useFacultyHome() {
 	}, [courses]);
 
 	useEffect(() => {
-		const timer = setTimeout(() => {
-			loadStats();
-		}, 100);
-		return () => clearTimeout(timer);
+		loadStats();
 	}, [loadStats]);
 
 	return {

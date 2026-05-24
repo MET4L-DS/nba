@@ -1,12 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { apiService } from "@/services/api";
 import type { Course, Test } from "@/services/api";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, AlertTriangle } from "lucide-react";
-import { MarksEntryByCO } from "@/features/marks/MarksEntryByCO";
-import { ViewTestMarks } from "@/features/marks/ViewTestMarks";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FacultyMarksByQuestion } from "./FacultyMarksByQuestion";
+
+const MarksEntryByCO = lazy(() =>
+	import("@/features/marks/MarksEntryByCO").then((m) => ({
+		default: m.MarksEntryByCO,
+	}))
+);
+
+const ViewTestMarks = lazy(() =>
+	import("@/features/marks/ViewTestMarks").then((m) => ({
+		default: m.ViewTestMarks,
+	}))
+);
 
 type ViewMode = "by-question" | "by-co" | "bulk";
 
@@ -213,14 +224,23 @@ export function FacultyMarks({ selectedCourse, readOnly = false }: FacultyMarksP
 					/>
 				) : viewMode === "by-co" ? (
 					<div className="flex-1 overflow-auto flex flex-col min-h-0">
-						<MarksEntryByCO
-							test={selectedTest}
-							course={selectedCourse}
-							onBack={() => setViewMode("by-question")}
-							embedded
-							headerContent={renderTabs()}
-							readOnly={readOnly}
-						/>
+						<Suspense
+							fallback={
+								<div className="p-6 space-y-4 flex-1">
+									<Skeleton className="h-10 w-full rounded-lg animate-pulse" />
+									<Skeleton className="h-[300px] w-full rounded-xl animate-pulse" />
+								</div>
+							}
+						>
+							<MarksEntryByCO
+								test={selectedTest}
+								course={selectedCourse}
+								onBack={() => setViewMode("by-question")}
+								embedded
+								headerContent={renderTabs()}
+								readOnly={readOnly}
+							/>
+						</Suspense>
 					</div>
 				) : (
 					<div className="flex-1 overflow-auto flex flex-col min-h-0">
@@ -230,12 +250,21 @@ export function FacultyMarks({ selectedCourse, readOnly = false }: FacultyMarksP
 							</div>
 						</div>
 						<div className="flex-1 overflow-auto">
-							<ViewTestMarks
-								test={selectedTest}
-								course={selectedCourse}
-								onBack={() => setViewMode("by-question")}
-								embedded
-							/>
+							<Suspense
+								fallback={
+									<div className="p-6 space-y-4 flex-1">
+										<Skeleton className="h-10 w-full rounded-lg animate-pulse" />
+										<Skeleton className="h-[300px] w-full rounded-xl animate-pulse" />
+									</div>
+								}
+							>
+								<ViewTestMarks
+									test={selectedTest}
+									course={selectedCourse}
+									onBack={() => setViewMode("by-question")}
+									embedded
+								/>
+							</Suspense>
 						</div>
 					</div>
 				)}

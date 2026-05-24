@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,11 +11,21 @@ import {
 	GraduationCap,
 } from "lucide-react";
 
-import { CreateAssessmentForm } from "@/features/assessments/CreateAssessmentForm";
 import { TestsList } from "@/features/assessments/TestsList";
-import { EnrollStudentsDialog } from "@/features/assessments/EnrollStudentsDialog";
 import { apiService } from "@/services/api";
 import type { Course, Test, CourseStats } from "@/services/api";
+
+const CreateAssessmentForm = lazy(() =>
+	import("@/features/assessments/CreateAssessmentForm").then((m) => ({
+		default: m.CreateAssessmentForm,
+	}))
+);
+
+const EnrollStudentsDialog = lazy(() =>
+	import("@/features/assessments/EnrollStudentsDialog").then((m) => ({
+		default: m.EnrollStudentsDialog,
+	}))
+);
 
 interface FacultyAssessmentsProps {
 	selectedCourse: Course | null;
@@ -231,20 +241,28 @@ export function FacultyAssessments({
 			{/* ── Main content ─────────────────────────────────────────── */}
 			<div className="flex-1 overflow-hidden">
 				{showCreateForm ? (
-					<CreateAssessmentForm
-						selectedCourse={selectedCourse}
-						onSuccess={handleAssessmentCreated}
-						onCancel={() => setShowCreateForm(false)}
-						contextStats={
-							courseStats
-								? {
-										assessments:
-											courseStats.totalAssessments,
-										students: courseStats.activeStudents,
-									}
-								: null
+					<Suspense
+						fallback={
+							<div className="p-6">
+								<Skeleton className="h-[400px] w-full rounded-2xl" />
+							</div>
 						}
-					/>
+					>
+						<CreateAssessmentForm
+							selectedCourse={selectedCourse}
+							onSuccess={handleAssessmentCreated}
+							onCancel={() => setShowCreateForm(false)}
+							contextStats={
+								courseStats
+									? {
+											assessments:
+												courseStats.totalAssessments,
+											students: courseStats.activeStudents,
+										}
+									: null
+							}
+						/>
+					</Suspense>
 				) : (
 					<ScrollArea className="h-full">
 						<div className="p-6">
@@ -281,11 +299,15 @@ export function FacultyAssessments({
 			</div>
 
 			{/* ── Enroll Students Dialog ────────────────────────────────── */}
-			<EnrollStudentsDialog
-				open={showEnrollDialog}
-				onOpenChange={setShowEnrollDialog}
-				course={selectedCourse}
-			/>
+			{showEnrollDialog && (
+				<Suspense fallback={null}>
+					<EnrollStudentsDialog
+						open={showEnrollDialog}
+						onOpenChange={setShowEnrollDialog}
+						course={selectedCourse}
+					/>
+				</Suspense>
+			)}
 		</div>
 	);
 }

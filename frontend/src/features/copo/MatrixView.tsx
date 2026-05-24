@@ -3,10 +3,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Settings } from "lucide-react";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { CSVUploader } from "@/features/shared/CSVUploader";
-import { AttainmentSettingsPanel } from "./AttainmentSettingsPanel";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+
+const AttainmentSettingsPanel = lazy(() =>
+	import("./AttainmentSettingsPanel").then((m) => ({
+		default: m.AttainmentSettingsPanel,
+	}))
+);
 import { AttainmentCriteriaCard } from "./AttainmentCriteriaCard";
 import { PassingMarksCard } from "./PassingMarksCard";
 import { StudentMarksTable } from "./StudentMarksTable";
@@ -256,22 +261,36 @@ export function MatrixView({
 			</Card>
 
 			{/* Settings Panel */}
-			<Sheet open={showSettings} onOpenChange={setShowSettings}>
-				<SheetContent className="w-[500px] sm:w-[600px] md:w-[700px] lg:w-[850px] sm:max-w-none max-w-full overflow-y-auto h-full p-6 border-l border-muted/50 bg-background/95 backdrop-blur-md">
-					<AttainmentSettingsPanel
-						showSettings={showSettings}
-						coThreshold={coThreshold}
-						setCoThreshold={setCoThreshold}
-						passingThreshold={passingThreshold}
-						setPassingThreshold={setPassingThreshold}
-						attainmentThresholds={attainmentThresholds}
-						addThreshold={addThreshold}
-						updateThreshold={updateThreshold}
-						removeThreshold={removeThreshold}
-						saveSettings={saveSettings}
-					/>
-				</SheetContent>
-			</Sheet>
+			{showSettings && (
+				<Sheet open={showSettings} onOpenChange={setShowSettings}>
+					<SheetContent className="w-[500px] sm:w-[600px] md:w-[700px] lg:w-[850px] sm:max-w-none max-w-full overflow-y-auto h-full p-6 border-l border-muted/50 bg-background/95 backdrop-blur-md">
+						<Suspense
+							fallback={
+								<div className="space-y-6 p-4">
+									<div className="h-8 bg-muted/20 animate-pulse rounded-lg w-1/3" />
+									<div className="space-y-4">
+										<div className="h-10 bg-muted/20 animate-pulse rounded-lg w-full" />
+										<div className="h-[200px] bg-muted/20 animate-pulse rounded-xl w-full" />
+									</div>
+								</div>
+							}
+						>
+							<AttainmentSettingsPanel
+								showSettings={showSettings}
+								coThreshold={coThreshold}
+								setCoThreshold={setCoThreshold}
+								passingThreshold={passingThreshold}
+								setPassingThreshold={setPassingThreshold}
+								attainmentThresholds={attainmentThresholds}
+								addThreshold={addThreshold}
+								updateThreshold={updateThreshold}
+								removeThreshold={removeThreshold}
+								saveSettings={saveSettings}
+							/>
+						</Suspense>
+					</SheetContent>
+				</Sheet>
+			)}
 
 			{/* Attainment Criteria Card */}
 			<AttainmentCriteriaCard

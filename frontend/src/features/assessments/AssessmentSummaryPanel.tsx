@@ -1,3 +1,4 @@
+import React from "react";
 import { Separator } from "@/components/ui/separator";
 import { School, BarChart3, Info, BookOpen, Layers } from "lucide-react";
 import type { Test, Course, QuestionResponse } from "@/services/api";
@@ -10,7 +11,7 @@ interface AssessmentSummaryPanelProps {
     };
 }
 
-export function AssessmentSummaryPanel({ details }: AssessmentSummaryPanelProps) {
+export const AssessmentSummaryPanel = React.memo(function AssessmentSummaryPanel({ details }: AssessmentSummaryPanelProps) {
     return (
         <div className="p-6 space-y-6 h-full overflow-y-auto">
             {/* Course Information Section */}
@@ -105,4 +106,5 @@ export function AssessmentSummaryPanel({ details }: AssessmentSummaryPanelProps)
             </div>
         </div>
     );
-}
+});
+

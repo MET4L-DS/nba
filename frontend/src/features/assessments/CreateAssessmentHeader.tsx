@@ -1,10 +1,11 @@
+import React from "react";
 import { ArrowLeft } from "lucide-react";
 
 interface AssessmentsHeaderProps {
 	onBack: () => void;
 }
 
-export function AssessmentsHeader({ onBack }: AssessmentsHeaderProps) {
+export const AssessmentsHeader = React.memo(function AssessmentsHeader({ onBack }: AssessmentsHeaderProps) {
 	return (
 		<div className="flex relative items-center gap-4">
 			<button
@@ -22,4 +23,5 @@ export function AssessmentsHeader({ onBack }: AssessmentsHeaderProps) {
 			</div>
 		</div>
 	);
-}
+});
+

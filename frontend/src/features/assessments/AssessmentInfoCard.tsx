@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Test } from "@/services/api";
@@ -8,7 +9,7 @@ interface AssessmentInfoCardProps {
 	questionsCount: number;
 }
 
-export function AssessmentInfoCard({
+export const AssessmentInfoCard = React.memo(function AssessmentInfoCard({
 	test,
 	questionsCount,
 }: AssessmentInfoCardProps) {
@@ -61,4 +62,5 @@ export function AssessmentInfoCard({
 			</CardContent>
 		</Card>
 	);
-}
+});
+

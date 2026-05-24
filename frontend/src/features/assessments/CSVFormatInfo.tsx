@@ -1,3 +1,4 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, FileText } from "lucide-react";
 
@@ -5,7 +6,7 @@ interface CSVFormatInfoProps {
 	onDownloadTemplate: () => void;
 }
 
-export function CSVFormatInfo({ onDownloadTemplate }: CSVFormatInfoProps) {
+export const CSVFormatInfo = React.memo(function CSVFormatInfo({ onDownloadTemplate }: CSVFormatInfoProps) {
 	return (
 		<div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
 			<div className="flex items-start gap-3">
@@ -30,4 +31,5 @@ export function CSVFormatInfo({ onDownloadTemplate }: CSVFormatInfoProps) {
 			</div>
 		</div>
 	);
-}
+});
+

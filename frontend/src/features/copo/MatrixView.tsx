@@ -263,7 +263,7 @@ export function MatrixView({
 			{/* Settings Panel */}
 			{showSettings && (
 				<Sheet open={showSettings} onOpenChange={setShowSettings}>
-					<SheetContent className="w-[500px] sm:w-[600px] md:w-[700px] lg:w-[850px] sm:max-w-none max-w-full overflow-y-auto h-full p-6 border-l border-muted/50 bg-background/95 backdrop-blur-md">
+					<SheetContent className="w-full sm:w-[600px] md:w-[800px] lg:w-[1050px] xl:w-[1250px] sm:max-w-none max-w-full overflow-y-auto h-full p-6 border-l border-muted/50 bg-background/95 backdrop-blur-md">
 						<Suspense
 							fallback={
 								<div className="space-y-6 p-4">

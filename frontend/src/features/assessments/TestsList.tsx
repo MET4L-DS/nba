@@ -1,7 +1,5 @@
-import { TestList, getBaseTestColumns } from "@/features/shared";
-import type { ColumnDef } from "@tanstack/react-table";
+import { TestList } from "@/features/shared";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,12 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, Trash2, ClipboardList } from "lucide-react";
+import { Trash2, ClipboardList } from "lucide-react";
 import { ViewAssessmentDialog } from "./ViewAssessmentDialog";
-import { apiService } from "@/services/api";
-import { assessmentsApi } from "@/services/api/assessments";
-import { toast } from "sonner";
 import type { Course, Test } from "@/services/api";
+import { useTestsList } from "./hooks/useTestsList";
+import { getTestsListColumns } from "./TestsList.columns";
+import { useMemo } from "react";
 
 interface TestsListProps {
 	course: Course | null;
@@ -35,128 +33,35 @@ export function TestsList({
 	onGoToMarks,
 	onCountChange,
 }: TestsListProps) {
-	const [tests, setTests] = useState<Test[]>([]);
-	const [loading, setLoading] = useState(!!course);
-	const hasInitialLoadedRef = useRef(false);
+	const {
+		tests,
+		loading,
+		hasInitialLoadedRef,
+		selectedTestId,
+		setSelectedTestId,
+		showDetailsDialog,
+		setShowDetailsDialog,
+		showDeleteDialog,
+		setShowDeleteDialog,
+		testToDelete,
+		setTestToDelete,
+		deleteConfirmation,
+		setDeleteConfirmation,
+		isDeleting,
+		handleDeleteClick,
+		handleDeleteConfirm,
+	} = useTestsList({ course, refreshTrigger, onCountChange });
 
-	if (!loading && course) {
-		hasInitialLoadedRef.current = true;
-	}
-	const [selectedTestId, setSelectedTestId] = useState<number | null>(null);
-	const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-	const [testToDelete, setTestToDelete] = useState<Test | null>(null);
-	const [deleteConfirmation, setDeleteConfirmation] = useState("");
-	const [isDeleting, setIsDeleting] = useState(false);
-
-	const columns = useMemo<ColumnDef<Test>[]>(() => [
-		...getBaseTestColumns<Test>(),
-		{
-			id: "actions",
-			header: () => <div className="text-right">Actions</div>,
-			cell: ({ row }) => {
-				const test = row.original;
-				return (
-					<div className="flex justify-end gap-1">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => {
-								setSelectedTestId(test.id);
-								setShowDetailsDialog(true);
-							}}
-							className="gap-1.5 h-8"
-						>
-							<Eye className="w-3.5 h-3.5" />
-							View
-						</Button>
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => handleDeleteClick(test)}
-							className="gap-1.5 h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-						>
-							<Trash2 className="w-3.5 h-3.5" />
-							Delete
-						</Button>
-					</div>
-				);
+	// Memoize columns using the hook's state callbacks
+	const columns = useMemo(() => {
+		return getTestsListColumns(
+			(id) => {
+				setSelectedTestId(id);
+				setShowDetailsDialog(true);
 			},
-		},
-	], []);
-
-	useEffect(() => {
-		if (course) {
-			hasInitialLoadedRef.current = false;
-			loadTests();
-		} else {
-			setTests([]);
-			hasInitialLoadedRef.current = false;
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [course, refreshTrigger]);
-
-	const loadTests = async () => {
-		if (!course) return;
-
-		setLoading(true);
-		try {
-			const testsData = await apiService.getCourseTests(
-				course.offering_id ?? course.course_id,
-			);
-			console.log("Tests received in component:", testsData);
-
-			// Ensure testsData is an array
-			const arr = Array.isArray(testsData) ? testsData : [];
-			setTests(arr);
-			onCountChange?.(arr.length);
-		} catch (error) {
-			console.error("Failed to load tests:", error);
-			// Reset to empty array on error
-			setTests([]);
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const handleDeleteClick = (test: Test) => {
-		setTestToDelete(test);
-		setDeleteConfirmation("");
-		setShowDeleteDialog(true);
-	};
-
-	const handleDeleteConfirm = async () => {
-		if (!testToDelete || deleteConfirmation !== "Yes") {
-			return;
-		}
-
-		setIsDeleting(true);
-		try {
-			const result = await assessmentsApi.deleteTest(testToDelete.id);
-
-			toast.success(result.message || "Test deleted successfully", {
-				description: `${result.data.questions_deleted} questions and marks for ${result.data.students_affected} students were removed.`,
-			});
-
-			// Refresh the tests list
-			loadTests();
-
-			// Close dialog
-			setShowDeleteDialog(false);
-			setTestToDelete(null);
-			setDeleteConfirmation("");
-		} catch (error) {
-			console.error("Failed to delete test:", error);
-			toast.error("Failed to delete test", {
-				description:
-					error instanceof Error
-						? error.message
-						: "An error occurred",
-			});
-		} finally {
-			setIsDeleting(false);
-		}
-	};
+			handleDeleteClick
+		);
+	}, [setSelectedTestId, setShowDetailsDialog, handleDeleteClick]);
 
 	if (!course) {
 		return (

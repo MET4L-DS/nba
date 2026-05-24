@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,20 +17,32 @@ import type { Question } from "@/services/api";
 interface QuestionTableRowProps {
 	question: Question;
 	index: number;
-	onUpdate: (updates: Partial<Question>) => void;
-	onRemove: () => void;
-	onAddSubQuestion: () => void;
+	onUpdate: (index: number, updates: Partial<Question>) => void;
+	onRemove: (index: number) => void;
+	onAddSubQuestion: (questionNumber: number) => void;
 }
 
 const MotionButton = motion(Button);
 
-export function QuestionTableRow({
+export const QuestionTableRow = memo(function QuestionTableRow({
 	question,
 	index,
 	onUpdate,
 	onRemove,
 	onAddSubQuestion,
 }: QuestionTableRowProps) {
+	const handleUpdate = useCallback((updates: Partial<Question>) => {
+		onUpdate(index, updates);
+	}, [index, onUpdate]);
+
+	const handleRemove = useCallback(() => {
+		onRemove(index);
+	}, [index, onRemove]);
+
+	const handleAddSubQuestion = useCallback(() => {
+		onAddSubQuestion(question.question_number);
+	}, [question.question_number, onAddSubQuestion]);
+
 	const questionLabel = question.sub_question
 		? `Q${question.question_number}${question.sub_question}`
 		: `Q${question.question_number}`;
@@ -66,7 +79,7 @@ export function QuestionTableRow({
 						type="text"
 						value={question.sub_question}
 						onChange={(e) =>
-							onUpdate({ sub_question: e.target.value })
+							handleUpdate({ sub_question: e.target.value })
 						}
 						className="w-16 h-10 text-center font-bold shadow-xs bg-white dark:bg-slate-950 focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 border-slate-200 dark:border-slate-800 transition-all"
 						placeholder="-"
@@ -96,7 +109,7 @@ export function QuestionTableRow({
 							{[1, 2, 3, 4, 5, 6].map((co) => (
 								<DropdownMenuItem
 									key={co}
-									onSelect={() => onUpdate({ co })}
+									onSelect={() => handleUpdate({ co })}
 									className="rounded-lg py-1.5 px-3 font-semibold text-xs gap-2"
 								>
 									<span className="font-bold text-primary">
@@ -121,7 +134,7 @@ export function QuestionTableRow({
 						min="0.5"
 						value={question.max_marks}
 						onChange={(e) =>
-							onUpdate({
+							handleUpdate({
 								max_marks: parseFloat(e.target.value) || 0,
 							})
 						}
@@ -139,7 +152,7 @@ export function QuestionTableRow({
 						id={`optional-${index}`}
 						checked={question.is_optional}
 						onCheckedChange={(checked) =>
-							onUpdate({ is_optional: !!checked })
+							handleUpdate({ is_optional: !!checked })
 						}
 						className="h-5 w-5 rounded-md border-slate-300 dark:border-slate-700 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-transform active:scale-95"
 					/>
@@ -153,7 +166,7 @@ export function QuestionTableRow({
 						type="button"
 						variant="ghost"
 						size="icon"
-						onClick={onAddSubQuestion}
+						onClick={handleAddSubQuestion}
 						title="Add sub-question"
 						whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.08)", color: "rgb(59, 130, 246)" }}
 						whileTap={{ scale: 0.9 }}
@@ -165,7 +178,7 @@ export function QuestionTableRow({
 						type="button"
 						variant="ghost"
 						size="icon"
-						onClick={onRemove}
+						onClick={handleRemove}
 						title="Remove question"
 						whileHover={{ scale: 1.1, backgroundColor: "rgba(239, 68, 68, 0.08)", color: "rgb(239, 68, 68)" }}
 						whileTap={{ scale: 0.9 }}
@@ -177,5 +190,4 @@ export function QuestionTableRow({
 			</TableCell>
 		</motion.tr>
 	);
-}
-
+});

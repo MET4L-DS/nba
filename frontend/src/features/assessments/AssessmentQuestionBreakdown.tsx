@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useMemo, memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
     Table,
@@ -14,13 +14,15 @@ interface AssessmentQuestionBreakdownProps {
     questions: QuestionResponse[];
 }
 
-export function AssessmentQuestionBreakdown({ questions }: AssessmentQuestionBreakdownProps) {
-    const groupedQuestions = questions.reduce((acc, q) => {
-        const key = q.question_number;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(q);
-        return acc;
-    }, {} as Record<number, QuestionResponse[]>);
+export const AssessmentQuestionBreakdown = memo(function AssessmentQuestionBreakdown({ questions }: AssessmentQuestionBreakdownProps) {
+    const groupedQuestions = useMemo(() => {
+        return questions.reduce((acc, q) => {
+            const key = q.question_number;
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(q);
+            return acc;
+        }, {} as Record<number, QuestionResponse[]>);
+    }, [questions]);
 
     return (
         <div className="flex-1 overflow-auto rounded-xl border border-muted/50 bg-card/30 backdrop-blur-md shadow-inner">
@@ -74,4 +76,4 @@ export function AssessmentQuestionBreakdown({ questions }: AssessmentQuestionBre
             </Table>
         </div>
     );
-}
+});

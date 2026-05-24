@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ClipboardList } from "lucide-react";
 import {
 	Table,
@@ -17,7 +18,7 @@ interface QuestionsTableProps {
 	onAddSubQuestion: (questionNumber: number) => void;
 }
 
-export function QuestionsTable({
+export const QuestionsTable = memo(function QuestionsTable({
 	questions,
 	onUpdateQuestion,
 	onRemoveQuestion,
@@ -70,15 +71,13 @@ export function QuestionsTable({
 							key={`${question.question_number}-${question.sub_question}-${index}`}
 							question={question}
 							index={index}
-							onUpdate={(updates) => onUpdateQuestion(index, updates)}
-							onRemove={() => onRemoveQuestion(index)}
-							onAddSubQuestion={() =>
-								onAddSubQuestion(question.question_number)
-							}
+							onUpdate={onUpdateQuestion}
+							onRemove={onRemoveQuestion}
+							onAddSubQuestion={onAddSubQuestion}
 						/>
 					))}
 				</AnimatePresence>
 			</TableBody>
 		</Table>
 	);
-}
+});

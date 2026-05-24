@@ -1,3 +1,4 @@
+import React from "react";
 import {
 	Table,
 	TableBody,
@@ -17,7 +18,7 @@ interface StudentPreviewTableProps {
 	students: StudentEntry[];
 }
 
-export function StudentPreviewTable({ students }: StudentPreviewTableProps) {
+export const StudentPreviewTable = React.memo(function StudentPreviewTable({ students }: StudentPreviewTableProps) {
 	if (students.length === 0) return null;
 
 	return (
@@ -43,4 +44,5 @@ export function StudentPreviewTable({ students }: StudentPreviewTableProps) {
 			</div>
 		</div>
 	);
-}
+});
+

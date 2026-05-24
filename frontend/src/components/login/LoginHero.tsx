@@ -97,11 +97,18 @@ export function LoginHero() {
 						whileHover={{ scale: 1.08, rotate: 3 }}
 						transition={{ type: "spring", stiffness: 300, damping: 20 }}
 					>
-						<img
-							src="/tulogo.png"
-							alt="Tezpur University"
-							className="w-12 h-12 object-contain"
-						/>
+						<picture>
+							<source srcSet="/tulogo.webp" type="image/webp" />
+							<img
+								src="/tulogo.png"
+								alt="Tezpur University"
+								width={48}
+								height={48}
+								fetchPriority="high"
+								decoding="async"
+								className="w-12 h-12 object-contain"
+							/>
+						</picture>
 					</motion.div>
 					<div>
 						<h3 className="text-xl font-bold text-white leading-tight">

@@ -14,7 +14,6 @@ import {
 	calculatePOComputations,
 } from "./computations";
 import { getAttainmentCriteria } from "./utils";
-import { exportAttainmentExcel } from "@/lib/excel/attainmentExcel";
 
 export interface UseCOPOMappingDataProps {
 	courseId: number;
@@ -742,6 +741,7 @@ export function useCOPOMappingData({
 				}),
 			);
 
+			const { exportAttainmentExcel } = await import("@/lib/excel/attainmentExcel");
 			await exportAttainmentExcel({
 				attainmentThresholds,
 				coThreshold,

@@ -50,11 +50,14 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
 				{/* University Logo for mobile */}
 				<motion.div className="flex flex-col items-center md:hidden mb-4" variants={itemVariants}>
 					<div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden shadow-lg">
-						<img
-							src="/tulogo.png"
-							alt="Tezpur University"
-							className="h-12 w-12 object-contain"
-						/>
+						<picture>
+							<source srcSet="/tulogo.webp" type="image/webp" />
+							<img
+								src="/tulogo.png"
+								alt="Tezpur University"
+								className="h-12 w-12 object-contain"
+							/>
+						</picture>
 					</div>
 					<h2 className="mt-3 text-lg font-bold text-slate-900 dark:text-white">
 						Tezpur University

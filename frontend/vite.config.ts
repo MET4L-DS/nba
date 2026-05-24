@@ -11,4 +11,12 @@ export default defineConfig({
 			"@": path.resolve(__dirname, "./src"),
 		},
 	},
+	build: {
+		// Target modern browsers for smaller bundles
+		target: "esnext",
+		// Enable minification
+		minify: "esbuild",
+		// Raise warning threshold (we know about large async chunks like attainmentExcel)
+		chunkSizeWarningLimit: 1000,
+	},
 });

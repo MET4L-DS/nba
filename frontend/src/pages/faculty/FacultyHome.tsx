@@ -1,12 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom";
-import { apiService } from "@/services/api";
-import type { User, FacultyStats, Course } from "@/services/api";
+import { lazy, Suspense } from "react";
+import { useFacultyHome } from "./hooks/useFacultyHome";
+import { FacultyWelcomeCard } from "./components/FacultyWelcomeCard";
 import { StatsGrid, QuickAccessGrid } from "@/features/shared";
-import { createFacultyStats } from "@/features/shared/statsFactory";
-import { createFacultyQuickAccess } from "@/features/shared/quickAccessFactory";
-import { FacultyOverview } from "@/components/faculty";
-import { debugLogger } from "@/lib/debugLogger";
+import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
 const pageVariants = {
@@ -20,66 +16,24 @@ const pageTransition = {
 	ease: [0.16, 1, 0.3, 1] as const,
 };
 
+// Lazy load heavy FacultyOverview component for improved code-splitting and faster initial page hydration
+const FacultyOverview = lazy(() =>
+	import("@/components/faculty").then((module) => ({
+		default: module.FacultyOverview,
+	})),
+);
+
 export function FacultyHome() {
-	const navigate = useNavigate();
 	const {
 		user,
 		courses,
 		selectedCourse,
 		isLoadingCourses,
-	} = useOutletContext<{
-		user: User;
-		courses: Course[];
-		selectedCourse: Course | null;
-		isLoadingCourses: boolean;
-	}>();
-
-	debugLogger.info("FacultyHome", "Component mounted", { user: user?.username });
-
-	const [stats, setStats] = useState<FacultyStats>({
-		totalCourses: 0,
-		totalAssessments: 0,
-		totalStudents: 0,
-		averageAttainment: 0,
-	});
-	const [statsLoading, setStatsLoading] = useState(true);
-
-	const facultyStats = useMemo(() => createFacultyStats(stats), [stats]);
-	const quickAccessItems = useMemo(() => createFacultyQuickAccess(), []);
-	const handleQuickAccessClick = useCallback((nav: string) => {
-		navigate(`/faculty/${nav}`);
-	}, [navigate]);
-
-	useEffect(() => {
-		loadStats();
-	}, []);
-
-	const loadStats = async (options?: { bypassCache?: boolean }) => {
-		debugLogger.debug("FacultyHome", "Loading faculty stats...");
-		setStatsLoading(true);
-		try {
-			const statsData = await apiService.getFacultyStats(options);
-			debugLogger.info("FacultyHome", "Faculty stats loaded", {
-				stats: statsData,
-				totalCourses: statsData.totalCourses,
-				totalAssessments: statsData.totalAssessments,
-				totalStudents: statsData.totalStudents
-			});
-			setStats(statsData);
-		} catch (error) {
-			debugLogger.error("FacultyHome", "Failed to load faculty stats", error);
-			console.error("Failed to load faculty stats:", error);
-			setStats({
-				totalCourses: courses.length,
-				totalAssessments: 0,
-				totalStudents: 0,
-				averageAttainment: 0,
-			});
-		} finally {
-			setStatsLoading(false);
-			debugLogger.debug("FacultyHome", "Stats loading completed");
-		}
-	};
+		statsLoading,
+		facultyStats,
+		quickAccessItems,
+		handleQuickAccessClick,
+	} = useFacultyHome();
 
 	return (
 		<motion.div
@@ -90,37 +44,42 @@ export function FacultyHome() {
 			transition={pageTransition}
 			className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6"
 		>
-			<div className="flex flex-wrap gap-4 items-center justify-between bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden mb-2">
-				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20 pointer-events-none"></div>
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-						Welcome, {user.username}
-					</h1>
-					<p className="text-sm text-muted-foreground mt-1">
-						{selectedCourse
-							? `Currently managing ${selectedCourse.course_code} — ${selectedCourse.course_name}`
-							: "Overview of your assigned courses and student performance."}
-					</p>
-				</div>
-			</div>
+			{/* Extracted static UI header: prevents unnecessary rerenders when stats load */}
+			<FacultyWelcomeCard
+				user={user}
+				selectedCourse={selectedCourse}
+			/>
 
+			{/* Core Dashboard KPI Metrics */}
 			<StatsGrid
 				stats={facultyStats}
 				isLoading={statsLoading}
 				variant="solid"
 				columns={4}
 			/>
+
+			{/* Feature Portal Navigation */}
 			<QuickAccessGrid
 				items={quickAccessItems}
 				onItemClick={handleQuickAccessClick}
 				variant="elevated"
 				columns={4}
 			/>
-			<FacultyOverview
-				courses={courses}
-				isLoading={isLoadingCourses}
-			/>
+
+			{/* Heavy table/analytics section loaded asynchronously */}
+			<Suspense
+				fallback={
+					<div className="space-y-4">
+						<Skeleton className="h-10 w-48 rounded-lg" />
+						<Skeleton className="h-64 w-full rounded-xl" />
+					</div>
+				}
+			>
+				<FacultyOverview
+					courses={courses}
+					isLoading={isLoadingCourses}
+				/>
+			</Suspense>
 		</motion.div>
 	);
 }
-

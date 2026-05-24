@@ -1,10 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import "./App.css";
-import { LoginPage } from "./pages/LoginPage";
-import { DashboardLayout } from "./components/layout/DashboardLayout";
-import { FacultyLayout } from "./components/layout/FacultyLayout";
 import { PageLoader } from "./components/ui/page-loader";
+
+const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout").then(module => ({ default: module.DashboardLayout })));
+const FacultyLayout = lazy(() => import("./components/layout/FacultyLayout").then(module => ({ default: module.FacultyLayout })));
+
+const LoginPage = lazy(() => import("./pages/LoginPage").then(module => ({ default: module.LoginPage })));
 
 // Lazy-loaded Admin Pages
 const AdminHome = lazy(() => import("./pages/admin/AdminHome").then(module => ({ default: module.AdminHome })));

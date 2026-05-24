@@ -47,11 +47,14 @@ export function AppSidebar({
 							whileHover={{ scale: 1.06, rotate: 3 }}
 							transition={{ type: "spring", stiffness: 340, damping: 22 }}
 						>
-							<img
-								src="/tulogo.png"
-								alt="Tezpur University Logo"
-								className="w-8 h-8 object-contain"
-							/>
+							<picture>
+								<source srcSet="/tulogo.webp" type="image/webp" />
+								<img
+									src="/tulogo.png"
+									alt="Tezpur University Logo"
+									className="w-8 h-8 object-contain"
+								/>
+							</picture>
 						</motion.div>
 						<div className="flex-1 min-w-0">
 							<h2 className="text-sm font-bold text-gray-900 dark:text-white truncate">

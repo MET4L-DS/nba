@@ -60,38 +60,27 @@ export function useMarksEntryByQuestion(test: Test, course: Course | null) {
 				});
 			});
 
-			// Fetch all students' marks in parallel
-			const marksResults = await Promise.all(
-				loadedEnrollments.map(async (enrollment) => {
-					try {
-						return await apiService.getStudentMarks(
-							test.id,
-							enrollment.student_rollno,
-						);
-					} catch {
-						return null; // student has no marks yet
-					}
-				}),
-			);
+			// Fetch all students' marks in a single bulk request
+			const testMarksData = await apiService.getTestMarks(test.id, true);
 
-			// Fill in existing marks from parallel results
-			loadedEnrollments.forEach((enrollment, idx) => {
-				const studentMarks = marksResults[idx];
-				if (studentMarks?.raw_marks?.length) {
-					studentMarks.raw_marks.forEach((rawMark) => {
-						const questionIdentifier = rawMark.question_identifier;
-						if (
-							initialMarks[enrollment.student_rollno][
-								questionIdentifier
-							] !== undefined
-						) {
-							initialMarks[enrollment.student_rollno][
-								questionIdentifier
-							] = rawMark.marks.toString();
-						}
-					});
-				}
-			});
+			// Fill in existing marks from bulk results
+			if (testMarksData?.raw_marks?.length) {
+				testMarksData.raw_marks.forEach((studentData) => {
+					const studentId = studentData.student_id;
+					if (initialMarks[studentId]) {
+						studentData.raw_marks.forEach((rawMark) => {
+							const questionIdentifier = rawMark.question_identifier;
+							if (
+								initialMarks[studentId][questionIdentifier] !==
+								undefined
+							) {
+								initialMarks[studentId][questionIdentifier] =
+									rawMark.marks_obtained.toString();
+							}
+						});
+					}
+				});
+			}
 
 			setMarks(initialMarks);
 			setOriginalMarks(JSON.parse(JSON.stringify(initialMarks))); // Deep copy

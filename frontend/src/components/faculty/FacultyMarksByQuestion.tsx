@@ -104,39 +104,23 @@ export function FacultyMarksByQuestion({
 				});
 			});
 
-			const marksResults = await Promise.all(
-				enrolledList.map(async (e) => {
-					try {
-						return await apiService.getStudentMarks(
-							selectedTest.id,
-							e.student_rollno,
-						);
-					} catch {
-						return null;
-					}
-				}),
-			);
+			// Fetch all students' marks in a single bulk request
+			const testMarksData = await apiService.getTestMarks(selectedTest.id, true);
 
-			enrolledList.forEach((e, idx) => {
-				const sm = marksResults[idx];
-				if (sm?.raw_marks?.length) {
-					sm.raw_marks.forEach(
-						(rawMark: {
-							question_identifier: string;
-							marks: number;
-						}) => {
+			// Fill in existing marks from bulk results
+			if (testMarksData?.raw_marks?.length) {
+				testMarksData.raw_marks.forEach((studentData) => {
+					const studentId = studentData.student_id;
+					if (initialMarks[studentId]) {
+						studentData.raw_marks.forEach((rawMark) => {
 							const qId = rawMark.question_identifier;
-							if (
-								initialMarks[e.student_rollno][qId] !==
-								undefined
-							) {
-								initialMarks[e.student_rollno][qId] =
-									rawMark.marks.toString();
+							if (initialMarks[studentId][qId] !== undefined) {
+								initialMarks[studentId][qId] = rawMark.marks_obtained.toString();
 							}
-						},
-					);
-				}
-			});
+						});
+					}
+				});
+			}
 
 			setMarks(initialMarks);
 			setOriginalMarks(JSON.parse(JSON.stringify(initialMarks)));

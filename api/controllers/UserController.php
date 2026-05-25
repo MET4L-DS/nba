@@ -46,8 +46,14 @@ class UserController
             // Attempt authentication
             $result = $this->authService->authenticate($data['employeeIdOrEmail'], $data['password']);
 
-            if ($result['error']) {
-                if (isset($GLOBALS['fileLogger'])) { $GLOBALS['fileLogger']->warn('UserController', 'Unauthorized access attempt', ['user' => $_REQUEST['authenticated_user'] ?? 'anonymous']); }
+            if (isset($result['error'])) {
+                if (isset($GLOBALS['fileLogger'])) { 
+                    $GLOBALS['fileLogger']->warn('UserController', 'Login attempt failed', [
+                        'identifier' => $data['employeeIdOrEmail'],
+                        'reason' => $result['error'],
+                        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                    ]); 
+                }
                 http_response_code(401);
                 $message = 'Invalid credentials';
                 if ($result['error'] === 'user_not_found') {
@@ -64,6 +70,13 @@ class UserController
             }
 
             // Success response
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->info('UserController', 'Login successful', [
+                    'employee_id' => $result['user']['employee_id'],
+                    'role' => $result['user']['role'],
+                    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                ]);
+            }
             http_response_code(200);
             header('Content-Type: application/json');
             echo json_encode([

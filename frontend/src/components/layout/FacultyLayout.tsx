@@ -129,8 +129,6 @@ export function FacultyLayout() {
 	// Memoize the context object passed to Outlet to prevent downstream re-renders
 	const contextValue = useMemo(() => ({
 		user,
-		sidebarOpen,
-		setSidebarOpen,
 		courses,
 		activeCourses,
 		selectedCourse,
@@ -139,8 +137,6 @@ export function FacultyLayout() {
 		refreshCourses,
 	}), [
 		user,
-		sidebarOpen,
-		setSidebarOpen,
 		courses,
 		activeCourses,
 		selectedCourse,

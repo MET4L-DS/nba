@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { apiService } from "@/services/api";
 import type { User, FacultyStats, Course } from "@/services/api";
@@ -30,6 +30,11 @@ export function useFacultyHome() {
 	});
 	const [statsLoading, setStatsLoading] = useState(true);
 
+	const coursesRef = useRef(courses);
+	useEffect(() => {
+		coursesRef.current = courses;
+	}, [courses]);
+
 	const facultyStats = useMemo(() => createFacultyStats(stats), [stats]);
 	const quickAccessItems = useMemo(() => createFacultyQuickAccess(), []);
 
@@ -52,8 +57,9 @@ export function useFacultyHome() {
 		} catch (error) {
 			debugLogger.error("FacultyHome", "Failed to load faculty stats in hook", error);
 			console.error("Failed to load faculty stats:", error);
+			const currentCourses = coursesRef.current;
 			setStats({
-				totalCourses: courses ? courses.length : 0,
+				totalCourses: currentCourses ? currentCourses.length : 0,
 				totalAssessments: 0,
 				totalStudents: 0,
 				averageAttainment: 0,
@@ -62,7 +68,7 @@ export function useFacultyHome() {
 			setStatsLoading(false);
 			debugLogger.debug("FacultyHome", "Stats loading completed in hook");
 		}
-	}, [courses]);
+	}, []);
 
 	useEffect(() => {
 		loadStats();

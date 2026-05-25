@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import type { Course, Question } from "@/services/api";
@@ -31,6 +31,12 @@ export function useCreateAssessment({
 		return fullMarksNum > 0 && totalMarks === fullMarksNum;
 	}, [fullMarksNum, totalMarks]);
 
+	const totalMarksRef = useRef(totalMarks);
+	const fullMarksNumRef = useRef(fullMarksNum);
+
+	totalMarksRef.current = totalMarks;
+	fullMarksNumRef.current = fullMarksNum;
+
 	const handleTestTypeChange = useCallback((testType: string) => {
 		setName(testType === "Other" ? "" : testType);
 		const fm = TEST_MARKS[testType] || 0;
@@ -52,9 +58,11 @@ export function useCreateAssessment({
 	}, []);
 
 	const addQuestion = useCallback(() => {
-		if (fullMarksNum && totalMarks + 1 > fullMarksNum) {
+		const currentFullMarks = fullMarksNumRef.current;
+		const currentTotalMarks = totalMarksRef.current;
+		if (currentFullMarks && currentTotalMarks + 1 > currentFullMarks) {
 			toast.error(
-				`Total marks (${totalMarks}) would exceed full marks (${fullMarksNum})`
+				`Total marks (${currentTotalMarks}) would exceed full marks (${currentFullMarks})`
 			);
 			return;
 		}
@@ -74,12 +82,14 @@ export function useCreateAssessment({
 				},
 			];
 		});
-	}, [fullMarksNum, totalMarks]);
+	}, []);
 
 	const addSubQuestion = useCallback((questionNumber: number) => {
-		if (fullMarksNum && totalMarks + 1 > fullMarksNum) {
+		const currentFullMarks = fullMarksNumRef.current;
+		const currentTotalMarks = totalMarksRef.current;
+		if (currentFullMarks && currentTotalMarks + 1 > currentFullMarks) {
 			toast.error(
-				`Total marks (${totalMarks}) would exceed full marks (${fullMarksNum})`
+				`Total marks (${currentTotalMarks}) would exceed full marks (${currentFullMarks})`
 			);
 			return;
 		}
@@ -130,13 +140,13 @@ export function useCreateAssessment({
 			}
 			return updated;
 		});
-	}, [fullMarksNum, totalMarks]);
+	}, []);
 
 	const removeQuestion = useCallback((index: number) => {
 		setQuestions((prev) => {
 			const removed = prev[index];
 			if (!removed) return prev;
-			let remaining = prev.filter((_, i) => i !== index);
+			const remaining = prev.filter((_, i) => i !== index);
 			const sameNum = remaining.filter(
 				(q) => q.question_number === removed.question_number
 			);

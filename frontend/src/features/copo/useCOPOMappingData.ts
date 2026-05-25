@@ -193,21 +193,23 @@ export function useCOPOMappingData({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [courseId]);
 
-	const loadMatrix = async () => {
+	const loadMatrix = useCallback(async () => {
 		try {
 			debugLogger.info("COPOMapping", "loadMatrix called");
 			const mappings = await apiService.getCoPoMatrix(courseId);
 			if (mappings && mappings.length > 0) {
-				const newMatrix = JSON.parse(JSON.stringify(copoMatrix)); // Deep clone
-				mappings.forEach((m) => {
-					const co = m.co_name as keyof COPOMatrixState;
-					const po = m.po_name;
-					if (newMatrix[co]) {
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						(newMatrix[co] as any)[po] = m.value;
-					}
+				setCopoMatrix((prevMatrix) => {
+					const newMatrix = JSON.parse(JSON.stringify(prevMatrix)); // Deep clone
+					mappings.forEach((m) => {
+						const co = m.co_name as keyof COPOMatrixState;
+						const po = m.po_name;
+						if (newMatrix[co]) {
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
+							(newMatrix[co] as any)[po] = m.value;
+						}
+					});
+					return newMatrix;
 				});
-				setCopoMatrix(newMatrix);
 			}
 		} catch (error) {
 			debugLogger.error(
@@ -217,9 +219,9 @@ export function useCOPOMappingData({
 			);
 			console.error("Failed to load CO-PO matrix:", error);
 		}
-	};
+	}, [courseId]);
 
-	const loadAttainmentConfig = async () => {
+	const loadAttainmentConfig = useCallback(async () => {
 		try {
 			debugLogger.info("COPOMapping", "loadAttainmentConfig called");
 			const config = await apiService.getAttainmentConfig(courseId);
@@ -249,9 +251,9 @@ export function useCOPOMappingData({
 			console.error("Failed to load attainment configuration:", error);
 			toast.info("Using default attainment configuration");
 		}
-	};
+	}, [courseId]);
 
-	const loadCOPOData = async () => {
+	const loadCOPOData = useCallback(async () => {
 		try {
 			debugLogger.info("COPOMapping", "loadCOPOData called");
 			setLoading(true);
@@ -466,9 +468,9 @@ export function useCOPOMappingData({
 			toast.error("Failed to load CO-PO data");
 			setLoading(false);
 		}
-	};
+	}, [courseId]);
 
-	const saveMatrix = async () => {
+	const saveMatrix = useCallback(async () => {
 		setSaving(true);
 		try {
 			const mappings: Array<{ co: string; po: string; value: number }> =
@@ -490,82 +492,87 @@ export function useCOPOMappingData({
 		} finally {
 			setSaving(false);
 		}
-	};
+	}, [courseId, copoMatrix]);
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const handleCSVDataParsed = (data: any[]) => {
-		const newMatrix = JSON.parse(JSON.stringify(copoMatrix));
-		let updateCount = 0;
+	const handleCSVDataParsed = useCallback((data: any[]) => {
+		setCopoMatrix((prevMatrix) => {
+			const newMatrix = JSON.parse(JSON.stringify(prevMatrix));
+			let updateCount = 0;
 
-		data.forEach((row) => {
-			let coName = "";
-			for (const key in row) {
-				const val = row[key]?.toString().trim().toUpperCase();
-				if (val && /^CO[1-6]$/i.test(val)) {
-					coName = val;
-					break;
+			data.forEach((row) => {
+				let coName = "";
+				for (const key in row) {
+					const val = row[key]?.toString().trim().toUpperCase();
+					if (val && /^CO[1-6]$/i.test(val)) {
+						coName = val;
+						break;
+					}
 				}
-			}
 
-			if (!coName || !newMatrix[coName]) return;
+				if (!coName || !newMatrix[coName]) return;
 
-			for (const key in row) {
-				const upperKey = key.trim().toUpperCase();
-				if (upperKey.startsWith("PO") || upperKey.startsWith("PSO")) {
-					const val = parseInt(row[key]) || 0;
-					if (val >= 0 && val <= 3) {
-						if (newMatrix[coName][upperKey] !== undefined) {
-							newMatrix[coName][upperKey] = val;
-							updateCount++;
+				for (const key in row) {
+					const upperKey = key.trim().toUpperCase();
+					if (upperKey.startsWith("PO") || upperKey.startsWith("PSO")) {
+						const val = parseInt(row[key]) || 0;
+						if (val >= 0 && val <= 3) {
+							if (newMatrix[coName][upperKey] !== undefined) {
+								newMatrix[coName][upperKey] = val;
+								updateCount++;
+							}
 						}
 					}
 				}
+			});
+
+			if (updateCount > 0) {
+				toast.success(
+					`Imported metadata successfully (${updateCount} values updated). Click Save to persist.`,
+				);
+				return newMatrix;
+			} else {
+				toast.warning(
+					"No valid data found in CSV matching CO/PO structure.",
+				);
+				return prevMatrix;
 			}
 		});
+	}, []);
 
-		if (updateCount > 0) {
-			setCopoMatrix(newMatrix);
-			toast.success(
-				`Imported metadata successfully (${updateCount} values updated). Click Save to persist.`,
+	const addThreshold = useCallback(() => {
+		setAttainmentThresholds((prev) => {
+			const newId = Math.max(...prev.map((t) => t.id), 0) + 1;
+			const lowestPercentage = Math.min(
+				...prev.map((t) => t.percentage),
 			);
-		} else {
-			toast.warning(
-				"No valid data found in CSV matching CO/PO structure.",
-			);
-		}
-	};
+			const newPercentage = Math.max(lowestPercentage - 10, 0);
+			return [
+				...prev,
+				{ id: newId, percentage: newPercentage },
+			];
+		});
+	}, []);
 
-	const addThreshold = () => {
-		const newId = Math.max(...attainmentThresholds.map((t) => t.id), 0) + 1;
-		const lowestPercentage = Math.min(
-			...attainmentThresholds.map((t) => t.percentage),
-		);
-		const newPercentage = Math.max(lowestPercentage - 10, 0);
-		setAttainmentThresholds([
-			...attainmentThresholds,
-			{ id: newId, percentage: newPercentage },
-		]);
-	};
-
-	const updateThreshold = (id: number, value: number) => {
-		setAttainmentThresholds(
-			attainmentThresholds.map((t) =>
+	const updateThreshold = useCallback((id: number, value: number) => {
+		setAttainmentThresholds((prev) =>
+			prev.map((t) =>
 				t.id === id ? { ...t, percentage: value } : t,
 			),
 		);
-	};
+	}, []);
 
-	const removeThreshold = (id: number) => {
-		if (attainmentThresholds.length <= 1) {
-			toast.error("At least one threshold is required");
-			return;
-		}
-		setAttainmentThresholds(
-			attainmentThresholds.filter((t) => t.id !== id),
-		);
-	};
+	const removeThreshold = useCallback((id: number) => {
+		setAttainmentThresholds((prev) => {
+			if (prev.length <= 1) {
+				toast.error("At least one threshold is required");
+				return prev;
+			}
+			return prev.filter((t) => t.id !== id);
+		});
+	}, []);
 
-	const saveSettings = async () => {
+	const saveSettings = useCallback(async () => {
 		const percentages = attainmentThresholds.map((t) => t.percentage);
 		const hasDuplicates = new Set(percentages).size !== percentages.length;
 		if (hasDuplicates) {
@@ -600,9 +607,9 @@ export function useCOPOMappingData({
 					: "Failed to save settings",
 			);
 		}
-	};
+	}, [courseId, coThreshold, passingThreshold, directWeightage, indirectWeightage, attainmentThresholds]);
 
-	const updateCOPOMapping = (co: string, po: string, value: number) => {
+	const updateCOPOMapping = useCallback((co: string, po: string, value: number) => {
 		setCopoMatrix((prev) => ({
 			...prev,
 			[co]: {
@@ -610,7 +617,7 @@ export function useCOPOMappingData({
 				[po]: Math.max(0, Math.min(value, attainmentThresholds.length)),
 			},
 		}));
-	};
+	}, [attainmentThresholds.length]);
 
 	const zeroLevelThreshold = Math.min(
 		...attainmentThresholds.map((t) => t.percentage),
@@ -677,7 +684,7 @@ export function useCOPOMappingData({
 		return getAttainmentCriteria(attainmentThresholds, zeroLevelThreshold);
 	}, [attainmentThresholds, zeroLevelThreshold]);
 
-	const handleExportAttainment = async (headerOverrides?: {
+	const handleExportAttainment = useCallback(async (headerOverrides?: {
 		programme?: string;
 		programme_id?: number;
 		year?: string;
@@ -763,7 +770,7 @@ export function useCOPOMappingData({
 			console.error("Export failed:", error);
 			toast.error("Failed to export Excel");
 		}
-	};
+	}, [studentsData, maxMarks, attainmentThresholds, coThreshold, passingThreshold, courseCode, facultyName, departmentName, year, semester, courseName, copoMatrix]);
 
 	const poComputations = useMemo(() => {
 		if (!attainmentData) return null;

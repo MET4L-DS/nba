@@ -149,9 +149,16 @@ export function useEnrollStudents({
 		onOpenChange(false);
 	}, [onOpenChange]);
 
+	const studentsRef = useRef(students);
+	studentsRef.current = students;
+	const manualRollnoRef = useRef(manualRollno);
+	manualRollnoRef.current = manualRollno;
+	const manualNameRef = useRef(manualName);
+	manualNameRef.current = manualName;
+
 	const handleAddManualStudent = useCallback(() => {
-		const rollnoTrim = manualRollno.trim();
-		const nameTrim = manualName.trim();
+		const rollnoTrim = manualRollnoRef.current.trim();
+		const nameTrim = manualNameRef.current.trim();
 
 		if (!rollnoTrim) {
 			toast.error("Please enter a roll number");
@@ -162,7 +169,7 @@ export function useEnrollStudents({
 			return;
 		}
 
-		if (students.some((s) => s.rollno === rollnoTrim)) {
+		if (studentsRef.current.some((s) => s.rollno === rollnoTrim)) {
 			toast.error("This roll number is already in the list");
 			return;
 		}
@@ -174,7 +181,7 @@ export function useEnrollStudents({
 		setManualRollno("");
 		setManualName("");
 		toast.success("Student added to enrollment list");
-	}, [manualRollno, manualName, students]);
+	}, []);
 
 	const handleRemoveFromList = useCallback((rollno: string) => {
 		setStudents((prev) => prev.filter((s) => s.rollno !== rollno));

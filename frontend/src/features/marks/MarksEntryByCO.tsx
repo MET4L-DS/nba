@@ -1,11 +1,66 @@
-import { Fragment } from "react";
+import { Fragment, useState, useEffect, memo } from "react";
 import { motion } from "framer-motion";
 import {
 	useMarksEntryByCO,
 	ITEMS_PER_PAGE,
 	CO_KEYS,
 	emptyRow,
+	type COKey,
 } from "./useMarksEntryByCO";
+
+const COMarksCellInput = memo(function COMarksCellInput({
+	rollno,
+	co,
+	initialValue,
+	maxMarks,
+	onMarkChange,
+	invalid,
+	disabled,
+}: {
+	rollno: string;
+	co: COKey;
+	initialValue: string;
+	maxMarks: number;
+	onMarkChange: (rollno: string, co: COKey, val: string) => void;
+	invalid: boolean;
+	disabled: boolean;
+}) {
+	const [value, setValue] = useState(initialValue);
+
+	useEffect(() => {
+		setValue(initialValue);
+	}, [initialValue]);
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setValue(e.target.value);
+	};
+
+	const handleBlur = () => {
+		if (value !== initialValue) {
+			onMarkChange(rollno, co, value);
+		}
+	};
+
+	return (
+		<Input
+			type="number"
+			step="0.5"
+			min="0"
+			max={maxMarks > 0 ? maxMarks : undefined}
+			value={value}
+			onChange={handleChange}
+			onBlur={handleBlur}
+			disabled={disabled}
+			onFocus={(e) => e.target.select()}
+			placeholder="-"
+			className={cn(
+				"w-16 h-8 p-1.5 text-center text-sm bg-background/50 focus-visible:ring-violet-500/30",
+				invalid &&
+					"border-destructive border-2 text-destructive focus-visible:ring-destructive/30",
+			)}
+		/>
+	);
+});
 
 import {
 	Upload,
@@ -242,34 +297,14 @@ export function MarksEntryByCO({
 									key={co}
 									className="px-4 py-3 text-center border-r border-border"
 								>
-									<Input
-										type="number"
-										step="0.5"
-										min="0"
-										max={
-											coMaxMarks[co] > 0
-												? coMaxMarks[co]
-												: undefined
-										}
-										value={row[co]}
-										onChange={(e) =>
-											readOnly
-												? undefined
-												:
-											handleMarkChange(
-												rollno,
-												co,
-												e.target.value,
-											)
-										}
+									<COMarksCellInput
+										rollno={rollno}
+										co={co}
+										initialValue={row[co]}
+										maxMarks={coMaxMarks[co]}
+										onMarkChange={handleMarkChange}
+										invalid={invalid}
 										disabled={readOnly}
-										onFocus={(e) => e.target.select()}
-										placeholder="-"
-										className={cn(
-											"w-16 h-8 p-1.5 text-center text-sm bg-background/50 focus-visible:ring-violet-500/30",
-											invalid &&
-												"border-destructive border-2 text-destructive focus-visible:ring-destructive/30",
-										)}
 									/>
 								</TableCell>
 							);

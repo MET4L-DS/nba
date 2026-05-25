@@ -41,18 +41,21 @@ export function FacultyCOPO() {
 		}
 	}, [urlOfferingId, courses, selectedCourse, setSelectedCourse]);
 
+	const selectedCourseId = selectedCourse?.offering_id ?? selectedCourse?.course_id;
+	const selectedCourseCode = selectedCourse?.course_code;
+	const isSelectedCourseLocked = selectedCourse?.is_active === 0;
+
 	// Snapshot debug: auto-fetch when a locked course is selected
 	useEffect(() => {
-		if (selectedCourse && selectedCourse.is_active === 0) {
-			const offeringId = selectedCourse.offering_id ?? selectedCourse.course_id;
+		if (selectedCourseId && isSelectedCourseLocked) {
 			debugLogger.info("FacultyCOPO", "Locked course selected, fetching snapshot", {
-				courseCode: selectedCourse.course_code,
-				offeringId,
+				courseCode: selectedCourseCode,
+				offeringId: selectedCourseId,
 			});
-			attainmentApi.getOfferingAttainment(offeringId).then((snap) => {
+			attainmentApi.getOfferingAttainment(selectedCourseId).then((snap) => {
 				debugLogger.info("FacultyCOPO", "Snapshot data for locked course", {
-					courseCode: selectedCourse.course_code,
-					offeringId,
+					courseCode: selectedCourseCode,
+					offeringId: selectedCourseId,
 					co_count: snap.co_attainment?.length ?? 0,
 					po_count: snap.po_attainment?.length ?? 0,
 					co_attainment: snap.co_attainment?.map((c) => ({
@@ -68,12 +71,12 @@ export function FacultyCOPO() {
 			})
 			.catch((err) => {
 				debugLogger.warn("FacultyCOPO", "Snapshot fetch failed for locked course", {
-					courseCode: selectedCourse.course_code,
+					courseCode: selectedCourseCode,
 					error: err instanceof Error ? err.message : String(err),
 				});
 			});
 		}
-	}, [selectedCourse]);
+	}, [selectedCourseId, isSelectedCourseLocked, selectedCourseCode]);
 
 	const pageVariants = {
 		initial: { opacity: 0, y: 15 },

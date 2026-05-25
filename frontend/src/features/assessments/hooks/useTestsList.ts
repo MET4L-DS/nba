@@ -15,11 +15,15 @@ export function useTestsList({
 	refreshTrigger,
 	onCountChange,
 }: UseTestsListProps) {
+	const courseId = course?.offering_id ?? course?.course_id;
+	const onCountChangeRef = useRef(onCountChange);
+	onCountChangeRef.current = onCountChange;
+
 	const [tests, setTests] = useState<Test[]>([]);
-	const [loading, setLoading] = useState(!!course);
+	const [loading, setLoading] = useState(!!courseId);
 	const hasInitialLoadedRef = useRef(false);
 
-	if (!loading && course) {
+	if (!loading && courseId) {
 		hasInitialLoadedRef.current = true;
 	}
 
@@ -31,35 +35,33 @@ export function useTestsList({
 	const [isDeleting, setIsDeleting] = useState(false);
 
 	const loadTests = useCallback(async () => {
-		if (!course) return;
+		if (!courseId) return;
 
 		setLoading(true);
 		try {
-			const testsData = await apiService.getCourseTests(
-				course.offering_id ?? course.course_id
-			);
+			const testsData = await apiService.getCourseTests(courseId);
 			console.log("Tests received in component:", testsData);
 
 			const arr = Array.isArray(testsData) ? testsData : [];
 			setTests(arr);
-			onCountChange?.(arr.length);
+			onCountChangeRef.current?.(arr.length);
 		} catch (error) {
 			console.error("Failed to load tests:", error);
 			setTests([]);
 		} finally {
 			setLoading(false);
 		}
-	}, [course, onCountChange]);
+	}, [courseId]);
 
 	useEffect(() => {
-		if (course) {
+		if (courseId) {
 			hasInitialLoadedRef.current = false;
 			loadTests();
 		} else {
 			setTests([]);
 			hasInitialLoadedRef.current = false;
 		}
-	}, [course, refreshTrigger, loadTests]);
+	}, [courseId, refreshTrigger, loadTests]);
 
 	const handleDeleteClick = useCallback((test: Test) => {
 		setTestToDelete(test);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useCSVParser } from "@/lib/useCSVParser";
 import { toast } from "sonner";
 import { apiService } from "@/services/api";
@@ -134,26 +134,31 @@ export function useMarksEntryByCO(test: Test, course: Course | null) {
 		}
 	};
 
-	const handleMarkChange = (rollno: string, co: COKey, value: string) => {
-		setMarks((prev) => ({
-			...prev,
-			[rollno]: { ...prev[rollno], [co]: value },
-		}));
+	const handleMarkChange = useCallback((rollno: string, co: COKey, value: string) => {
+		setMarks((prevMarks) => {
+			const updatedMarks = {
+				...prevMarks,
+				[rollno]: { ...(prevMarks[rollno] || emptyRow()), [co]: value },
+			};
 
-		setDirtyRows((prev) => {
-			const next = new Set(prev);
-			const rowUnchanged = CO_KEYS.every((k) => {
-				const cur = k === co ? value : (marks[rollno]?.[k] ?? "");
-				return cur === (originalMarks[rollno]?.[k] ?? "");
+			setDirtyRows((prevDirty) => {
+				const nextDirty = new Set(prevDirty);
+				const rowUnchanged = CO_KEYS.every((k) => {
+					const cur = updatedMarks[rollno]?.[k] ?? "";
+					const orig = originalMarks[rollno]?.[k] ?? "";
+					return cur === orig;
+				});
+				if (rowUnchanged) {
+					nextDirty.delete(rollno);
+				} else {
+					nextDirty.add(rollno);
+				}
+				return nextDirty;
 			});
-			if (rowUnchanged) {
-				next.delete(rollno);
-			} else {
-				next.add(rollno);
-			}
-			return next;
+
+			return updatedMarks;
 		});
-	};
+	}, [originalMarks]);
 
 	const handleSubmit = async () => {
 		if (invalidCells.size > 0) {

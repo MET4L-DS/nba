@@ -12,6 +12,7 @@ import {
 } from "../../components/ui/card";
 import { ViewDiffModal } from "./ViewDiffModal";
 import { RefreshCw, Eye, Activity } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 
 const ACTION_FILTERS = ["ALL", "CREATE", "UPDATE", "DELETE"] as const;
 
@@ -204,23 +205,23 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 				</div>
 
 				<div className="flex flex-wrap items-center gap-2">
-					<div className="bg-muted/50 p-1 rounded-lg flex flex-wrap gap-1 border border-muted/40 backdrop-blur-sm">
-						{ACTION_FILTERS.map((action) => (
-							<Button
-								key={action}
-								size="sm"
-								variant="ghost"
-								onClick={() => setActionFilter(action)}
-								className={`px-3 py-1 h-8 text-xs font-semibold rounded-md transition-all duration-200 ${
-									actionFilter === action
-										? "bg-card text-foreground shadow-sm scale-102"
-										: "text-muted-foreground hover:bg-card/40 hover:text-foreground"
-								}`}
-							>
-								{action}
-							</Button>
-						))}
-					</div>
+					<Tabs
+						value={actionFilter}
+						onValueChange={(v) => setActionFilter(v as "ALL" | "CREATE" | "UPDATE" | "DELETE")}
+						layoutId="audit-logs-action-tabs"
+					>
+						<TabsList className="bg-muted/50 p-1 rounded-lg flex flex-wrap gap-1 border border-muted/40 backdrop-blur-sm h-auto">
+							{ACTION_FILTERS.map((action) => (
+								<TabsTrigger
+									key={action}
+									value={action}
+									className="px-3 py-1 h-8 text-xs font-semibold rounded-md transition-all duration-200 hover:text-foreground active:scale-95 duration-200 transition-all data-[state=active]:bg-card"
+								>
+									{action}
+								</TabsTrigger>
+							))}
+						</TabsList>
+					</Tabs>
 					<Badge variant="outline" className="ml-auto bg-primary/5 text-primary border-primary/10 font-semibold py-1">
 						Showing {filteredLogs.length} of {logs.length} on this page
 					</Badge>

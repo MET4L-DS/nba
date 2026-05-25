@@ -9,6 +9,8 @@ interface UseFacultyMarksProps {
 }
 
 export function useFacultyMarks({ selectedCourse }: UseFacultyMarksProps) {
+	const courseId = selectedCourse?.offering_id ?? selectedCourse?.course_id;
+
 	const [tests, setTests] = useState<Test[]>([]);
 	const [testsLoading, setTestsLoading] = useState(false);
 	const [selectedTest, setSelectedTest] = useState<Test | null>(null);
@@ -20,12 +22,10 @@ export function useFacultyMarks({ selectedCourse }: UseFacultyMarksProps) {
 	} | null>(null);
 
 	const loadTests = useCallback(async () => {
-		if (!selectedCourse) return;
+		if (!courseId) return;
 		setTestsLoading(true);
 		try {
-			const testsData = await apiService.getCourseTests(
-				selectedCourse.offering_id ?? selectedCourse.course_id,
-			);
+			const testsData = await apiService.getCourseTests(courseId);
 			const list: Test[] = Array.isArray(testsData) ? testsData : [];
 			setTests(list);
 			if (list.length > 0) {
@@ -40,16 +40,16 @@ export function useFacultyMarks({ selectedCourse }: UseFacultyMarksProps) {
 		} finally {
 			setTestsLoading(false);
 		}
-	}, [selectedCourse]);
+	}, [courseId]);
 
 	useEffect(() => {
-		if (selectedCourse) {
+		if (courseId) {
 			loadTests();
 		} else {
 			setTests([]);
 			setSelectedTest(null);
 		}
-	}, [selectedCourse, loadTests]);
+	}, [courseId, loadTests]);
 
 	const handleTabSelect = useCallback((test: Test) => {
 		setSelectedTest((current) => {

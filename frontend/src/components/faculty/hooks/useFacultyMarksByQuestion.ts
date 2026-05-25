@@ -28,6 +28,9 @@ export function useFacultyMarksByQuestion({
 	readOnly = false,
 	onStatsUpdate,
 }: UseFacultyMarksByQuestionProps) {
+	const courseId = selectedCourse?.offering_id ?? selectedCourse?.course_id;
+	const testId = selectedTest?.id;
+
 	const [questions, setQuestions] = useState<QuestionResponse[]>([]);
 	const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
 	const [marks, setMarks] = useState<Record<string, Record<string, string>>>({});
@@ -41,13 +44,12 @@ export function useFacultyMarksByQuestion({
 	const [validateMarks, setValidateMarks] = useState(true);
 
 	const loadEnrollmentsAndQuestions = useCallback(async () => {
-		if (!selectedCourse || !selectedTest) return;
+		if (!courseId || !testId) return;
 		setMarksLoading(true);
 		try {
-			const offeringId = selectedCourse.offering_id ?? selectedCourse.course_id;
 			const enrollmentData = await apiService.getCourseEnrollments(
-				offeringId,
-				selectedTest.id,
+				courseId,
+				testId,
 			);
 			const enrolledList: Enrollment[] = enrollmentData.enrollments || [];
 			const questionsList: QuestionResponse[] =
@@ -64,39 +66,23 @@ export function useFacultyMarksByQuestion({
 				});
 			});
 
-			const marksResults = await Promise.all(
-				enrolledList.map(async (e) => {
-					try {
-						return await apiService.getStudentMarks(
-							selectedTest.id,
-							e.student_rollno,
-						);
-					} catch {
-						return null;
-					}
-				}),
-			);
+			// Fetch all students' marks in a single bulk request
+			const testMarksData = await apiService.getTestMarks(testId, true);
 
-			enrolledList.forEach((e, idx) => {
-				const sm = marksResults[idx];
-				if (sm?.raw_marks?.length) {
-					sm.raw_marks.forEach(
-						(rawMark: {
-							question_identifier: string;
-							marks: number;
-						}) => {
+			// Fill in existing marks from bulk results
+			if (testMarksData?.raw_marks?.length) {
+				testMarksData.raw_marks.forEach((studentData) => {
+					const studentId = studentData.student_id;
+					if (initialMarks[studentId]) {
+						studentData.raw_marks.forEach((rawMark) => {
 							const qId = rawMark.question_identifier;
-							if (
-								initialMarks[e.student_rollno][qId] !==
-								undefined
-							) {
-								initialMarks[e.student_rollno][qId] =
-									rawMark.marks.toString();
+							if (initialMarks[studentId][qId] !== undefined) {
+								initialMarks[studentId][qId] = rawMark.marks_obtained.toString();
 							}
-						},
-					);
-				}
-			});
+						});
+					}
+				});
+			}
 
 			setMarks(initialMarks);
 			setOriginalMarks(JSON.parse(JSON.stringify(initialMarks)));
@@ -107,15 +93,15 @@ export function useFacultyMarksByQuestion({
 		} finally {
 			setMarksLoading(false);
 		}
-	}, [selectedCourse, selectedTest]);
+	}, [courseId, testId]);
 
 	useEffect(() => {
-		if (selectedTest && selectedCourse) {
+		if (testId && courseId) {
 			loadEnrollmentsAndQuestions();
 		}
 		setSearchTerm("");
 		setCurrentPage(1);
-	}, [selectedTest, selectedCourse, loadEnrollmentsAndQuestions]);
+	}, [testId, courseId, loadEnrollmentsAndQuestions]);
 
 	const handleMarkChange = useCallback((
 		studentRollno: string,
@@ -123,35 +109,44 @@ export function useFacultyMarksByQuestion({
 		value: string,
 	) => {
 		if (readOnly) return;
-		setMarks((prev) => ({
-			...prev,
-			[studentRollno]: { ...prev[studentRollno], [questionId]: value },
-		}));
-		setDirtyRows((prev) => {
-			const next = new Set(prev);
-			const originalValue =
-				originalMarks[studentRollno]?.[questionId] || "";
-			if (value !== originalValue) {
-				next.add(studentRollno);
-			} else {
-				const allUnchanged = Object.keys(
-					marks[studentRollno] || {},
-				).every((qId) => {
-					if (qId === questionId) return value === originalValue;
-					return (
-						(marks[studentRollno]?.[qId] || "") ===
-						(originalMarks[studentRollno]?.[qId] || "")
-					);
-				});
-				if (allUnchanged) next.delete(studentRollno);
-			}
-			return next;
+		setMarks((prevMarks) => {
+			const updatedMarks = {
+				...prevMarks,
+				[studentRollno]: {
+					...(prevMarks[studentRollno] || {}),
+					[questionId]: value,
+				},
+			};
+
+			setDirtyRows((prevDirty) => {
+				const nextDirty = new Set(prevDirty);
+				const originalValue = originalMarks[studentRollno]?.[questionId] || "";
+
+				if (value !== originalValue) {
+					nextDirty.add(studentRollno);
+				} else {
+					const studentRow = updatedMarks[studentRollno] || {};
+					const allUnchanged = Object.keys(studentRow).every((qId) => {
+						const currentVal = studentRow[qId] || "";
+						const origVal = originalMarks[studentRollno]?.[qId] || "";
+						return currentVal === origVal;
+					});
+					if (allUnchanged) {
+						nextDirty.delete(studentRollno);
+					} else {
+						nextDirty.add(studentRollno);
+					}
+				}
+				return nextDirty;
+			});
+
+			return updatedMarks;
 		});
-	}, [readOnly, originalMarks, marks]);
+	}, [readOnly, originalMarks]);
 
 	const handleSubmit = useCallback(async () => {
 		if (readOnly) return;
-		if (!selectedTest) {
+		if (!testId) {
 			toast.error("No test selected");
 			return;
 		}
@@ -200,7 +195,7 @@ export function useFacultyMarksByQuestion({
 		setSubmitting(true);
 		try {
 			const result = await apiService.saveBulkMarks({
-				test_id: selectedTest.id,
+				test_id: testId,
 				marks_entries: bulkEntries,
 				validate_marks: validateMarks,
 			});
@@ -221,7 +216,7 @@ export function useFacultyMarksByQuestion({
 		} finally {
 			setSubmitting(false);
 		}
-	}, [readOnly, selectedTest, dirtyRows, marks, validateMarks, loadEnrollmentsAndQuestions]);
+	}, [readOnly, testId, dirtyRows, marks, validateMarks, loadEnrollmentsAndQuestions]);
 
 	const processCSV = useCallback((text: string) => {
 		const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
@@ -344,13 +339,15 @@ export function useFacultyMarksByQuestion({
 	}, [enrollments, questions, marks, rowTotal]);
 
 	useEffect(() => {
-		if (onStatsUpdate) {
+		if (!onStatsUpdate) return;
+		const timer = setTimeout(() => {
 			onStatsUpdate({
 				entered: enteredCount,
 				total: enrollments.length,
 				average: averageTotal,
 			});
-		}
+		}, 300);
+		return () => clearTimeout(timer);
 	}, [enteredCount, enrollments.length, averageTotal, onStatsUpdate]);
 
 	return {

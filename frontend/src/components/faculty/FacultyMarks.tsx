@@ -57,7 +57,8 @@ export const FacultyMarks = memo(function FacultyMarks({
 	const renderTabs = () => (
 		<Tabs
 			value={viewMode}
-			onValueChange={(v) => setViewMode(v as any)}
+			onValueChange={(v) => setViewMode(v as "by-question" | "by-co" | "bulk")}
+			layoutId="faculty-marks-view-tabs"
 		>
 			<TabsList className="bg-muted/50 border border-muted/80 backdrop-blur-sm rounded-xl p-1 h-auto gap-0.5">
 				<TabsTrigger
@@ -96,48 +97,55 @@ export const FacultyMarks = memo(function FacultyMarks({
 			)}
 			
 			{/* Tests Header */}
-			<div className="shrink-0 bg-muted/20 border-b border-muted/50 p-4">
-				{testsLoading ? (
-					<div className="p-4 text-sm text-muted-foreground text-center animate-pulse">
-						Loading assessments...
-					</div>
-				) : tests.length === 0 ? (
-					<div className="p-4 text-sm text-muted-foreground text-center">
-						No assessments found for this course.
-					</div>
-				) : (
-					<ScrollArea className="w-full whitespace-nowrap">
-						<div className="flex w-full p-1 gap-3">
-							{tests.map((test) => {
-								const { dot, subtitle } = getTabStatus(test);
-								const isSelected = selectedTest?.id === test.id;
-								return (
-									<button
-										key={test.id}
-										onClick={() => handleTabSelect(test)}
-										className={`flex flex-col items-start min-w-[210px] rounded-xl px-4 py-3.5 text-left border transition-all duration-300 active:scale-95 ${
-											isSelected
-												? "border-violet-500/50 bg-violet-500/10 text-foreground shadow-lg shadow-violet-500/5"
-												: "border-muted/60 bg-background/50 backdrop-blur-sm hover:bg-muted/40 hover:border-muted-foreground/20 text-muted-foreground"
-										}`}
-									>
-										<div className="flex items-center gap-2 mb-1.5 font-bold text-sm w-full">
-											<span
-												className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`}
-											/>
-											<span className={`truncate ${isSelected ? "text-violet-600 dark:text-violet-400" : "text-foreground/90"}`}>
-												{test.name}
-											</span>
-										</div>
-										<div className="text-xs font-medium opacity-90">
-											{subtitle}
-										</div>
-									</button>
-								);
-							})}
+			<div className="shrink-0 bg-muted/20 border-b border-muted/50 p-4 flex flex-col gap-3.5">
+				<div className="w-full">
+					{testsLoading ? (
+						<div className="p-4 text-sm text-muted-foreground text-center animate-pulse">
+							Loading assessments...
 						</div>
-						<ScrollBar orientation="horizontal" />
-					</ScrollArea>
+					) : tests.length === 0 ? (
+						<div className="p-4 text-sm text-muted-foreground text-center">
+							No assessments found for this course.
+						</div>
+					) : (
+						<ScrollArea className="w-full whitespace-nowrap">
+							<div className="flex w-full p-1 gap-3">
+								{tests.map((test) => {
+									const { dot, subtitle } = getTabStatus(test);
+									const isSelected = selectedTest?.id === test.id;
+									return (
+										<button
+											key={test.id}
+											onClick={() => handleTabSelect(test)}
+											className={`flex flex-col items-start min-w-[210px] rounded-xl px-4 py-3.5 text-left border transition-all duration-300 active:scale-95 ${
+												isSelected
+													? "border-violet-500/50 bg-violet-500/10 text-foreground shadow-lg shadow-violet-500/5"
+													: "border-muted/60 bg-background/50 backdrop-blur-sm hover:bg-muted/40 hover:border-muted-foreground/20 text-muted-foreground"
+											}`}
+										>
+											<div className="flex items-center gap-2 mb-1.5 font-bold text-sm w-full">
+												<span
+													className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`}
+												/>
+												<span className={`truncate ${isSelected ? "text-violet-600 dark:text-violet-400" : "text-foreground/90"}`}>
+													{test.name}
+												</span>
+											</div>
+											<div className="text-xs font-medium opacity-90">
+												{subtitle}
+											</div>
+										</button>
+									);
+								})}
+							</div>
+							<ScrollBar orientation="horizontal" />
+						</ScrollArea>
+					)}
+				</div>
+				{!testsLoading && tests.length > 0 && selectedTest && (
+					<div className="shrink-0 self-start mt-0.5">
+						{renderTabs()}
+					</div>
 				)}
 			</div>
 
@@ -154,7 +162,7 @@ export const FacultyMarks = memo(function FacultyMarks({
 					<FacultyMarksByQuestion
 						selectedCourse={selectedCourse}
 						selectedTest={selectedTest}
-						headerContent={renderTabs()}
+						headerContent={null}
 						onStatsUpdate={setStats}
 						readOnly={readOnly}
 					/>
@@ -173,18 +181,13 @@ export const FacultyMarks = memo(function FacultyMarks({
 								course={selectedCourse}
 								onBack={() => setViewMode("by-question")}
 								embedded
-								headerContent={renderTabs()}
+								headerContent={null}
 								readOnly={readOnly}
 							/>
 						</Suspense>
 					</div>
 				) : (
-					<div className="flex-1 overflow-auto flex flex-col min-h-0">
-						<div className="px-6 py-3 flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-muted/50 bg-background/40 backdrop-blur-md">
-							<div className="flex items-center gap-3 flex-wrap">
-								{renderTabs()}
-							</div>
-						</div>
+					<div className="flex-grow overflow-auto flex flex-col min-h-0">
 						<div className="flex-1 overflow-auto">
 							<Suspense
 								fallback={

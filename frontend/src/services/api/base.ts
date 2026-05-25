@@ -47,6 +47,55 @@ function handleUnauthorized(): void {
 	window.location.href = "/login";
 }
 
+/**
+ * Wraps global fetch with automatic retry logic for transient network/proxy errors.
+ */
+async function fetchWithRetry(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+	retries = 3,
+	delay = 300,
+): Promise<Response> {
+	let lastError: any;
+	for (let attempt = 1; attempt <= retries; attempt++) {
+		try {
+			const response = await fetch(input, init);
+			
+			// Retry only on transient gateway/proxy errors (502, 503, 504)
+			if (
+				response.status === 502 ||
+				response.status === 503 ||
+				response.status === 504
+			) {
+				debugLogger.warn(
+					"API",
+					`Temporary server error ${response.status} on attempt ${attempt} for ${input}. Retrying in ${delay}ms...`,
+				);
+				lastError = new Error(`HTTP error ${response.status}`);
+				if (attempt < retries) {
+					await new Promise((resolve) => setTimeout(resolve, delay));
+					delay *= 2; // exponential backoff
+					continue;
+				}
+			}
+			return response;
+		} catch (error) {
+			debugLogger.warn(
+				"API",
+				`Network error on attempt ${attempt} for ${input}. Retrying in ${delay}ms...`,
+				error,
+			);
+			lastError = error;
+			if (attempt < retries) {
+				await new Promise((resolve) => setTimeout(resolve, delay));
+				delay *= 2; // exponential backoff
+				continue;
+			}
+		}
+	}
+	throw lastError;
+}
+
 // Caching and Request Deduplication structures
 const apiCache = new Map<string, { data: any; timestamp: number }>();
 const activeGetRequests = new Map<string, Promise<any>>();
@@ -95,7 +144,7 @@ export async function apiGet<T>(endpoint: string, options?: { bypassCache?: bool
 		const startTime = performance.now();
 
 		try {
-			const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+			const response = await fetchWithRetry(`${API_BASE_URL}${endpoint}`, {
 				headers: tokenManager.getAuthHeaders(),
 			});
 
@@ -141,7 +190,7 @@ export async function apiPost<T, R>(endpoint: string, body: T): Promise<R> {
 	const startTime = performance.now();
 
 	try {
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+		const response = await fetchWithRetry(`${API_BASE_URL}${endpoint}`, {
 			method: "POST",
 			headers: tokenManager.getJsonHeaders(),
 			body: JSON.stringify(body),
@@ -187,7 +236,7 @@ export async function apiDelete<T = void>(endpoint: string): Promise<T> {
 	const startTime = performance.now();
 
 	try {
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+		const response = await fetchWithRetry(`${API_BASE_URL}${endpoint}`, {
 			method: "DELETE",
 			headers: tokenManager.getAuthHeaders(),
 		});
@@ -225,7 +274,7 @@ export async function apiPut<T, R>(endpoint: string, body: T): Promise<R> {
 	const startTime = performance.now();
 
 	try {
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+		const response = await fetchWithRetry(`${API_BASE_URL}${endpoint}`, {
 			method: "PUT",
 			headers: tokenManager.getJsonHeaders(),
 			body: JSON.stringify(body),
@@ -289,7 +338,7 @@ export async function apiGetFull<T>(
 	}
 
 	const requestPromise = (async () => {
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+		const response = await fetchWithRetry(`${API_BASE_URL}${endpoint}`, {
 			headers: tokenManager.getAuthHeaders(),
 		});
 
@@ -318,7 +367,7 @@ export async function apiPostFull<T, R>(
 	endpoint: string,
 	body: T,
 ): Promise<{ success: boolean; message: string; data: R }> {
-	const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+	const response = await fetchWithRetry(`${API_BASE_URL}${endpoint}`, {
 		method: "POST",
 		headers: tokenManager.getJsonHeaders(),
 		body: JSON.stringify(body),
@@ -380,7 +429,7 @@ export async function apiGetPaginated<T>(
 		}
 
 		debugLogger.debug("API", `GET paginated request: ${url}`);
-		const response = await fetch(url, {
+		const response = await fetchWithRetry(url, {
 			headers: tokenManager.getAuthHeaders(),
 		});
 

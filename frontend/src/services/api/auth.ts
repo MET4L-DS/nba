@@ -1,5 +1,5 @@
 import { debugLogger } from "@/lib/debugLogger";
-import { API_BASE_URL, tokenManager } from "./base";
+import { API_BASE_URL, tokenManager, fetchWithRetry } from "./base";
 import type { LoginCredentials, LoginResponse, User } from "./types";
 
 export const authApi = {
@@ -10,7 +10,7 @@ export const authApi = {
 				(credentials as any).email ||
 				(credentials as any).username,
 		});
-		const response = await fetch(`${API_BASE_URL}/login`, {
+		const response = await fetchWithRetry(`${API_BASE_URL}/login`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -43,7 +43,7 @@ export const authApi = {
 		debugLogger.info("Auth", "Logging out");
 		if (token) {
 			try {
-				await fetch(`${API_BASE_URL}/logout`, {
+				await fetchWithRetry(`${API_BASE_URL}/logout`, {
 					method: "POST",
 					headers: {
 						Authorization: `Bearer ${token}`,
@@ -58,7 +58,7 @@ export const authApi = {
 	},
 
 	async getProfile(): Promise<User> {
-		const response = await fetch(`${API_BASE_URL}/profile`, {
+		const response = await fetchWithRetry(`${API_BASE_URL}/profile`, {
 			headers: tokenManager.getAuthHeaders(),
 		});
 

@@ -28,6 +28,7 @@ class TokenManager {
 	getAuthHeaders(): HeadersInit {
 		return {
 			Authorization: `Bearer ${this.token}`,
+			"bypass-tunnel-reminder": "true",
 		};
 	}
 
@@ -35,6 +36,7 @@ class TokenManager {
 		return {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${this.token}`,
+			"bypass-tunnel-reminder": "true",
 		};
 	}
 }
@@ -50,16 +52,31 @@ function handleUnauthorized(): void {
 /**
  * Wraps global fetch with automatic retry logic for transient network/proxy errors.
  */
-async function fetchWithRetry(
+export async function fetchWithRetry(
 	input: RequestInfo | URL,
 	init?: RequestInit,
 	retries = 3,
 	delay = 300,
 ): Promise<Response> {
+	// Inject bypass-tunnel-reminder header to avoid localtunnel landing page
+	const newInit = { ...init };
+	if (!newInit.headers) {
+		newInit.headers = { "bypass-tunnel-reminder": "true" };
+	} else if (newInit.headers instanceof Headers) {
+		newInit.headers.set("bypass-tunnel-reminder", "true");
+	} else if (Array.isArray(newInit.headers)) {
+		newInit.headers = [...newInit.headers, ["bypass-tunnel-reminder", "true"]];
+	} else {
+		newInit.headers = {
+			...newInit.headers,
+			"bypass-tunnel-reminder": "true",
+		};
+	}
+
 	let lastError: any;
 	for (let attempt = 1; attempt <= retries; attempt++) {
 		try {
-			const response = await fetch(input, init);
+			const response = await fetch(input, newInit);
 			
 			// Retry only on transient gateway/proxy errors (502, 503, 504)
 			if (

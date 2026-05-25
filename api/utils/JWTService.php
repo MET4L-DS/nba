@@ -74,6 +74,11 @@ class JWTService
     {
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
+            if (isset($GLOBALS['fileLogger'])) { 
+                $GLOBALS['fileLogger']->warn('JWTService', 'Token validation failed: Malformed token (expected 3 parts)', [
+                    'token_segment_count' => count($parts)
+                ]); 
+            }
             return null;
         }
 
@@ -86,6 +91,9 @@ class JWTService
         $expectedSignatureEncoded = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($expectedSignature));
 
         if (!hash_equals($signature, $expectedSignatureEncoded)) {
+            if (isset($GLOBALS['fileLogger'])) { 
+                $GLOBALS['fileLogger']->warn('JWTService', 'Token validation failed: Signature verification mismatch'); 
+            }
             return null;
         }
 
@@ -94,6 +102,13 @@ class JWTService
 
         // Check expiry
         if (isset($payloadDecoded['exp']) && $payloadDecoded['exp'] < time()) {
+            if (isset($GLOBALS['fileLogger'])) { 
+                $GLOBALS['fileLogger']->warn('JWTService', 'Token validation failed: Token expired', [
+                    'expired_at' => date('Y-m-d H:i:s', $payloadDecoded['exp']),
+                    'current_time' => date('Y-m-d H:i:s'),
+                    'employee_id' => $payloadDecoded['employee_id'] ?? 'unknown'
+                ]); 
+            }
             return null;
         }
 

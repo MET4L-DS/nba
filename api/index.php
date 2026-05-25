@@ -10,6 +10,9 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
+// Set default timezone to match local system time
+date_default_timezone_set('Asia/Kolkata');
+
 // Output buffer ensures no stray output pollutes JSON responses
 ob_start();
 

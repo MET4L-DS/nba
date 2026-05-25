@@ -50,21 +50,248 @@ export const FacultyMarksByQuestion = memo(function FacultyMarksByQuestion({
 }: FacultyMarksByQuestionProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const {
-		questions,
-		enrollments,
-		marks,
-		dirtyRows,
-		marksLoading,
-		submitting,
-		searchTerm,
-		setSearchTerm,
-		currentPage,
-		setCurrentPage,
-		validateMarks,
-		setValidateMarks,
-		filteredEnrollments,
-		totalPages,
+	useEffect(() => {
+		if (selectedTest && selectedCourse) {
+			loadEnrollmentsAndQuestions();
+		}
+		setSearchTerm("");
+		setCurrentPage(1);
+	}, [selectedTest]);
+
+	const loadEnrollmentsAndQuestions = async () => {
+		if (!selectedCourse || !selectedTest) return;
+		setMarksLoading(true);
+		try {
+			const enrollmentData = await apiService.getCourseEnrollments(
+				selectedCourse.offering_id ?? selectedCourse.course_id,
+				selectedTest.id,
+			);
+			const enrolledList: Enrollment[] = enrollmentData.enrollments || [];
+			const questionsList: QuestionResponse[] =
+				enrollmentData.test_info?.questions || [];
+
+			setEnrollments(enrolledList);
+			setQuestions(questionsList);
+
+			const initialMarks: Record<string, Record<string, string>> = {};
+			enrolledList.forEach((e) => {
+				initialMarks[e.student_rollno] = {};
+				questionsList.forEach((q) => {
+					initialMarks[e.student_rollno][q.question_identifier] = "";
+				});
+			});
+
+			// Fetch all students' marks in a single bulk request
+			const testMarksData = await apiService.getTestMarks(selectedTest.id, true);
+
+			// Fill in existing marks from bulk results
+			if (testMarksData?.raw_marks?.length) {
+				testMarksData.raw_marks.forEach((studentData) => {
+					const studentId = studentData.student_id;
+					if (initialMarks[studentId]) {
+						studentData.raw_marks.forEach((rawMark) => {
+							const qId = rawMark.question_identifier;
+							if (initialMarks[studentId][qId] !== undefined) {
+								initialMarks[studentId][qId] = rawMark.marks_obtained.toString();
+							}
+						});
+					}
+				});
+			}
+
+			setMarks(initialMarks);
+			setOriginalMarks(JSON.parse(JSON.stringify(initialMarks)));
+			setDirtyRows(new Set());
+		} catch (err) {
+			console.error("Failed to load data:", err);
+			toast.error("Failed to load students and questions");
+		} finally {
+			setMarksLoading(false);
+		}
+	};
+
+	const handleMarkChange = (
+		studentRollno: string,
+		questionId: string,
+		value: string,
+	) => {
+		if (readOnly) return;
+		setMarks((prev) => ({
+			...prev,
+			[studentRollno]: { ...prev[studentRollno], [questionId]: value },
+		}));
+		setDirtyRows((prev) => {
+			const next = new Set(prev);
+			const originalValue =
+				originalMarks[studentRollno]?.[questionId] || "";
+			if (value !== originalValue) {
+				next.add(studentRollno);
+			} else {
+				const allUnchanged = Object.keys(
+					marks[studentRollno] || {},
+				).every((qId) => {
+					if (qId === questionId) return value === originalValue;
+					return (
+						(marks[studentRollno]?.[qId] || "") ===
+						(originalMarks[studentRollno]?.[qId] || "")
+					);
+				});
+				if (allUnchanged) next.delete(studentRollno);
+			}
+			return next;
+		});
+	};
+
+	const handleSubmit = async () => {
+		if (readOnly) return;
+		if (!selectedTest) {
+			toast.error("No test selected");
+			return;
+		}
+		if (dirtyRows.size === 0) {
+			toast.error("No changes to save");
+			return;
+		}
+
+		const bulkEntries: BulkMarksEntry[] = [];
+		for (const rollno of dirtyRows) {
+			const studentMarks = marks[rollno];
+			if (!studentMarks) continue;
+			for (const [questionIdentifier, markValue] of Object.entries(
+				studentMarks,
+			)) {
+				if (markValue.trim() !== "") {
+					const mark = parseFloat(markValue);
+					if (isNaN(mark) || mark < 0) {
+						toast.error(
+							`Invalid mark for ${rollno} – Q${questionIdentifier}`,
+						);
+						return;
+					}
+					const match = questionIdentifier.match(/^(\d+)([a-h]?)$/);
+					if (!match) {
+						toast.error(
+							`Invalid question identifier: ${questionIdentifier}`,
+						);
+						return;
+					}
+					bulkEntries.push({
+						student_rollno: rollno,
+						question_number: parseInt(match[1]),
+						sub_question: match[2] || null,
+						marks_obtained: mark,
+					});
+				}
+			}
+		}
+
+		if (bulkEntries.length === 0) {
+			toast.error("Please enter at least one mark");
+			return;
+		}
+
+		setSubmitting(true);
+		try {
+			const result = await apiService.saveBulkMarks({
+				test_id: selectedTest.id,
+				marks_entries: bulkEntries,
+				validate_marks: validateMarks,
+			});
+			if (result.data.failure_count > 0) {
+				toast.warning(
+					`Saved with ${result.data.failure_count} failure(s). ${result.data.success_count} successful.`,
+				);
+			} else {
+				toast.success(
+					`All marks saved! (${result.data.success_count} entries)`,
+				);
+			}
+			await loadEnrollmentsAndQuestions();
+		} catch (err) {
+			toast.error(
+				err instanceof Error ? err.message : "Failed to save marks",
+			);
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (readOnly) return;
+		const file = event.target.files?.[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.onload = (e) => processCSV(e.target?.result as string);
+		reader.readAsText(file);
+		if (fileInputRef.current) fileInputRef.current.value = "";
+	};
+
+	const processCSV = (text: string) => {
+		const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
+		if (lines.length < 2) {
+			toast.error("CSV file is empty or missing header");
+			return;
+		}
+		const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+		let marksStartIndex = 1;
+		if (
+			headers.length > 1 &&
+			(headers[1].includes("name") || headers[1] === "student name")
+		) {
+			marksStartIndex = 2;
+		} else {
+			const firstData = lines[1].split(",");
+			if (firstData.length > 1 && isNaN(parseFloat(firstData[1]))) {
+				marksStartIndex = 2;
+			}
+		}
+
+		setMarks((prevMarks) => {
+			const newMarks = { ...prevMarks };
+			const newDirtyRows = new Set(dirtyRows);
+			let updatedCount = 0;
+			const questionIds = questions.map((q) => q.question_identifier);
+
+			lines.slice(1).forEach((line) => {
+				const values = line.split(",").map((v) => v.trim());
+				if (values.length < 2) return;
+				const rollNo = values[0];
+				if (!enrollments.some((e) => e.student_rollno === rollNo))
+					return;
+				if (!newMarks[rollNo]) newMarks[rollNo] = {};
+				values.slice(marksStartIndex).forEach((val, index) => {
+					if (
+						index < questionIds.length &&
+						val !== "" &&
+						!isNaN(parseFloat(val))
+					) {
+						newMarks[rollNo][questionIds[index]] = val;
+					}
+				});
+				newDirtyRows.add(rollNo);
+				updatedCount++;
+			});
+
+			setDirtyRows(newDirtyRows);
+			if (updatedCount > 0) {
+				toast.success(
+					`Imported marks for ${updatedCount} students. Review and click Save.`,
+				);
+			} else {
+				toast.warning("No matching students found in CSV.");
+			}
+			return newMarks;
+		});
+	};
+
+	const filteredEnrollments = enrollments.filter(
+		(e) =>
+			e.student_rollno.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			e.student_name.toLowerCase().includes(searchTerm.toLowerCase()),
+	);
+	const totalPages = Math.ceil(filteredEnrollments.length / ITEMS_PER_PAGE);
+	const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+	const currentEnrollments = filteredEnrollments.slice(
 		startIndex,
 		currentEnrollments,
 		enteredCount,

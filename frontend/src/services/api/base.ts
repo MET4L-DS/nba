@@ -29,6 +29,7 @@ class TokenManager {
 		return {
 			Authorization: `Bearer ${this.token}`,
 			"bypass-tunnel-reminder": "true",
+			"ngrok-skip-browser-warning": "true",
 		};
 	}
 
@@ -37,6 +38,7 @@ class TokenManager {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${this.token}`,
 			"bypass-tunnel-reminder": "true",
+			"ngrok-skip-browser-warning": "true",
 		};
 	}
 }
@@ -58,18 +60,27 @@ export async function fetchWithRetry(
 	retries = 3,
 	delay = 300,
 ): Promise<Response> {
-	// Inject bypass-tunnel-reminder header to avoid localtunnel landing page
+	// Inject bypass-tunnel-reminder & ngrok-skip-browser-warning headers to avoid tunnel landing pages
 	const newInit = { ...init };
 	if (!newInit.headers) {
-		newInit.headers = { "bypass-tunnel-reminder": "true" };
+		newInit.headers = {
+			"bypass-tunnel-reminder": "true",
+			"ngrok-skip-browser-warning": "true",
+		};
 	} else if (newInit.headers instanceof Headers) {
 		newInit.headers.set("bypass-tunnel-reminder", "true");
+		newInit.headers.set("ngrok-skip-browser-warning", "true");
 	} else if (Array.isArray(newInit.headers)) {
-		newInit.headers = [...newInit.headers, ["bypass-tunnel-reminder", "true"]];
+		newInit.headers = [
+			...newInit.headers,
+			["bypass-tunnel-reminder", "true"],
+			["ngrok-skip-browser-warning", "true"],
+		];
 	} else {
 		newInit.headers = {
 			...newInit.headers,
 			"bypass-tunnel-reminder": "true",
+			"ngrok-skip-browser-warning": "true",
 		};
 	}
 

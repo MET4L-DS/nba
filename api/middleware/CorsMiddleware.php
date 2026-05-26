@@ -42,7 +42,7 @@ class CorsMiddleware
         }
 
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, bypass-tunnel-reminder');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, bypass-tunnel-reminder, ngrok-skip-browser-warning');
         header('Access-Control-Allow-Credentials: true');
         header('Access-Control-Max-Age: 86400'); // 24 hours
     }

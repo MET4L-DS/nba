@@ -185,7 +185,7 @@ export function createCourseColumns(
 	if (config.showType) {
 		columns.push({
 			accessorKey: "course_type",
-			header: "Type",
+			header: sortableHeader("Type"),
 			cell: ({ row }) => (
 				<Badge variant="secondary" className="text-xs">
 					{(row.getValue("course_type") as string) ?? "—"}
@@ -197,7 +197,7 @@ export function createCourseColumns(
 	if (config.showLevel) {
 		columns.push({
 			accessorKey: "course_level",
-			header: "Level",
+			header: sortableHeader("Level"),
 			cell: ({ row }) => (
 				<span className="text-sm">
 					{(row.getValue("course_level") as string) ?? "—"}

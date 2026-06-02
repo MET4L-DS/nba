@@ -145,7 +145,7 @@ class DeanController
                 $_GET,
                 'd.department_id',
                 'd.department_id',
-                ['d.department_id', 'd.department_name', 'd.department_code'],
+                ['d.department_id', 'd.department_name', 'd.department_code', 'faculty_count', 'staff_count', 'course_count', 'student_count'],
                 ['hod_status']
             );
 
@@ -270,7 +270,17 @@ class DeanController
                 $_GET,
                 't.test_id',
                 't.test_id',
-                ['t.test_id', 't.test_name', 't.test_date', 't.test_type'],
+                [
+                    't.test_id', 'test_identifier',
+                    't.test_name', 'test_label',
+                    't.test_date', 't.test_type',
+                    't.full_marks', 'full_marks',
+                    't.pass_marks', 'pass_marks',
+                    'co.semester', 'semester',
+                    'faculty_name',
+                    'c.course_code', 'course_code',
+                    'd.department_code', 'department_code'
+                ],
                 ['department_id', 'test_type']
             );
 

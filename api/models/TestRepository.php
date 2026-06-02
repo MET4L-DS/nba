@@ -351,8 +351,23 @@ class TestRepository
 
             PaginationHelper::applyCursor($sql, $bindings, 't.test_id', $params['cursor'], $params['sortDir']);
 
+            $sortColumn = $params['sort'];
+            $mapping = [
+                'test_identifier' => 't.test_id',
+                'test_id'         => 't.test_id',
+                'test_label'      => 't.test_name',
+                'test_name'       => 't.test_name',
+                'semester'        => 'co.semester',
+                'full_marks'      => 't.full_marks',
+                'pass_marks'      => 't.pass_marks',
+                'course_code'     => 'c.course_code',
+            ];
+            if (isset($mapping[$sortColumn])) {
+                $sortColumn = $mapping[$sortColumn];
+            }
+
             $limit = (int)$params['limit'] + 1;
-            $sql .= " ORDER BY {$params['sort']} {$params['sortDir']} LIMIT {$limit}";
+            $sql .= " ORDER BY {$sortColumn} {$params['sortDir']} LIMIT {$limit}";
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute($bindings);
@@ -443,8 +458,24 @@ class TestRepository
 
             PaginationHelper::applyCursor($sql, $bindings, 't.test_id', $params['cursor'], $params['sortDir']);
 
+            $sortColumn = $params['sort'];
+            $mapping = [
+                'test_identifier' => 't.test_id',
+                'test_id'         => 't.test_id',
+                'test_label'      => 't.test_name',
+                'test_name'       => 't.test_name',
+                'semester'        => 'co.semester',
+                'full_marks'      => 't.full_marks',
+                'pass_marks'      => 't.pass_marks',
+                'course_code'     => 'c.course_code',
+                'department_code' => 'd.department_code',
+            ];
+            if (isset($mapping[$sortColumn])) {
+                $sortColumn = $mapping[$sortColumn];
+            }
+
             $limit = (int)$params['limit'] + 1;
-            $sql .= " ORDER BY {$params['sort']} {$params['sortDir']} LIMIT {$limit}";
+            $sql .= " ORDER BY {$sortColumn} {$params['sortDir']} LIMIT {$limit}";
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute($bindings);

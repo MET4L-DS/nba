@@ -23,8 +23,10 @@ $this->auditRepo = $auditRepo;
             
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+            $sort = $_GET['sort'] ?? 'created_at';
+            $sortDir = $_GET['sort_dir'] ?? 'DESC';
 
-            $result = $this->auditRepo->findAll($filters, $page, $limit);
+            $result = $this->auditRepo->findAll($filters, $page, $limit, $sort, $sortDir);
 
             // Result data is already mapped in Repository as array or needs toArray if objects
             $items = $result['data'];

@@ -181,10 +181,6 @@ export function BaseCourseList({
 	onOfferCourse,
 	onRefresh,
 }: BaseCourseListProps) {
-	// Dialog state
-	const [search, setSearch] = useState("");
-	const [statusFilter, setStatusFilter] = useState("all");
-
 	// Dialog controls
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [editingCourse, setEditingCourse] = useState<BaseCourse | null>(null);
@@ -198,8 +194,21 @@ export function BaseCourseList({
 		data: courses,
 		loading: isLoading,
 		error,
+		pagination,
+		goNext,
+		goPrev,
+		canPrev,
+		pageIndex,
+		search,
+		setSearch,
+		filters,
+		setFilter,
+		sort,
+		sortDir,
+		setSort,
+		setLimit,
 		refresh,
-	} = usePaginatedData<BaseCourse>({
+	} = usePaginatedData<BaseCourse, { is_active?: string }>({
 		fetchFn:
 			fetchFn ||
 			(() =>
@@ -210,7 +219,8 @@ export function BaseCourseList({
 					message: "",
 				})),
 		limit: pageSize,
-		defaultSort: "-course_code",
+		defaultSort: "course_code",
+		defaultSortDir: "ASC",
 	});
 
 	// Handlers
@@ -265,19 +275,8 @@ export function BaseCourseList({
 		}
 	}, [onCourseDelete, deletingCourseId, refresh]);
 
-	// Filter courses by status and search
-	const filteredCourses = useMemo(() => {
-		return courses.filter((c) => {
-			const matchesStatus =
-				statusFilter === "all" ||
-				(c.is_active ?? 1) === (statusFilter === "1" ? 1 : 0);
-			const matchesSearch =
-				!search ||
-				c.course_code.toLowerCase().includes(search.toLowerCase()) ||
-				c.course_name.toLowerCase().includes(search.toLowerCase());
-			return matchesStatus && matchesSearch;
-		});
-	}, [courses, statusFilter, search]);
+	// Filter courses by status and search (handled server-side now)
+	const filteredCourses = courses;
 
 	// Create columns
 	const columns = useMemo(
@@ -353,6 +352,19 @@ export function BaseCourseList({
 								columns={columns}
 								data={filteredCourses || []}
 								refreshing={isLoading}
+								serverPagination={{
+									pagination,
+									onNext: goNext,
+									onPrev: goPrev,
+									canPrev,
+									pageIndex,
+									search,
+									onSearch: setSearch,
+									onLimitChange: setLimit,
+									sort,
+									sortDir,
+									setSort,
+								}}
 							>
 								{/* Custom Filters inside header */}
 								<div className="flex gap-4 flex-wrap items-center">
@@ -384,8 +396,10 @@ export function BaseCourseList({
 
 									<div className="w-[150px]">
 										<Select
-											value={statusFilter}
-											onValueChange={setStatusFilter}
+											value={filters.is_active || "all"}
+											onValueChange={(val) => {
+												setFilter("is_active", val === "all" ? undefined : val);
+											}}
 											disabled={isLoading}
 										>
 											<SelectTrigger className="h-9">
@@ -405,13 +419,13 @@ export function BaseCourseList({
 										</Select>
 									</div>
 
-									{(search || statusFilter !== "all") && (
+									{(search || filters.is_active) && (
 										<Button
 											variant="ghost"
 											size="sm"
 											onClick={() => {
 												setSearch("");
-												setStatusFilter("all");
+												setFilter("is_active", undefined);
 											}}
 											disabled={isLoading}
 										>

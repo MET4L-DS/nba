@@ -22,6 +22,7 @@ import type { DepartmentFaculty, HODUpdateUserRequest } from "@/services/api";
 import { hodApi } from "@/services/api/hod";
 import { usePaginatedData } from "@/lib/usePaginatedData";
 import { UserList, getBaseUserColumns } from "@/features/shared";
+import { sortableHeader } from "@/features/shared/tableUtils";
 import { UserPhonesRow } from "@/features/users";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -43,6 +44,10 @@ export function FacultyManagement() {
 		setSearch,
 		filters,
 		setFilter,
+		sort,
+		sortDir,
+		setSort,
+		setLimit,
 	} = usePaginatedData<DepartmentFaculty, { role: string | undefined }>({
 		fetchFn: (params) => hodApi.getDepartmentFaculty(params),
 		limit: 20,
@@ -317,7 +322,7 @@ export function FacultyManagement() {
 		...getBaseUserColumns<DepartmentFaculty>(),
 		{
 			accessorKey: "designation",
-			header: "Designation",
+			header: sortableHeader("Designation"),
 			cell: ({ row }) => (
 				<div className="text-muted-foreground">
 					{(row.getValue("designation") as string) || "—"}
@@ -446,6 +451,10 @@ export function FacultyManagement() {
 						pageIndex,
 						search,
 						onSearch: setSearch,
+						sort,
+						sortDir,
+						setSort,
+						onLimitChange: setLimit,
 					}}
 					renderSubRow={(row: any) => (
 						<UserPhonesRow

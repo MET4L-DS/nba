@@ -39,12 +39,12 @@ export function getBaseTestColumns<T extends BaseTestType>(): ColumnDef<T>[] {
 		},
 		{
 			accessorKey: "full_marks",
-			header: "Full Marks",
+			header: sortableHeader("Full Marks"),
 			cell: ({ row }) => <span>{row.getValue("full_marks")}</span>,
 		},
 		{
 			accessorKey: "pass_marks",
-			header: "Pass Marks",
+			header: sortableHeader("Pass Marks"),
 			cell: ({ row }) => <span>{row.getValue("pass_marks")}</span>,
 		},
 	];

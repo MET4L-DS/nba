@@ -65,8 +65,10 @@ class FacultyController
             
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+            $sort = $_GET['sort'] ?? 'created_at';
+            $sortDir = $_GET['sort_dir'] ?? 'DESC';
 
-            $result = $this->auditLogRepository->findAll($filters, $page, $limit);
+            $result = $this->auditLogRepository->findAll($filters, $page, $limit, $sort, $sortDir);
 
             $items = $result['data'];
             
@@ -205,13 +207,14 @@ class FacultyController
             }
             if (!empty($params["filters"])) {
                 foreach ($params["filters"] as $key => $value) {
-                    $dbKey = "s." . ltrim($key, "s.");
+                    $rawKey = str_starts_with($key, "s.") ? substr($key, 2) : $key;
+                    $dbKey = "s." . $rawKey;
                     $whereConditions[] = "$dbKey = ?";
                     $queryParams[] = $value;
                 }
             }
 
-            $rawSort = ltrim($params["sort"], "s.");
+            $rawSort = str_starts_with($params["sort"], "s.") ? substr($params["sort"], 2) : $params["sort"];
             $sortCol = "s." . $rawSort;
             $op = ($params["sortDir"] === "ASC") ? ">" : "<";
 

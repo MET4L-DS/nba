@@ -186,7 +186,15 @@ class AdminController
                 $_GET,
                 't.test_id',
                 't.test_id',
-                ['t.test_id', 't.test_name', 't.test_date', 't.test_type'],
+                [
+                    't.test_id', 'test_identifier',
+                    't.test_name', 'test_label',
+                    't.test_date', 't.test_type',
+                    't.full_marks', 'full_marks',
+                    't.pass_marks', 'pass_marks',
+                    'co.semester', 'semester',
+                    'c.course_code', 'course_code'
+                ],
                 ['department_id', 'test_type']
             );
 
@@ -816,7 +824,7 @@ class AdminController
                 $_GET,
                 'p.programme_id',
                 'p.programme_id',
-                ['p.programme_id', 'p.programme_code', 'p.programme_name', 'd.department_name', 'd.department_code'],
+                ['p.programme_id', 'p.programme_code', 'p.programme_name', 'd.department_name', 'd.department_code', 'p.degree_level', 'p.duration_years'],
                 ['department_id', 'school_id', 'degree_level']
             );
 

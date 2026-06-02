@@ -59,7 +59,7 @@ export function getProgrammeColumns({
 		},
 		{
 			accessorKey: "degree_level",
-			header: "Level",
+			header: sortableHeader("Level"),
 			cell: ({ row }) => (
 				<Badge 
 					className="font-bold text-[10px] bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 shadow-none"
@@ -70,7 +70,7 @@ export function getProgrammeColumns({
 		},
 		{
 			accessorKey: "duration_years",
-			header: "Duration",
+			header: sortableHeader("Duration"),
 			cell: ({ row }) => (
 				<span className="text-xs text-muted-foreground/90 font-medium">
 					{row.getValue("duration_years")} Years
@@ -79,9 +79,9 @@ export function getProgrammeColumns({
 		},
 		{
 			accessorKey: "department_name",
-			header: "Department",
+			header: sortableHeader("Department", "text-left"),
 			cell: ({ row }) => (
-				<div className="text-xs text-muted-foreground truncate max-w-[150px]">
+				<div className="text-xs text-muted-foreground truncate max-w-[150px] text-left">
 					{row.getValue("department_name") || row.original.department_code || "—"}
 				</div>
 			),

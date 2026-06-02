@@ -36,6 +36,9 @@ export function ProgrammeList({
 		pageIndex,
 		search,
 		setSearch,
+		sort,
+		sortDir,
+		setSort,
 		setLimit,
 	} = usePaginatedData<Programme>({
 		fetchFn,
@@ -82,6 +85,9 @@ export function ProgrammeList({
 						search,
 						onSearch: setSearch,
 						onLimitChange: setLimit,
+						sort,
+						sortDir,
+						setSort,
 					}}
 				/>
 			</motion.div>

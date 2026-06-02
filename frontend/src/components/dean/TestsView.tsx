@@ -132,6 +132,10 @@ export function TestsView() {
 		setSearch,
 		filters,
 		setFilter,
+		sort,
+		sortDir,
+		setSort,
+		setLimit,
 	} = usePaginatedData<
 		DeanTest,
 		{ department_id: string; test_type: string }
@@ -171,6 +175,10 @@ export function TestsView() {
 						pageIndex,
 						search,
 						onSearch: setSearch,
+						sort,
+						sortDir,
+						setSort,
+						onLimitChange: setLimit,
 					}}
 				>
 					{() => (

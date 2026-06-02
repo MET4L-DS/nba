@@ -28,6 +28,10 @@ export function DepartmentsView() {
 		setSearch,
 		filters,
 		setFilter,
+		sort,
+		sortDir,
+		setSort,
+		setLimit,
 	} = usePaginatedData<DeanDepartment, { hod_status: string }>({
 		fetchFn: (params) => deanApi.getAllDepartments(params),
 		limit: 20,
@@ -149,6 +153,10 @@ export function DepartmentsView() {
 							pageIndex,
 							search,
 							onSearch: setSearch,
+							sort,
+							sortDir,
+							setSort,
+							onLimitChange: setLimit,
 						}}
 					>
 						<Select

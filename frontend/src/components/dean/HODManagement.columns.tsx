@@ -81,7 +81,7 @@ export function getStatusColumns({
 								onClick={() => onDemoteClick(dept)}
 								className="h-8 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 active:scale-95 duration-200 transition-all font-semibold rounded-lg"
 							>
-								Replace Serving HOD
+								Assign New HOD
 							</Button>
 						) : (
 							<Button

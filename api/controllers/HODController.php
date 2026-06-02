@@ -126,8 +126,10 @@ class HODController
             
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+            $sort = $_GET['sort'] ?? 'created_at';
+            $sortDir = $_GET['sort_dir'] ?? 'DESC';
 
-            $result = $this->auditLogRepository->findAllForHOD($departmentId, $filters, $page, $limit);
+            $result = $this->auditLogRepository->findAllForHOD($departmentId, $filters, $page, $limit, $sort, $sortDir);
 
             $items = $result['data'];
             
@@ -172,7 +174,7 @@ class HODController
                 $_GET,
                 'p.programme_id',
                 'p.programme_id',
-                ['p.programme_id', 'p.programme_code', 'p.programme_name', 'd.department_name', 'd.department_code'],
+                ['p.programme_id', 'p.programme_code', 'p.programme_name', 'd.department_name', 'd.department_code', 'p.degree_level', 'p.duration_years'],
                 ['degree_level', 'year', 'has_batches', 'batch_year_max']
             );
 

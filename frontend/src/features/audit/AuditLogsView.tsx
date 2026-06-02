@@ -1,7 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { type AuditLog } from "../../services/api/audit";
 import { DataTable } from "../../features/shared/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
+import { sortableHeader } from "../../features/shared/tableUtils";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -17,7 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 const ACTION_FILTERS = ["ALL", "CREATE", "UPDATE", "DELETE"] as const;
 
 export interface AuditLogsViewProps {
-	fetchFn: (params: { page?: number; limit?: number }) => Promise<any>;
+	fetchFn: (params: { page?: number; limit?: number; sort?: string; sort_dir?: string }) => Promise<any>;
 }
 
 export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
@@ -31,11 +33,13 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [actionFilter, setActionFilter] =
 		useState<(typeof ACTION_FILTERS)[number]>("ALL");
+	const [sort, setSort] = useState("created_at");
+	const [sortDir, setSortDir] = useState<"ASC" | "DESC">("DESC");
 
-	const fetchLogs = async (p = page, l = limit) => {
+	const fetchLogs = useCallback(async (p = page, l = limit, s = sort, sd = sortDir) => {
 		setIsLoading(true);
 		try {
-			const res: any = await fetchFn({ page: p, limit: l });
+			const res: any = await fetchFn({ page: p, limit: l, sort: s, sort_dir: sd });
 			if (res.success) {
 				setLogs(res.data);
 				if (res.pagination) {
@@ -48,21 +52,19 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [fetchFn, page, limit, sort, sortDir]);
 
 	useEffect(() => {
-		fetchLogs(1);
-	}, []);
+		fetchLogs(page, limit, sort, sortDir);
+	}, [page, limit, sort, sortDir, fetchLogs]);
 
 	const handlePageChange = (newPage: number) => {
 		setPage(newPage);
-		fetchLogs(newPage, limit);
 	};
 
 	const handleLimitChange = (newLimit: number) => {
 		setLimit(newLimit);
 		setPage(1);
-		fetchLogs(1, newLimit);
 	};
 
 	const filteredLogs = useMemo(() => {
@@ -82,11 +84,11 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 		});
 	}, [logs, searchTerm, actionFilter]);
 
-	const columns = useMemo(
+	const columns: ColumnDef<AuditLog>[] = useMemo(
 		() => [
 			{
 				accessorKey: "created_at",
-				header: "Timestamp",
+				header: sortableHeader("Timestamp"),
 				cell: ({ row }: any) => {
 					return (
 						<span>
@@ -97,7 +99,7 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 			},
 			{
 				accessorKey: "action",
-				header: "Action",
+				header: sortableHeader("Action"),
 				cell: ({ row }: any) => {
 					const action = row.original.action;
 					if (action === "CREATE") {
@@ -130,25 +132,25 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 			},
 			{
 				accessorKey: "entity_type",
-				header: "Entity",
+				header: sortableHeader("Entity"),
 			},
 			{
 				accessorKey: "entity_id",
-				header: "Entity ID",
+				header: sortableHeader("Entity ID"),
 			},
 			{
 				accessorKey: "username",
-				header: "Actor",
+				header: sortableHeader("Actor", "text-left"),
 				cell: ({ row }: any) => {
 					if (row.original.username) {
 						return (
-							<span>
+							<span className="text-left block">
 								{row.original.username} ({row.original.user_id})
 							</span>
 						);
 					}
 					return (
-						<span className="text-muted-foreground">System</span>
+						<span className="text-muted-foreground text-left block">System</span>
 					);
 				},
 			},
@@ -193,7 +195,7 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 					<Button
 						variant="outline"
 						size="sm"
-						onClick={() => fetchLogs()}
+						onClick={() => fetchLogs(page, limit, sort, sortDir)}
 						disabled={isLoading}
 						className="h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95"
 					>
@@ -248,6 +250,13 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 						search: searchTerm,
 						onSearch: setSearchTerm,
 						onLimitChange: handleLimitChange,
+						sort,
+						sortDir,
+						setSort: (field: string, dir?: "ASC" | "DESC") => {
+							setSort(field);
+							if (dir) setSortDir(dir);
+							setPage(1);
+						},
 					}}
 				/>
 

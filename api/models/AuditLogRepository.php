@@ -41,7 +41,7 @@ class AuditLogRepository {
         }
     }
 
-    public function findAll($filters = [], $page = 1, $limit = 50) {
+    public function findAll($filters = [], $page = 1, $limit = 50, $sort = 'created_at', $sortDir = 'DESC') {
         $query = "SELECT a.*, u.username 
                   FROM audit_logs a 
                   LEFT JOIN users u ON a.user_id = u.employee_id 
@@ -79,8 +79,20 @@ class AuditLogRepository {
             $params[':date_to'] = $filters['date_to'];
         }
 
-        // Add sorting
-        $query .= " ORDER BY a.created_at DESC";
+        // Add sorting with whitelisted columns to prevent SQL injection
+        $allowedSorts = [
+            'created_at' => 'a.created_at',
+            'action' => 'a.action',
+            'entity_type' => 'a.entity_type',
+            'entity_id' => 'a.entity_id',
+            'username' => 'u.username'
+        ];
+        $sortField = 'a.created_at';
+        if (!empty($sort) && isset($allowedSorts[$sort])) {
+            $sortField = $allowedSorts[$sort];
+        }
+        $sortDirection = (strtoupper($sortDir) === 'ASC') ? 'ASC' : 'DESC';
+        $query .= " ORDER BY {$sortField} {$sortDirection}";
 
         // Manual pagination instead of missing helper method
         $offset = ($page - 1) * $limit;
@@ -112,7 +124,7 @@ class AuditLogRepository {
     /**
      * Get filtered audit logs for HOD view (excludes granular updates)
      */
-    public function findAllForHOD(int $departmentId, array $filters = [], int $page = 1, int $limit = 50) {
+    public function findAllForHOD(int $departmentId, array $filters = [], int $page = 1, int $limit = 50, $sort = 'created_at', $sortDir = 'DESC') {
         // Only fetch high-level actions: user creation, course creation, faculty assignments, etc.
         // Exclude marks updates, CO-PO updates to reduce noise
         $includedEntityTypes = ['User', 'Course', 'CourseOffering', 'FacultyAssignment', 'Dean', 'HOD'];
@@ -152,7 +164,20 @@ class AuditLogRepository {
             $params[':date_to'] = $filters['date_to'];
         }
 
-        $query .= " ORDER BY a.created_at DESC";
+        // Add sorting with whitelisted columns to prevent SQL injection
+        $allowedSorts = [
+            'created_at' => 'a.created_at',
+            'action' => 'a.action',
+            'entity_type' => 'a.entity_type',
+            'entity_id' => 'a.entity_id',
+            'username' => 'u.username'
+        ];
+        $sortField = 'a.created_at';
+        if (!empty($sort) && isset($allowedSorts[$sort])) {
+            $sortField = $allowedSorts[$sort];
+        }
+        $sortDirection = (strtoupper($sortDir) === 'ASC') ? 'ASC' : 'DESC';
+        $query .= " ORDER BY {$sortField} {$sortDirection}";
 
         $offset = ($page - 1) * $limit;
         

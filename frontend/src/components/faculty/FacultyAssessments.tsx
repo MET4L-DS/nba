@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { TestsList } from "@/features/assessments/TestsList";
-import type { Course, Test } from "@/services/api";
+import type { Course } from "@/services/api";
 import { useFacultyAssessments } from "./hooks/useFacultyAssessments";
 
 const CreateAssessmentForm = lazy(() =>
@@ -57,15 +57,15 @@ export const FacultyAssessments = memo(function FacultyAssessments({
 		triggerRefresh();
 	}, [setShowCreateForm, triggerRefresh]);
 
-	const handleGoToMarks = useCallback((_test: Test) => {
+	const handleGoToMarks = useCallback(() => {
 		// Navigate to marks entry — parent handles this via nav
 	}, []);
 
 	return (
-		<div className="h-full flex flex-col">
+		<div className="h-full flex flex-col w-full max-w-full min-w-0">
 			{/* ── Page header + toolbar ─────────────────────────────────── */}
 			{!showCreateForm && (
-				<div className="p-6 shrink-0 space-y-5 bg-card/45 backdrop-blur-md border-b border-muted/50 relative overflow-hidden">
+				<div className="p-4 sm:p-6 shrink-0 space-y-4 sm:space-y-5 bg-card/45 backdrop-blur-md border-b border-muted/50 relative overflow-hidden w-full max-w-full min-w-0">
 					{/* Ambient Top gradient glow */}
 					<div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent" />
 					
@@ -75,7 +75,7 @@ export const FacultyAssessments = memo(function FacultyAssessments({
 								Assessments Dashboard
 							</h3>
 							{selectedCourse ? (
-								<p className="text-sm text-muted-foreground mt-0.5 font-medium flex items-center gap-1.5">
+								<p className="text-sm text-muted-foreground mt-0.5 font-medium flex items-center gap-1.5 flex-wrap">
 									<span className="text-indigo-500 font-semibold">{selectedCourse.course_code}</span>
 									<span>&bull;</span>
 									<span className="text-foreground">{selectedCourse.course_name}</span>
@@ -88,7 +88,7 @@ export const FacultyAssessments = memo(function FacultyAssessments({
 								</p>
 							)}
 						</div>
-						<div className="flex gap-2.5 shrink-0">
+						<div className="flex flex-wrap gap-2.5 shrink-0">
 							<Button
 								variant="outline"
 								size="sm"
@@ -113,7 +113,7 @@ export const FacultyAssessments = memo(function FacultyAssessments({
 
 					{/* Stat cards */}
 					{selectedCourse && (
-						<div className="grid grid-cols-3 gap-4">
+						<div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full">
 							{/* Total Assessments */}
 							<div className="rounded-xl border bg-blue-500/5 dark:bg-blue-500/10 border-blue-500/20 p-3 flex items-center gap-3.5 hover:bg-blue-500/10 transition-all duration-300">
 								<div className="h-9 w-9 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0 shadow-sm">
@@ -189,7 +189,7 @@ export const FacultyAssessments = memo(function FacultyAssessments({
 			)}
 
 			{/* ── Main content ─────────────────────────────────────────── */}
-			<div className="flex-1 overflow-hidden">
+			<div className="flex-1 overflow-hidden w-full max-w-full min-w-0">
 				{showCreateForm ? (
 					<Suspense
 						fallback={
@@ -214,11 +214,11 @@ export const FacultyAssessments = memo(function FacultyAssessments({
 						/>
 					</Suspense>
 				) : (
-					<ScrollArea className="h-full">
-						<div className="p-6">
-							<div className="bg-card/70 backdrop-blur-sm border border-muted/50 rounded-2xl overflow-hidden shadow-lg shadow-black/5 hover:shadow-xl transition-all duration-300">
+					<ScrollArea className="h-full w-full max-w-full">
+						<div className="p-3 sm:p-6 w-full max-w-full min-w-0">
+							<div className="bg-card/70 backdrop-blur-sm border border-muted/50 rounded-2xl overflow-hidden shadow-lg shadow-black/5 hover:shadow-xl transition-all duration-300 w-full max-w-full min-w-0">
 								<div className="h-[2px] bg-gradient-to-r from-violet-500/60 to-indigo-500/60" />
-								<div className="p-6">
+								<div className="p-3 sm:p-6 w-full max-w-full min-w-0">
 									{isListMounted ? (
 										<TestsList
 											course={selectedCourse}

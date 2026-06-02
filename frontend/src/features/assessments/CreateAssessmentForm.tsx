@@ -65,9 +65,9 @@ export function CreateAssessmentForm({
 	return (
 		<form onSubmit={handleSubmit} className="h-full flex flex-col relative overflow-hidden bg-slate-50/30 dark:bg-slate-950/20">
 			{/* Top header bar */}
-			<header className="h-16 shrink-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b flex items-center justify-between px-6 gap-4 relative z-20">
+			<header className="h-auto py-3 md:h-16 md:py-0 shrink-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 gap-3 relative z-20">
 				<div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-				<div className="flex items-center gap-3 min-w-0">
+				<div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
 					<MotionButton
 						type="button"
 						variant="ghost"
@@ -90,7 +90,7 @@ export function CreateAssessmentForm({
 						)}
 					</div>
 				</div>
-				<div className="flex items-center gap-3 shrink-0">
+				<div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto justify-end flex-wrap">
 					{selectedCourse && (
 						<motion.div
 							initial={{ opacity: 0, scale: 0.95 }}
@@ -112,7 +112,7 @@ export function CreateAssessmentForm({
 						whileHover={{ scale: 1.02 }}
 						whileTap={{ scale: 0.98 }}
 						transition={{ type: "spring" as const, stiffness: 450, damping: 14 }}
-						className="gap-2 font-bold shadow-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 border-none px-4 h-9.5"
+						className="gap-2 font-bold shadow-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 border-none px-4 h-9.5 w-full sm:w-auto"
 					>
 						<Rocket className="w-4 h-4" />
 						{isSubmitting ? "Creating..." : "Create Assessment"}
@@ -121,13 +121,13 @@ export function CreateAssessmentForm({
 			</header>
 
 			{/* Two-column body */}
-			<div className="flex-1 flex overflow-hidden">
+			<div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
 				{/* Left panel */}
 				<motion.aside
 					initial={{ opacity: 0, x: -30 }}
 					animate={{ opacity: 1, x: 0 }}
 					transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
-					className="w-80 lg:w-96 bg-white/75 dark:bg-slate-900/75 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col shrink-0 overflow-y-auto relative z-10"
+					className="w-full md:w-80 lg:w-96 bg-white/75 dark:bg-slate-900/75 backdrop-blur-md border-b md:border-b-0 md:border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col shrink-0 overflow-y-auto relative z-10"
 				>
 					<div className="p-6 space-y-8">
 						{/* Context */}
@@ -334,10 +334,10 @@ export function CreateAssessmentForm({
 					initial={{ opacity: 0, x: 30 }}
 					animate={{ opacity: 1, x: 0 }}
 					transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
-					className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col overflow-hidden relative"
+					className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col md:overflow-hidden overflow-visible relative h-auto md:h-full"
 				>
 					{/* Sticky sub-header */}
-					<div className="px-8 py-4.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between sticky top-0 z-10 shadow-xs">
+					<div className="px-4 sm:px-8 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between sticky top-0 z-10 shadow-xs gap-3">
 						<div className="flex items-center gap-5">
 							<h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
 								<span className="w-1.5 h-5 bg-gradient-to-b from-indigo-505 to-indigo-600 rounded-full" />
@@ -408,7 +408,7 @@ export function CreateAssessmentForm({
 					</div>
 
 					{/* Scrollable questions area */}
-					<div className="flex-1 overflow-y-auto p-6 lg:p-8">
+					<div className="flex-1 md:overflow-y-auto overflow-visible p-4 sm:p-6 lg:p-8">
 						<div className="max-w-7xl mx-auto w-full pb-4">
 							<div className="bg-white/70 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
 								<QuestionsTable
@@ -422,7 +422,7 @@ export function CreateAssessmentForm({
 					</div>
 
 					{/* True Sticky Add Button Footer */}
-					<div className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/60 dark:border-slate-800/60 p-4.5 flex justify-center relative z-10 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.03)]">
+					<div className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/60 dark:border-slate-800/60 p-3 sm:p-4.5 flex justify-center relative z-10 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.03)]">
 						<MotionButton
 							type="button"
 							variant="outline"

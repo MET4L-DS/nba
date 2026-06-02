@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppSidebar, type NavItem } from "@/components/layout";
 import { apiService } from "@/services/api";
 import type { User } from "@/services/api";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
 	LayoutDashboard,
 	ClipboardList,
@@ -23,7 +24,9 @@ import {
 
 export function DashboardLayout() {
 	const [user, setUser] = useState<User | null>(null);
-	const [sidebarOpen, setSidebarOpen] = useState(true);
+	const [sidebarOpen, setSidebarOpen] = useState(() => {
+		return typeof window !== "undefined" ? window.innerWidth >= 768 : true;
+	});
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -37,6 +40,23 @@ export function DashboardLayout() {
 		}
 		setUser(storedUser);
 	}, [navigate]);
+
+	// Handle window resize to dynamically toggle sidebar visibility state
+	useEffect(() => {
+		const handleResize = () => {
+			if (window.innerWidth >= 768) {
+				setSidebarOpen(true);
+			} else {
+				setSidebarOpen(false);
+			}
+		};
+
+		// Initial check on mount
+		handleResize();
+
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
 
 	const handleLogout = async () => {
 		await apiService.logout();
@@ -140,7 +160,7 @@ export function DashboardLayout() {
 			default:
 				return common;
 		}
-	}, [user?.role, user?.is_dean]);
+	}, [user]);
 
 	// Memoize the context object to prevent downstream re-renders on every layout tick
 	const contextValue = useMemo(() => ({
@@ -180,11 +200,18 @@ export function DashboardLayout() {
 		} else {
 			navigate(`${rolePath}/${id}`);
 		}
+
+		// Close sidebar drawer if navigating on mobile
+		if (window.innerWidth < 768) {
+			setSidebarOpen(false);
+		}
 	};
 
 	return (
 		<div className="flex h-screen bg-background w-full overflow-hidden">
 			<Toaster />
+			
+			{/* Desktop Sidebar */}
 			<AppSidebar
 				items={navItems}
 				user={user}
@@ -192,7 +219,25 @@ export function DashboardLayout() {
 				onNavigate={onNavigate}
 				onLogout={handleLogout}
 				sidebarOpen={sidebarOpen}
+				className="hidden md:flex"
 			/>
+
+			{/* Mobile Sidebar (Drawer) */}
+			<Sheet open={sidebarOpen && window.innerWidth < 768} onOpenChange={setSidebarOpen}>
+				<SheetContent side="left" className="p-0 w-64 border-r-0" showCloseButton={false}>
+					<SheetTitle className="sr-only">Navigation Sidebar</SheetTitle>
+					<AppSidebar
+						items={navItems}
+						user={user}
+						activeId={activeId}
+						onNavigate={onNavigate}
+						onLogout={handleLogout}
+						sidebarOpen={true}
+						className="w-full h-full border-r-0"
+					/>
+				</SheetContent>
+			</Sheet>
+
 			<main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 				<Suspense fallback={<PageLoader />}>
 					<Outlet context={contextValue} />

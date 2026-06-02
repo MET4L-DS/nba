@@ -157,7 +157,7 @@ export function COPOMatrixGrid({
 	return (
 		<Table className="relative select-none border-collapse">
 			<TableHeader>
-				<TableRow className="bg-blue-50/80 dark:bg-blue-950/40 backdrop-blur">
+				<TableRow className="bg-blue-50/80 dark:bg-blue-950/40">
 					<TableHead
 						rowSpan={2}
 						className="border border-gray-300 dark:border-gray-700 font-bold text-center align-middle bg-yellow-100/80 dark:bg-yellow-950/40 text-foreground"
@@ -183,7 +183,7 @@ export function COPOMatrixGrid({
 						CO-PSO Mapping Matrix
 					</TableHead>
 				</TableRow>
-				<TableRow className="bg-zinc-50/80 dark:bg-zinc-900/40 backdrop-blur">
+				<TableRow className="bg-zinc-50/80 dark:bg-zinc-900/40">
 					{[
 						"PO1",
 						"PO2",
@@ -369,7 +369,7 @@ export function COPOMatrixGrid({
 				})}
 
 				{/* PO Attainment Row */}
-				<TableRow className="bg-orange-50/80 dark:bg-orange-950/30 font-bold backdrop-blur">
+				<TableRow className="bg-orange-50/80 dark:bg-orange-950/30 font-bold">
 					<TableCell
 						colSpan={2}
 						className="border border-gray-300 dark:border-gray-700 text-center text-sm font-bold text-orange-900 dark:text-orange-200"

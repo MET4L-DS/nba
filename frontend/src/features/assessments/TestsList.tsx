@@ -103,16 +103,16 @@ export function TestsList({
 			initial={{ opacity: 0, y: 15 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.45 }}
-			className="w-full"
+			className="w-full max-w-full min-w-0"
 		>
 			{/* Course header */}
 			<motion.div 
 				initial={{ opacity: 0, x: -10 }}
 				animate={{ opacity: 1, x: 0 }}
 				transition={{ delay: 0.1, duration: 0.3 }}
-				className="mb-6"
+				className="mb-4 sm:mb-6"
 			>
-				<h3 className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+				<h3 className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text break-words">
 					{course.course_code} — {course.course_name}
 				</h3>
 				<p className="text-sm text-muted-foreground mt-0.5 font-medium">
@@ -120,8 +120,8 @@ export function TestsList({
 				</p>
 			</motion.div>
 
-			<Card className="bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-xl rounded-xl overflow-hidden">
-				<CardContent className="px-5 pt-6">
+			<Card className="bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-xl rounded-xl overflow-hidden w-full max-w-full min-w-0">
+				<CardContent className="p-3 sm:px-5 sm:pt-6 w-full max-w-full min-w-0 overflow-hidden">
 					{hasInitialLoadedRef.current ? (
 						<TestList
 							columns={columns}

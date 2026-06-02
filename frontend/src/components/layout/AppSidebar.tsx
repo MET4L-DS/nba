@@ -4,6 +4,8 @@ import { LogOut } from "lucide-react";
 import type { User } from "@/services/api";
 import { motion } from "framer-motion";
 
+import { cn } from "@/lib/utils";
+
 export interface NavItem {
 	id: string;
 	label: string;
@@ -19,6 +21,7 @@ interface AppSidebarProps {
 	onLogout: () => void;
 	title?: string;
 	subtitle?: string;
+	className?: string;
 }
 
 export function AppSidebar({
@@ -30,12 +33,16 @@ export function AppSidebar({
 	onLogout,
 	title = "Tezpur University",
 	subtitle,
+	className,
 }: AppSidebarProps) {
 	return (
 		<motion.aside
 			animate={{ width: sidebarOpen ? 256 : 0 }}
 			transition={{ type: "spring", stiffness: 300, damping: 30 }}
-			className="bg-white dark:bg-gray-950 border-r border-gray-200/80 dark:border-gray-800/80 overflow-hidden shrink-0 flex flex-col h-full"
+			className={cn(
+				"bg-white dark:bg-gray-950 border-r border-gray-200/80 dark:border-gray-800/80 overflow-hidden shrink-0 flex flex-col h-full",
+				className
+			)}
 			style={{ minWidth: 0, willChange: "width" }}
 		>
 			<div className="flex flex-col h-full w-64">

@@ -131,13 +131,13 @@ export function BulkMarksTable({
 				<TableRow className="hover:bg-transparent border-b border-border">
 					<TableHead
 						scope="col"
-						className="sticky left-0 z-40 bg-gray-50 dark:bg-muted px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider border-r border-border w-[120px] min-w-[120px] shadow-[1px_0_0_0_var(--border)]"
+						className="sticky left-0 z-40 bg-gray-50 dark:bg-muted px-3 md:px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider border-r border-border w-24 md:w-28 min-w-[96px] md:min-w-[112px] shadow-[1px_0_0_0_var(--border)]"
 					>
 						Roll No
 					</TableHead>
 					<TableHead
 						scope="col"
-						className="sticky left-[120px] z-40 bg-gray-50 dark:bg-muted px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider border-r border-border w-[200px] min-w-[200px] shadow-[1px_0_0_0_var(--border)]"
+						className="sticky left-[96px] md:left-[112px] z-40 bg-gray-50 dark:bg-muted px-3 md:px-6 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider border-r border-border w-32 md:w-48 min-w-[128px] md:min-w-[192px] shadow-[1px_0_0_0_var(--border)]"
 					>
 						Student Name
 					</TableHead>
@@ -198,13 +198,13 @@ export function BulkMarksTable({
 					const isDirty = dirtyRows.has(rollno);
 					const hasMark = hasAnyMark(rollno);
 					const total = hasMark ? rowTotal(rollno) : null;
-
+ 
 					const stickyBg = isInvalid
 						? "bg-red-50 group-hover:bg-red-100 dark:bg-red-950 dark:group-hover:bg-red-900"
 						: isDirty
 							? "bg-amber-50 group-hover:bg-amber-100 dark:bg-amber-950 dark:group-hover:bg-amber-900"
 							: "bg-background group-hover:bg-muted";
-
+ 
 					return (
 						<motion.tr
 							key={rollno}
@@ -227,20 +227,21 @@ export function BulkMarksTable({
 							{/* Sticky Roll No */}
 							<TableCell
 								className={cn(
-									"sticky left-0 z-20 px-6 py-3 whitespace-nowrap font-medium text-foreground border-r border-border shadow-[1px_0_0_0_var(--border)]",
+									"sticky left-0 z-20 px-3 md:px-6 py-3 whitespace-nowrap font-medium text-foreground border-r border-border shadow-[1px_0_0_0_var(--border)]",
 									stickyBg,
 								)}
 							>
-								<Badge variant="outline" className="font-mono">
+								<Badge variant="outline" className="font-mono text-[10px] md:text-xs px-1.5 md:px-2">
 									{rollno}
 								</Badge>
 							</TableCell>
 							{/* Sticky Name */}
 							<TableCell
 								className={cn(
-									"sticky left-[120px] z-20 px-6 py-3 text-left whitespace-nowrap text-sm font-medium text-foreground border-r border-border shadow-[1px_0_0_0_var(--border)]",
+									"sticky left-[96px] md:left-[112px] z-20 px-3 md:px-6 py-3 text-left whitespace-nowrap text-xs md:text-sm font-medium text-foreground border-r border-border shadow-[1px_0_0_0_var(--border)] truncate max-w-[128px] md:max-w-[192px]",
 									stickyBg,
 								)}
+								title={enrollment.student_name}
 							>
 								{enrollment.student_name}
 							</TableCell>

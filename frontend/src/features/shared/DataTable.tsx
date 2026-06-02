@@ -151,8 +151,8 @@ function TableToolbar<TData, F extends Record<string, any> = any>({
 	const isFiltered = table.getState().columnFilters.length > 0;
 
 	return (
-		<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-			<div className="flex flex-1 flex-wrap items-center gap-2">
+		<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between w-full max-w-full min-w-0">
+			<div className="flex flex-1 flex-wrap items-center gap-2 w-full max-w-full min-w-0">
 				{/* Server-side search input */}
 				{isServerMode && (
 					<div className="relative">
@@ -349,7 +349,7 @@ function TablePagination<TData>({
 	const serverLimit = sp?.pagination?.limit ?? null;
 
 	return (
-		<div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
+		<div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4 w-full max-w-full min-w-0">
 			{isServerMode ? (
 				<>
 					<div className="flex-1 text-sm text-muted-foreground hidden md:block">
@@ -559,7 +559,7 @@ export const DataTable = React.memo(function DataTable<TData, TValue, F extends 
 	});
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4 w-full max-w-full min-w-0 overflow-hidden">
 			<TableToolbar
 				table={table}
 				refreshing={refreshing}

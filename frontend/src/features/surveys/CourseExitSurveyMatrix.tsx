@@ -138,7 +138,7 @@ export function CourseExitSurveyMatrix({
 }: CourseExitSurveyMatrixProps) {
 	return (
 		<div className="border rounded-lg overflow-hidden bg-card">
-			<div className="px-5 py-4 border-b flex justify-between items-center bg-background/50 backdrop-blur-md">
+			<div className="px-4 sm:px-5 py-4 border-b flex flex-col sm:flex-row gap-4 sm:items-center justify-between bg-background/50 backdrop-blur-md">
 				<div>
 					<h2 className="font-semibold text-base">
 						Course Exit Survey Analysis Matrix
@@ -148,10 +148,10 @@ export function CourseExitSurveyMatrix({
 						mapped to Course Outcomes.
 					</p>
 				</div>
-				<div className="relative">
+				<div className="relative w-full sm:w-auto">
 					<Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
 					<Input
-						className="pl-8 pr-3 py-1.5 h-8 text-xs w-44"
+						className="pl-8 pr-3 py-1.5 h-8 text-xs w-full sm:w-44"
 						placeholder="Filter questions..."
 						value={filterText}
 						onChange={(e) => onFilterTextChange(e.target.value)}

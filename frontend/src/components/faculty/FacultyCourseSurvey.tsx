@@ -110,22 +110,22 @@ export const FacultyCourseSurvey = memo(function FacultyCourseSurvey({
 
 	return (
 		<div className="flex flex-col min-w-0 h-full">
-			<div className="h-16 bg-card/45 backdrop-blur-md border-b border-muted/50 flex items-center justify-between px-6 shrink-0 z-10">
-				<div className="flex items-center gap-3">
+			<div className="h-auto py-4 bg-card/45 backdrop-blur-md border-b border-muted/50 flex flex-col md:flex-row md:items-center justify-between px-4 sm:px-6 shrink-0 z-10 gap-4">
+				<div className="flex items-center gap-3 flex-wrap w-full md:w-auto">
 					<div className="flex items-center gap-2">
 						<Database className="w-5 h-5 text-violet-500" />
 						<h2 className="font-bold text-base bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 							Survey Integration Console
 						</h2>
 					</div>
-					<Separator orientation="vertical" className="h-5" />
+					<Separator orientation="vertical" className="h-5 hidden sm:block" />
 					<Badge
 						className="bg-violet-500/10 text-violet-600 border border-violet-500/20 text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
 					>
 						Live Sync
 					</Badge>
 				</div>
-				<div className="flex items-center gap-2">
+				<div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
 					<ClearSurveyConfirm
 						offeringId={offeringId}
 						onCleared={refresh}

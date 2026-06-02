@@ -146,7 +146,7 @@ export function MatrixView({
 			{/* Header Section with Card */}
 			<Card className="border-0 shadow-none bg-transparent">
 				<CardHeader className="px-0">
-					<div className="flex justify-between items-start w-full">
+					<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
 						<div>
 							<CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
 								CO-PO Mapping
@@ -155,7 +155,7 @@ export function MatrixView({
 								Course: {courseCode} - {courseName}
 							</p>
 						</div>
-						<div className="flex items-center gap-2">
+						<div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
 							{!readOnly && (
 								<Button
 									onClick={() =>
@@ -191,8 +191,8 @@ export function MatrixView({
 
 			<Card className="w-full border-0 shadow-none bg-transparent">
 				<CardContent className="w-full px-0 pt-4">
-					<div className="flex flex-wrap justify-evenly items-center gap-4">
-						<div className="flex items-center gap-2">
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+						<div className="flex items-center gap-2 w-full">
 							<Label
 								htmlFor="programme"
 								className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap"
@@ -204,11 +204,11 @@ export function MatrixView({
 								type="text"
 								value={editableProgramme}
 								onChange={handleProgrammeChange}
-								className=" text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent px-2 py-0.5 focus:outline-none focus:border-blue-500"
+								className="w-full text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent px-2 py-0.5 focus:outline-none focus:border-blue-500"
 								placeholder="Programme"
 							/>
 						</div>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 w-full">
 							<Label
 								htmlFor="year"
 								className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap"
@@ -220,11 +220,11 @@ export function MatrixView({
 								type="text"
 								value={editableYear}
 								onChange={handleYearChange}
-								className=" text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent px-2 py-0.5 focus:outline-none focus:border-blue-500"
+								className="w-full text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent px-2 py-0.5 focus:outline-none focus:border-blue-500"
 								placeholder="Year"
 							/>
 						</div>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 w-full">
 							<Label
 								htmlFor="semester"
 								className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap"
@@ -236,11 +236,11 @@ export function MatrixView({
 								type="text"
 								value={editableSemester}
 								onChange={handleSemesterChange}
-								className=" text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent px-2 py-0.5 focus:outline-none focus:border-blue-500"
+								className="w-full text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent px-2 py-0.5 focus:outline-none focus:border-blue-500"
 								placeholder="SEM"
 							/>
 						</div>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 w-full">
 							<Label
 								htmlFor="session"
 								className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap"
@@ -252,7 +252,7 @@ export function MatrixView({
 								type="text"
 								value={editableSession}
 								onChange={handleSessionChange}
-								className=" text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent px-2 py-0.5 focus:outline-none focus:border-blue-500"
+								className="w-full text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent px-2 py-0.5 focus:outline-none focus:border-blue-500"
 								placeholder="Session"
 							/>
 						</div>

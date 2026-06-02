@@ -31,7 +31,7 @@ export function StudentMarksCardHeader({
 				<CardTitle className="text-xl text-center text-gray-900 dark:text-white font-bold">
 					TEZPUR UNIVERSITY
 				</CardTitle>
-				<div className="grid grid-cols-2 gap-2 text-sm">
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
 					<div className="flex gap-2">
 						<span className="font-semibold">Faculty Name:</span>
 						<span>{facultyName}</span>
@@ -51,7 +51,7 @@ export function StudentMarksCardHeader({
 						<span>{getSemesterDisplay(semester)}</span>
 					</div>
 				</div>
-				<div className="grid grid-cols-2 gap-2 text-sm">
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2 sm:mt-0">
 					<div className="flex gap-2">
 						<span className="font-semibold">Course:</span>
 						<span>{courseName}</span>

@@ -53,7 +53,7 @@ const DeanAnalytics = lazy(() => import("./pages/dean/DeanAnalytics").then(modul
 
 function App() {
 	return (
-		<BrowserRouter>
+		<BrowserRouter basename={import.meta.env.BASE_URL}>
 			<Suspense fallback={<PageLoader />}>
 				<Routes>
 					<Route path="/login" element={<LoginPage />} />

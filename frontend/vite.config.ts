@@ -4,19 +4,12 @@ import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
 	plugins: [react(), tailwindcss()],
+	base: command === "build" ? "/nba-frontend/" : "/",
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
 		},
 	},
-	build: {
-		// Target modern browsers for smaller bundles
-		target: "esnext",
-		// Enable minification
-		minify: "esbuild",
-		// Raise warning threshold (we know about large async chunks like attainmentExcel)
-		chunkSizeWarningLimit: 1000,
-	},
-});
+}));

@@ -672,4 +672,367 @@ class DeanController
             ]);
         }
     }
+
+    /**
+     * Create department (Dean only, scoped to dean's school)
+     */
+    public function createDepartment()
+    {
+        try {
+            if (!$this->requireDean()) return;
+
+            $schoolId = (int)($_REQUEST['authenticated_user']['school_id'] ?? 0);
+            if (!$schoolId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'School ID not found']);
+                return;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            // Validate required fields
+            if (empty($input['department_name']) || empty($input['department_code'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Department name and code are required'
+                ]);
+                return;
+            }
+
+            $departmentName = trim($input['department_name']);
+            $departmentCode = strtoupper(trim($input['department_code']));
+
+            // Check if code already exists
+            if ($this->departmentRepository->codeExists($departmentCode)) {
+                http_response_code(409);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Department code already exists'
+                ]);
+                return;
+            }
+
+            // Check if name already exists
+            if ($this->departmentRepository->nameExists($departmentName)) {
+                http_response_code(409);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Department name already exists'
+                ]);
+                return;
+            }
+
+            // Create department
+            $department = new Department(
+                null, 
+                $departmentName, 
+                $departmentCode,
+                $schoolId,
+                isset($input['description']) ? $input['description'] : null
+            );
+            $result = $this->departmentRepository->save($department);
+
+            if ($result) {
+                // Auto-create an HOD login account for this department
+                try {
+                    $hodUsername = 'hod_' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $departmentCode));
+                    $hodEmail = $hodUsername . '@tezu.ernet.in';
+                    $hodPassword = password_hash('password123', PASSWORD_BCRYPT);
+                    
+                    $newEmpId = $this->userRepository->generateSystemAccountId('hod');
+                    
+                    if ($this->userRepository->findByUsername($hodUsername)) {
+                        $hodUsername .= '_' . rand(10, 99);
+                        $hodEmail = $hodUsername . '@tezu.ernet.in';
+                    }
+
+                    $hodUser = new User(
+                        $newEmpId,
+                        'HOD ' . $departmentCode,
+                        $hodEmail,
+                        $hodPassword,
+                        'hod',
+                        $department->getDepartmentId(),
+                        'Professor',
+                        null,
+                        null,
+                        null,
+                        null
+                    );
+                    
+                    $this->userRepository->save($hodUser);
+                } catch (Exception $userEx) {
+                    error_log("Failed to create default HOD account for department: " . $userEx->getMessage());
+                }
+
+                http_response_code(201);
+                
+                $auditPayload = $input ?? null;
+                if (isset($this->auditService)) {
+                    $this->auditService->log('CREATE', 'Department', null, null, $auditPayload);
+                }
+                if (isset($GLOBALS['fileLogger'])) {
+                    $GLOBALS['fileLogger']->log('INFO', 'DeanController', 'CREATE operation successful in createDepartment');
+                }
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Department and HOD account created successfully',
+                    'data' => [
+                        'department_id' => $department->getDepartmentId(),
+                        'department_name' => $department->getDepartmentName(),
+                        'department_code' => $department->getDepartmentCode()
+                    ]
+                ]);
+            } else {
+                throw new Exception('Failed to create department');
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to create department',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update department (Dean only, scoped to dean's school)
+     */
+    public function updateDepartment($departmentId)
+    {
+        try {
+            if (!$this->requireDean()) return;
+
+            $schoolId = (int)($_REQUEST['authenticated_user']['school_id'] ?? 0);
+            if (!$schoolId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'School ID not found']);
+                return;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+
+            // Find existing department
+            $department = $this->departmentRepository->findById($departmentId);
+            $GLOBALS['audit_old_state'] = (isset($department) && is_object($department) && method_exists($department, 'toArray')) ? $department->toArray() : (isset($department) ? clone $department : null);
+            
+            if (!$department) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Department not found'
+                ]);
+                return;
+            }
+
+            // Enforce school restriction
+            if ($department->getSchoolId() != $schoolId) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You are not authorized to update departments outside your school'
+                ]);
+                return;
+            }
+
+            // Validate at least one field to update
+            if (
+                empty($input['department_name']) && 
+                empty($input['department_code']) && 
+                !array_key_exists('description', $input)
+            ) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'At least one field to update is required'
+                ]);
+                return;
+            }
+
+            // Update fields
+            if (!empty($input['department_name'])) {
+                $newName = trim($input['department_name']);
+                if (
+                    $newName !== $department->getDepartmentName() &&
+                    $this->departmentRepository->nameExists($newName, $departmentId)
+                ) {
+                    http_response_code(409);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Department name already exists'
+                    ]);
+                    return;
+                }
+                $department->setDepartmentName($newName);
+            }
+
+            if (!empty($input['department_code'])) {
+                $newCode = strtoupper(trim($input['department_code']));
+                if (
+                    $newCode !== $department->getDepartmentCode() &&
+                    $this->departmentRepository->codeExists($newCode, $departmentId)
+                ) {
+                    http_response_code(409);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Department code already exists'
+                    ]);
+                    return;
+                }
+                $department->setDepartmentCode($newCode);
+            }
+
+            if (array_key_exists('description', $input)) {
+                $department->setDescription($input['description']);
+            }
+
+            // Keep school_id locked to dean's school
+            $department->setSchoolId($schoolId);
+
+            $result = $this->departmentRepository->save($department);
+
+            if ($result) {
+                http_response_code(200);
+                
+                $auditPayload = $input ?? null;
+                if (isset($this->auditService)) {
+                    $this->auditService->log('UPDATE', 'Department', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+                }
+                if (isset($GLOBALS['fileLogger'])) {
+                    $GLOBALS['fileLogger']->log('INFO', 'DeanController', 'UPDATE operation successful in updateDepartment');
+                }
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Department updated successfully',
+                    'data' => [
+                        'department_id' => $department->getDepartmentId(),
+                        'department_name' => $department->getDepartmentName(),
+                        'department_code' => $department->getDepartmentCode()
+                    ]
+                ]);
+            } else {
+                throw new Exception('Failed to update department');
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to update department',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Delete department (Dean only, scoped to dean's school)
+     */
+    public function deleteDepartment($departmentId)
+    {
+        try {
+            if (!$this->requireDean()) return;
+
+            $schoolId = (int)($_REQUEST['authenticated_user']['school_id'] ?? 0);
+            if (!$schoolId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'School ID not found']);
+                return;
+            }
+
+            // Find existing department
+            $department = $this->departmentRepository->findById($departmentId);
+            $GLOBALS['audit_old_state'] = (isset($department) && is_object($department) && method_exists($department, 'toArray')) ? $department->toArray() : (isset($department) ? clone $department : null);
+            
+            if (!$department) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Department not found'
+                ]);
+                return;
+            }
+
+            // Enforce school restriction
+            if ($department->getSchoolId() != $schoolId) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You are not authorized to delete departments outside your school'
+                ]);
+                return;
+            }
+
+            $result = $this->departmentRepository->delete($departmentId);
+
+            if ($result) {
+                http_response_code(200);
+                
+                $auditPayload = null;
+                if (isset($this->auditService)) {
+                    $this->auditService->log('DELETE', 'Department', null, ($GLOBALS['audit_old_state'] ?? null), $auditPayload);
+                }
+                if (isset($GLOBALS['fileLogger'])) {
+                    $GLOBALS['fileLogger']->log('INFO', 'DeanController', 'DELETE operation successful in deleteDepartment');
+                }
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Department deleted successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to delete department');
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to delete department',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get school scoped logs for Dean view
+     */
+    public function getLogs($filters)
+    {
+        if (!$this->requireDean()) return;
+
+        try {
+            $schoolId = (int)($_REQUEST['authenticated_user']['school_id'] ?? 0);
+            if (!$schoolId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'School ID not found in session']);
+                return;
+            }
+
+            $page = isset($filters['page']) ? (int)$filters['page'] : 1;
+            $limit = isset($filters['limit']) ? (int)$filters['limit'] : 50;
+            $sort = isset($filters['sort']) ? $filters['sort'] : 'created_at';
+            $sortDir = isset($filters['sort_dir']) ? $filters['sort_dir'] : 'DESC';
+
+            $auditLogRepository = new AuditLogRepository($this->departmentRepository->getConnection());
+            $result = $auditLogRepository->findAllForDean($schoolId, $filters, $page, $limit, $sort, $sortDir);
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $result['data'],
+                'pagination' => [
+                    'total_items' => $result['total'],
+                    'total_pages' => ceil($result['total'] / $limit),
+                    'current_page' => $page,
+                    'limit' => $limit
+                ]
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to retrieve logs',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }

@@ -52,6 +52,7 @@ const DeanCourses = lazy(() => import("./pages/dean/DeanCourses").then(module =>
 const DeanStudents = lazy(() => import("./pages/dean/DeanStudents").then(module => ({ default: module.DeanStudents })));
 const DeanAssessments = lazy(() => import("./pages/dean/DeanAssessments").then(module => ({ default: module.DeanAssessments })));
 const DeanAnalytics = lazy(() => import("./pages/dean/DeanAnalytics").then(module => ({ default: module.DeanAnalytics })));
+const DeanAuditLogs = lazy(() => import("./pages/dean/DeanAuditLogs").then(module => ({ default: module.DeanAuditLogs })));
 
 function App() {
 	return (
@@ -139,6 +140,7 @@ function App() {
 							element={<DeanAssessments />}
 						/>
 						<Route path="/dean/analytics" element={<DeanAnalytics />} />
+						<Route path="/dean/logs" element={<DeanAuditLogs />} />
 
 						{/* Staff Routes */}
 						<Route path="/staff" element={<StaffHome />} />

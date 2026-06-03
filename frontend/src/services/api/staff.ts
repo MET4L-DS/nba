@@ -5,6 +5,8 @@ import type {
 	Student,
 	PaginatedResponse,
 	PaginationParams,
+	BaseCourse,
+	Programme,
 } from "./types";
 import { apiGet, apiPost, apiPut, apiDelete, apiGetPaginated } from "./base";
 import { debugLogger } from "@/lib/debugLogger";
@@ -171,5 +173,19 @@ export const staffApi = {
 	async deleteCourse(offeringId: number): Promise<void> {
 		debugLogger.info("staffApi", "deleteCourse called");
 		return apiDelete(`/staff/courses/${offeringId}`);
+	},
+
+	/**
+	 * Get base courses for the department
+	 */
+	async getBaseCourses(params?: PaginationParams): Promise<PaginatedResponse<BaseCourse>> {
+		return apiGetPaginated<BaseCourse>("/staff/base-courses", params);
+	},
+
+	/**
+	 * Get programmes associated with the staff's department
+	 */
+	async getDepartmentProgrammes(params?: PaginationParams): Promise<PaginatedResponse<Programme>> {
+		return apiGetPaginated<Programme>("/staff/programmes", params);
 	},
 };

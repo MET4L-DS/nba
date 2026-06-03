@@ -2,7 +2,7 @@ import { sortableHeader } from "../shared/tableUtils";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Pencil, Trash2, Eye, Unlock } from "lucide-react";
+import { ArrowUpDown, Pencil, Trash2, Eye, Unlock, Users } from "lucide-react";
 import type { AdminCourse } from "@/services/api";
 import type { VariantProps } from "class-variance-authority";
 import { badgeVariants } from "@/components/ui/badge";
@@ -58,6 +58,7 @@ export interface CourseListColumnConfig {
 	canReopen?: boolean;
 	expandable?: boolean;
 	canViewCOPO?: boolean;
+	canManageEnrollment?: boolean;
 }
 
 /**
@@ -69,6 +70,7 @@ export function createCourseColumns(
 	onDelete?: (course: AdminCourse) => void,
 	onViewCOPO?: (course: AdminCourse) => void,
 	onReopen?: (course: AdminCourse) => void,
+	onManageEnrollment?: (course: AdminCourse) => void,
 ): ColumnDef<AdminCourse>[] {
 	const columns: ColumnDef<AdminCourse>[] = [];
 
@@ -272,7 +274,7 @@ export function createCourseColumns(
 		});
 	}
 
-	if (config.canEdit || config.canDelete || config.canViewCOPO) {
+	if (config.canEdit || config.canDelete || config.canViewCOPO || config.canManageEnrollment) {
 		columns.push({
 			id: "actions",
 			header: "Actions",
@@ -287,6 +289,17 @@ export function createCourseColumns(
 							onClick={() => onViewCOPO(row.original)}
 						>
 							<Eye className="h-4 w-4" />
+						</Button>
+					)}
+					{config.canManageEnrollment && onManageEnrollment && (
+						<Button
+							variant="outline"
+							size="icon"
+							title="Manage Enrollments"
+							className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+							onClick={() => onManageEnrollment(row.original)}
+						>
+							<Users className="h-4 w-4" />
 						</Button>
 					)}
 					{config.canEdit && onEdit && (

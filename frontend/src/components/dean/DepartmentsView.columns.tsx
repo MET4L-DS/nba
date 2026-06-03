@@ -1,10 +1,20 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
 import type { DeanDepartment } from "@/services/api";
+import { ConfirmDeleteDialog } from "../../features/shared";
 import { sortableHeader } from "../../features/shared/tableUtils";
 
-export function getDeanDepartmentColumns(): ColumnDef<DeanDepartment>[] {
-	return [
+export interface DeanDepartmentColumnProps {
+	onEdit?: (department: DeanDepartment) => void;
+	onDelete?: (department: DeanDepartment) => void;
+}
+
+export function getDeanDepartmentColumns(
+	props?: DeanDepartmentColumnProps,
+): ColumnDef<DeanDepartment>[] {
+	const columns: ColumnDef<DeanDepartment>[] = [
 		{
 			accessorKey: "department_code",
 			header: sortableHeader("Code"),
@@ -102,4 +112,52 @@ export function getDeanDepartmentColumns(): ColumnDef<DeanDepartment>[] {
 			),
 		},
 	];
+
+	if (props?.onEdit || props?.onDelete) {
+		columns.push({
+			id: "actions",
+			header: () => <div className="text-center">Actions</div>,
+			cell: ({ row }) => {
+				const dept = row.original;
+				return (
+					<div className="flex justify-center gap-2">
+						{props.onEdit && (
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => props.onEdit?.(dept)}
+								className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+							>
+								<Pencil className="w-4 h-4" />
+							</Button>
+						)}
+						{props.onDelete && (
+							<ConfirmDeleteDialog
+								title={<>Are you absolutely sure?</>}
+								description={
+									<>
+										This will permanently delete the{" "}
+										<strong>{dept.department_name}</strong>{" "}
+										department. This action cannot be undone.
+									</>
+								}
+								onConfirm={() => props.onDelete?.(dept)}
+								trigger={
+									<Button
+										variant="ghost"
+										size="icon"
+										className="text-red-600 hover:text-red-700 hover:bg-red-50"
+									>
+										<Trash2 className="w-4 h-4" />
+									</Button>
+								}
+							/>
+						)}
+					</div>
+				);
+			},
+		});
+	}
+
+	return columns;
 }

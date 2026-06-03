@@ -22,6 +22,7 @@ import {
 import { CourseFormDialog } from "./CourseFormDialog";
 import { DeleteCourseDialog } from "./DeleteCourseDialog";
 import { ReopenCourseDialog } from "./ReopenCourseDialog";
+import { CourseEnrollmentDialog } from "./CourseEnrollmentDialog";
 import { createCourseColumns, type CourseListColumnConfig } from "./utils";
 import { motion } from "framer-motion";
 
@@ -33,7 +34,6 @@ export interface CourseListProps {
 	initialFilters?: Record<string, string | number | undefined>;
 	clientData?: AdminCourse[];
 
-	// Permissions & capabilities
 	permissions?: {
 		canEdit?: boolean;
 		canDelete?: boolean;
@@ -41,6 +41,7 @@ export interface CourseListProps {
 		canViewDepartment?: boolean;
 		allowDepartmentFilter?: boolean;
 		canViewCOPO?: boolean;
+		canManageEnrollment?: boolean;
 	};
 
 	// UI customization
@@ -131,6 +132,7 @@ export function CourseList({
 	const [deleteSaving, setDeleteSaving] = useState(false);
 	const [reopenTarget, setReopenTarget] = useState<AdminCourse | null>(null);
 	const [reopenSaving, setReopenSaving] = useState(false);
+	const [enrollmentTarget, setEnrollmentTarget] = useState<AdminCourse | null>(null);
 
 	// Data fetching
 	const {
@@ -221,6 +223,7 @@ export function CourseList({
 		canDelete: permissions.canDelete,
 		canReopen: !!onCourseReopen,
 		canViewCOPO: permissions.canViewCOPO || !!onViewCOPO,
+		canManageEnrollment: permissions.canManageEnrollment,
 		expandable,
 	};
 
@@ -234,6 +237,7 @@ export function CourseList({
 			toast.success("Course updated successfully");
 			setEditTarget(null);
 			onRefresh?.();
+			refresh();
 		} catch (err) {
 			toast.error("Failed to update course");
 			console.error(err);
@@ -252,6 +256,7 @@ export function CourseList({
 			toast.success("Course created successfully");
 			setCreateOpen(false);
 			onRefresh?.();
+			refresh();
 		} catch (err) {
 			toast.error("Failed to create course");
 			console.error(err);
@@ -270,6 +275,7 @@ export function CourseList({
 			toast.success("Course deleted successfully");
 			setDeleteTarget(null);
 			onRefresh?.();
+			refresh();
 		} catch (err) {
 			toast.error("Failed to delete course");
 			console.error(err);
@@ -312,8 +318,11 @@ export function CourseList({
 				},
 				onViewCOPO,
 				handleReopenClick,
+				(course: AdminCourse) => {
+					setEnrollmentTarget(course);
+				},
 			),
-		[courses, columnConfig, onViewCOPO, onCourseReopen, handleReopenClick],
+		[courses, columnConfig, onViewCOPO, onCourseReopen, handleReopenClick, setEnrollmentTarget],
 	);
 
 	if (error) {
@@ -696,6 +705,12 @@ export function CourseList({
 				onOpenChange={(open) => !open && setReopenTarget(null)}
 				onConfirm={handleReopenConfirm}
 				isLoading={reopenSaving}
+			/>
+			<CourseEnrollmentDialog
+				open={!!enrollmentTarget}
+				course={enrollmentTarget}
+				onOpenChange={(open) => !open && setEnrollmentTarget(null)}
+				onRefreshParent={refresh}
 			/>
 		</motion.div>
 	);

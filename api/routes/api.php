@@ -653,6 +653,10 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->deanController->getAllDepartments();
+                } elseif ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->createDepartment();
                 } else {
                     $this->sendMethodNotAllowed();
                 }
@@ -703,6 +707,16 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->deanController->getDepartmentAnalytics();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'dean/logs':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->deanController->getLogs($_GET);
                 } else {
                     $this->sendMethodNotAllowed();
                 }
@@ -1276,6 +1290,19 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->hodController->getBatch($batchId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^dean/departments/(\d+)$#', $path, $matches)) {
+                    $departmentId = $matches[1];
+                    if ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->deanController->updateDepartment($departmentId);
+                    } elseif ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->deanController->deleteDepartment($departmentId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

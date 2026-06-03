@@ -443,6 +443,10 @@ class StudentRepository
                 $bindings[] = $like;
                 $bindings[] = $like;
             }
+            if (!empty($params['filters']['programme_id'])) {
+                $sql .= " AND s.programme_id = ?";
+                $bindings[] = (int)$params['filters']['programme_id'];
+            }
             if (!empty($params['filters']['batch_year'])) {
                 $sql .= " AND s.batch_year = ?";
                 $bindings[] = (int)$params['filters']['batch_year'];
@@ -480,6 +484,10 @@ class StudentRepository
                 $like = '%' . $params['search'] . '%';
                 $bindings[] = $like;
                 $bindings[] = $like;
+            }
+            if (!empty($params['filters']['programme_id'])) {
+                $sql .= " AND s.programme_id = ?";
+                $bindings[] = (int)$params['filters']['programme_id'];
             }
             if (!empty($params['filters']['batch_year'])) {
                 $sql .= " AND s.batch_year = ?";

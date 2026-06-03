@@ -727,19 +727,17 @@ class StaffController
                     'message' => 'Student is not enrolled in this offering'
                 ]);
                 return;
-            }
-
-            // Remove enrollment
+            }            // Remove enrollment
             $this->enrollmentRepository->removeEnrollment($offeringId, $rollno);
 
             http_response_code(200);
             
             $auditPayload = isset($input) ? $input : (isset($data) ? $data : null);
             if (isset($this->auditService)) {
-                $this->auditService->log('CREATE', 'removeEnrollment', null, null, $auditPayload);
+                $this->auditService->log('DELETE', 'removeEnrollment', null, null, $auditPayload);
             }
             if (isset($GLOBALS['fileLogger'])) {
-                $GLOBALS['fileLogger']->log('INFO', 'StaffController', 'CREATE operation successful in removeEnrollment');
+                $GLOBALS['fileLogger']->log('INFO', 'StaffController', 'DELETE operation successful in removeEnrollment');
             }
             echo json_encode([
                 'success' => true,
@@ -788,6 +786,77 @@ class StaffController
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to retrieve students', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get base courses for the staff's department — paginated
+     */
+    public function getBaseCourses() {
+        try {
+            if (!$this->requireStaff()) return;
+
+            $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
+            if (!$departmentId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Department not assigned']);
+                return;
+            }
+
+            $params = PaginationHelper::parseParams(
+                $_GET,
+                'course_id',
+                'c.course_id',
+                ['course_code', 'course_name', 'credit', 'course_type', 'course_level'],
+                ['is_active', 'course_type']
+            );
+
+            $total = $this->courseRepository->countBaseCoursesByDepartmentPaginated($departmentId, $params);
+            $rows  = $this->courseRepository->findBaseCoursesByDepartmentPaginated($departmentId, $params);
+
+            $result = PaginationHelper::buildResponse($rows, 'course_id', $params['limit'], $total);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(array_merge(['success' => true, 'message' => 'Base courses retrieved successfully'], $result));
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to retrieve base courses', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get programmes associated with the staff's department
+     */
+    public function getDepartmentProgrammes()
+    {
+        try {
+            if (!$this->requireStaff()) return;
+
+            $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
+
+            $params = PaginationHelper::parseParams(
+                $_GET,
+                'p.programme_id',
+                'p.programme_id',
+                ['p.programme_id', 'p.programme_code', 'p.programme_name', 'd.department_name', 'd.department_code', 'p.degree_level', 'p.duration_years'],
+                ['degree_level', 'year', 'has_batches', 'batch_year_max']
+            );
+
+            // Override department_id filter to restrict to staff's own department
+            $params['department_id'] = $departmentId;
+
+            $programmeRepository = new ProgrammeRepository($this->pdo);
+            $total = $programmeRepository->countEnrichedPaginated($params);
+            $rows = $programmeRepository->findEnrichedPaginated($params);
+            $result = PaginationHelper::buildResponse($rows, 'programme_id', $params['limit'], $total);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(array_merge(['success' => true, 'message' => 'Programmes retrieved successfully'], $result));
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to retrieve programmes', 'error' => $e->getMessage()]);
         }
     }
 }

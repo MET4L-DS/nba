@@ -56,6 +56,19 @@ export function StaffCourses() {
 							title={`Current Courses - ${currentSemester} ${currentYear}`}
 							permissions={{
 								canViewDepartment: true,
+								canEdit: true,
+								canDelete: true,
+								canCreate: true,
+								canManageEnrollment: true,
+							}}
+							onCourseCreate={async (data) => {
+								await staffApi.createCourse(data);
+							}}
+							onCourseUpdate={async (courseId, data) => {
+								await staffApi.updateCourse(courseId, data);
+							}}
+							onCourseDelete={async (courseId) => {
+								await staffApi.deleteCourse(courseId);
 							}}
 							showYear={false}
 							showSemester={false}
@@ -70,6 +83,19 @@ export function StaffCourses() {
 							title="All Course Offerings"
 							permissions={{
 								canViewDepartment: true,
+								canEdit: true,
+								canDelete: true,
+								canCreate: true,
+								canManageEnrollment: true,
+							}}
+							onCourseCreate={async (data) => {
+								await staffApi.createCourse(data);
+							}}
+							onCourseUpdate={async (courseId, data) => {
+								await staffApi.updateCourse(courseId, data);
+							}}
+							onCourseDelete={async (courseId) => {
+								await staffApi.deleteCourse(courseId);
 							}}
 							availableFilters={["year", "semester"]}
 						/>

@@ -89,6 +89,7 @@ export function DashboardLayout() {
 					icon: ClipboardList,
 				},
 				{ id: "analytics", label: "Analytics", icon: BarChart3 },
+				{ id: "logs", label: "Audit Logs", icon: History },
 			];
 		}
 

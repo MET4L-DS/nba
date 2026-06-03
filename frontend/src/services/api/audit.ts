@@ -51,4 +51,13 @@ export const auditApi = {
 		});
 		return apiGetFull(`/faculty/logs?${queryParams.toString()}`);
 	},
+	getDeanLogs: (filters: AuditLogFilters = {}) => {
+		const queryParams = new URLSearchParams();
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value !== undefined && value !== null && value !== "") {
+				queryParams.append(key, String(value));
+			}
+		});
+		return apiGetFull(`/dean/logs?${queryParams.toString()}`);
+	},
 };

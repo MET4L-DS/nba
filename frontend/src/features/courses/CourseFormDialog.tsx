@@ -19,7 +19,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { hodApi } from "@/services/api/hod";
-import type { DepartmentFaculty, BaseCourse, Programme } from "@/services/api/types";
+import { staffApi } from "@/services/api/staff";
+import { apiService } from "@/services/api";
+import type { BaseCourse, Programme } from "@/services/api/types";
 import { motion, AnimatePresence } from "framer-motion";
 
 
@@ -57,7 +59,7 @@ export function CourseFormDialog({
 	};
 
 	const [formData, setFormData] = useState(defaultFormData);
-	const [faculties, setFaculties] = useState<DepartmentFaculty[]>([]);
+	const [faculties, setFaculties] = useState<any[]>([]);
 	const [isFetchingFaculties, setIsFetchingFaculties] = useState(false);
 	const [baseCourses, setBaseCourses] = useState<BaseCourse[]>([]);
 	const [isFetchingCourses, setIsFetchingCourses] = useState(false);
@@ -120,10 +122,14 @@ export function CourseFormDialog({
 			}
 
 			const fetchData = async () => {
+				const user = apiService.getStoredUser();
+				const isStaff = user?.role === "staff";
+				const currentApi = isStaff ? staffApi : hodApi;
+
 				if (courseType === "offering") {
 					setIsFetchingFaculties(true);
 					try {
-						const facultyResp = await hodApi.getDepartmentFaculty({
+						const facultyResp = await currentApi.getDepartmentFaculty({
 							limit: 100,
 						});
 						setFaculties(facultyResp.data);
@@ -136,7 +142,7 @@ export function CourseFormDialog({
 					if (mode === "create") {
 						setIsFetchingCourses(true);
 						try {
-							const courseResp = await hodApi.getBaseCourses({
+							const courseResp = await currentApi.getBaseCourses({
 								limit: 200,
 							});
 							setBaseCourses(courseResp.data || []);

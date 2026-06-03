@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete, apiGetPaginated } from "./base";
+import { apiGet, apiPost, apiPut, apiDelete, apiGetPaginated } from "./base";
 import { debugLogger } from "@/lib/debugLogger";
 import type {
 	DeanStats,
@@ -12,6 +12,9 @@ import type {
 	HODHistoryRecord,
 	PaginatedResponse,
 	PaginationParams,
+	Department,
+	CreateDepartmentRequest,
+	UpdateDepartmentRequest,
 } from "./types";
 
 export const deanApi = {
@@ -80,5 +83,26 @@ export const deanApi = {
 	async getHODHistory(): Promise<HODHistoryRecord[]> {
 		debugLogger.info("deanApi", "getHODHistory called");
 		return apiGet<HODHistoryRecord[]>("/dean/hod/history");
+	},
+
+	async createDepartment(data: CreateDepartmentRequest): Promise<Department> {
+		debugLogger.info("deanApi", "createDepartment called");
+		return apiPost<CreateDepartmentRequest, Department>("/dean/departments", data);
+	},
+
+	async updateDepartment(
+		departmentId: number,
+		data: UpdateDepartmentRequest,
+	): Promise<Department> {
+		debugLogger.info("deanApi", "updateDepartment called");
+		return apiPut<UpdateDepartmentRequest, Department>(
+			`/dean/departments/${departmentId}`,
+			data,
+		);
+	},
+
+	async deleteDepartment(departmentId: number): Promise<void> {
+		debugLogger.info("deanApi", "deleteDepartment called");
+		return apiDelete(`/dean/departments/${departmentId}`);
 	},
 };

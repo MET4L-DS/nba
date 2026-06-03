@@ -7,6 +7,15 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig(({ command }) => ({
 	plugins: [react(), tailwindcss()],
 	base: command === "build" ? "/nba-frontend/" : "/",
+	server: {
+		allowedHosts: true,
+		proxy: {
+			"/nba-met4l/api": {
+				target: "http://localhost",
+				changeOrigin: true,
+			},
+		},
+	},
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),

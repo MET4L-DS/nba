@@ -45,7 +45,8 @@ App.tsx (BrowserRouter)
 │   │   ├── /dean/courses → DeanCourses
 │   │   ├── /dean/students → DeanStudents
 │   │   ├── /dean/assessments → DeanAssessments
-│   │   └── /dean/analytics → DeanAnalytics
+│   │   ├── /dean/analytics → DeanAnalytics
+│   │   └── /dean/logs → DeanAuditLogs
 │   │
 │   └── Staff Routes
 │       ├── /staff → StaffHome
@@ -102,13 +103,14 @@ App.tsx (Root)
 │       │
 │       ├── Dean Pages
 │       │   ├── DeanHome — School-level stats
-│       │   ├── DeanDepartments — Department listing
+│       │   ├── DeanDepartments — Department listing + Add/Edit/Delete
 │       │   ├── DeanHODManagement — Appoint/demote HODs
 │       │   ├── DeanUsers — View all users
 │       │   ├── DeanCourses — View all courses
 │       │   ├── DeanStudents — View all students
 │       │   ├── DeanAssessments — View all assessments
-│       │   └── DeanAnalytics — Department analytics
+│       │   ├── DeanAnalytics — Department analytics
+│       │   └── DeanAuditLogs — School-level audit log viewer
 │       │
 │       └── Staff Pages
 │           ├── StaffHome — Stats
@@ -362,6 +364,6 @@ frontend/
 
 ---
 
-**Version**: 3.0  
-**Last Updated**: May 16, 2026  
-**Status**: Updated with complete routing, feature modules, CO-PO snapshots, programme attainment, and service layer documentation.
+**Version**: 4.0  
+**Last Updated**: June 3, 2026  
+**Status**: Updated with complete routing, feature modules, CO-PO snapshots, programme attainment, service layer documentation, and Staff/Dean dashboard mutations.

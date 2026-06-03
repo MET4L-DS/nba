@@ -411,9 +411,29 @@ Same query params as admin logs, scoped to HOD's department.
 
 ---
 
-### 26. View All Data
+### 26. View & Manage Departments
 
-**GET** `/dean/departments` | **GET** `/dean/users` | **GET** `/dean/courses` | **GET** `/dean/students` | **GET** `/dean/tests`
+**GET** `/dean/departments` — List departments (scoped to assigned school)  
+**POST** `/dean/departments` — Create department (scoped to assigned school, auto-creates HOD login account)  
+**PUT** `/dean/departments/{id}` — Update department  
+**DELETE** `/dean/departments/{id}` — Delete department  
+**GET** `/dean/users` | **GET** `/dean/courses` | **GET** `/dean/students` | **GET** `/dean/tests`
+
+```json
+// POST Request
+{ "department_name": "AI & ML Department", "department_code": "AIML", "description": "..." }
+
+// Response (201)
+{
+  "success": true,
+  "message": "Department and HOD account created successfully",
+  "data": {
+    "department_id": 12,
+    "department_name": "AI & ML Department",
+    "department_code": "AIML"
+  }
+}
+```
 
 ---
 
@@ -440,6 +460,41 @@ Same query params as admin logs, scoped to HOD's department.
 
 // POST Request — create new HOD
 { "employee_id": 2005, "username": "New HOD", "email": "hod_new@tezu.ac.in", "password": "password123", "role": "faculty", "appointment_order": "ORD/HOD/2026/01" }
+```
+
+---
+
+### 28b. View School Audit Logs
+
+**GET** `/dean/logs?page=1&limit=50`
+
+Query params: `page`, `limit`, `sort`, `sort_dir`, `action`, `entity_type`, `user_id`
+
+```json
+// RESPONSE (200)
+{
+  "success": true,
+  "data": [
+    {
+      "id": 15,
+      "user_id": 3001,
+      "username": "faculty_member",
+      "action": "CREATE",
+      "entity_type": "Course",
+      "entity_id": "45",
+      "old_values": null,
+      "new_values": { "course_name": "Deep Learning" },
+      "ip_address": "127.0.0.1",
+      "created_at": "2026-06-03 12:00:00"
+    }
+  ],
+  "pagination": {
+    "total_items": 120,
+    "total_pages": 3,
+    "current_page": 1,
+    "limit": 50
+  }
+}
 ```
 
 ---
@@ -554,7 +609,9 @@ Returns students enrolled in the faculty's courses.
 ### 39. View Data
 
 **GET** `/staff/faculty` — List department faculty  
-**GET** `/staff/students` — List department students
+**GET** `/staff/students` — List department students  
+**GET** `/staff/base-courses` — List department base course templates  
+**GET** `/staff/programmes` — List department programmes
 
 ---
 

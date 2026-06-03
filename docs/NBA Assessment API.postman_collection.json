@@ -884,6 +884,42 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Get Base Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/staff/base-courses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "staff",
+                "base-courses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Department Programmes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/staff/programmes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "staff",
+                "programmes"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -1173,6 +1209,108 @@
                 "dean",
                 "hod",
                 "101"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"department_name\": \"AI & ML Department\",\n  \"department_code\": \"AIML\",\n  \"description\": \"Artificial Intelligence and Machine Learning Department\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dean/departments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dean",
+                "departments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"department_name\": \"Updated AI & ML Department\",\n  \"department_code\": \"AIML\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dean/departments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dean",
+                "departments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dean/departments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dean",
+                "departments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get School Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dean/logs?page=1&limit=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dean",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
               ]
             }
           },

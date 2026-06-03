@@ -301,14 +301,18 @@ export function HODStakeholderSurveys() {
 							Select an active batch below or use the dropdown filters above to load the matrices.
 						</p>
 					</div>
-					{activeBatches.length > 0 ? (
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-							{activeBatches.map((batch) => (
-								<button
-									key={`${batch.programmeId}-${batch.batchId}`}
-									onClick={() => handleSelectBatch(batch)}
-									className="flex items-start gap-4 p-5 bg-card/75 backdrop-blur-sm border border-muted/55 rounded-xl shadow-sm hover:shadow-md hover:border-primary/50 hover:shadow-primary/[0.02] hover:-translate-y-1 transition-all duration-300 text-left group relative overflow-hidden"
-								>
+					{(() => {
+						const displayedBatches = selectedProgId
+							? activeBatches.filter((b) => b.programmeId === selectedProgId)
+							: activeBatches;
+						return displayedBatches.length > 0 ? (
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+								{displayedBatches.map((batch) => (
+									<button
+										key={`${batch.programmeId}-${batch.batchId}`}
+										onClick={() => handleSelectBatch(batch)}
+										className="flex items-start gap-4 p-5 bg-card/75 backdrop-blur-sm border border-muted/55 rounded-xl shadow-sm hover:shadow-md hover:border-primary/50 hover:shadow-primary/[0.02] hover:-translate-y-1 transition-all duration-300 text-left group relative overflow-hidden"
+									>
 									<div className="absolute top-0 right-0 w-20 h-20 opacity-0 group-hover:opacity-5 rounded-bl-full bg-primary transition-opacity duration-300"></div>
 									<div className="w-11 h-11 rounded-xl bg-primary/[.08] border border-primary/[0.12] flex items-center justify-center flex-shrink-0 group-hover:bg-primary/[.15] group-hover:scale-105 transition-all duration-300 shadow-sm">
 										<GraduationCap className="h-5 w-5 text-primary" />
@@ -335,14 +339,15 @@ export function HODStakeholderSurveys() {
 							))}
 						</div>
 					) : (
-						<div className="flex-1 flex items-center justify-center border-2 border-dashed border-muted rounded-xl p-8 bg-card/40">
-							<div className="text-center">
-								<BookOpen className="mx-auto h-8 w-8 text-muted-foreground/[.5] mb-3" />
-								<p className="text-sm font-semibold text-foreground">No active batches found</p>
-								<p className="text-xs text-muted-foreground mt-1">Please create batches in the Programmes panel first.</p>
+							<div className="flex-1 flex items-center justify-center border-2 border-dashed border-muted rounded-xl p-8 bg-card/40">
+								<div className="text-center">
+									<BookOpen className="mx-auto h-8 w-8 text-muted-foreground/[.5] mb-3" />
+									<p className="text-sm font-semibold text-foreground">No active batches found</p>
+									<p className="text-xs text-muted-foreground mt-1">Please create batches in the Programmes panel first.</p>
+								</div>
 							</div>
-						</div>
-					)}
+						);
+					})()}
 				</div>
 			)}
 		</div>

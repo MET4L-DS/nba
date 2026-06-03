@@ -176,14 +176,8 @@ export function DashboardLayout() {
 	const lastPart = pathParts[pathParts.length - 1];
 	
 	let activeId = "dashboard";
-	if (
-		lastPart &&
-		lastPart !== "faculty" &&
-		lastPart !== "hod" &&
-		lastPart !== "dean" &&
-		lastPart !== "staff" &&
-		lastPart !== "dashboard"
-	) {
+	const rolePath = user.role === "admin" ? "/dashboard" : (user.is_dean ? "/dean" : `/${user.role}`);
+	if (location.pathname !== rolePath && location.pathname !== `${rolePath}/` && lastPart) {
 		activeId = lastPart;
 	}
 

@@ -26,9 +26,9 @@ import { coursesApi } from "@/services/api/courses";
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Graduated", "Dropped"];
 const BATCH_OPTIONS = Array.from(
-	{ length: 10 },
-	(_, i) => new Date().getFullYear() - 4 + i,
-);
+	{ length: 13 },
+	(_, i) => new Date().getFullYear() - 10 + i,
+).reverse();
 
 export interface StudentListProps {
 	// Data source

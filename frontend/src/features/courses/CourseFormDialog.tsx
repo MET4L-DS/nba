@@ -445,12 +445,12 @@ export function CourseFormDialog({
 												</SelectTrigger>
 												<SelectContent>
 													{[
-														"Undergraduate",
-														"Postgraduate",
-														"UG & PG",
-													].map((l) => (
-														<SelectItem key={l} value={l}>
-															{l}
+														{ value: "Undergraduate", label: "UG" },
+														{ value: "Postgraduate", label: "PG" },
+														{ value: "UG & PG", label: "UG & PG" },
+													].map((opt) => (
+														<SelectItem key={opt.value} value={opt.value}>
+															{opt.label}
 														</SelectItem>
 													))}
 												</SelectContent>

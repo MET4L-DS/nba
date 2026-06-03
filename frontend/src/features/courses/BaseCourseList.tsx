@@ -87,11 +87,15 @@ function createBaseCourseColumns(
 		{
 			accessorKey: "course_level",
 			header: "Level",
-			cell: ({ row }) => (
-				<span className="text-sm">
-					{(row.getValue("course_level") as string) ?? "—"}
-				</span>
-			),
+			cell: ({ row }) => {
+				const val = row.getValue("course_level") as string;
+				const label = val === "Undergraduate" ? "UG" : (val === "Postgraduate" ? "PG" : (val ?? "—"));
+				return (
+					<span className="text-sm">
+						{label}
+					</span>
+				);
+			},
 		},
 		{
 			accessorKey: "credit",
@@ -208,7 +212,10 @@ export function BaseCourseList({
 		setSort,
 		setLimit,
 		refresh,
-	} = usePaginatedData<BaseCourse, { is_active?: string }>({
+	} = usePaginatedData<
+		BaseCourse,
+		{ is_active?: string; year?: string; course_type?: string }
+	>({
 		fetchFn:
 			fetchFn ||
 			(() =>
@@ -419,13 +426,63 @@ export function BaseCourseList({
 										</Select>
 									</div>
 
-									{(search || filters.is_active) && (
+									<div className="w-[150px]">
+										<Select
+											value={filters.course_type || "all"}
+											onValueChange={(val) => {
+												setFilter("course_type", val === "all" ? undefined : val);
+											}}
+											disabled={isLoading}
+										>
+											<SelectTrigger className="h-9">
+												<SelectValue placeholder="Course Type" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">All Types</SelectItem>
+												<SelectItem value="Theory">Theory</SelectItem>
+												<SelectItem value="Lab">Lab</SelectItem>
+												<SelectItem value="Project">Project</SelectItem>
+												<SelectItem value="Seminar">Seminar</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+
+									<div className="w-[150px]">
+										<Select
+											value={filters.year || "all"}
+											onValueChange={(val) => {
+												setFilter("year", val === "all" ? undefined : val);
+											}}
+											disabled={isLoading}
+										>
+											<SelectTrigger className="h-9">
+												<SelectValue placeholder="Offering Year" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">All Years</SelectItem>
+												{Array.from(
+													{ length: 8 },
+													(_, i) => new Date().getFullYear() - 5 + i,
+												)
+													.reverse()
+													.map((y) => (
+														<SelectItem key={y} value={y.toString()}>
+															{y}
+														</SelectItem>
+													))}
+											</SelectContent>
+										</Select>
+									</div>
+
+									{(search || filters.is_active || filters.course_type || filters.year) && (
 										<Button
 											variant="ghost"
 											size="sm"
 											onClick={() => {
 												setSearch("");
 												setFilter("is_active", undefined);
+												setFilter("course_type", undefined);
+												setFilter("year", undefined);
 											}}
 											disabled={isLoading}
 										>

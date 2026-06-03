@@ -55,7 +55,7 @@ class FacultyController
             }
 
             $filters = [
-                'user_id' => $_GET['user_id'] ?? null,
+                'user_id' => $userData['employee_id'],
                 'action' => $_GET['action'] ?? null,
                 'entity_type' => $_GET['entity_type'] ?? null,
                 'entity_id' => $_GET['entity_id'] ?? null,

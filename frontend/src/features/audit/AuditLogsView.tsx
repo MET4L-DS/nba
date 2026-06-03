@@ -135,10 +135,6 @@ export function AuditLogsView({ fetchFn }: AuditLogsViewProps) {
 				header: sortableHeader("Entity"),
 			},
 			{
-				accessorKey: "entity_id",
-				header: sortableHeader("Entity ID"),
-			},
-			{
 				accessorKey: "username",
 				header: sortableHeader("Actor", "text-left"),
 				cell: ({ row }: any) => {

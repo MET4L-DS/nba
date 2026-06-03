@@ -97,12 +97,10 @@ class AuditLogRepository {
         // Manual pagination instead of missing helper method
         $offset = ($page - 1) * $limit;
         
-        // Count query
-        $countQuery = "SELECT COUNT(*) FROM audit_logs a WHERE 1=1";
-        // Re-use filter conditions logic here or simplify
-        // For brevity in this fix, let's keep it simple
-        $stmtCount = $this->db->prepare($countQuery); // This is a simplification
-        $stmtCount->execute();
+        // Count query with filters applied
+        $countQuery = str_replace("SELECT a.*, u.username", "SELECT COUNT(*)", $query);
+        $stmtCount = $this->db->prepare($countQuery);
+        $stmtCount->execute($params);
         $total = $stmtCount->fetchColumn();
 
         $query .= " LIMIT $limit OFFSET $offset";
@@ -133,9 +131,10 @@ class AuditLogRepository {
         $query = "SELECT a.*, u.username 
                   FROM audit_logs a 
                   LEFT JOIN users u ON a.user_id = u.employee_id 
-                  WHERE a.entity_type IN ('" . implode("','", $includedEntityTypes) . "')";
+                  WHERE a.entity_type IN ('" . implode("','", $includedEntityTypes) . "')
+                  AND u.department_id = :department_id";
         
-        $params = [];
+        $params = [':department_id' => $departmentId];
         
         if (!empty($excludedActions)) {
             $excludedList = implode("','", array_map(function($a) {

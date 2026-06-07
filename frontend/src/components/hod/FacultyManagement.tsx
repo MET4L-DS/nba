@@ -170,11 +170,6 @@ export function FacultyManagement() {
 			return;
 		}
 
-		if (editFormData.password && editFormData.password.length < 6) {
-			toast.error("Password must be at least 6 characters");
-			return;
-		}
-
 		const invalidEditPhones = editFormData.phones?.filter(
 			(p) => p !== "" && !/^\d{10}$/.test(p),
 		);
@@ -192,10 +187,6 @@ export function FacultyManagement() {
 				designation: editFormData.designation || null,
 				phones: editFormData.phones?.filter(Boolean) || undefined,
 			};
-
-			if (editFormData.password) {
-				updateData.password = editFormData.password;
-			}
 
 			await hodApi.updateUser(selectedUser.employee_id, updateData);
 			toast.success("User updated successfully");

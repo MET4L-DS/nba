@@ -236,44 +236,40 @@ export function DepartmentMemberDialog({
 							</Button>
 						</div>
 					</div>
-					<div className="space-y-2">
-						<Label htmlFor={`${mode}_password`}>
-							{mode === "add"
-								? "Password *"
-								: "Password (Optional)"}
-						</Label>
-						<div className="relative">
-							<Input
-								id={`${mode}_password`}
-								type={showPassword ? "text" : "password"}
-								placeholder={
-									mode === "add"
-										? "Minimum 6 characters"
-										: "Leave blank to keep unchanged"
-								}
-								value={formData.password}
-								onChange={(e) =>
-									setFormData({
-										...formData,
-										password: e.target.value,
-									})
-								}
-							/>
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-								onClick={() => setShowPassword(!showPassword)}
-							>
-								{showPassword ? (
-									<EyeOff className="h-4 w-4 text-muted-foreground" />
-								) : (
-									<Eye className="h-4 w-4 text-muted-foreground" />
-								)}
-							</Button>
+					{mode === "add" && (
+						<div className="space-y-2">
+							<Label htmlFor={`${mode}_password`}>
+								Password *
+							</Label>
+							<div className="relative">
+								<Input
+									id={`${mode}_password`}
+									type={showPassword ? "text" : "password"}
+									placeholder="Minimum 6 characters"
+									value={formData.password}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											password: e.target.value,
+										})
+									}
+								/>
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+									onClick={() => setShowPassword(!showPassword)}
+								>
+									{showPassword ? (
+										<EyeOff className="h-4 w-4 text-muted-foreground" />
+									) : (
+										<Eye className="h-4 w-4 text-muted-foreground" />
+									)}
+								</Button>
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
 				<DialogFooter>
 					<Button variant="outline" onClick={onCancel}>

@@ -28,6 +28,7 @@ class ApiService {
 	changePassword = authApi.changePassword;
 	forgotPassword = authApi.forgotPassword;
 	resetPassword = authApi.resetPassword;
+	updateProfile = authApi.updateProfile;
 
 	// Course methods
 	getCourses = coursesApi.getCourses;

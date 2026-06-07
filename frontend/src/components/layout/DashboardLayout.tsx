@@ -243,7 +243,11 @@ export function DashboardLayout() {
 				</Suspense>
 			</main>
 
-			<ProfileSettingsDialog open={profileOpen} onOpenChange={setProfileOpen} />
+			<ProfileSettingsDialog 
+				open={profileOpen} 
+				onOpenChange={setProfileOpen} 
+				onProfileUpdate={(updatedUser) => setUser(updatedUser)} 
+			/>
 		</div>
 	);
 }

@@ -136,4 +136,28 @@ export const authApi = {
 		}
 		return data;
 	},
+
+	async updateProfile(profileData: {
+		username?: string;
+		email?: string;
+		designation?: string;
+		phones?: string[];
+	}): Promise<{ success: boolean; message: string; data: User }> {
+		const response = await fetchWithRetry(`${API_BASE_URL}/profile`, {
+			method: "PUT",
+			headers: tokenManager.getAuthHeaders(),
+			body: JSON.stringify(profileData),
+		});
+
+		const data = await response.json();
+		if (!response.ok) {
+			throw new Error(data.message || "Failed to update profile");
+		}
+
+		if (data.success && data.data) {
+			localStorage.setItem("user", JSON.stringify(data.data));
+		}
+
+		return data;
+	},
 };

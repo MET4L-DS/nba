@@ -42,7 +42,7 @@ export const AssessmentQuestionBreakdown = memo(function AssessmentQuestionBreak
                         .map((qNum) => (
                             <Fragment key={qNum}>
                                 {groupedQuestions[Number(qNum)].map((q, idx) => (
-                                    <TableRow key={q.id} className="hover:bg-primary/[0.02] border-b border-muted/40 transition-colors duration-200">
+                                    <TableRow key={q.question_id} className="hover:bg-primary/[0.02] border-b border-muted/40 transition-colors duration-200">
                                         <TableCell className="font-mono font-bold text-foreground py-3.5 pl-4">
                                             {idx === 0 ? `Q${q.question_number}` : ""}
                                         </TableCell>

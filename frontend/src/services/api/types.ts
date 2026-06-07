@@ -115,7 +115,8 @@ export interface Question {
 }
 
 export interface QuestionResponse extends Question {
-	id: number;
+	question_id: number;
+	id?: number;
 	test_id: number;
 	question_identifier: string;
 }

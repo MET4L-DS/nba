@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import { assessmentsApi } from "@/services/api/assessments";
 import type { Course, Test } from "@/services/api";
+import { debugLogger } from "@/lib/debugLogger";
 
 interface UseTestsListProps {
 	course: Course | null;
@@ -74,12 +75,23 @@ export function useTestsList({
 			return;
 		}
 
+		debugLogger.info("useTestsList", "Submitting delete assessment request", {
+			testId: testToDelete.id,
+			testName: testToDelete.name,
+			courseId,
+		});
+
 		setIsDeleting(true);
 		try {
 			const result = await assessmentsApi.deleteTest(testToDelete.id);
 
-			toast.success(result.message || "Test deleted successfully", {
-				description: `${result.data.questions_deleted} questions and marks for ${result.data.students_affected} students were removed.`,
+			debugLogger.info("useTestsList", "Assessment deleted successfully", {
+				testId: testToDelete.id,
+				result,
+			});
+
+			toast.success("Test deleted successfully", {
+				description: `${result.questions_deleted} questions and marks for ${result.students_affected} students were removed.`,
 			});
 
 			await loadTests();
@@ -88,6 +100,7 @@ export function useTestsList({
 			setTestToDelete(null);
 			setDeleteConfirmation("");
 		} catch (error) {
+			debugLogger.error("useTestsList", "Failed to delete test", error);
 			console.error("Failed to delete test:", error);
 			toast.error("Failed to delete test", {
 				description:
@@ -96,7 +109,7 @@ export function useTestsList({
 		} finally {
 			setIsDeleting(false);
 		}
-	}, [testToDelete, deleteConfirmation, loadTests]);
+	}, [testToDelete, deleteConfirmation, loadTests, courseId]);
 
 	return {
 		tests,

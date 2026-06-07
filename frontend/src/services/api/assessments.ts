@@ -39,27 +39,19 @@ export const assessmentsApi = {
 	},
 
 	async deleteTest(testId: number): Promise<{
-		success: boolean;
-		message: string;
-		data: {
+		test_name: string;
+		course_code: string;
+		questions_deleted: number;
+		students_affected: number;
+		raw_marks_deleted: number;
+	}> {
+		debugLogger.info("assessmentsApi", "deleteTest called");
+		return apiDelete<{
 			test_name: string;
 			course_code: string;
 			questions_deleted: number;
 			students_affected: number;
 			raw_marks_deleted: number;
-		};
-	}> {
-		debugLogger.info("assessmentsApi", "deleteTest called");
-		return apiDelete<{
-			success: boolean;
-			message: string;
-			data: {
-				test_name: string;
-				course_code: string;
-				questions_deleted: number;
-				students_affected: number;
-				raw_marks_deleted: number;
-			};
 		}>(`/tests/${testId}`);
 	},
 };

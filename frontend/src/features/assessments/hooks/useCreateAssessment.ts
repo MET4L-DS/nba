@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { apiService } from "@/services/api";
 import type { Course, Question } from "@/services/api";
 import { TEST_MARKS } from "../constants";
+import { debugLogger } from "@/lib/debugLogger";
 
 interface UseCreateAssessmentProps {
 	selectedCourse: Course | null;
@@ -224,6 +225,15 @@ export function useCreateAssessment({
 				return;
 			}
 		}
+
+		debugLogger.info("useCreateAssessment", "Submitting new assessment request", {
+			courseId: selectedCourse.offering_id ?? selectedCourse.course_id,
+			name,
+			fullMarks,
+			passMarks,
+			questionCount: questions.length,
+		});
+
 		setIsSubmitting(true);
 		try {
 			const result = await apiService.createAssessment({
@@ -234,11 +244,18 @@ export function useCreateAssessment({
 				pass_marks: parseFloat(passMarks),
 				questions,
 			});
+
+			debugLogger.info("useCreateAssessment", "Assessment created successfully", {
+				testId: result.data?.test?.id || "unknown",
+				result,
+			});
+
 			toast.success(
-				`Assessment created! Test ID: ${result.data.test.id}`
+				`Assessment created! Test ID: ${result.data?.test?.id || "unknown"}`
 			);
 			onSuccess(selectedCourse.offering_id ?? selectedCourse.course_id);
 		} catch (err) {
+			debugLogger.error("useCreateAssessment", "Failed to create assessment", err);
 			console.error("Failed to create assessment:", err);
 			toast.error(
 				err instanceof Error

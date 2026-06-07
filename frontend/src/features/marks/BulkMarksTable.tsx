@@ -147,7 +147,7 @@ export function BulkMarksTable({
 							"bg-gray-100 text-gray-800 dark:bg-muted dark:text-muted-foreground";
 						return (
 							<TableHead
-								key={q.id}
+								key={q.question_id}
 								scope="col"
 								className="px-4 py-3 text-center border-b border-r border-border min-w-[90px] align-middle"
 							>
@@ -250,7 +250,7 @@ export function BulkMarksTable({
 								const invalid = isCellInvalid(rollno, q);
 								return (
 									<TableCell
-										key={q.id}
+										key={q.question_id}
 										className="px-4 py-3 text-center border-r border-border"
 									>
 										<BulkMarksCellInput

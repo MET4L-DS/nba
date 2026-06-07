@@ -362,6 +362,14 @@ erDiagram
         string ip_address
         timestamp created_at
     }
+
+    password_resets {
+        int id PK
+        string email
+        string token
+        timestamp created_at
+        datetime expires_at
+    }
 ```
 
 ---
@@ -964,6 +972,22 @@ Tracks all significant data changes and login events for auditing.
 
 **Indexes**: PRIMARY KEY (id), INDEX (entity_type, entity_id), INDEX (user_id), INDEX (action)
 **Foreign Keys**: user_id REFERENCES users(employee_id) ON DELETE SET NULL
+
+---
+
+### 32. password_resets
+
+Stores temporary tokens generated for the self-service forgot password / password reset flow.
+
+| Column      | Type        | Constraints                 | Description                      |
+| ----------- | ----------- | --------------------------- | -------------------------------- |
+| id          | INT(11)     | PRIMARY KEY, AUTO_INCREMENT | Unique identifier                |
+| email       | VARCHAR(255)| NOT NULL                    | Email requesting the reset       |
+| token       | VARCHAR(255)| NOT NULL                    | Unique, secure reset token       |
+| created_at  | TIMESTAMP   | DEFAULT CURRENT_TIMESTAMP   | Token generation timestamp       |
+| expires_at  | DATETIME    | NOT NULL                    | Expiration timestamp of the token|
+
+**Indexes**: PRIMARY KEY (id), INDEX (email), INDEX (token)
 
 ---
 

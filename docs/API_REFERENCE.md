@@ -99,7 +99,12 @@ Users have a fixed **base role** (`admin`, `faculty`, `hod`, `dean`, `staff`). A
 
 ```json
 // REQUEST (all optional)
-{ "username": "newusername", "email": "newemail@nba.edu" }
+{ 
+  "username": "newusername", 
+  "email": "newemail@nba.edu", 
+  "designation": "Professor", 
+  "phones": ["9876543210", "9876543211"] 
+}
 
 // RESPONSE (200)
 { "success": true, "message": "Profile updated successfully", "data": { /* updated user */ } }

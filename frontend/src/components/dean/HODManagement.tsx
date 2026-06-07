@@ -323,7 +323,7 @@ export function HODManagement({
 				open={appointDialogOpen}
 				onOpenChange={setAppointDialogOpen}
 			>
-				<DialogContent className="max-w-md border border-muted/50 bg-card/95 backdrop-blur-lg rounded-2xl shadow-2xl relative overflow-hidden">
+				<DialogContent className="max-w-md border border-muted/50 bg-card/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden">
 					<div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-blue-500 to-teal-500"></div>
 					<DialogHeader className="pt-2">
 						<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">

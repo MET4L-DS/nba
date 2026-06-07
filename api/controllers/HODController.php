@@ -1338,11 +1338,6 @@ class HODController
                 }
             }
 
-            // Update password if provided
-            if (isset($input['password']) && !empty($input['password'])) {
-                $password = password_hash($input['password'], PASSWORD_DEFAULT);
-            }
-
             $updatedUser = new User(
                 $employeeId,
                 $username,

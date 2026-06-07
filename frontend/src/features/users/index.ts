@@ -12,3 +12,4 @@ export {
 } from "./utils";
 
 export { UserPhonesRow } from "./UserPhonesRow";
+export { ProfileSettingsDialog, type ProfileSettingsDialogProps } from "./ProfileSettingsDialog";

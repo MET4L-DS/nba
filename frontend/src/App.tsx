@@ -7,6 +7,8 @@ const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout")
 const FacultyLayout = lazy(() => import("./components/layout/FacultyLayout").then(module => ({ default: module.FacultyLayout })));
 
 const LoginPage = lazy(() => import("./pages/LoginPage").then(module => ({ default: module.LoginPage })));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage").then(module => ({ default: module.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage").then(module => ({ default: module.ResetPasswordPage })));
 
 // Lazy-loaded Admin Pages
 const AdminHome = lazy(() => import("./pages/admin/AdminHome").then(module => ({ default: module.AdminHome })));
@@ -60,6 +62,8 @@ function App() {
 			<Suspense fallback={<PageLoader />}>
 				<Routes>
 					<Route path="/login" element={<LoginPage />} />
+					<Route path="/forgot-password" element={<ForgotPasswordPage />} />
+					<Route path="/reset-password" element={<ResetPasswordPage />} />
 
 					{/* Protected Routes with Dashboard Layout */}
 					<Route element={<DashboardLayout />}>

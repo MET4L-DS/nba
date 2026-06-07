@@ -7,6 +7,8 @@
 ```
 App.tsx (BrowserRouter)
 ├── /login → LoginPage
+├── /forgot-password → ForgotPasswordPage
+├── /reset-password → ResetPasswordPage
 │
 ├── DashboardLayout (Protected — wraps all role routes)
 │
@@ -69,8 +71,12 @@ App.tsx (Root)
 │       │   ├── Card (Shadcn)
 │       │   └── LoginForm (employeeIdOrEmail + Password)
 │       │
+│       ├── ForgotPasswordPage (/forgot-password)
+│       ├── ResetPasswordPage (/reset-password)
+│       │
 │       ├── DashboardLayout (shared layout wrapper)
 │       │   ├── AppSidebar (role-aware navigation)
+│       │   │   └── ProfileSettingsDialog (change password form)
 │       │   ├── AppHeader (title, breadcrumb, theme toggle, logout)
 │       │   └── <Outlet /> (nested route content)
 │       │

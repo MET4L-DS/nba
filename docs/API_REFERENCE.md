@@ -99,7 +99,7 @@ Users have a fixed **base role** (`admin`, `faculty`, `hod`, `dean`, `staff`). A
 
 ```json
 // REQUEST (all optional)
-{ "username": "newusername", "email": "newemail@nba.edu", "password": "newpassword" }
+{ "username": "newusername", "email": "newemail@nba.edu" }
 
 // RESPONSE (200)
 { "success": true, "message": "Profile updated successfully", "data": { /* updated user */ } }
@@ -107,7 +107,61 @@ Users have a fixed **base role** (`admin`, `faculty`, `hod`, `dean`, `staff`). A
 
 ---
 
-### 4. Logout
+### 4. Change Password
+
+**POST** `/profile/change-password`
+
+*Note: Requires Authentication.*
+
+```json
+// REQUEST
+{ "current_password": "oldpassword123", "new_password": "newpassword456" }
+
+// RESPONSE (200)
+{ "success": true, "message": "Password changed successfully" }
+
+// ERROR (400)
+{ "success": false, "message": "Incorrect current password" }
+```
+
+---
+
+### 5. Forgot Password
+
+**POST** `/auth/forgot-password`
+
+*Note: Public endpoint. Initiates password reset by sending an email.*
+
+```json
+// REQUEST
+{ "email": "ayan14.ds@gmail.com" }
+
+// RESPONSE (200)
+{ "success": true, "message": "If this email is registered, a password reset link has been sent." }
+```
+
+---
+
+### 6. Reset Password
+
+**POST** `/auth/reset-password`
+
+*Note: Public endpoint. Completes the password reset.*
+
+```json
+// REQUEST
+{ "token": "a1b2c3d4...", "new_password": "newsecurepassword123" }
+
+// RESPONSE (200)
+{ "success": true, "message": "Password reset successful. You can now login with your new password." }
+
+// ERROR (400)
+{ "success": false, "message": "Invalid or expired token. Please request a new password reset link." }
+```
+
+---
+
+### 7. Logout
 
 **POST** `/logout`
 
@@ -117,7 +171,7 @@ Users have a fixed **base role** (`admin`, `faculty`, `hod`, `dean`, `staff`). A
 
 ---
 
-### 5. Get User's Department
+### 8. Get User's Department
 
 **GET** `/department`
 
@@ -128,7 +182,7 @@ Users have a fixed **base role** (`admin`, `faculty`, `hod`, `dean`, `staff`). A
 
 ---
 
-### 6. Get All Departments
+### 9. Get All Departments
 
 **GET** `/departments`
 

@@ -78,6 +78,68 @@ class ValidationMiddleware
     }
 
     /**
+     * Validate change password request data
+     * @param array $data
+     * @return array Array of validation errors, empty if valid
+     */
+    public function validateChangePasswordData($data)
+    {
+        $errors = [];
+
+        if (empty($data['current_password'])) {
+            $errors[] = "Current password is required";
+        }
+
+        if (empty($data['new_password'])) {
+            $errors[] = "New password is required";
+        } elseif (strlen($data['new_password']) < 6) {
+            $errors[] = "New password must be at least 6 characters long";
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Validate forgot password request data
+     * @param array $data
+     * @return array Array of validation errors, empty if valid
+     */
+    public function validateForgotPasswordData($data)
+    {
+        $errors = [];
+
+        if (empty($data['email'])) {
+            $errors[] = "Email is required";
+        } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Invalid email format";
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Validate reset password request data
+     * @param array $data
+     * @return array Array of validation errors, empty if valid
+     */
+    public function validateResetPasswordData($data)
+    {
+        $errors = [];
+
+        if (empty($data['token'])) {
+            $errors[] = "Token is required";
+        }
+
+        if (empty($data['new_password'])) {
+            $errors[] = "New password is required";
+        } elseif (strlen($data['new_password']) < 6) {
+            $errors[] = "New password must be at least 6 characters long";
+        }
+
+        return $errors;
+    }
+
+    /**
      * Sanitize input data
      * @param array $data
      * @return array

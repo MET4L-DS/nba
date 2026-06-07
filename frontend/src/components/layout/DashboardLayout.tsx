@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppSidebar, type NavItem } from "@/components/layout";
 import { apiService } from "@/services/api";
 import type { User } from "@/services/api";
+import { ProfileSettingsDialog } from "@/features/users";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
 	LayoutDashboard,
@@ -27,6 +28,7 @@ export function DashboardLayout() {
 	const [sidebarOpen, setSidebarOpen] = useState(() => {
 		return typeof window !== "undefined" ? window.innerWidth >= 768 : true;
 	});
+	const [profileOpen, setProfileOpen] = useState(false);
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -213,6 +215,7 @@ export function DashboardLayout() {
 				activeId={activeId}
 				onNavigate={onNavigate}
 				onLogout={handleLogout}
+				onProfileClick={() => setProfileOpen(true)}
 				sidebarOpen={sidebarOpen}
 				className="hidden md:flex"
 			/>
@@ -227,6 +230,7 @@ export function DashboardLayout() {
 						activeId={activeId}
 						onNavigate={onNavigate}
 						onLogout={handleLogout}
+						onProfileClick={() => setProfileOpen(true)}
 						sidebarOpen={true}
 						className="w-full h-full border-r-0"
 					/>
@@ -238,6 +242,8 @@ export function DashboardLayout() {
 					<Outlet context={contextValue} />
 				</Suspense>
 			</main>
+
+			<ProfileSettingsDialog open={profileOpen} onOpenChange={setProfileOpen} />
 		</div>
 	);
 }

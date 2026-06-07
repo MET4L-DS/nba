@@ -13,6 +13,10 @@ error_reporting(E_ALL);
 // Set default timezone to match local system time
 date_default_timezone_set('Asia/Kolkata');
 
+// Load Environment Variables
+require_once __DIR__ . '/utils/EnvLoader.php';
+EnvLoader::load(__DIR__ . '/.env');
+
 // Output buffer ensures no stray output pollutes JSON responses
 ob_start();
 

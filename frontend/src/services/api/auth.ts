@@ -1,6 +1,6 @@
 import { debugLogger } from "@/lib/debugLogger";
 import { API_BASE_URL, tokenManager, fetchWithRetry } from "./base";
-import type { LoginCredentials, LoginResponse, User } from "./types";
+import type { LoginCredentials, LoginResponse, User, ChangePasswordCredentials, ResetPasswordCredentials } from "./types";
 
 export const authApi = {
 	async login(credentials: LoginCredentials): Promise<LoginResponse> {
@@ -89,5 +89,51 @@ export const authApi = {
 
 	clearToken(): void {
 		tokenManager.clearToken();
+	},
+
+	async changePassword(credentials: ChangePasswordCredentials): Promise<{ success: boolean; message: string }> {
+		const response = await fetchWithRetry(`${API_BASE_URL}/profile/change-password`, {
+			method: "POST",
+			headers: tokenManager.getAuthHeaders(),
+			body: JSON.stringify(credentials),
+		});
+
+		const data = await response.json();
+		if (!response.ok) {
+			throw new Error(data.message || "Failed to change password");
+		}
+		return data;
+	},
+
+	async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+		const response = await fetchWithRetry(`${API_BASE_URL}/auth/forgot-password`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ email }),
+		});
+
+		const data = await response.json();
+		if (!response.ok) {
+			throw new Error(data.message || "Failed to request password reset");
+		}
+		return data;
+	},
+
+	async resetPassword(credentials: ResetPasswordCredentials): Promise<{ success: boolean; message: string }> {
+		const response = await fetchWithRetry(`${API_BASE_URL}/auth/reset-password`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(credentials),
+		});
+
+		const data = await response.json();
+		if (!response.ok) {
+			throw new Error(data.message || "Failed to reset password");
+		}
+		return data;
 	},
 };

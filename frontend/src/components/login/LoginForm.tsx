@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
@@ -153,12 +154,12 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
 							>
 								Password
 							</Label>
-							<a
-								href="#"
+							<Link
+								to="/forgot-password"
 								className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium transition-colors"
 							>
 								Forgot password?
-							</a>
+							</Link>
 						</div>
 						<div className="relative">
 							<Lock

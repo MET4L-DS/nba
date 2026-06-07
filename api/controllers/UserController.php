@@ -181,10 +181,6 @@ class UserController
                 $user->setEmail($data['email']);
             }
 
-            if (isset($data['password'])) {
-                $user->setPassword(password_hash($data['password'], PASSWORD_DEFAULT));
-            }
-
             if (isset($data['designation'])) {
                 $user->setDesignation($data['designation']);
             }
@@ -609,10 +605,6 @@ class UserController
                 $user->setEmail($data['email']);
             }
 
-            if (isset($data['password'])) {
-                $user->setPassword(password_hash($data['password'], PASSWORD_DEFAULT));
-            }
-
             if (isset($data['role'])) {
                 $user->setRole($data['role']);
             }
@@ -798,6 +790,248 @@ class UserController
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to retrieve phones', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Change user password (Authenticated user only)
+     */
+    public function changePassword()
+    {
+        try {
+            $userData = $_REQUEST['authenticated_user'];
+            $data = $this->validationMiddleware->getJsonInput();
+
+            if (!$data) {
+                throw new Exception("Invalid JSON input");
+            }
+
+            // Validate input
+            $errors = $this->validationMiddleware->validateChangePasswordData($data);
+            if (!empty($errors)) {
+                $this->validationMiddleware->sendValidationErrorResponse($errors);
+                return;
+            }
+
+            // Find user
+            $user = $this->userRepository->findByEmployeeId($userData['employee_id']);
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+                return;
+            }
+
+            // Verify current password
+            if (!password_verify($data['current_password'], $user->getPassword())) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Incorrect current password'
+                ]);
+                return;
+            }
+
+            // Set and save new password
+            $user->setPassword(password_hash($data['new_password'], PASSWORD_DEFAULT));
+            if ($this->userRepository->save($user)) {
+                if (isset($this->auditService)) {
+                    $this->auditService->log('UPDATE', 'PasswordChange', $user->getEmployeeId(), null, ['employee_id' => $user->getEmployeeId()]);
+                }
+                
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Password changed successfully'
+                ]);
+            } else {
+                throw new Exception("Failed to save new password");
+            }
+        } catch (Exception $e) {
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->error('UserController', 'changePassword error', ['error' => $e->getMessage()]);
+            }
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to change password',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Forgot Password flow (Public endpoint)
+     */
+    public function forgotPassword()
+    {
+        try {
+            $data = $this->validationMiddleware->getJsonInput();
+
+            if (!$data) {
+                throw new Exception("Invalid JSON input");
+            }
+
+            // Validate input
+            $errors = $this->validationMiddleware->validateForgotPasswordData($data);
+            if (!empty($errors)) {
+                $this->validationMiddleware->sendValidationErrorResponse($errors);
+                return;
+            }
+
+            $email = $data['email'];
+
+            // Find user by email
+            $user = $this->userRepository->findByEmail($email);
+            if (!$user) {
+                // Return success anyway for security / email enumeration prevention
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'If this email is registered, a password reset link has been sent.'
+                ]);
+                return;
+            }
+
+            // Generate a secure random token
+            $token = bin2hex(random_bytes(32));
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+            // Store in password_resets table
+            $this->userRepository->createPasswordReset($email, $token, $expiresAt);
+
+            // Determine frontend URL
+            $frontendUrl = getenv('FRONTEND_URL') ?: ($_SERVER['HTTP_ORIGIN'] ?? 'http://localhost:5173');
+            $resetLink = rtrim($frontendUrl, '/') . '/reset-password?token=' . $token;
+
+            // HTML Body for the email
+            $subject = "Reset Your Password - NBA Assessment System";
+            $bodyHTML = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;'>
+                <h2 style='color: #2b6cb0; text-align: center;'>Password Reset Request</h2>
+                <p>Hello,</p>
+                <p>We received a request to reset the password for your account in the NBA Assessment System.</p>
+                <p>Click the button below to reset your password. This link is valid for 1 hour.</p>
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='{$resetLink}' style='background-color: #3182ce; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;'>Reset Password</a>
+                </div>
+                <p>If the button doesn't work, you can copy and paste the following link into your browser:</p>
+                <p style='word-break: break-all; color: #4a5568;'><a href='{$resetLink}'>{$resetLink}</a></p>
+                <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;' />
+                <p style='font-size: 0.85em; color: #718096;'>If you did not request this change, you can safely ignore this email.</p>
+            </div>
+            ";
+
+            // Send Mail
+            EmailService::sendMail($email, $subject, $bodyHTML);
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'message' => 'If this email is registered, a password reset link has been sent.'
+            ]);
+        } catch (Exception $e) {
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->error('UserController', 'forgotPassword error', ['error' => $e->getMessage()]);
+            }
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to process forgot password request',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Reset Password flow (Public endpoint)
+     */
+    public function resetPassword()
+    {
+        try {
+            $data = $this->validationMiddleware->getJsonInput();
+
+            if (!$data) {
+                throw new Exception("Invalid JSON input");
+            }
+
+            // Validate input
+            $errors = $this->validationMiddleware->validateResetPasswordData($data);
+            if (!empty($errors)) {
+                $this->validationMiddleware->sendValidationErrorResponse($errors);
+                return;
+            }
+
+            $token = $data['token'];
+            $newPassword = $data['new_password'];
+
+            // Find reset record
+            $resetRecord = $this->userRepository->findPasswordResetByToken($token);
+            if (!$resetRecord) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid or expired token. Please request a new password reset link.'
+                ]);
+                return;
+            }
+
+            // Check if expired
+            $expiresAt = new DateTime($resetRecord['expires_at']);
+            $now = new DateTime();
+            if ($now > $expiresAt) {
+                // Delete expired record
+                $this->userRepository->deletePasswordResetByEmail($resetRecord['email']);
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Reset link has expired. Please request a new password reset link.'
+                ]);
+                return;
+            }
+
+            // Find user by email
+            $user = $this->userRepository->findByEmail($resetRecord['email']);
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
+                return;
+            }
+
+            // Set new password
+            $user->setPassword(password_hash($newPassword, PASSWORD_DEFAULT));
+
+            if ($this->userRepository->save($user)) {
+                // Delete reset token
+                $this->userRepository->deletePasswordResetByEmail($resetRecord['email']);
+
+                if (isset($this->auditService)) {
+                    $this->auditService->log('UPDATE', 'PasswordReset', $user->getEmployeeId(), null, ['employee_id' => $user->getEmployeeId()]);
+                }
+
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Password reset successful. You can now login with your new password.'
+                ]);
+            } else {
+                throw new Exception("Failed to save new password");
+            }
+        } catch (Exception $e) {
+            if (isset($GLOBALS['fileLogger'])) {
+                $GLOBALS['fileLogger']->error('UserController', 'resetPassword error', ['error' => $e->getMessage()]);
+            }
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to reset password',
+                'error' => $e->getMessage()
+            ]);
         }
     }
 }

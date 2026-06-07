@@ -906,4 +906,58 @@ class UserRepository
             throw new Exception("Database error: " . $e->getMessage());
         }
     }
+
+    /**
+     * Create a password reset record
+     * @param string $email
+     * @param string $token
+     * @param string $expiresAt MySQL formatted datetime
+     * @return bool
+     */
+    public function createPasswordReset($email, $token, $expiresAt)
+    {
+        try {
+            // Delete existing tokens for this email
+            $deleteStmt = $this->db->prepare("DELETE FROM password_resets WHERE email = ?");
+            $deleteStmt->execute([$email]);
+
+            // Insert new token
+            $insertStmt = $this->db->prepare("INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)");
+            return $insertStmt->execute([$email, $token, $expiresAt]);
+        } catch (PDOException $e) {
+            throw new Exception("Database error in createPasswordReset: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Find a password reset record by token
+     * @param string $token
+     * @return array|null
+     */
+    public function findPasswordResetByToken($token)
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT * FROM password_resets WHERE token = ? LIMIT 1");
+            $stmt->execute([$token]);
+            $result = $stmt->fetch();
+            return $result ? $result : null;
+        } catch (PDOException $e) {
+            throw new Exception("Database error in findPasswordResetByToken: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete password reset records by email
+     * @param string $email
+     * @return bool
+     */
+    public function deletePasswordResetByEmail($email)
+    {
+        try {
+            $stmt = $this->db->prepare("DELETE FROM password_resets WHERE email = ?");
+            return $stmt->execute([$email]);
+        } catch (PDOException $e) {
+            throw new Exception("Database error in deletePasswordResetByEmail: " . $e->getMessage());
+        }
+    }
 }

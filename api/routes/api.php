@@ -54,6 +54,7 @@ require_once __DIR__ . '/../utils/PaginationHelper.php';
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../middleware/ValidationMiddleware.php';
 require_once __DIR__ . '/../middleware/CorsMiddleware.php';
+require_once __DIR__ . '/../services/EmailService.php';
 require_once __DIR__ . '/../controllers/UserController.php';
 require_once __DIR__ . '/../controllers/AssessmentController.php';
 require_once __DIR__ . '/../controllers/MarksController.php';
@@ -303,6 +304,32 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->userController->updateProfile();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'profile/change-password':
+                if ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->userController->changePassword();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'auth/forgot-password':
+                if ($method === 'POST') {
+                    $this->userController->forgotPassword();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'auth/reset-password':
+                if ($method === 'POST') {
+                    $this->userController->resetPassword();
                 } else {
                     $this->sendMethodNotAllowed();
                 }

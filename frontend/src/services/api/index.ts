@@ -25,6 +25,9 @@ class ApiService {
 	getToken = authApi.getToken;
 	setToken = authApi.setToken;
 	clearToken = authApi.clearToken;
+	changePassword = authApi.changePassword;
+	forgotPassword = authApi.forgotPassword;
+	resetPassword = authApi.resetPassword;
 
 	// Course methods
 	getCourses = coursesApi.getCourses;

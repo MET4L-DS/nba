@@ -19,6 +19,7 @@ interface AppSidebarProps {
 	activeId: string;
 	onNavigate: (id: string) => void;
 	onLogout: () => void;
+	onProfileClick?: () => void;
 	title?: string;
 	subtitle?: string;
 	className?: string;
@@ -31,6 +32,7 @@ export function AppSidebar({
 	activeId,
 	onNavigate,
 	onLogout,
+	onProfileClick,
 	title = "Tezpur University",
 	subtitle,
 	className,
@@ -145,14 +147,17 @@ export function AppSidebar({
 
 				{/* User Profile */}
 				<div className="p-4 border-t border-gray-200/80 dark:border-gray-800/80 shrink-0">
-					<div className="flex items-center gap-3">
-						<Avatar className="h-9 w-9 ring-2 ring-indigo-100 dark:ring-indigo-900/50">
+					<button
+						onClick={onProfileClick}
+						className="w-full flex items-center gap-3 text-left p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-colors cursor-pointer group"
+					>
+						<Avatar className="h-9 w-9 ring-2 ring-indigo-100 dark:ring-indigo-900/50 group-hover:scale-105 transition-transform">
 							<AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-xs font-bold">
 								{user.username.substring(0, 2).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
 						<div className="flex-1 min-w-0">
-							<p className="text-[13px] font-semibold text-gray-900 dark:text-white truncate">
+							<p className="text-[13px] font-semibold text-gray-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
 								{user.username}
 							</p>
 							<p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
@@ -164,7 +169,7 @@ export function AppSidebar({
 							animate={{ scale: [1, 1.25, 1] }}
 							transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
 						/>
-					</div>
+					</button>
 				</div>
 			</div>
 		</motion.aside>

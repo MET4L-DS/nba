@@ -188,7 +188,7 @@ export function UserFormDialog({
 			}
 			description={
 				isEdit
-					? "Update the user's profile information. Leave password blank to keep the current one."
+					? "Update the user's profile information."
 					: "Add a new user to the system."
 			}
 			onSave={handleSave}
@@ -307,35 +307,34 @@ export function UserFormDialog({
 						)}
 					</div>
 
-					<div className="space-y-1.5">
-						<Label
-							htmlFor="password"
-							className="text-sm font-medium"
-						>
-							Password {isEdit ? "(Optional)" : "*"}
-						</Label>
-						<Input
-							id="password"
-							type="password"
-							value={formData.password}
-							onChange={(e) =>
-								setFormData({
-									...formData,
-									password: e.target.value,
-								})
-							}
-							disabled={isLoading}
-							className={errors.password ? "border-red-500" : ""}
-							placeholder={
-								isEdit ? "Leave blank to keep current" : ""
-							}
-						/>
-						{errors.password && (
-							<p className="text-xs text-red-500">
-								{errors.password}
-							</p>
-						)}
-					</div>
+					{!isEdit && (
+						<div className="space-y-1.5">
+							<Label
+								htmlFor="password"
+								className="text-sm font-medium"
+							>
+								Password *
+							</Label>
+							<Input
+								id="password"
+								type="password"
+								value={formData.password}
+								onChange={(e) =>
+									setFormData({
+										...formData,
+										password: e.target.value,
+									})
+								}
+								disabled={isLoading}
+								className={errors.password ? "border-red-500" : ""}
+							/>
+							{errors.password && (
+								<p className="text-xs text-red-500">
+									{errors.password}
+								</p>
+							)}
+						</div>
+					)}
 
 					<div className="space-y-1.5">
 						<Label

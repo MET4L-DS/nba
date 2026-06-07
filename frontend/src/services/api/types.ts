@@ -4,6 +4,16 @@ export interface LoginCredentials {
 	password: string;
 }
 
+export interface ChangePasswordCredentials {
+	current_password?: string;
+	new_password?: string;
+}
+
+export interface ResetPasswordCredentials {
+	token?: string;
+	new_password?: string;
+}
+
 // ─── Pagination ─────────────────────────────────────────────────────────────
 
 export interface PaginationMeta {

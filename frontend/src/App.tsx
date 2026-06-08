@@ -43,7 +43,8 @@ const FacultyLogs = lazy(() => import("./pages/faculty/FacultyLogs").then(module
 // Lazy-loaded Staff Pages
 const StaffHome = lazy(() => import("./pages/staff/StaffHome").then(module => ({ default: module.StaffHome })));
 const StaffCourses = lazy(() => import("./pages/staff/StaffCourses").then(module => ({ default: module.StaffCourses })));
-const StaffEnrollments = lazy(() => import("./pages/staff/StaffEnrollments").then(module => ({ default: module.StaffEnrollments })));
+const StaffProgrammes = lazy(() => import("./pages/staff/StaffProgrammes").then(module => ({ default: module.StaffProgrammes })));
+const StaffEnrolledStudents = lazy(() => import("./pages/staff/StaffEnrolledStudents").then(module => ({ default: module.StaffEnrolledStudents })));
 
 // Lazy-loaded Dean Pages
 const DeanHome = lazy(() => import("./pages/dean/DeanHome").then(module => ({ default: module.DeanHome })));
@@ -150,8 +151,12 @@ function App() {
 						<Route path="/staff" element={<StaffHome />} />
 						<Route path="/staff/courses" element={<StaffCourses />} />
 						<Route
-							path="/staff/enrollments"
-							element={<StaffEnrollments />}
+							path="/staff/programmes"
+							element={<StaffProgrammes />}
+						/>
+						<Route
+							path="/staff/enrolled-students"
+							element={<StaffEnrolledStudents />}
 						/>
 					</Route>
 

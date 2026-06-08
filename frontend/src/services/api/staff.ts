@@ -7,6 +7,11 @@ import type {
 	PaginationParams,
 	BaseCourse,
 	Programme,
+	ProgrammeWithBatch,
+	ProgrammeBatch,
+	ProgrammeCourseResponse,
+	CreateProgrammeRequest,
+	ProgrammeBulkEnrollRequest,
 } from "./types";
 import { apiGet, apiPost, apiPut, apiDelete, apiGetPaginated } from "./base";
 import { debugLogger } from "@/lib/debugLogger";
@@ -187,5 +192,84 @@ export const staffApi = {
 	 */
 	async getDepartmentProgrammes(params?: PaginationParams): Promise<PaginatedResponse<Programme>> {
 		return apiGetPaginated<Programme>("/staff/programmes", params);
+	},
+
+	async getProgrammesWithBatches(): Promise<ProgrammeWithBatch[]> {
+		debugLogger.info("staffApi", "getProgrammesWithBatches called");
+		return apiGet<ProgrammeWithBatch[]>("/staff/programmes/with-batches");
+	},
+
+	// Batch operations
+	async getBatchesByProgramme(programmeId: number): Promise<ProgrammeBatch[]> {
+		debugLogger.info("staffApi", "getBatchesByProgramme called", { programmeId });
+		return apiGet<ProgrammeBatch[]>(`/staff/programmes/${programmeId}/batches`);
+	},
+
+	async createBatch(programmeId: number, batchYear: number, status?: string): Promise<{ batch_id: number }> {
+		debugLogger.info("staffApi", "createBatch called", { programmeId, batchYear, status });
+		return apiPost<{ batch_year: number; status?: string }, { batch_id: number }>(
+			`/staff/programmes/${programmeId}/batches`,
+			{ batch_year: batchYear, status },
+		);
+	},
+
+	async getBatch(batchId: number): Promise<ProgrammeBatch> {
+		debugLogger.info("staffApi", "getBatch called", { batchId });
+		return apiGet<ProgrammeBatch>(`/staff/batches/${batchId}`);
+	},
+
+	// Programme CRUD
+	async createProgramme(data: CreateProgrammeRequest): Promise<Programme> {
+		debugLogger.info("staffApi", "createProgramme called", data);
+		return apiPost<CreateProgrammeRequest, Programme>("/staff/programmes", data);
+	},
+
+	async updateProgramme(programmeId: number, data: Partial<CreateProgrammeRequest>): Promise<Programme> {
+		debugLogger.info("staffApi", "updateProgramme called", { programmeId, data });
+		return apiPut<Partial<CreateProgrammeRequest>, Programme>(`/staff/programmes/${programmeId}`, data);
+	},
+
+	async deleteProgramme(programmeId: number): Promise<void> {
+		debugLogger.info("staffApi", "deleteProgramme called", { programmeId });
+		return apiDelete(`/staff/programmes/${programmeId}`);
+	},
+
+	// Programme-Course Mapping
+	async getProgrammeCourses(
+		programmeId: number,
+	): Promise<ProgrammeCourseResponse> {
+		debugLogger.info("staffApi", "getProgrammeCourses called");
+		return apiGet<ProgrammeCourseResponse>(
+			`/staff/programmes/${programmeId}/courses`,
+		);
+	},
+
+	async addProgrammeCourse(
+		programmeId: number,
+		courseId: number,
+	): Promise<void> {
+		debugLogger.info("staffApi", "addProgrammeCourse called");
+		return apiPost(`/staff/programmes/${programmeId}/courses`, {
+			course_id: courseId,
+		});
+	},
+
+	async removeProgrammeCourse(
+		programmeId: number,
+		courseId: number,
+	): Promise<void> {
+		debugLogger.info("staffApi", "removeProgrammeCourse called");
+		return apiDelete(`/staff/programmes/${programmeId}/courses/${courseId}`);
+	},
+
+	async bulkEnrollStudentsToProgramme(
+		programmeId: number,
+		data: ProgrammeBulkEnrollRequest,
+	): Promise<any> {
+		debugLogger.info("staffApi", "bulkEnrollStudentsToProgramme called");
+		return apiPost<ProgrammeBulkEnrollRequest, any>(
+			`/staff/programmes/${programmeId}/students/bulk`,
+			data,
+		);
 	},
 };

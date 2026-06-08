@@ -589,6 +589,30 @@ class Router
                 }
                 break;
 
+            case 'staff/programmes/with-batches':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->staffController->getProgrammesWithBatches();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'staff/programmes':
+                if ($method === 'GET') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->staffController->getDepartmentProgrammes();
+                } elseif ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->staffController->createProgramme();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
             // Faculty routes
             case 'faculty/logs':
                 if ($method === 'GET') {
@@ -1317,6 +1341,73 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->hodController->getBatch($batchId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^staff/programmes/(\d+)$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->updateProgramme($programmeId);
+                    } elseif ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->deleteProgramme($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^staff/programmes/(\d+)/courses$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->getProgrammeCourses($programmeId);
+                    } elseif ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->addProgrammeCourse($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^staff/programmes/(\d+)/students/bulk$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->bulkEnrollStudentsToProgramme($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^staff/programmes/(\d+)/courses/(\d+)$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    $courseId = $matches[2];
+                    if ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->removeProgrammeCourse($programmeId, $courseId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^staff/programmes/(\d+)/batches$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->listBatches($programmeId);
+                    } elseif ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->createBatch($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^staff/batches/(\d+)$#', $path, $matches)) {
+                    $batchId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->getBatch($batchId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

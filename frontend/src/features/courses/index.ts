@@ -10,9 +10,6 @@ export {
 	type DeleteCourseDialogProps,
 } from "./DeleteCourseDialog";
 export {
-	CourseEnrollmentDialog,
-} from "./CourseEnrollmentDialog";
-export {
 	getStatusVariant,
 	createCourseColumns,
 	toOrdinal,

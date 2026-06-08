@@ -153,12 +153,12 @@ export function DashboardLayout() {
 			case "staff":
 				return [
 					...common,
-					{ id: "courses", label: "Courses", icon: BookOpen },
 					{
-						id: "enrollments",
-						label: "Enrollments",
-						icon: ClipboardList,
+						id: "programmes",
+						label: "Programmes",
+						icon: GraduationCap,
 					},
+					{ id: "courses", label: "Courses", icon: BookOpen },
 				];
 			default:
 				return common;

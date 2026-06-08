@@ -22,7 +22,6 @@ import {
 import { CourseFormDialog } from "./CourseFormDialog";
 import { DeleteCourseDialog } from "./DeleteCourseDialog";
 import { ReopenCourseDialog } from "./ReopenCourseDialog";
-import { CourseEnrollmentDialog } from "./CourseEnrollmentDialog";
 import { createCourseColumns, type CourseListColumnConfig } from "./utils";
 import { motion } from "framer-motion";
 
@@ -84,6 +83,7 @@ export interface CourseListProps {
 	onCourseReopen?: (courseId: number) => Promise<void>;
 	onRefresh?: () => void;
 	onViewCOPO?: (course: AdminCourse) => void;
+	onManageEnrollment?: (course: AdminCourse) => void;
 
 	mode?: "base" | "offering";
 
@@ -121,6 +121,7 @@ export function CourseList({
 	onCourseReopen,
 	onRefresh,
 	onViewCOPO,
+	onManageEnrollment,
 	department_id,
 }: CourseListProps) {
 	// Dialog state
@@ -132,7 +133,6 @@ export function CourseList({
 	const [deleteSaving, setDeleteSaving] = useState(false);
 	const [reopenTarget, setReopenTarget] = useState<AdminCourse | null>(null);
 	const [reopenSaving, setReopenSaving] = useState(false);
-	const [enrollmentTarget, setEnrollmentTarget] = useState<AdminCourse | null>(null);
 
 	// Data fetching
 	const {
@@ -318,11 +318,9 @@ export function CourseList({
 				},
 				onViewCOPO,
 				handleReopenClick,
-				(course: AdminCourse) => {
-					setEnrollmentTarget(course);
-				},
+				onManageEnrollment,
 			),
-		[courses, columnConfig, onViewCOPO, onCourseReopen, handleReopenClick, setEnrollmentTarget],
+		[courses, columnConfig, onViewCOPO, onCourseReopen, handleReopenClick, onManageEnrollment],
 	);
 
 	if (error) {
@@ -705,12 +703,6 @@ export function CourseList({
 				onOpenChange={(open) => !open && setReopenTarget(null)}
 				onConfirm={handleReopenConfirm}
 				isLoading={reopenSaving}
-			/>
-			<CourseEnrollmentDialog
-				open={!!enrollmentTarget}
-				course={enrollmentTarget}
-				onOpenChange={(open) => !open && setEnrollmentTarget(null)}
-				onRefreshParent={refresh}
 			/>
 		</motion.div>
 	);

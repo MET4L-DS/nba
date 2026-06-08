@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/layout";
 import { CourseList } from "@/features/courses";
 import { staffApi } from "@/services/api/staff";
@@ -9,6 +9,7 @@ const currentYear = new Date().getFullYear();
 const currentSemester = new Date().getMonth() < 6 ? "Spring" : "Autumn";
 
 export function StaffCourses() {
+	const navigate = useNavigate();
 	const { sidebarOpen, setSidebarOpen } = useOutletContext<{
 		sidebarOpen: boolean;
 		setSidebarOpen: (open: boolean) => void;
@@ -61,6 +62,9 @@ export function StaffCourses() {
 								canCreate: true,
 								canManageEnrollment: true,
 							}}
+							onManageEnrollment={(course) => {
+								navigate(`/staff/enrolled-students?type=course&offeringId=${course.offering_id}&courseCode=${encodeURIComponent(course.course_code)}&courseName=${encodeURIComponent(course.course_name)}`);
+							}}
 							onCourseCreate={async (data) => {
 								await staffApi.createCourse(data);
 							}}
@@ -87,6 +91,9 @@ export function StaffCourses() {
 								canDelete: true,
 								canCreate: true,
 								canManageEnrollment: true,
+							}}
+							onManageEnrollment={(course) => {
+								navigate(`/staff/enrolled-students?type=course&offeringId=${course.offering_id}&courseCode=${encodeURIComponent(course.course_code)}&courseName=${encodeURIComponent(course.course_name)}`);
 							}}
 							onCourseCreate={async (data) => {
 								await staffApi.createCourse(data);

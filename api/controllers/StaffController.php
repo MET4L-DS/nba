@@ -17,6 +17,8 @@ class StaffController
     private $courseFacultyAssignmentRepository;
     private $validationMiddleware;
     private $pdo;
+    private $programmeRepository;
+    private $programmeCourseRepository;
 
     public function __construct(
         ?UserRepository $userRepository = null,
@@ -40,6 +42,11 @@ class StaffController
         $this->courseFacultyAssignmentRepository = $courseFacultyAssignmentRepository;
         $this->validationMiddleware = $validationMiddleware;
         $this->pdo = $pdo;
+        
+        if ($this->pdo) {
+            $this->programmeRepository = new ProgrammeRepository($this->pdo);
+            $this->programmeCourseRepository = new ProgrammeCourseRepository($this->pdo);
+        }
     }
 
     /**
@@ -773,7 +780,7 @@ class StaffController
                 's.roll_no',
                 's.roll_no',
                 ['s.roll_no', 's.student_name', 's.batch_year', 's.student_status'],
-                ['batch_year', 'student_status']
+                ['batch_year', 'student_status', 'programme_id', 'course_code']
             );
 
             $total  = $this->studentRepository->countByDepartmentPaginated($departmentId, $params);
@@ -846,9 +853,8 @@ class StaffController
             // Override department_id filter to restrict to staff's own department
             $params['department_id'] = $departmentId;
 
-            $programmeRepository = new ProgrammeRepository($this->pdo);
-            $total = $programmeRepository->countEnrichedPaginated($params);
-            $rows = $programmeRepository->findEnrichedPaginated($params);
+            $total = $this->programmeRepository->countEnrichedPaginated($params);
+            $rows = $this->programmeRepository->findEnrichedPaginated($params);
             $result = PaginationHelper::buildResponse($rows, 'programme_id', $params['limit'], $total);
 
             http_response_code(200);
@@ -857,6 +863,426 @@ class StaffController
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to retrieve programmes', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Helper to restrict programme access to staff's department
+     */
+    private function requireProgrammeAccess(int $programmeId): ?array
+    {
+        $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
+        $programme = $this->programmeRepository->findById($programmeId);
+        if (!$programme || $programme->getDepartmentId() !== $departmentId) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Access denied to this programme']);
+            return null;
+        }
+        return ['programme' => $programme, 'department_id' => $departmentId];
+    }
+
+    /**
+     * Get programmes with distinct batch_year combinations for the staff's department
+     */
+    public function getProgrammesWithBatches()
+    {
+        try {
+            if (!$this->requireStaff()) return;
+
+            $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
+            $rows = $this->programmeRepository->getProgrammesWithBatches($departmentId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Programmes with batches retrieved successfully',
+                'data' => $rows,
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to retrieve programmes with batches', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Create a new programme (auto-assigned to staff's department)
+     */
+    public function createProgramme()
+    {
+        try {
+            if (!$this->requireStaff()) return;
+
+            $departmentId = (int)($_REQUEST['authenticated_user']['department_id'] ?? 0);
+            if (!$departmentId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Department not assigned']);
+                return;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (empty($input['programme_name']) || empty($input['programme_code'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'programme_name and programme_code are required']);
+                return;
+            }
+
+            $programmeCode = strtoupper(trim($input['programme_code']));
+            $programmeName = trim($input['programme_name']);
+
+            if ($this->programmeRepository->codeExists($programmeCode)) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'Programme code already exists']);
+                return;
+            }
+
+            if ($this->programmeRepository->nameExists($programmeName)) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'Programme name already exists']);
+                return;
+            }
+
+            $programme = new Programme(
+                null,
+                $departmentId,
+                $programmeCode,
+                $programmeName,
+                $input['degree_level'] ?? 'UG',
+                isset($input['duration_years']) ? (int)$input['duration_years'] : 4
+            );
+
+            $result = $this->programmeRepository->save($programme);
+            if (!$result) {
+                throw new Exception('Failed to create programme');
+            }
+
+            http_response_code(201);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Programme created successfully',
+                'data' => $programme->toArray(),
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to create programme', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Update a programme (restricted to staff's department)
+     */
+    public function updateProgramme($programmeId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+            $access = $this->requireProgrammeAccess((int)$programmeId);
+            if (!$access) return;
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $programme = $access['programme'];
+
+            if (!empty($input['programme_code'])) {
+                $newCode = strtoupper(trim($input['programme_code']));
+                if ($newCode !== $programme->getProgrammeCode() && $this->programmeRepository->codeExists($newCode, (int)$programmeId)) {
+                    http_response_code(409);
+                    echo json_encode(['success' => false, 'message' => 'Programme code already exists']);
+                    return;
+                }
+                $programme->setProgrammeCode($newCode);
+            }
+
+            if (!empty($input['programme_name'])) {
+                $newName = trim($input['programme_name']);
+                if ($newName !== $programme->getProgrammeName() && $this->programmeRepository->nameExists($newName, (int)$programmeId)) {
+                    http_response_code(409);
+                    echo json_encode(['success' => false, 'message' => 'Programme name already exists']);
+                    return;
+                }
+                $programme->setProgrammeName($newName);
+            }
+
+            if (array_key_exists('degree_level', $input)) {
+                $programme->setDegreeLevel($input['degree_level']);
+            }
+
+            if (array_key_exists('duration_years', $input)) {
+                $programme->setDurationYears($input['duration_years']);
+            }
+
+            $result = $this->programmeRepository->save($programme);
+            if (!$result) {
+                throw new Exception('Failed to update programme');
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Programme updated successfully',
+                'data' => $programme->toArray(),
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to update programme', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete a programme (restricted to staff's department)
+     */
+    public function deleteProgramme($programmeId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+            $access = $this->requireProgrammeAccess((int)$programmeId);
+            if (!$access) return;
+
+            $studentCount = $this->programmeRepository->countStudents($programmeId);
+            if ($studentCount > 0) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => "Cannot delete programme. It has {$studentCount} student(s) assigned."]);
+                return;
+            }
+
+            $result = $this->programmeRepository->delete($programmeId);
+            if (!$result) {
+                throw new Exception('Failed to delete programme');
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Programme deleted successfully']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to delete programme', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Bulk enroll students into a programme (restricted to staff's department)
+     * POST /staff/programmes/{id}/students/bulk
+     */
+    public function bulkEnrollStudentsToProgramme($programmeId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+            $access = $this->requireProgrammeAccess((int)$programmeId);
+            if (!$access) return;
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!isset($input['students']) || !is_array($input['students']) || empty($input['students'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'students array is required and cannot be empty']);
+                return;
+            }
+
+            $globalBatchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : null;
+
+            $success = [];
+            $failed = [];
+
+            foreach ($input['students'] as $index => $row) {
+                $rollno = isset($row['rollno']) ? trim($row['rollno']) : '';
+                $name = isset($row['name']) ? trim($row['name']) : '';
+
+                if ($rollno === '' || $name === '') {
+                    $failed[] = ['index' => $index, 'rollno' => $rollno, 'reason' => 'rollno and name are required'];
+                    continue;
+                }
+
+                $studentBatchYear = isset($row['batch_year']) ? (int)$row['batch_year'] : $globalBatchYear;
+
+                try {
+                    $existing = $this->studentRepository->findByRollno($rollno);
+                    if ($existing) {
+                        $existing->setStudentName($name);
+                        $existing->setProgrammeId((int)$programmeId);
+                        if ($studentBatchYear !== null) {
+                            $existing->setBatchYear($studentBatchYear);
+                        }
+                        $this->studentRepository->update($existing);
+                    } else {
+                        $student = new Student($rollno, $name, (int)$programmeId, $studentBatchYear);
+                        $this->studentRepository->save($student);
+                    }
+                    $success[] = ['rollno' => $rollno, 'name' => $name];
+                } catch (Exception $ex) {
+                    $failed[] = ['index' => $index, 'rollno' => $rollno, 'reason' => $ex->getMessage()];
+                }
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'programme_id' => (int)$programmeId,
+                    'success_count' => count($success),
+                    'failure_count' => count($failed),
+                    'successful' => $success,
+                    'failed' => $failed,
+                ],
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to bulk enroll students', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get courses assigned to a programme (restricted to staff's department)
+     */
+    public function getProgrammeCourses($programmeId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+            $courses = $this->programmeCourseRepository->findByProgrammeId((int)$programmeId);
+            $available = $this->programmeCourseRepository->findAvailableCourses((int)$programmeId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'courses' => $courses,
+                    'available' => $available,
+                ],
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to retrieve programme courses', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Assign a course to a programme (restricted to staff's department)
+     */
+    public function addProgrammeCourse($programmeId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $courseId = isset($input['course_id']) ? (int)$input['course_id'] : 0;
+
+            if ($courseId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'course_id is required']);
+                return;
+            }
+
+            $this->programmeCourseRepository->addCourse((int)$programmeId, $courseId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Course assigned to programme']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to assign course', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Remove a course from a programme (restricted to staff's department)
+     */
+    public function removeProgrammeCourse($programmeId, $courseId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+            if (!$this->programmeCourseRepository->exists((int)$programmeId, (int)$courseId)) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Course not assigned to this programme']);
+                return;
+            }
+
+            $this->programmeCourseRepository->removeCourse((int)$programmeId, (int)$courseId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Course removed from programme']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to remove course', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * List batches for a programme
+     */
+    public function listBatches($programmeId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+            $rows = $this->programmeRepository->getBatchesByProgramme((int)$programmeId);
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => $rows]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to list batches', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Create a new batch for a programme
+     */
+    public function createBatch($programmeId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+            if (!$this->requireProgrammeAccess((int)$programmeId)) return;
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $batchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : 0;
+            $status = $input['status'] ?? 'upcoming';
+
+            if ($batchYear < 2000 || $batchYear > 2100) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid batch_year']);
+                return;
+            }
+
+            $batchId = $this->programmeRepository->createBatch((int)$programmeId, $batchYear, $status);
+
+            http_response_code(201);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => ['batch_id' => $batchId]]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to create batch', 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get batch details
+     */
+    public function getBatch($batchId)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+
+            $batch = $this->programmeRepository->getBatchById((int)$batchId);
+            if (!$batch) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Batch not found']);
+                return;
+            }
+
+            http_response_code(200);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => $batch]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to get batch', 'error' => $e->getMessage()]);
         }
     }
 }

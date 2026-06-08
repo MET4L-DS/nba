@@ -35,7 +35,7 @@ export function StaffHome() {
 	}, []);
 
 	const handleItemClick = (id: "courses" | "enrollments") => {
-		if (id === "enrollments") navigate("/staff/enrollments");
+		if (id === "enrollments") navigate("/staff/programmes");
 		if (id === "courses") navigate("/staff/courses");
 	};
 

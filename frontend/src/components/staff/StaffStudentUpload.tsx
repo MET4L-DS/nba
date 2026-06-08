@@ -30,6 +30,7 @@ export function StaffStudentUpload({
 	course,
 	onStudentsChange,
 }: StaffStudentUploadProps) {
+	const [activeTab, setActiveTab] = useState<"csv" | "manual">("csv");
 	const [file, setFile] = useState<File | null>(null);
 	const [students, setStudentsState] = useState<StudentEntry[]>([]);
 	const [manualRollno, setManualRollno] = useState("");
@@ -42,6 +43,7 @@ export function StaffStudentUpload({
 		setStudentsState([]);
 		setManualRollno("");
 		setManualName("");
+		setActiveTab("csv");
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
 		}
@@ -215,47 +217,49 @@ export function StaffStudentUpload({
 
 	return (
 		<div className="space-y-4 w-full">
-			<Tabs defaultValue="csv" className="w-full">
-				<TabsList className="grid w-full grid-cols-2 p-1 bg-muted/40 backdrop-blur-sm border border-muted/50 rounded-xl mb-4">
-					<TabsTrigger
-						value="csv"
-						className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm"
-					>
-						<Upload className="w-4 h-4" />
-						CSV Upload
-					</TabsTrigger>
-					<TabsTrigger
-						value="manual"
-						className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm"
-					>
-						<UserPlus className="w-4 h-4" />
-						Manual Entry
-					</TabsTrigger>
-				</TabsList>
-
-				{/* CSV Upload Tab */}
-				<TabsContent value="csv" className="space-y-4 focus-visible:outline-none">
-					<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-						<div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex-1">
-							<h4 className="text-sm font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">
-								<FileText className="w-4 h-4 text-amber-500" />
-								CSV Format Requirements
-							</h4>
-							<ul className="text-xs text-amber-700/90 dark:text-amber-300/80 mt-2 space-y-1 list-disc list-inside leading-relaxed font-medium">
-								<li>First row should contain column headers: <code className="font-bold font-mono text-[11px] bg-amber-500/10 px-1 py-0.5 rounded text-amber-600 dark:text-amber-400">rollno,name</code></li>
-								<li>Each subsequent row: <code className="font-bold font-mono text-[11px] bg-amber-500/10 px-1 py-0.5 rounded text-amber-600 dark:text-amber-400">roll_number,student_name</code></li>
-								<li>Example: <code className="font-mono text-[11px]">CS101,John Doe</code></li>
-							</ul>
-						</div>
+			<Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+				<div className="flex items-center justify-between gap-4 mb-4">
+					<TabsList className="grid w-[240px] grid-cols-2 p-1 bg-muted/40 backdrop-blur-sm border border-muted/50 rounded-xl">
+						<TabsTrigger
+							value="csv"
+							className="flex items-center justify-center gap-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm px-3 py-1.5"
+						>
+							<Upload className="w-3.5 h-3.5" />
+							CSV Upload
+						</TabsTrigger>
+						<TabsTrigger
+							value="manual"
+							className="flex items-center justify-center gap-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm px-3 py-1.5"
+						>
+							<UserPlus className="w-3.5 h-3.5" />
+							Manual Entry
+						</TabsTrigger>
+					</TabsList>
+					{activeTab === "csv" && (
 						<Button
 							variant="outline"
 							size="sm"
 							onClick={downloadTemplate}
-							className="bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all active:scale-95 duration-200 flex items-center justify-center gap-2 self-start sm:self-center h-10 px-4"
+							className="bg-background/60 shadow-sm border-muted/50 rounded-xl transition-all active:scale-95 duration-200 flex items-center justify-center gap-1.5 h-8 text-[11px] font-bold px-3 shrink-0"
 						>
-							<Download className="w-4 h-4 text-amber-500" />
+							<Download className="w-3.5 h-3.5 text-amber-500" />
 							Template
 						</Button>
+					)}
+				</div>
+
+				{/* CSV Upload Tab */}
+				<TabsContent value="csv" className="space-y-4 focus-visible:outline-none">
+					<div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+						<h4 className="text-sm font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+							<FileText className="w-4 h-4 text-amber-500" />
+							CSV Format Requirements
+						</h4>
+						<ul className="text-xs text-amber-700/90 dark:text-amber-300/80 mt-2 space-y-1 list-disc list-inside leading-relaxed font-medium">
+							<li>First row should contain column headers: <code className="font-bold font-mono text-[11px] bg-amber-500/10 px-1 py-0.5 rounded text-amber-600 dark:text-amber-400">rollno,name</code></li>
+							<li>Each subsequent row: <code className="font-bold font-mono text-[11px] bg-amber-500/10 px-1 py-0.5 rounded text-amber-600 dark:text-amber-400">roll_number,student_name</code></li>
+							<li>Example: <code className="font-mono text-[11px]">CS101,John Doe</code></li>
+						</ul>
 					</div>
 
 					<div className="border-2 border-dashed border-amber-500/25 hover:border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10 dark:bg-amber-500/5 dark:hover:bg-amber-500/10 rounded-2xl p-8 transition-all duration-300 group cursor-pointer relative overflow-hidden">
@@ -296,46 +300,48 @@ export function StaffStudentUpload({
 						</div>
 					</div>
 
-					<div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-end">
-						<div className="space-y-2">
-							<Label htmlFor="rollno" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Roll Number</Label>
-							<Input
-								id="rollno"
-								placeholder="e.g., CS101"
-								value={manualRollno}
-								onChange={(e) =>
-									setManualRollno(e.target.value)
-								}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") {
-										e.preventDefault();
-										document
-											.getElementById("studentName")
-											?.focus();
+					<div className="space-y-4">
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label htmlFor="rollno" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Roll Number</Label>
+								<Input
+									id="rollno"
+									placeholder="e.g., CS101"
+									value={manualRollno}
+									onChange={(e) =>
+										setManualRollno(e.target.value)
 									}
-								}}
-								className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-amber-500/30 rounded-xl border-muted/50 transition-all font-mono"
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="studentName" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Student Name</Label>
-							<Input
-								id="studentName"
-								placeholder="e.g., John Doe"
-								value={manualName}
-								onChange={(e) => setManualName(e.target.value)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") {
-										e.preventDefault();
-										handleAddManualStudent();
-									}
-								}}
-								className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-amber-500/30 rounded-xl border-muted/50 transition-all"
-							/>
+									onKeyDown={(e) => {
+										if (e.key === "Enter") {
+											e.preventDefault();
+											document
+												.getElementById("studentName")
+												?.focus();
+										}
+									}}
+									className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-amber-500/30 rounded-xl border-muted/50 transition-all font-mono"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="studentName" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Student Name</Label>
+								<Input
+									id="studentName"
+									placeholder="e.g., John Doe"
+									value={manualName}
+									onChange={(e) => setManualName(e.target.value)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") {
+											e.preventDefault();
+											handleAddManualStudent();
+										}
+									}}
+									className="bg-background/60 shadow-inner focus-visible:ring-1 focus-visible:ring-amber-500/30 rounded-xl border-muted/50 transition-all"
+								/>
+							</div>
 						</div>
 						<Button
 							onClick={handleAddManualStudent}
-							className="h-10 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl active:scale-95 duration-200 transition-all border border-orange-500/30 shadow-md shadow-orange-500/10 px-6 shrink-0"
+							className="w-full h-10 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl active:scale-95 duration-200 transition-all border border-orange-500/30 shadow-md shadow-orange-500/10 px-6 shrink-0"
 						>
 							<UserPlus className="w-4 h-4 mr-2" />
 							Add Student

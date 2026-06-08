@@ -49,7 +49,10 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
 				animate="show"
 			>
 				{/* University Logo for mobile */}
-				<motion.div className="flex flex-col items-center md:hidden mb-4" variants={itemVariants}>
+				<motion.div
+					className="flex flex-col items-center md:hidden mb-4"
+					variants={itemVariants}
+				>
 					<div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden shadow-lg">
 						<picture>
 							<source srcSet="/tulogo.webp" type="image/webp" />
@@ -74,8 +77,7 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
 						</span>
 					</div>
 					<h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-						NBA Accreditation
-						<br />
+						OBEMS{" "}
 						<span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
 							Portal
 						</span>
@@ -86,12 +88,20 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
 				</motion.div>
 
 				{/* Form */}
-				<motion.form onSubmit={handleSubmit} className="space-y-5" variants={itemVariants}>
+				<motion.form
+					onSubmit={handleSubmit}
+					className="space-y-5"
+					variants={itemVariants}
+				>
 					{/* Identifier Field */}
 					<motion.div
 						className="space-y-2"
 						animate={identifierFocused ? { y: -1 } : { y: 0 }}
-						transition={{ type: "spring", stiffness: 400, damping: 30 }}
+						transition={{
+							type: "spring",
+							stiffness: 400,
+							damping: 30,
+						}}
 					>
 						<Label
 							htmlFor="identifier"
@@ -141,7 +151,11 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
 					<motion.div
 						className="space-y-2"
 						animate={passwordFocused ? { y: -1 } : { y: 0 }}
-						transition={{ type: "spring", stiffness: 400, damping: 30 }}
+						transition={{
+							type: "spring",
+							stiffness: 400,
+							damping: 30,
+						}}
 					>
 						<div className="flex items-center justify-between">
 							<Label

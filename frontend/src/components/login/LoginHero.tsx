@@ -28,16 +28,47 @@ const featureVariants = {
 };
 
 const FEATURES = [
-	{ icon: GraduationCap, text: "CO-PO-PSO Attainment", color: "from-indigo-400 to-violet-400" },
-	{ icon: BookOpen, text: "Marks Management", color: "from-sky-400 to-cyan-400" },
-	{ icon: Award, text: "Accreditation Reports", color: "from-amber-400 to-orange-400" },
-	{ icon: Users, text: "Multi-role Access", color: "from-emerald-400 to-teal-400" },
+	{
+		icon: GraduationCap,
+		text: "CO-PO-PSO Attainment",
+		color: "from-indigo-400 to-violet-400",
+	},
+	{
+		icon: BookOpen,
+		text: "Marks Management",
+		color: "from-sky-400 to-cyan-400",
+	},
+	{
+		icon: Award,
+		text: "Accreditation Reports",
+		color: "from-amber-400 to-orange-400",
+	},
+	{
+		icon: Users,
+		text: "Multi-role Access",
+		color: "from-emerald-400 to-teal-400",
+	},
 ];
 
 const orbs = [
-	{ size: "w-72 h-72", pos: "top-[-80px] right-[-60px]", delay: 0, color: "from-indigo-500/20 to-violet-500/20" },
-	{ size: "w-56 h-56", pos: "bottom-[-60px] left-[-40px]", delay: 1.2, color: "from-sky-500/15 to-cyan-500/15" },
-	{ size: "w-40 h-40", pos: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2", delay: 0.6, color: "from-pink-500/10 to-purple-500/10" },
+	{
+		size: "w-72 h-72",
+		pos: "top-[-80px] right-[-60px]",
+		delay: 0,
+		color: "from-indigo-500/20 to-violet-500/20",
+	},
+	{
+		size: "w-56 h-56",
+		pos: "bottom-[-60px] left-[-40px]",
+		delay: 1.2,
+		color: "from-sky-500/15 to-cyan-500/15",
+	},
+	{
+		size: "w-40 h-40",
+		pos: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+		delay: 0.6,
+		color: "from-pink-500/10 to-purple-500/10",
+	},
 ];
 
 export function LoginHero() {
@@ -53,7 +84,11 @@ export function LoginHero() {
 					opacity: [0.4, 0.7, 0.4],
 					scale: [1, 1.04, 1],
 				}}
-				transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+				transition={{
+					duration: 7,
+					repeat: Infinity,
+					ease: "easeInOut",
+				}}
 			/>
 
 			{/* Decorative floating orbs */}
@@ -91,11 +126,18 @@ export function LoginHero() {
 				animate="show"
 			>
 				{/* University Logo & Name */}
-				<motion.div className="flex items-center gap-4 mb-10" variants={slideUp}>
+				<motion.div
+					className="flex items-center gap-4 mb-10"
+					variants={slideUp}
+				>
 					<motion.div
 						className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shrink-0 overflow-hidden shadow-2xl"
 						whileHover={{ scale: 1.08, rotate: 3 }}
-						transition={{ type: "spring", stiffness: 300, damping: 20 }}
+						transition={{
+							type: "spring",
+							stiffness: 300,
+							damping: 20,
+						}}
 					>
 						<picture>
 							<source srcSet="/tulogo.webp" type="image/webp" />
@@ -114,7 +156,9 @@ export function LoginHero() {
 						<h3 className="text-xl font-bold text-white leading-tight">
 							Tezpur University
 						</h3>
-						<p className="text-indigo-300 text-sm mt-0.5">A Central University • Est. 1994</p>
+						<p className="text-indigo-300 text-sm mt-0.5">
+							A Central University • Est. 1994
+						</p>
 					</div>
 				</motion.div>
 
@@ -126,13 +170,16 @@ export function LoginHero() {
 					<div className="flex items-center gap-1.5 bg-indigo-500/20 border border-indigo-400/30 rounded-full px-3 py-1">
 						<Sparkles className="w-3.5 h-3.5 text-indigo-300" />
 						<span className="text-xs font-semibold text-indigo-300 tracking-wide">
-							NBA Accreditation Platform
+							CO-PO Attainment & Analytics Platform
 						</span>
 					</div>
 				</motion.div>
 
 				{/* Main Heading */}
-				<motion.div className="mb-8" variants={slideUp}>
+				<motion.div
+					className="mb-8 flex flex-col items-center"
+					variants={slideUp}
+				>
 					<h2 className="text-3xl font-black text-white leading-tight mb-3 tracking-tight">
 						Outcome Based{" "}
 						<span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-pink-300 bg-clip-text text-transparent">
@@ -140,7 +187,8 @@ export function LoginHero() {
 						</span>
 					</h2>
 					<p className="text-slate-300/80 leading-relaxed text-sm max-w-xs">
-						Streamline academic assessments and accreditation with our comprehensive CO-PO mapping and attainment platform.
+						Streamline academic assessments and accreditation with
+						our comprehensive CO-PO mapping and attainment platform.
 					</p>
 				</motion.div>
 
@@ -159,7 +207,11 @@ export function LoginHero() {
 								backgroundColor: "rgba(255,255,255,0.1)",
 								borderColor: "rgba(255,255,255,0.18)",
 							}}
-							transition={{ type: "spring", stiffness: 380, damping: 24 }}
+							transition={{
+								type: "spring",
+								stiffness: 380,
+								damping: 24,
+							}}
 						>
 							<motion.div
 								className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${color}`}
@@ -173,7 +225,9 @@ export function LoginHero() {
 							>
 								<Icon className="h-4 w-4 text-white" />
 							</motion.div>
-							<p className="text-white/90 text-xs font-semibold leading-snug">{text}</p>
+							<p className="text-white/90 text-xs font-semibold leading-snug">
+								{text}
+							</p>
 						</motion.div>
 					))}
 				</motion.div>

@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import "./index.css";
 import App from "./App.tsx";
 import { ThemeProvider } from "./components/theme-provider";
+import { SettingsProvider } from "./context/SettingsContext.tsx";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -21,8 +23,12 @@ createRoot(document.getElementById("root")!).render(
 	<StrictMode>
 		<QueryClientProvider client={queryClient}>
 			<ThemeProvider defaultTheme="dark" storageKey="nba-ui-theme">
-				<App />
-				<Toaster />
+				<SettingsProvider>
+					<TooltipProvider>
+						<App />
+						<Toaster />
+					</TooltipProvider>
+				</SettingsProvider>
 			</ThemeProvider>
 		</QueryClientProvider>
 	</StrictMode>,

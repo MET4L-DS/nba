@@ -289,6 +289,7 @@ export function BulkEnrollStudentsDialog({
 					<div className="space-y-2">
 						<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Batch <span className="text-muted-foreground/60">(optional)</span></Label>
 						<BatchSelector
+							label=""
 							programmeId={programme?.programme_id ?? null}
 							value={null}
 							onChange={(_, batch) => {

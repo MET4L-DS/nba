@@ -21,6 +21,7 @@ import {
 	BarChart3,
 	History,
 	FileText,
+	Settings,
 } from "lucide-react";
 
 export function DashboardLayout() {
@@ -113,6 +114,11 @@ export function DashboardLayout() {
 						icon: GraduationCap,
 					},
 					{ id: "logs", label: "Audit Logs", icon: History },
+					{
+						id: "settings",
+						label: "Branding Settings",
+						icon: Settings,
+					},
 				];
 			case "hod":
 				return [
@@ -166,21 +172,33 @@ export function DashboardLayout() {
 	}, [user]);
 
 	// Memoize the context object to prevent downstream re-renders on every layout tick
-	const contextValue = useMemo(() => ({
-		user,
-		sidebarOpen,
-		setSidebarOpen,
-	}), [user, sidebarOpen]);
+	const contextValue = useMemo(
+		() => ({
+			user,
+			sidebarOpen,
+			setSidebarOpen,
+		}),
+		[user, sidebarOpen],
+	);
 
 	if (!user) return null;
 
 	// Determine active ID from URL
 	const pathParts = location.pathname.split("/");
 	const lastPart = pathParts[pathParts.length - 1];
-	
+
 	let activeId = "dashboard";
-	const rolePath = user.role === "admin" ? "/dashboard" : (user.is_dean ? "/dean" : `/${user.role}`);
-	if (location.pathname !== rolePath && location.pathname !== `${rolePath}/` && lastPart) {
+	const rolePath =
+		user.role === "admin"
+			? "/dashboard"
+			: user.is_dean
+				? "/dean"
+				: `/${user.role}`;
+	if (
+		location.pathname !== rolePath &&
+		location.pathname !== `${rolePath}/` &&
+		lastPart
+	) {
 		activeId = lastPart;
 	}
 
@@ -204,13 +222,17 @@ export function DashboardLayout() {
 		}
 	};
 
+	const mainNavItems = navItems.filter((item) => item.id !== "settings");
+	const bottomNavItems = navItems.filter((item) => item.id === "settings");
+
 	return (
 		<div className="flex h-screen bg-background w-full overflow-hidden">
 			<Toaster />
-			
+
 			{/* Desktop Sidebar */}
 			<AppSidebar
-				items={navItems}
+				items={mainNavItems}
+				bottomItems={bottomNavItems}
 				user={user}
 				activeId={activeId}
 				onNavigate={onNavigate}
@@ -221,11 +243,21 @@ export function DashboardLayout() {
 			/>
 
 			{/* Mobile Sidebar (Drawer) */}
-			<Sheet open={sidebarOpen && window.innerWidth < 768} onOpenChange={setSidebarOpen}>
-				<SheetContent side="left" className="p-0 w-64 border-r-0" showCloseButton={false}>
-					<SheetTitle className="sr-only">Navigation Sidebar</SheetTitle>
+			<Sheet
+				open={sidebarOpen && window.innerWidth < 768}
+				onOpenChange={setSidebarOpen}
+			>
+				<SheetContent
+					side="left"
+					className="p-0 w-64 border-r-0"
+					showCloseButton={false}
+				>
+					<SheetTitle className="sr-only">
+						Navigation Sidebar
+					</SheetTitle>
 					<AppSidebar
-						items={navItems}
+						items={mainNavItems}
+						bottomItems={bottomNavItems}
 						user={user}
 						activeId={activeId}
 						onNavigate={onNavigate}
@@ -243,10 +275,10 @@ export function DashboardLayout() {
 				</Suspense>
 			</main>
 
-			<ProfileSettingsDialog 
-				open={profileOpen} 
-				onOpenChange={setProfileOpen} 
-				onProfileUpdate={(updatedUser) => setUser(updatedUser)} 
+			<ProfileSettingsDialog
+				open={profileOpen}
+				onOpenChange={setProfileOpen}
+				onProfileUpdate={(updatedUser) => setUser(updatedUser)}
 			/>
 		</div>
 	);

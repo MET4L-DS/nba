@@ -257,11 +257,13 @@ export function ProgrammeAttainmentDashboard() {
 				initial={{ opacity: 0, y: -12 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ type: "spring", duration: 0.5, bounce: 0.1 }}
-				className="flex flex-wrap gap-4 items-end bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative overflow-hidden"
+				className="flex flex-wrap gap-4 items-end bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-5 shadow-sm relative"
 			>
-				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20 pointer-events-none"></div>
+				<div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+					<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20"></div>
+				</div>
 				<div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-				<div className="flex-1 min-w-[280px]">
+				<div className="flex-1 min-w-[280px] relative z-10">
 					<h1 className="text-xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 						Executive Analytics Dashboard
 					</h1>
@@ -280,8 +282,8 @@ export function ProgrammeAttainmentDashboard() {
 						) : "Select a programme and batch to view attainment"}
 					</p>
 				</div>
-				<div className="flex flex-wrap gap-3 items-end">
-					<div className="space-y-1.5">
+				<div className="flex flex-wrap gap-3 items-end relative z-10">
+					<div className="space-y-1.5 w-[280px]">
 						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block ml-0.5">Programme</span>
 						<Select
 							value={String(selectedProgrammeId ?? "")}
@@ -294,7 +296,10 @@ export function ProgrammeAttainmentDashboard() {
 							}}
 							disabled={programmesLoading}
 						>
-							<SelectTrigger className="w-[260px] bg-background/60 shadow-inner hover:border-primary/50 transition-colors">
+							<SelectTrigger 
+								className="w-full bg-background/60 shadow-inner hover:border-primary/50 transition-colors whitespace-normal [&>span]:line-clamp-none text-left"
+								style={{ height: 'auto', minHeight: '40px' }}
+							>
 								<SelectValue placeholder="Select programme..." />
 							</SelectTrigger>
 							<SelectContent>
@@ -306,9 +311,10 @@ export function ProgrammeAttainmentDashboard() {
 							</SelectContent>
 						</Select>
 					</div>
-					<div className="space-y-1.5 w-[150px]">
+					<div className="space-y-1.5 w-[180px]">
 						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block ml-0.5">Batch Year</span>
 						<BatchSelector
+							label=""
 							programmeId={selectedProgrammeId}
 							value={batchId}
 							onChange={(id, batch) => {
@@ -322,12 +328,12 @@ export function ProgrammeAttainmentDashboard() {
 							disabled={programmesLoading || !selectedProgrammeId}
 						/>
 					</div>
-					<div className="flex items-center gap-2 mb-0.5">
+					<div className="flex flex-wrap items-center gap-2">
 						<Button
 							onClick={handleCalculate}
 							disabled={calculating || !selectedProgrammeId || !batchYear.trim()}
 							variant="outline"
-							className="gap-1.5 h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95 duration-200"
+							className="gap-1.5 h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95"
 						>
 							<BarChart3 className="w-3.5 h-3.5" />
 							{calculating ? "Calculating..." : "Recalculate"}

@@ -172,9 +172,11 @@ export function HODStakeholderSurveys() {
 				</div>
 			</header>
 
-			<div className="flex flex-wrap gap-4 items-end bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-4 shadow-sm relative overflow-hidden">
-				<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20 pointer-events-none"></div>
-				<div className="space-y-1.5">
+			<div className="flex flex-wrap gap-4 items-end bg-card/60 backdrop-blur-md border border-muted/50 rounded-xl p-4 shadow-sm relative">
+				<div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+					<div className="absolute top-0 right-0 w-32 h-32 opacity-5 rounded-bl-full bg-primary/20"></div>
+				</div>
+				<div className="space-y-1.5 w-[280px] relative z-10">
 					<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block ml-0.5">Academic Programme</span>
 					<Select
 						value={String(selectedProgId ?? "")}
@@ -183,7 +185,10 @@ export function HODStakeholderSurveys() {
 						}}
 						disabled={loading}
 					>
-						<SelectTrigger className="w-[280px] bg-background/60 shadow-inner">
+						<SelectTrigger 
+							className="w-full bg-background/60 shadow-inner hover:border-primary/50 transition-colors whitespace-normal [&>span]:line-clamp-none text-left"
+							style={{ height: 'auto', minHeight: '40px' }}
+						>
 							<SelectValue placeholder="Select programme..." />
 						</SelectTrigger>
 						<SelectContent>
@@ -195,9 +200,10 @@ export function HODStakeholderSurveys() {
 						</SelectContent>
 					</Select>
 				</div>
-				<div className="space-y-1.5 w-[160px]">
+				<div className="space-y-1.5 w-[180px]">
 					<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 block ml-0.5">Active Batch</span>
 					<BatchSelector
+						label=""
 						programmeId={selectedProgId ?? null}
 						value={selectedBatchId}
 						onChange={(_id, batch) => {
@@ -216,7 +222,7 @@ export function HODStakeholderSurveys() {
 					/>
 				</div>
 				{selectedProgId && (
-					<div className="ml-auto flex items-center mb-0.5">
+					<div className="ml-auto flex flex-wrap items-center gap-2">
 						<ProgrammeWeightageConfig programmeId={selectedProgId} onSaved={handleRefresh} />
 					</div>
 				)}

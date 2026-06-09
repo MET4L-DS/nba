@@ -68,6 +68,9 @@ require_once __DIR__ . '/../controllers/DeanController.php';
 require_once __DIR__ . '/../controllers/AuditLogController.php';
 require_once __DIR__ . '/../controllers/SurveyController.php';
 require_once __DIR__ . '/../controllers/ActionPlanController.php';
+require_once __DIR__ . '/../models/SystemSetting.php';
+require_once __DIR__ . '/../models/SystemSettingsRepository.php';
+require_once __DIR__ . '/../controllers/SystemSettingsController.php';
 
 /**
  * Router Class
@@ -90,6 +93,7 @@ class Router
     private $auditLogController;
     private $surveyController;
     private $actionPlanController;
+    private $systemSettingsController;
 
     public function __construct()
     {
@@ -154,6 +158,10 @@ class Router
 
         // Initialize dean controller
         $this->deanController = new DeanController($userRepository, $courseRepository, $courseOfferingRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository, $hodAssignmentRepository, $courseFacultyAssignmentRepository, $auditService);
+
+        // Initialize system settings controller
+        $systemSettingsRepository = new SystemSettingsRepository($db);
+        $this->systemSettingsController = new SystemSettingsController($systemSettingsRepository, $auditService);
     }
 
     /**
@@ -361,6 +369,36 @@ class Router
                     $user = $this->authMiddleware->requireAuth();
                     $_REQUEST['authenticated_user'] = $user;
                     $this->userController->getAllDepartments();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'settings/public':
+                if ($method === 'GET') {
+                    $this->systemSettingsController->getPublicSettings();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'admin/settings':
+            case 'settings':
+                if ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->systemSettingsController->updateSettings();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
+                break;
+
+            case 'admin/settings/logo':
+            case 'settings/logo':
+                if ($method === 'POST') {
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->systemSettingsController->uploadLogo();
                 } else {
                     $this->sendMethodNotAllowed();
                 }

@@ -14,6 +14,7 @@ import { facultyApi } from "./faculty";
 import { attainmentApi } from "./attainment";
 import { surveyApi } from "./surveys";
 import { auditApi } from "./audit";
+import { settingsApi } from "./settings";
 
 // Create a unified API service that maintains backward compatibility
 class ApiService {
@@ -115,6 +116,11 @@ class ApiService {
 	createDeanDepartment = deanApi.createDepartment;
 	updateDeanDepartment = deanApi.updateDepartment;
 	deleteDeanDepartment = deanApi.deleteDepartment;
+
+	// Settings methods
+	getPublicSettings = settingsApi.getPublicSettings;
+	updateSettings = settingsApi.updateSettings;
+	uploadLogo = settingsApi.uploadLogo;
 }
 
 // Export a singleton instance for backward compatibility
@@ -134,4 +140,5 @@ export {
 	staffApi,
 	deanApi,
 	auditApi,
+	settingsApi,
 };

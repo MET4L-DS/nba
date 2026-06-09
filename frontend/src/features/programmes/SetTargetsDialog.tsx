@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { actionPlanApi } from "@/services/api/actionPlans";
 import { Target } from "lucide-react";
@@ -112,7 +111,7 @@ export function SetTargetsDialog({
 						<p className="text-sm text-muted-foreground">
 							Set the target attainment level (0-3) for each PO/PSO.
 						</p>
-						<ScrollArea className="max-h-[300px] pr-3 -mr-3">
+						<div className="max-h-[50vh] overflow-y-auto pr-2 overflow-x-hidden">
 							<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
 								{poList.map((po, index) => (
 									<motion.div
@@ -148,7 +147,7 @@ export function SetTargetsDialog({
 									</motion.div>
 								))}
 							</div>
-						</ScrollArea>
+						</div>
 						<MotionButton
 							onClick={handleSave}
 							disabled={loading}

@@ -70,7 +70,10 @@ export function BatchSelector({
 				}}
 				disabled={disabled || loading || batches.length === 0}
 			>
-				<SelectTrigger>
+				<SelectTrigger 
+					className="w-full whitespace-normal [&>span]:line-clamp-none text-left"
+					style={{ height: 'auto', minHeight: '40px' }}
+				>
 					<SelectValue
 						placeholder={
 							loading

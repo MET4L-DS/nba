@@ -19,6 +19,7 @@ const AdminStudents = lazy(() => import("./pages/admin/AdminStudents").then(modu
 const AdminCourses = lazy(() => import("./pages/admin/AdminCourses").then(module => ({ default: module.AdminCourses })));
 const AdminProgrammes = lazy(() => import("./pages/admin/AdminProgrammes").then(module => ({ default: module.AdminProgrammes })));
 const AdminLogs = lazy(() => import("./pages/admin/AdminLogs").then(module => ({ default: module.AdminLogs })));
+const SystemSettingsPage = lazy(() => import("./pages/admin/SystemSettingsPage").then(module => ({ default: module.SystemSettingsPage })));
 
 // Lazy-loaded HOD Pages
 const HODHome = lazy(() => import("./pages/hod/HODHome").then(module => ({ default: module.HODHome })));
@@ -92,6 +93,7 @@ function App() {
 							element={<AdminCourses />}
 						/>
 						<Route path="/dashboard/logs" element={<AdminLogs />} />
+						<Route path="/dashboard/settings" element={<SystemSettingsPage />} />
 						<Route path="/hod" element={<HODHome />} />
 						<Route path="/hod/faculty" element={<HODFaculty />} />
 						<Route path="/hod/students" element={<HODStudents />} />

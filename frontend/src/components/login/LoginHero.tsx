@@ -1,5 +1,6 @@
 import { GraduationCap, BookOpen, Award, Users, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSettings } from "@/context/SettingsContext";
 
 const containerVariants = {
 	hidden: { opacity: 0 },
@@ -72,6 +73,13 @@ const orbs = [
 ];
 
 export function LoginHero() {
+	const { settings } = useSettings();
+	if (!settings) return null;
+
+	const words = settings.system_name.split(" ");
+	const lastWord = words.pop() || "";
+	const leadingWords = words.join(" ");
+
 	return (
 		<div className="relative hidden md:block overflow-hidden">
 			{/* Rich multi-stop gradient background */}
@@ -139,26 +147,25 @@ export function LoginHero() {
 							damping: 20,
 						}}
 					>
-						<picture>
-							<source srcSet="/tulogo.webp" type="image/webp" />
-							<img
-								src="/tulogo.png"
-								alt="Tezpur University"
-								width={48}
-								height={48}
-								fetchPriority="high"
-								decoding="async"
-								className="w-12 h-12 object-contain"
-							/>
-						</picture>
+						<img
+							src={settings.logo_url}
+							alt={settings.university_name}
+							width={48}
+							height={48}
+							fetchPriority="high"
+							decoding="async"
+							className="w-12 h-12 object-contain"
+						/>
 					</motion.div>
 					<div>
 						<h3 className="text-xl font-bold text-white leading-tight">
-							Tezpur University
+							{settings.university_name}
 						</h3>
-						<p className="text-indigo-300 text-sm mt-0.5">
-							A Central University • Est. 1994
-						</p>
+						{settings.university_subtitle && (
+							<p className="text-indigo-300 text-sm mt-0.5">
+								{settings.university_subtitle}
+							</p>
+						)}
 					</div>
 				</motion.div>
 
@@ -181,9 +188,9 @@ export function LoginHero() {
 					variants={slideUp}
 				>
 					<h2 className="text-3xl font-black text-white leading-tight mb-3 tracking-tight">
-						Outcome Based{" "}
+						{leadingWords}{" "}
 						<span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-pink-300 bg-clip-text text-transparent">
-							Education System
+							{lastWord}
 						</span>
 					</h2>
 					<p className="text-slate-300/80 leading-relaxed text-sm max-w-xs">
@@ -233,17 +240,21 @@ export function LoginHero() {
 				</motion.div>
 
 				{/* Sanskrit Motto */}
-				<motion.div
-					className="pt-6 border-t border-white/[0.1]"
-					variants={slideUp}
-				>
-					<p className="text-indigo-300/70 italic text-sm leading-relaxed">
-						"विज्ञान यज्ञे जुहोम"
-					</p>
-					<p className="text-slate-400/60 text-xs mt-1">
-						We offer ourselves to the fire of knowledge
-					</p>
-				</motion.div>
+				{settings.motto_text && (
+					<motion.div
+						className="pt-6 border-t border-white/[0.1]"
+						variants={slideUp}
+					>
+						<p className="text-indigo-300/70 italic text-sm leading-relaxed">
+							"{settings.motto_text}"
+						</p>
+						{settings.motto_subtext && (
+							<p className="text-slate-400/60 text-xs mt-1">
+								{settings.motto_subtext}
+							</p>
+						)}
+					</motion.div>
+				)}
 			</motion.div>
 		</div>
 	);

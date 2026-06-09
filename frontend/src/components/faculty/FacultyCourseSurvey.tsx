@@ -174,15 +174,7 @@ export const FacultyCourseSurvey = memo(function FacultyCourseSurvey({
 						<Upload className="w-4 h-4 mr-1.5" />
 						Export CSV
 					</Button>
-					<Button 
-						size="sm"
-						disabled
-						title="Coming soon"
-						className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 border-none opacity-60 cursor-not-allowed"
-					>
-						<RefreshCw className="w-4 h-4 mr-1.5" />
-						Sync Survey Platform
-					</Button>
+
 				</div>
 			</div>
 

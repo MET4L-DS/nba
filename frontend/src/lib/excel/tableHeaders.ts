@@ -1,10 +1,12 @@
 import ExcelJS from "exceljs";
-import type { AssessmentInfo, AssessmentColumn, COMarks } from "./types";
+import type { AssessmentInfo, AssessmentColumn } from "./types";
+import { styleCell, mergeAndStyle } from "./excelUtils";
 
 export function createTableHeaders(
 	ws: ExcelJS.Worksheet,
 	tableStartRow: number,
-	assessments: AssessmentInfo[]
+	assessments: AssessmentInfo[],
+	coNames: string[]
 ): {
 	assessmentColumns: AssessmentColumn[];
 	totalStartCol: number;
@@ -12,84 +14,45 @@ export function createTableHeaders(
 	sigmaCoCol: number;
 } {
 	const headerRow1 = tableStartRow;
+	const numCOs = coNames.length;
 
 	// S.No column
-	ws.mergeCells(headerRow1, 1, headerRow1 + 3, 1);
-	const sNoHeader = ws.getCell(headerRow1, 1);
-	sNoHeader.value = "S.No.";
-	sNoHeader.alignment = {
-		horizontal: "center",
-		vertical: "middle",
+	mergeAndStyle(ws, headerRow1, 1, headerRow1 + 3, 1, {
+		value: "S.No.",
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
 		wrapText: true,
-	};
-	sNoHeader.font = { bold: true };
-	sNoHeader.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFFFFF00" },
-	};
-	sNoHeader.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+		fillColor: "FFFFFF00", // Yellow
+	});
 
 	// Roll No column
-	ws.mergeCells(headerRow1, 2, headerRow1 + 3, 2);
-	const rollNoHeader = ws.getCell(headerRow1, 2);
-	rollNoHeader.value = "Roll No.";
-	rollNoHeader.alignment = {
-		horizontal: "center",
-		vertical: "middle",
+	mergeAndStyle(ws, headerRow1, 2, headerRow1 + 3, 2, {
+		value: "Roll No.",
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
 		wrapText: true,
-	};
-	rollNoHeader.font = { bold: true };
-	rollNoHeader.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFFFFF00" },
-	};
-	rollNoHeader.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+		fillColor: "FFFFFF00", // Yellow
+	});
 
 	// Name column
-	ws.mergeCells(headerRow1, 3, headerRow1 + 2, 3);
-	const nameHeader = ws.getCell(headerRow1, 3);
-	nameHeader.value = "Name of Student";
-	nameHeader.alignment = {
-		horizontal: "center",
-		vertical: "middle",
+	mergeAndStyle(ws, headerRow1, 3, headerRow1 + 2, 3, {
+		value: "Name of Student",
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
 		wrapText: true,
-	};
-	nameHeader.font = { bold: true };
-	nameHeader.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	});
 
 	// Absentee column
-	ws.mergeCells(headerRow1, 4, headerRow1 + 2, 4);
-	const absenteeHeader = ws.getCell(headerRow1, 4);
-	absenteeHeader.value = "ABSENTEE RECORD";
-	absenteeHeader.alignment = {
-		horizontal: "center",
-		vertical: "middle",
+	mergeAndStyle(ws, headerRow1, 4, headerRow1 + 2, 4, {
+		value: "ABSENTEE RECORD",
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
 		wrapText: true,
-	};
-	absenteeHeader.font = { bold: true };
-	absenteeHeader.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	});
 
 	let currentCol = 5;
 	const assessmentColumns: AssessmentColumn[] = [];
@@ -97,118 +60,68 @@ export function createTableHeaders(
 	// Create assessment headers
 	assessments.forEach((assessment) => {
 		const assessmentStartCol = currentCol;
-		const numCols = 6;
-		const assessmentEndCol = currentCol + numCols - 1;
+		const assessmentEndCol = currentCol + numCOs - 1;
 
-		ws.mergeCells(
-			headerRow1,
-			assessmentStartCol,
-			headerRow1,
-			assessmentEndCol
-		);
-		const assessmentCell = ws.getCell(headerRow1, assessmentStartCol);
-		assessmentCell.value = assessment.name;
-		assessmentCell.alignment = { horizontal: "center", vertical: "middle" };
-		assessmentCell.font = { bold: true };
-		assessmentCell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: { argb: "FFFFFF00" },
-		};
-		assessmentCell.border = {
-			top: { style: "thin" },
-			right: { style: "thin" },
-			bottom: { style: "thin" },
-			left: { style: "thin" },
-		};
+		mergeAndStyle(ws, headerRow1, assessmentStartCol, headerRow1, assessmentEndCol, {
+			value: assessment.name,
+			bold: true,
+			align: "center",
+			verticalAlign: "middle",
+			fillColor: "FFFFFF00",
+		});
 
 		assessmentColumns.push({
 			name: assessment.name,
 			startCol: assessmentStartCol,
 			endCol: assessmentEndCol,
 		});
-		currentCol += numCols;
+		currentCol += numCOs;
 	});
 
 	// TOTAL column
 	const totalStartCol = currentCol;
-	ws.mergeCells(headerRow1, totalStartCol, headerRow1 + 1, totalStartCol);
-	const totalHeader = ws.getCell(headerRow1, totalStartCol);
-	totalHeader.value = "TOTAL";
-	totalHeader.alignment = { horizontal: "center", vertical: "middle" };
-	totalHeader.font = { bold: true };
-	totalHeader.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FF87CEEB" },
-	};
-	totalHeader.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, headerRow1, totalStartCol, headerRow1 + 1, totalStartCol, {
+		value: "TOTAL",
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+		fillColor: "FF87CEEB", // Light sky blue
+	});
 
 	// CO columns
 	const coStartCol = totalStartCol + 1;
-	for (let i = 1; i <= 6; i++) {
-		ws.mergeCells(
-			headerRow1,
-			coStartCol + i - 1,
-			headerRow1 + 1,
-			coStartCol + i - 1
-		);
-		const coHeader = ws.getCell(headerRow1, coStartCol + i - 1);
-		coHeader.value = `CO${i}`;
-		coHeader.alignment = { horizontal: "center", vertical: "middle" };
-		coHeader.font = { bold: true };
-		coHeader.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: { argb: "FFFFFF00" },
-		};
-		coHeader.border = {
-			top: { style: "thin" },
-			right: { style: "thin" },
-			bottom: { style: "thin" },
-			left: { style: "thin" },
-		};
-	}
+	coNames.forEach((coName, i) => {
+		mergeAndStyle(ws, headerRow1, coStartCol + i, headerRow1 + 1, coStartCol + i, {
+			value: coName,
+			bold: true,
+			align: "center",
+			verticalAlign: "middle",
+			fillColor: "FFFFFF00",
+		});
+	});
 
 	// ΣCO column
-	const sigmaCoCol = coStartCol + 6;
-	ws.mergeCells(headerRow1, sigmaCoCol, headerRow1 + 1, sigmaCoCol);
-	const sigmaCoHeader = ws.getCell(headerRow1, sigmaCoCol);
-	sigmaCoHeader.value = "ΣCO";
-	sigmaCoHeader.alignment = { horizontal: "center", vertical: "middle" };
-	sigmaCoHeader.font = { bold: true };
-	sigmaCoHeader.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFFFFF00" },
-	};
-	sigmaCoHeader.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	const sigmaCoCol = coStartCol + numCOs;
+	mergeAndStyle(ws, headerRow1, sigmaCoCol, headerRow1 + 1, sigmaCoCol, {
+		value: "ΣCO",
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+		fillColor: "FFFFFF00",
+	});
 
 	// Row 2: CO labels for each assessment
 	const headerRow2 = tableStartRow + 1;
 	assessmentColumns.forEach(({ startCol }) => {
-		for (let i = 0; i < 6; i++) {
+		coNames.forEach((coName, i) => {
 			const coCell = ws.getCell(headerRow2, startCol + i);
-			coCell.value = `CO${i + 1}`;
-			coCell.alignment = { horizontal: "center", vertical: "middle" };
-			coCell.font = { bold: true };
-			coCell.border = {
-				top: { style: "thin" },
-				right: { style: "thin" },
-				bottom: { style: "thin" },
-				left: { style: "thin" },
-			};
-		}
+			coCell.value = coName;
+			styleCell(coCell, {
+				bold: true,
+				align: "center",
+				verticalAlign: "middle",
+			});
+		});
 	});
 
 	// Row 3: Maximum Marks and % labels
@@ -216,79 +129,58 @@ export function createTableHeaders(
 
 	const totalPercentLabel = ws.getCell(headerRow3, totalStartCol);
 	totalPercentLabel.value = "%";
-	totalPercentLabel.alignment = { horizontal: "center", vertical: "middle" };
-	totalPercentLabel.font = { bold: true };
-	totalPercentLabel.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FF87CEEB" },
-	};
-	totalPercentLabel.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	styleCell(totalPercentLabel, {
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+		fillColor: "FF87CEEB",
+	});
 
-	for (let i = 0; i < 6; i++) {
+	coNames.forEach((_, i) => {
 		const coPercentLabel = ws.getCell(headerRow3, coStartCol + i);
 		coPercentLabel.value = "%";
-		coPercentLabel.alignment = { horizontal: "center", vertical: "middle" };
-		coPercentLabel.font = { bold: true };
-		coPercentLabel.border = {
-			top: { style: "thin" },
-			right: { style: "thin" },
-			bottom: { style: "thin" },
-			left: { style: "thin" },
-		};
-	}
+		styleCell(coPercentLabel, {
+			bold: true,
+			align: "center",
+			verticalAlign: "middle",
+		});
+	});
 
 	const sigmaCoPercentLabel = ws.getCell(headerRow3, sigmaCoCol);
 	sigmaCoPercentLabel.value = "%";
-	sigmaCoPercentLabel.alignment = {
-		horizontal: "center",
-		vertical: "middle",
-	};
-	sigmaCoPercentLabel.font = { bold: true };
-	sigmaCoPercentLabel.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	styleCell(sigmaCoPercentLabel, {
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+	});
 
 	assessmentColumns.forEach(({ startCol }, idx) => {
 		const assessment = assessments[idx];
-		ws.mergeCells(headerRow3, startCol, headerRow3, startCol + 4);
-		const maxMarksCell = ws.getCell(headerRow3, startCol);
-		maxMarksCell.value = "Maximum Marks";
-		maxMarksCell.alignment = { horizontal: "center", vertical: "middle" };
-		maxMarksCell.font = { bold: true };
-		maxMarksCell.border = {
-			top: { style: "thin" },
-			right: { style: "thin" },
-			bottom: { style: "thin" },
-			left: { style: "thin" },
-		};
+		if (numCOs > 1) {
+			mergeAndStyle(ws, headerRow3, startCol, headerRow3, startCol + numCOs - 2, {
+				value: "Maximum Marks",
+				bold: true,
+				align: "center",
+				verticalAlign: "middle",
+			});
+		} else {
+			const cell = ws.getCell(headerRow3, startCol);
+			cell.value = "Max Marks";
+			styleCell(cell, {
+				bold: true,
+				align: "center",
+				verticalAlign: "middle",
+			});
+		}
 
-		const maxMarksValueCell = ws.getCell(headerRow3, startCol + 5);
+		const maxMarksValueCell = ws.getCell(headerRow3, startCol + numCOs - 1);
 		maxMarksValueCell.value = assessment.maxMarks;
-		maxMarksValueCell.alignment = {
-			horizontal: "center",
-			vertical: "middle",
-		};
-		maxMarksValueCell.font = { bold: true };
-		maxMarksValueCell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: { argb: "FFFFFF00" },
-		};
-		maxMarksValueCell.border = {
-			top: { style: "thin" },
-			right: { style: "thin" },
-			bottom: { style: "thin" },
-			left: { style: "thin" },
-		};
+		styleCell(maxMarksValueCell, {
+			bold: true,
+			align: "center",
+			verticalAlign: "middle",
+			fillColor: "FFFFFF00",
+		});
 	});
 
 	// Row 4: CO max marks
@@ -296,99 +188,75 @@ export function createTableHeaders(
 
 	const coWiseLabel = ws.getCell(headerRow4, 3);
 	coWiseLabel.value = "CO WISE MAXIMUM MARKS";
-	coWiseLabel.alignment = { horizontal: "center", vertical: "middle" };
-	coWiseLabel.font = { bold: true };
-	coWiseLabel.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	styleCell(coWiseLabel, {
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+	});
 
 	const absenteeRow4 = ws.getCell(headerRow4, 4);
 	absenteeRow4.value = '"AB" or 0';
-	absenteeRow4.alignment = { horizontal: "center", vertical: "middle" };
-	absenteeRow4.font = { bold: true };
-	absenteeRow4.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	styleCell(absenteeRow4, {
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+	});
 
 	assessmentColumns.forEach(({ startCol }, idx) => {
 		const assessment = assessments[idx];
-		for (let i = 0; i < 6; i++) {
-			const coKey = `CO${i + 1}` as keyof COMarks;
+		coNames.forEach((coName, i) => {
 			const coCell = ws.getCell(headerRow4, startCol + i);
-			const maxMarkValue = assessment.coMaxMarks[coKey];
+			const maxMarkValue = assessment.coMaxMarks[coName] || 0;
 			coCell.value = maxMarkValue > 0 ? maxMarkValue : "";
-			coCell.alignment = { horizontal: "center", vertical: "middle" };
-			coCell.font = { bold: true };
-			coCell.border = {
-				top: { style: "thin" },
-				right: { style: "thin" },
-				bottom: { style: "thin" },
-				left: { style: "thin" },
-			};
-		}
+			styleCell(coCell, {
+				bold: true,
+				align: "center",
+				verticalAlign: "middle",
+			});
+		});
 	});
 
 	const totalCOMaxMarks = assessments.reduce(
 		(acc, a) => {
-			acc.CO1 += a.coMaxMarks.CO1;
-			acc.CO2 += a.coMaxMarks.CO2;
-			acc.CO3 += a.coMaxMarks.CO3;
-			acc.CO4 += a.coMaxMarks.CO4;
-			acc.CO5 += a.coMaxMarks.CO5;
-			acc.CO6 += a.coMaxMarks.CO6;
+			coNames.forEach((coName) => {
+				acc[coName] = (acc[coName] || 0) + (a.coMaxMarks[coName] || 0);
+			});
 			return acc;
 		},
-		{ CO1: 0, CO2: 0, CO3: 0, CO4: 0, CO5: 0, CO6: 0 }
+		{} as Record<string, number>
 	);
+
 	const totalMaxSum = Object.values(totalCOMaxMarks).reduce(
 		(sum, v) => sum + v,
 		0
 	);
+
 	const totalMaxCell = ws.getCell(headerRow4, totalStartCol);
 	totalMaxCell.value = totalMaxSum;
-	totalMaxCell.alignment = { horizontal: "center", vertical: "middle" };
-	totalMaxCell.font = { bold: true };
-	totalMaxCell.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FF87CEEB" },
-	};
-	totalMaxCell.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	styleCell(totalMaxCell, {
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+		fillColor: "FF87CEEB",
+	});
 
-	for (let i = 0; i < 6; i++) {
+	coNames.forEach((_, i) => {
 		const percentCell = ws.getCell(headerRow4, coStartCol + i);
 		percentCell.value = 100;
-		percentCell.alignment = { horizontal: "center", vertical: "middle" };
-		percentCell.font = { bold: true };
-		percentCell.border = {
-			top: { style: "thin" },
-			right: { style: "thin" },
-			bottom: { style: "thin" },
-			left: { style: "thin" },
-		};
-	}
+		styleCell(percentCell, {
+			bold: true,
+			align: "center",
+			verticalAlign: "middle",
+		});
+	});
 
 	const sigmaCoSumCell = ws.getCell(headerRow4, sigmaCoCol);
 	sigmaCoSumCell.value = 100;
-	sigmaCoSumCell.alignment = { horizontal: "center", vertical: "middle" };
-	sigmaCoSumCell.font = { bold: true };
-	sigmaCoSumCell.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	styleCell(sigmaCoSumCell, {
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+	});
 
 	return { assessmentColumns, totalStartCol, coStartCol, sigmaCoCol };
 }

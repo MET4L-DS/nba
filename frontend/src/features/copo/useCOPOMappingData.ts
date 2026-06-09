@@ -693,25 +693,18 @@ export function useCOPOMappingData({
 	}) => {
 		try {
 			const exportStudentsData = studentsData.map((student, index) => {
-				const assessmentMarks: {
-					[key: string]: {
-						CO1: number;
-						CO2: number;
-						CO3: number;
-						CO4: number;
-						CO5: number;
-						CO6: number;
-					};
-				} = {};
+				const assessmentMarks: Record<string, Record<string, number>> = {};
 				Object.entries(student.tests).forEach(([testName, marks]) => {
-					assessmentMarks[testName] = {
-						CO1: marks.CO1 || 0,
-						CO2: marks.CO2 || 0,
-						CO3: marks.CO3 || 0,
-						CO4: marks.CO4 || 0,
-						CO5: marks.CO5 || 0,
-						CO6: marks.CO6 || 0,
-					};
+					const coMarks: Record<string, number> = {};
+					Object.entries(marks).forEach(([coName, markVal]) => {
+						coMarks[coName] = markVal || 0;
+					});
+					assessmentMarks[testName] = coMarks;
+				});
+
+				const coTotals: Record<string, number> = {};
+				Object.entries(student.coTotals).forEach(([coName, val]) => {
+					coTotals[coName] = val || 0;
 				});
 
 				return {
@@ -722,30 +715,26 @@ export function useCOPOMappingData({
 					absentee: student.absentee,
 					assessmentMarks,
 					coTotals: {
-						CO1: student.coTotals.CO1,
-						CO2: student.coTotals.CO2,
-						CO3: student.coTotals.CO3,
-						CO4: student.coTotals.CO4,
-						CO5: student.coTotals.CO5,
-						CO6: student.coTotals.CO6,
+						...coTotals,
 						total: student.total,
 					},
 				};
 			});
 
 			const exportAssessments = Object.entries(maxMarks).map(
-				([name, marks]) => ({
-					name,
-					maxMarks: marks.total,
-					coMaxMarks: {
-						CO1: marks.CO1,
-						CO2: marks.CO2,
-						CO3: marks.CO3,
-						CO4: marks.CO4,
-						CO5: marks.CO5,
-						CO6: marks.CO6,
-					},
-				}),
+				([name, marks]) => {
+					const coMaxMarks: Record<string, number> = {};
+					Object.entries(marks).forEach(([coName, maxMarkVal]) => {
+						if (coName !== "total") {
+							coMaxMarks[coName] = maxMarkVal;
+						}
+					});
+					return {
+						name,
+						maxMarks: marks.total,
+						coMaxMarks,
+					};
+				},
 			);
 
 			const { exportAttainmentExcel } = await import("@/lib/excel/attainmentExcel");
@@ -764,13 +753,14 @@ export function useCOPOMappingData({
 				studentsData: exportStudentsData,
 				assessments: exportAssessments,
 				copoMatrix: copoMatrix,
+				snapshotIndirectData: snapshotIndirectData || [],
 			});
 			toast.success("Attainment Excel downloaded");
 		} catch (error) {
 			console.error("Export failed:", error);
 			toast.error("Failed to export Excel");
 		}
-	}, [studentsData, maxMarks, attainmentThresholds, coThreshold, passingThreshold, courseCode, facultyName, departmentName, year, semester, courseName, copoMatrix]);
+	}, [studentsData, maxMarks, attainmentThresholds, coThreshold, passingThreshold, courseCode, facultyName, departmentName, year, semester, courseName, copoMatrix, snapshotIndirectData]);
 
 	const poComputations = useMemo(() => {
 		if (!attainmentData) return null;

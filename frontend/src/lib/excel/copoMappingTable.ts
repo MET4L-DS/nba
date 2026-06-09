@@ -1,5 +1,6 @@
 import type ExcelJS from "exceljs";
 import type { StudentMarksData, COMarks } from "./types";
+import { styleCell, mergeAndStyle } from "./excelUtils";
 
 interface AttainmentThreshold {
 	id: number;
@@ -17,12 +18,13 @@ interface AttainmentCalculation {
 	absentees: number;
 	presentStudents: number;
 	coStats: {
-		CO1: { abovePass: number };
-		CO2: { abovePass: number };
-		CO3: { abovePass: number };
-		CO4: { abovePass: number };
-		CO5: { abovePass: number };
-		CO6: { abovePass: number };
+		[coName: string]: {
+			abovePass: number;
+			above70: number;
+			aboveCOThreshold: number;
+			sumPercentage: number;
+			averagePercentage: number;
+		};
 	};
 }
 
@@ -30,8 +32,8 @@ interface AttainmentCalculation {
  * Check if a CO is assessed (has total max marks > 0)
  */
 function isCOAssessed(co: string, coMaxMarks?: COMarks): boolean {
-	if (!coMaxMarks) return true; // Default to assessed if no data provided
-	return (coMaxMarks[co as keyof COMarks] || 0) > 0;
+	if (!coMaxMarks) return true;
+	return (coMaxMarks[co] || 0) > 0;
 }
 
 /**
@@ -39,19 +41,16 @@ function isCOAssessed(co: string, coMaxMarks?: COMarks): boolean {
  */
 function calculateCOAttainment(
 	studentsData: StudentMarksData[],
-	coThreshold: number
+	coThreshold: number,
+	coNames: string[]
 ): AttainmentCalculation {
 	const totalStudents = studentsData.length;
 	let absentees = 0;
 
-	const coStats = {
-		CO1: { abovePass: 0 },
-		CO2: { abovePass: 0 },
-		CO3: { abovePass: 0 },
-		CO4: { abovePass: 0 },
-		CO5: { abovePass: 0 },
-		CO6: { abovePass: 0 },
-	};
+	const coStats: Record<string, any> = {};
+	coNames.forEach((co) => {
+		coStats[co] = { abovePass: 0, above70: 0, aboveCOThreshold: 0, sumPercentage: 0, averagePercentage: 0 };
+	});
 
 	studentsData.forEach((student) => {
 		if (student.absentee === "AB" || student.absentee === "UR") {
@@ -59,13 +58,24 @@ function calculateCOAttainment(
 			return;
 		}
 
-		(["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"] as const).forEach((co) => {
-			const percentage = student.coTotals[co];
-			if (percentage >= coThreshold) coStats[co].abovePass++;
+		coNames.forEach((co) => {
+			const percentage = student.coTotals[co] || 0;
+			const roundedPercentage = Math.round(percentage * 100) / 100;
+			if (roundedPercentage >= 70) coStats[co].above70++;
+			if (roundedPercentage >= coThreshold) coStats[co].aboveCOThreshold++;
+			coStats[co].sumPercentage += roundedPercentage;
 		});
 	});
 
 	const presentStudents = totalStudents - absentees;
+	
+	coNames.forEach((co) => {
+		if (presentStudents > 0) {
+			coStats[co].averagePercentage = 
+				Math.round((coStats[co].sumPercentage / presentStudents) * 100) / 100;
+		}
+	});
+
 	return { totalStudents, absentees, presentStudents, coStats };
 }
 
@@ -98,31 +108,58 @@ function getAttainmentLevel(
 }
 
 /**
- * Calculate PO/PSO attainment
+ * Get background color based on percentage
+ */
+function getPercentageColor(
+	percentage: number,
+	thresholds: AttainmentThreshold[]
+): string {
+	const level = getAttainmentLevel(percentage, thresholds);
+	const maxLevel = thresholds.length;
+
+	const flooredLevel = Math.floor(level);
+	if (flooredLevel === maxLevel) return "FFAAFFAA"; // Light green
+	if (flooredLevel === maxLevel - 1) return "FFFFFFAA"; // Light yellow
+	if (flooredLevel === maxLevel - 2) return "FFFFCCAA"; // Light orange
+	return "FFFFAAAA"; // Light red
+}
+
+/**
+ * Get color based on numeric attainment level
+ */
+function getLevelColor(
+	level: number,
+	maxLevel: number
+): string {
+	const flooredLevel = Math.floor(level);
+	if (flooredLevel === maxLevel) return "FFAAFFAA";
+	if (flooredLevel === maxLevel - 1) return "FFFFFFAA";
+	if (flooredLevel === maxLevel - 2) return "FFFFCCAA";
+	return "FFFFAAAA";
+}
+
+/**
+ * Calculate PO/PSO attainment using 3-point scale computation
  */
 function calculatePOAttainment(
 	po: string,
 	copoMatrix: COPOMatrix,
 	attainmentData: AttainmentCalculation,
 	attainmentThresholds: AttainmentThreshold[],
-	coMaxMarks?: COMarks
+	coMaxMarks?: COMarks,
+	coNames?: string[]
 ): number {
-	const cos = ["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"];
+	const cos = coNames || [];
 	const attainmentPointsScale = attainmentThresholds.length;
 	let sum = 0;
 	let mappedCount = 0;
 
 	cos.forEach((co) => {
-		// Skip unassessed COs
 		if (!isCOAssessed(co, coMaxMarks)) return;
 
 		const percentage =
 			attainmentData.presentStudents > 0
-				? (attainmentData.coStats[
-						co as keyof typeof attainmentData.coStats
-				  ].abovePass /
-						attainmentData.presentStudents) *
-				  100
+				? (attainmentData.coStats[co].aboveCOThreshold / attainmentData.presentStudents) * 100
 				: 0;
 
 		const coLevel = getAttainmentLevel(percentage, attainmentThresholds);
@@ -138,7 +175,7 @@ function calculatePOAttainment(
 }
 
 /**
- * Create CO-PO Mapping (3 Point Scale) table
+ * Create all CO-PO tables sequentially in the sheet
  */
 export function createCOPOMappingTable(
 	ws: ExcelJS.Worksheet,
@@ -147,61 +184,175 @@ export function createCOPOMappingTable(
 	coThreshold: number,
 	attainmentThresholds: AttainmentThreshold[],
 	copoMatrix: COPOMatrix,
-	coMaxMarks?: COMarks
+	coMaxMarks: COMarks,
+	coNames: string[]
 ): number {
-	const attainment = calculateCOAttainment(studentsData, coThreshold);
-	const coList = ["CO1", "CO2", "CO3", "CO4", "CO5", "CO6"];
-	const poList = [
-		"PO1",
-		"PO2",
-		"PO3",
-		"PO4",
-		"PO5",
-		"PO6",
-		"PO7",
-		"PO8",
-		"PO9",
-		"PO10",
-		"PO11",
-		"PO12",
-		"PSO1",
-		"PSO2",
-		"PSO3",
-	];
+	const attainment = calculateCOAttainment(studentsData, coThreshold, coNames);
+	const coList = coNames;
+	
+	// Extract unique PO/PSO names from the matrix dynamically
+	const poSet = new Set<string>();
+	Object.values(copoMatrix).forEach((pos) => {
+		Object.keys(pos).forEach((po) => {
+			poSet.add(po.toUpperCase());
+		});
+	});
+
+	// If no PO/PSOs in matrix, fallback to standard PO1-12, PSO1-3
+	if (poSet.size === 0) {
+		for (let i = 1; i <= 12; i++) poSet.add(`PO${i}`);
+		for (let i = 1; i <= 3; i++) poSet.add(`PSO${i}`);
+	}
+
+	const poList = Array.from(poSet).sort((a, b) => {
+		const isAPso = a.startsWith("PSO");
+		const isBPso = b.startsWith("PSO");
+		if (isAPso !== isBPso) return isAPso ? 1 : -1;
+		const numA = parseInt(a.replace(/^\D+/g, "")) || 0;
+		const numB = parseInt(b.replace(/^\D+/g, "")) || 0;
+		return numA - numB;
+	});
 
 	let currentRow = startRow;
 
-	// Title row
-	const titleCell = ws.getCell(currentRow, 1);
-	titleCell.value = `COMPUTATION BY MAPPED CO-PO (${attainmentThresholds.length} POINT SCALE)`;
-	titleCell.font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
-	titleCell.alignment = { horizontal: "center", vertical: "middle" };
-	titleCell.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FF6B8E23" }, // Olive green
-	};
-	ws.mergeCells(currentRow, 1, currentRow, 16); // Span across all columns
+	// ==========================================
+	// TABLE 1: CO-PO-PSO Mapping Matrix (Raw Input)
+	// ==========================================
+	currentRow = createTable1MappingMatrix(
+		ws,
+		currentRow,
+		coList,
+		poList,
+		copoMatrix,
+		coMaxMarks,
+		attainment,
+		attainmentThresholds
+	);
+
+	currentRow += 3; // Space out
+
+	// ==========================================
+	// TABLE 2: PO Attainment Using CO (Direct Method)
+	// ==========================================
+	currentRow = createTable2DirectMethod(
+		ws,
+		currentRow,
+		coList,
+		poList,
+		copoMatrix,
+		coMaxMarks
+	);
+
+	currentRow += 3; // Space out
+
+	// ==========================================
+	// TABLE 3: PO & PSO Attainment (3 Point Scale)
+	// ==========================================
+	currentRow = createTable3ThreePointScale(
+		ws,
+		currentRow,
+		coList,
+		poList,
+		copoMatrix,
+		coMaxMarks,
+		attainment,
+		attainmentThresholds
+	);
+
+	currentRow += 3; // Space out
+
+	// ==========================================
+	// TABLE 4: PO & PSO Attainment (Percentage Scale)
+	// ==========================================
+	currentRow = createTable4PercentageScale(
+		ws,
+		currentRow,
+		coList,
+		poList,
+		copoMatrix,
+		coMaxMarks,
+		studentsData
+	);
+
+	return currentRow;
+}
+
+/**
+ * Helper to build Table 1: Mapping Matrix
+ */
+function createTable1MappingMatrix(
+	ws: ExcelJS.Worksheet,
+	startRow: number,
+	coList: string[],
+	poList: string[],
+	copoMatrix: COPOMatrix,
+	coMaxMarks: COMarks,
+	attainment: AttainmentCalculation,
+	attainmentThresholds: AttainmentThreshold[]
+): number {
+	let currentRow = startRow;
+	const totalCols = 2 + poList.length;
+
+	// Title Row
+	mergeAndStyle(ws, currentRow, 1, currentRow, totalCols, {
+		value: "COURSE OUTCOME - PROGRAM OUTCOME - PROGRAM SPECIFIC OUTCOME MAPPING MATRIX",
+		bold: true,
+		size: 14,
+		align: "center",
+		fillColor: "FFE4B5", // Moccasin/Orange Accent
+	});
 	currentRow++;
 
-	// Header row - PO/PSO columns
-	const headerStartCol = 2; // Column B
+	// Header row 1
+	mergeAndStyle(ws, currentRow, 1, currentRow + 1, 1, {
+		value: "CO",
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+		fillColor: "FFFFE0",
+	});
+
+	mergeAndStyle(ws, currentRow, 2, currentRow + 1, 2, {
+		value: "CO Attainment Level",
+		bold: true,
+		align: "center",
+		verticalAlign: "middle",
+		wrapText: true,
+		fillColor: "FFFFE0",
+	});
+
+	const splitIdx = poList.findIndex(po => po.startsWith("PSO"));
+	const numPOsOnly = splitIdx === -1 ? poList.length : splitIdx;
+	const numPSOsOnly = poList.length - numPOsOnly;
+
+	if (numPOsOnly > 0) {
+		mergeAndStyle(ws, currentRow, 3, currentRow, 2 + numPOsOnly, {
+			value: "CO-PO Mapping Matrix",
+			bold: true,
+			align: "center",
+			fillColor: "E0EEE0",
+		});
+	}
+
+	if (numPSOsOnly > 0) {
+		mergeAndStyle(ws, currentRow, 3 + numPOsOnly, currentRow, totalCols, {
+			value: "CO-PSO Mapping Matrix",
+			bold: true,
+			align: "center",
+			fillColor: "E6E6FA",
+		});
+	}
+	currentRow++;
+
+	// Header row 2 - PO/PSO names
 	poList.forEach((po, idx) => {
-		const cell = ws.getCell(currentRow, headerStartCol + idx);
+		const cell = ws.getCell(currentRow, 3 + idx);
 		cell.value = po;
-		cell.font = { bold: true };
-		cell.alignment = { horizontal: "center", vertical: "middle" };
-		cell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: { argb: "FFFFFFFF" }, // White
-		};
-		cell.border = {
-			top: { style: "thin" },
-			left: { style: "thin" },
-			bottom: { style: "thin" },
-			right: { style: "thin" },
-		};
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: "F5F5F5",
+		});
 	});
 	currentRow++;
 
@@ -209,127 +360,486 @@ export function createCOPOMappingTable(
 	coList.forEach((co) => {
 		const assessed = isCOAssessed(co, coMaxMarks);
 
-		// CO label in column A
 		const coCell = ws.getCell(currentRow, 1);
 		coCell.value = co;
-		coCell.font = { bold: true };
-		coCell.alignment = { horizontal: "center", vertical: "middle" };
-		coCell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: { argb: assessed ? "FFFFC000" : "FFD3D3D3" }, // Orange or gray for unassessed
-		};
-		coCell.border = {
-			top: { style: "thin" },
-			left: { style: "thin" },
-			bottom: { style: "thin" },
-			right: { style: "thin" },
-		};
+		styleCell(coCell, {
+			bold: true,
+			align: "center",
+			fillColor: assessed ? "FFF8DC" : "FFD3D3D3",
+		});
 
-		// Calculate CO attainment level (only if assessed)
+		// Attainment Level Column
+		const levelCell = ws.getCell(currentRow, 2);
 		let coLevel = 0;
 		if (assessed) {
 			const percentage =
 				attainment.presentStudents > 0
-					? (attainment.coStats[co as keyof typeof attainment.coStats]
-							.abovePass /
-							attainment.presentStudents) *
-					  100
+					? (attainment.coStats[co].aboveCOThreshold / attainment.presentStudents) * 100
 					: 0;
 			coLevel = getAttainmentLevel(percentage, attainmentThresholds);
+			levelCell.value = Number(coLevel.toFixed(2));
+			styleCell(levelCell, {
+				bold: true,
+				align: "center",
+				fillColor: getPercentageColor(percentage, attainmentThresholds),
+			});
+		} else {
+			levelCell.value = "NA";
+			styleCell(levelCell, {
+				bold: true,
+				align: "center",
+				color: "FF808080",
+				fillColor: "FFD3D3D3",
+			});
 		}
 
-		// PO/PSO mapping values
+		// Mappings
 		poList.forEach((po, idx) => {
-			const cell = ws.getCell(currentRow, headerStartCol + idx);
+			const cell = ws.getCell(currentRow, 3 + idx);
 			const mappingValue = copoMatrix[co]?.[po] || 0;
-			const attainmentPointsScale = attainmentThresholds.length;
-
-			if (!assessed) {
-				// Show NA for unassessed COs
-				cell.value = "NA";
-				cell.font = { color: { argb: "FF808080" } };
-				cell.fill = {
-					type: "pattern",
-					pattern: "solid",
-					fgColor: { argb: "FFD3D3D3" }, // Light gray
-				};
-			} else {
-				// Calculate the mapped value: (CO Level × Mapping) / Point Scale
-				const computedValue =
-					mappingValue > 0
-						? (coLevel * mappingValue) / attainmentPointsScale
-						: 0;
-
-				cell.value =
-					computedValue > 0 ? Number(computedValue.toFixed(2)) : "";
-
-				// Apply conditional formatting - only show values if mapping exists
-				if (mappingValue === 0) {
-					cell.fill = {
-						type: "pattern",
-						pattern: "solid",
-						fgColor: { argb: "FFD3D3D3" }, // Light gray for empty cells
-					};
-				}
-			}
-
-			cell.alignment = { horizontal: "center", vertical: "middle" };
-			cell.border = {
-				top: { style: "thin" },
-				left: { style: "thin" },
-				bottom: { style: "thin" },
-				right: { style: "thin" },
-			};
+			cell.value = mappingValue > 0 ? mappingValue : "";
+			styleCell(cell, {
+				align: "center",
+				fillColor: mappingValue === 0 ? "FFF8F8F8" : undefined,
+			});
 		});
 
 		currentRow++;
 	});
 
-	// AVG row
-	const avgCell = ws.getCell(currentRow, 1);
-	avgCell.value = "AVG";
-	avgCell.font = { bold: true };
-	avgCell.alignment = { horizontal: "center", vertical: "middle" };
-	avgCell.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFFFC000" }, // Orange
-	};
-	avgCell.border = {
-		top: { style: "thin" },
-		left: { style: "thin" },
-		bottom: { style: "thin" },
-		right: { style: "thin" },
-	};
+	// PO Attainment Level Row
+	mergeAndStyle(ws, currentRow, 1, currentRow, 2, {
+		value: "PO Attainment Level",
+		bold: true,
+		align: "center",
+		fillColor: "FFE4B5",
+	});
 
-	// Calculate average for each PO/PSO
 	poList.forEach((po, idx) => {
-		const cell = ws.getCell(currentRow, headerStartCol + idx);
-		const poAttainment = calculatePOAttainment(
+		const cell = ws.getCell(currentRow, 3 + idx);
+		const poAtt = calculatePOAttainment(
 			po,
 			copoMatrix,
 			attainment,
 			attainmentThresholds,
-			coMaxMarks
+			coMaxMarks,
+			coList
 		);
-
-		cell.value = poAttainment > 0 ? Number(poAttainment.toFixed(2)) : "";
-		cell.alignment = { horizontal: "center", vertical: "middle" };
-		cell.font = { bold: true };
-		cell.fill = {
-			type: "pattern",
-			pattern: "solid",
-			fgColor: { argb: "FFFFC000" }, // Orange
-		};
-		cell.border = {
-			top: { style: "thin" },
-			left: { style: "thin" },
-			bottom: { style: "thin" },
-			right: { style: "thin" },
-		};
+		cell.value = poAtt > 0 ? Number(poAtt.toFixed(2)) : "";
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: poAtt > 0 ? getLevelColor(poAtt, attainmentThresholds.length) : "FFE4B5",
+		});
 	});
 	currentRow++;
 
-	return currentRow; // Return next available row
+	return currentRow;
+}
+
+/**
+ * Helper to build Table 2: PO Attainment Using CO (Direct Method)
+ */
+function createTable2DirectMethod(
+	ws: ExcelJS.Worksheet,
+	startRow: number,
+	coList: string[],
+	poList: string[],
+	copoMatrix: COPOMatrix,
+	coMaxMarks: COMarks
+): number {
+	let currentRow = startRow;
+	const totalCols = 1 + poList.length;
+
+	mergeAndStyle(ws, currentRow, 1, currentRow, totalCols, {
+		value: "PO ATTAINMENT USING CO (DIRECT METHOD)",
+		bold: true,
+		size: 12,
+		align: "center",
+		fillColor: "FFD3B3",
+	});
+	currentRow++;
+
+	// Headers
+	const cCell = ws.getCell(currentRow, 1);
+	cCell.value = "—";
+	styleCell(cCell, { bold: true, align: "center", fillColor: "FFF5EE" });
+
+	poList.forEach((po, idx) => {
+		const cell = ws.getCell(currentRow, 2 + idx);
+		cell.value = po;
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: po.startsWith("PSO") ? "FFEBF5" : "FFF5EE",
+		});
+	});
+	currentRow++;
+
+	// CO rows
+	coList.forEach((co) => {
+		const assessed = isCOAssessed(co, coMaxMarks);
+		const coCell = ws.getCell(currentRow, 1);
+		coCell.value = co;
+		styleCell(coCell, {
+			bold: true,
+			align: "center",
+			fillColor: assessed ? "FFF5EE" : "FFD3D3D3",
+		});
+
+		poList.forEach((po, idx) => {
+			const cell = ws.getCell(currentRow, 2 + idx);
+			const mappingValue = copoMatrix[co]?.[po] || 0;
+			
+			if (assessed) {
+				cell.value = mappingValue > 0 ? mappingValue : "—";
+			} else {
+				cell.value = "NA";
+			}
+			styleCell(cell, {
+				align: "center",
+				color: (!assessed || mappingValue === 0) ? "FF808080" : undefined,
+				fillColor: po.startsWith("PSO") ? "FFF8F8FF" : undefined,
+			});
+		});
+		currentRow++;
+	});
+
+	// Wt. Sum Row
+	const wtCell = ws.getCell(currentRow, 1);
+	wtCell.value = "Wt. Sum";
+	styleCell(wtCell, {
+		bold: true,
+		align: "center",
+		fillColor: "FFD3B3",
+	});
+
+	poList.forEach((po, idx) => {
+		const cell = ws.getCell(currentRow, 2 + idx);
+		let sum = 0;
+		coList.forEach((co) => {
+			if (isCOAssessed(co, coMaxMarks)) {
+				sum += copoMatrix[co]?.[po] || 0;
+			}
+		});
+		cell.value = sum > 0 ? Number(sum.toFixed(2)) : "—";
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: "FFD3B3",
+		});
+	});
+	currentRow++;
+
+	return currentRow;
+}
+
+/**
+ * Helper to build Table 3: 3 Point Scale
+ */
+function createTable3ThreePointScale(
+	ws: ExcelJS.Worksheet,
+	startRow: number,
+	coList: string[],
+	poList: string[],
+	copoMatrix: COPOMatrix,
+	coMaxMarks: COMarks,
+	attainment: AttainmentCalculation,
+	attainmentThresholds: AttainmentThreshold[]
+): number {
+	let currentRow = startRow;
+	const totalCols = 1 + poList.length;
+	const attainmentPointsScale = attainmentThresholds.length;
+
+	// Calculate overall average for 3 point scale
+	const columnAverages: Record<string, number | null> = {};
+	let overallSum = 0;
+	let overallCount = 0;
+
+	poList.forEach((po) => {
+		let sum = 0;
+		let count = 0;
+		coList.forEach((co) => {
+			if (isCOAssessed(co, coMaxMarks)) {
+				const percentage =
+					attainment.presentStudents > 0
+						? (attainment.coStats[co].aboveCOThreshold / attainment.presentStudents) * 100
+						: 0;
+				const coLevel = getAttainmentLevel(percentage, attainmentThresholds);
+				const poMapping = copoMatrix[co]?.[po] || 0;
+				if (poMapping > 0) {
+					sum += (coLevel * poMapping) / attainmentPointsScale;
+					count++;
+				}
+			}
+		});
+		if (count > 0) {
+			const avg = sum / count;
+			columnAverages[po] = avg;
+			if (avg > 0) {
+				overallSum += avg;
+				overallCount++;
+			}
+		} else {
+			columnAverages[po] = null;
+		}
+	});
+
+	const overallAverage = overallCount > 0 ? overallSum / overallCount : 0;
+
+	// Title Row
+	mergeAndStyle(ws, currentRow, 1, currentRow, totalCols, {
+		value: `PO & PSO ATTAINMENT (3 POINT SCALE) - OVERALL: ${overallAverage.toFixed(2)}`,
+		bold: true,
+		size: 12,
+		align: "center",
+		fillColor: "FFEBCD",
+	});
+	currentRow++;
+
+	// Headers
+	const coHeadCell = ws.getCell(currentRow, 1);
+	coHeadCell.value = "Course Outcome";
+	styleCell(coHeadCell, { bold: true, align: "center", fillColor: "FFF8F8" });
+
+	poList.forEach((po, idx) => {
+		const cell = ws.getCell(currentRow, 2 + idx);
+		cell.value = po;
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: po.startsWith("PSO") ? "FFF0F5" : "FFF8F8",
+		});
+	});
+	currentRow++;
+
+	// CO rows
+	coList.forEach((co) => {
+		const assessed = isCOAssessed(co, coMaxMarks);
+		const coCell = ws.getCell(currentRow, 1);
+		coCell.value = co;
+		styleCell(coCell, {
+			bold: true,
+			align: "center",
+			fillColor: assessed ? "FFF8F8" : "FFD3D3D3",
+		});
+
+		poList.forEach((po, idx) => {
+			const cell = ws.getCell(currentRow, 2 + idx);
+			const mappingValue = copoMatrix[co]?.[po] || 0;
+			if (assessed) {
+				if (mappingValue > 0) {
+					const percentage =
+						attainment.presentStudents > 0
+							? (attainment.coStats[co].aboveCOThreshold / attainment.presentStudents) * 100
+							: 0;
+					const coLevel = getAttainmentLevel(percentage, attainmentThresholds);
+					const val = (coLevel * mappingValue) / attainmentPointsScale;
+					cell.value = Number(val.toFixed(2));
+				} else {
+					cell.value = "—";
+				}
+			} else {
+				cell.value = "NA";
+			}
+			styleCell(cell, {
+				align: "center",
+				color: (!assessed || mappingValue === 0) ? "FF808080" : undefined,
+				fillColor: po.startsWith("PSO") ? "FFF8F8FF" : undefined,
+			});
+		});
+		currentRow++;
+	});
+
+	// Average Row
+	const avgCell = ws.getCell(currentRow, 1);
+	avgCell.value = "Average";
+	styleCell(avgCell, {
+		bold: true,
+		align: "center",
+		fillColor: "FFEBCD",
+	});
+
+	poList.forEach((po, idx) => {
+		const cell = ws.getCell(currentRow, 2 + idx);
+		const val = columnAverages[po];
+		cell.value = (val !== null && val !== undefined) ? Number(val.toFixed(2)) : "—";
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: "FFEBCD",
+		});
+	});
+	currentRow++;
+
+	return currentRow;
+}
+
+/**
+ * Helper to build Table 4: Percentage Scale
+ */
+function createTable4PercentageScale(
+	ws: ExcelJS.Worksheet,
+	startRow: number,
+	coList: string[],
+	poList: string[],
+	copoMatrix: COPOMatrix,
+	coMaxMarks: COMarks,
+	studentsData: StudentMarksData[]
+): number {
+	let currentRow = startRow;
+	const totalCols = 1 + poList.length;
+
+	// Calculate class average percentage for each CO
+	const coPercentages: Record<string, number> = {};
+	coList.forEach((co) => {
+		let sumPercentage = 0;
+		let presentCount = 0;
+		studentsData.forEach((student) => {
+			if (student.absentee !== "AB" && student.absentee !== "UR") {
+				sumPercentage += student.coTotals[co] || 0;
+				presentCount++;
+			}
+		});
+		coPercentages[co] = presentCount > 0 ? sumPercentage / presentCount : 0;
+	});
+
+	// Calculations for PO percentages
+	const sums: Record<string, number> = {};
+	const weightSums: Record<string, number> = {};
+	const averages: Record<string, number | null> = {};
+	let overallSum = 0;
+	let overallCount = 0;
+
+	poList.forEach((po) => {
+		let sum = 0;
+		let wSum = 0;
+		coList.forEach((co) => {
+			if (isCOAssessed(co, coMaxMarks)) {
+				const poMapping = copoMatrix[co]?.[po] || 0;
+				if (poMapping > 0) {
+					sum += coPercentages[co] * poMapping;
+					wSum += poMapping;
+				}
+			}
+		});
+		sums[po] = sum;
+		weightSums[po] = wSum;
+
+		if (wSum > 0) {
+			const avg = sum / wSum;
+			averages[po] = avg;
+			overallSum += avg;
+			overallCount++;
+		} else {
+			averages[po] = null;
+		}
+	});
+
+	const overallAverage = overallCount > 0 ? overallSum / overallCount : 0;
+
+	// Title Row
+	mergeAndStyle(ws, currentRow, 1, currentRow, totalCols, {
+		value: `PO & PSO ATTAINMENT (PERCENTAGE SCALE) - OVERALL AVERAGE: ${overallAverage.toFixed(2)}%`,
+		bold: true,
+		size: 12,
+		align: "center",
+		fillColor: "E6E6FA", // Lavender
+	});
+	currentRow++;
+
+	// Headers
+	const coHeadCell = ws.getCell(currentRow, 1);
+	coHeadCell.value = "Course Outcome";
+	styleCell(coHeadCell, { bold: true, align: "center", fillColor: "FFF8F8" });
+
+	poList.forEach((po, idx) => {
+		const cell = ws.getCell(currentRow, 2 + idx);
+		cell.value = po;
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: po.startsWith("PSO") ? "FFF5EE" : "FFF8F8",
+		});
+	});
+	currentRow++;
+
+	// CO rows
+	coList.forEach((co) => {
+		const assessed = isCOAssessed(co, coMaxMarks);
+		const coCell = ws.getCell(currentRow, 1);
+		coCell.value = co;
+		styleCell(coCell, {
+			bold: true,
+			align: "center",
+			fillColor: assessed ? "FFF8F8" : "FFD3D3D3",
+		});
+
+		poList.forEach((po, idx) => {
+			const cell = ws.getCell(currentRow, 2 + idx);
+			const mappingValue = copoMatrix[co]?.[po] || 0;
+			if (assessed) {
+				if (mappingValue > 0) {
+					const val = coPercentages[co] * mappingValue;
+					cell.value = Number(val.toFixed(2));
+				} else {
+					cell.value = "—";
+				}
+			} else {
+				cell.value = "NA";
+			}
+			styleCell(cell, {
+				align: "center",
+				color: (!assessed || mappingValue === 0) ? "FF808080" : undefined,
+				fillColor: po.startsWith("PSO") ? "FFF8F8FF" : undefined,
+			});
+		});
+		currentRow++;
+	});
+
+	// Sum Row
+	const sumLabelCell = ws.getCell(currentRow, 1);
+	sumLabelCell.value = "Sum";
+	styleCell(sumLabelCell, { bold: true, align: "center", fillColor: "FFF0F5" });
+	poList.forEach((po, idx) => {
+		const cell = ws.getCell(currentRow, 2 + idx);
+		cell.value = weightSums[po] > 0 ? Number(sums[po].toFixed(2)) : "—";
+		styleCell(cell, { align: "center", fillColor: "FFF0F5" });
+	});
+	currentRow++;
+
+	// Weight Sum Row
+	const wSumLabelCell = ws.getCell(currentRow, 1);
+	wSumLabelCell.value = "Weight Sum";
+	styleCell(wSumLabelCell, { bold: true, align: "center", fillColor: "FFF0F5" });
+	poList.forEach((po, idx) => {
+		const cell = ws.getCell(currentRow, 2 + idx);
+		cell.value = weightSums[po] > 0 ? Number(weightSums[po].toFixed(2)) : "—";
+		styleCell(cell, { align: "center", fillColor: "FFF0F5" });
+	});
+	currentRow++;
+
+	// Direct PO Attainment % Row
+	const directLabelCell = ws.getCell(currentRow, 1);
+	directLabelCell.value = "Direct PO Attainment %";
+	styleCell(directLabelCell, {
+		bold: true,
+		align: "center",
+		fillColor: "E6E6FA",
+	});
+
+	poList.forEach((po, idx) => {
+		const cell = ws.getCell(currentRow, 2 + idx);
+		const val = averages[po];
+		cell.value = (val !== null && val !== undefined) ? `${val.toFixed(2)}%` : "—";
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: "E6E6FA",
+			color: "FF8A2BE2", // BlueViolet
+		});
+	});
+	currentRow++;
+
+	return currentRow;
 }

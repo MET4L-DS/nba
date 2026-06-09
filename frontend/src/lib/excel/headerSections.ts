@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { styleCell, mergeAndStyle, standardCellBorder } from "./excelUtils";
 
 export function createAttainmentCriteriaSection(
 	ws: ExcelJS.Worksheet,
@@ -10,26 +11,15 @@ export function createAttainmentCriteriaSection(
 	const rowsNeeded = Math.max(sorted.length, 3);
 
 	// Merged label for ATTAINMENT CRITERIA
-	ws.mergeCells(1, 1, rowsNeeded, 2);
-	const leftCell = ws.getCell(1, 1);
-	leftCell.value = "ATTAINMENT\nCRITERIA";
-	leftCell.alignment = {
-		vertical: "middle",
-		horizontal: "center",
+	mergeAndStyle(ws, 1, 1, rowsNeeded, 2, {
+		value: "ATTAINMENT\nCRITERIA",
+		bold: true,
+		size: 12,
+		align: "center",
+		verticalAlign: "middle",
 		wrapText: true,
-	};
-	leftCell.font = { bold: true, size: 12 };
-	leftCell.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFCCEEFF" },
-	};
-	leftCell.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+		fillColor: "FFCCEEFF",
+	});
 
 	// Fill thresholds and level numbers
 	for (let i = 0; i < rowsNeeded; i++) {
@@ -40,30 +30,15 @@ export function createAttainmentCriteriaSection(
 
 		if (thr) {
 			valueCell.value = thr.percentage;
-			valueCell.alignment = { horizontal: "center", vertical: "middle" };
-			valueCell.font = { bold: true };
-			valueCell.border = {
-				top: { style: "thin" },
-				right: { style: "thin" },
-				bottom: { style: "thin" },
-				left: { style: "thin" },
-			};
+			styleCell(valueCell, { bold: true, align: "center" });
 
 			const level = sorted.length - i;
 			levelCell.value = level > 0 ? `${level}` : "0";
-			levelCell.alignment = { horizontal: "center", vertical: "middle" };
-			levelCell.font = { bold: true };
-			levelCell.fill = {
-				type: "pattern",
-				pattern: "solid",
-				fgColor: { argb: "FFE68A00" },
-			};
-			levelCell.border = {
-				top: { style: "thin" },
-				right: { style: "thin" },
-				bottom: { style: "thin" },
-				left: { style: "thin" },
-			};
+			styleCell(levelCell, {
+				bold: true,
+				align: "center",
+				fillColor: "FFE68A00",
+			});
 		} else {
 			valueCell.value = "";
 			levelCell.value = "";
@@ -76,116 +51,63 @@ export function createAttainmentCriteriaSection(
 export function createPassingMarksSection(
 	ws: ExcelJS.Worksheet,
 	passingThreshold: number,
-	coThreshold: number
+	coThreshold: number,
+	totalCols: number
 ) {
 	// Passing Marks label and value
-	ws.mergeCells(1, 7, 1, 13);
-	const passHeader = ws.getCell(1, 7);
-	passHeader.value = "PASSING MARKS (%)";
-	passHeader.alignment = { horizontal: "center", vertical: "middle" };
-	passHeader.font = { bold: true };
-	passHeader.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFEEEEEE" },
-	};
-	passHeader.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, 1, 7, 1, 13, {
+		value: "PASSING MARKS (%)",
+		bold: true,
+		align: "center",
+		fillColor: "FFEEEEEE",
+	});
 
 	const passValue = ws.getCell(1, 14);
 	passValue.value = passingThreshold;
-	passValue.alignment = { horizontal: "center", vertical: "middle" };
-	passValue.font = { bold: true };
-	passValue.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFDDEEFF" },
-	};
-	passValue.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	styleCell(passValue, {
+		bold: true,
+		align: "center",
+		fillColor: "FFDDEEFF",
+	});
 
 	// CO Threshold label and value
-	ws.mergeCells(2, 7, 2, 13);
-	const thrHeader = ws.getCell(2, 7);
-	thrHeader.value = "Threshold % for CO attainment";
-	thrHeader.alignment = { horizontal: "center", vertical: "middle" };
-	thrHeader.font = { bold: true };
-	thrHeader.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFEEEEEE" },
-	};
-	thrHeader.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, 2, 7, 2, 13, {
+		value: "Threshold % for CO attainment",
+		bold: true,
+		align: "center",
+		fillColor: "FFEEEEEE",
+	});
 
 	const thrValue = ws.getCell(2, 14);
 	thrValue.value = coThreshold;
-	thrValue.alignment = { horizontal: "center", vertical: "middle" };
-	thrValue.font = { bold: true };
-	thrValue.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFFFF2CC" },
-	};
-	thrValue.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	styleCell(thrValue, {
+		bold: true,
+		align: "center",
+		fillColor: "FFFFF2CC",
+	});
 
 	// Note label
-	ws.mergeCells(3, 7, 3, 31);
-	const noteCell = ws.getCell(3, 7);
-	noteCell.value =
-		'Please fill "AB" for Absent and "UR" for Unregistered candidate(s)';
-	noteCell.alignment = { horizontal: "center", vertical: "middle" };
-	noteCell.font = { italic: true, size: 10 };
-	noteCell.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFC6E0B4" },
-	};
-	noteCell.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, 3, 7, 3, totalCols, {
+		value: 'Please fill "AB" for Absent and "UR" for Unregistered candidate(s)',
+		italic: true,
+		size: 10,
+		align: "center",
+		fillColor: "FFC6E0B4",
+	});
 }
 
 export function createUniversitySection(
 	ws: ExcelJS.Worksheet,
-	universityRow: number
+	universityRow: number,
+	totalCols: number
 ) {
-	ws.mergeCells(universityRow, 1, universityRow, 31);
-	const universityCell = ws.getCell(universityRow, 1);
-	universityCell.value = "TEZPUR UNIVERSITY";
-	universityCell.alignment = { horizontal: "center", vertical: "middle" };
-	universityCell.font = { bold: true, size: 12 };
-	universityCell.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFE4B57E" },
-	};
-	universityCell.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, universityRow, 1, universityRow, totalCols, {
+		value: "TEZPUR UNIVERSITY",
+		bold: true,
+		size: 12,
+		align: "center",
+		fillColor: "FFE4B57E",
+	});
 }
 
 export function createFacultyInfoSection(
@@ -201,225 +123,123 @@ export function createFacultyInfoSection(
 		semester: string;
 		courseCode?: string;
 		session: string;
-	}
+	},
+	totalCols: number
 ) {
 	// Row 1: Faculty Name and Branch
-	ws.mergeCells(infoRow1, 1, infoRow1, 2);
-	const facultyLabel = ws.getCell(infoRow1, 1);
-	facultyLabel.value = "Faculty Name:";
-	facultyLabel.alignment = { horizontal: "center", vertical: "middle" };
-	facultyLabel.font = { bold: true };
-	facultyLabel.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFFFFF00" },
-	};
-	facultyLabel.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow1, 1, infoRow1, 2, {
+		value: "Faculty Name:",
+		bold: true,
+		align: "center",
+		fillColor: "FFFFFF00",
+	});
 
-	ws.mergeCells(infoRow1, 3, infoRow1, 4);
-	const facultyValue = ws.getCell(infoRow1, 3);
-	facultyValue.value = options.facultyName;
-	facultyValue.alignment = { horizontal: "center", vertical: "middle" };
-	facultyValue.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow1, 3, infoRow1, 4, {
+		value: options.facultyName,
+		align: "center",
+	});
 
-	ws.mergeCells(infoRow1, 5, infoRow1, 6);
-	ws.getCell(infoRow1, 5).value = "BRANCH";
-	ws.getCell(infoRow1, 5).alignment = {
-		horizontal: "center",
-		vertical: "middle",
-	};
-	ws.getCell(infoRow1, 5).font = { bold: true };
-	ws.getCell(infoRow1, 5).border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow1, 5, infoRow1, 6, {
+		value: "BRANCH",
+		bold: true,
+		align: "center",
+	});
 
-	ws.mergeCells(infoRow1, 7, infoRow1, 14);
-	const branchValue = ws.getCell(infoRow1, 10);
-	branchValue.value = options.branch;
-	branchValue.alignment = { horizontal: "center", vertical: "middle" };
-	branchValue.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	// Partition remaining columns for Branch value, Course label, and Course value
+	const startColForBranch = 7;
+	const remainingCols = totalCols - startColForBranch + 1;
+	const partSize = Math.floor(remainingCols / 3);
 
-	ws.mergeCells(infoRow1, 15, infoRow1, 22);
-	const courseLabel = ws.getCell(infoRow1, 15);
-	courseLabel.value = "Course:";
-	courseLabel.alignment = { horizontal: "center", vertical: "middle" };
-	courseLabel.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	const branchEndCol = startColForBranch + partSize - 1;
+	const courseLabelStartCol = branchEndCol + 1;
+	const courseLabelEndCol = courseLabelStartCol + partSize - 1;
+	const courseValueStartCol = courseLabelEndCol + 1;
 
-	ws.mergeCells(infoRow1, 23, infoRow1, 31);
-	const courseValue = ws.getCell(infoRow1, 23);
-	courseValue.value = options.courseName;
-	courseValue.alignment = { horizontal: "center", vertical: "middle" };
-	courseValue.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow1, startColForBranch, infoRow1, branchEndCol, {
+		value: options.branch,
+		align: "center",
+	});
+
+	mergeAndStyle(ws, infoRow1, courseLabelStartCol, infoRow1, courseLabelEndCol, {
+		value: "Course:",
+		align: "center",
+	});
+
+	mergeAndStyle(ws, infoRow1, courseValueStartCol, infoRow1, totalCols, {
+		value: options.courseName,
+		align: "center",
+	});
 
 	// Row 2: Programme, Year, Sem, Course Code, Session
-	ws.mergeCells(infoRow2, 1, infoRow2, 2);
-	const programmeLabel = ws.getCell(infoRow2, 1);
-	programmeLabel.value = "Programme:";
-	programmeLabel.alignment = { horizontal: "center", vertical: "middle" };
-	programmeLabel.font = { bold: true };
-	programmeLabel.fill = {
-		type: "pattern",
-		pattern: "solid",
-		fgColor: { argb: "FFFFFF00" },
-	};
-	programmeLabel.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow2, 1, infoRow2, 2, {
+		value: "Programme:",
+		bold: true,
+		align: "center",
+		fillColor: "FFFFFF00",
+	});
 
-	ws.mergeCells(infoRow2, 3, infoRow2, 4);
-	const programmeValue = ws.getCell(infoRow2, 3);
-	programmeValue.value = options.programme;
-	programmeValue.alignment = { horizontal: "center", vertical: "middle" };
-	programmeValue.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow2, 3, infoRow2, 4, {
+		value: options.programme,
+		align: "center",
+	});
 
-	ws.mergeCells(infoRow2, 5, infoRow2, 6);
+	mergeAndStyle(ws, infoRow2, 5, infoRow2, 6, {
+		value: "YEAR",
+		bold: true,
+		align: "center",
+	});
 
-	ws.getCell(infoRow2, 5).border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow2, 7, infoRow2, 8, {
+		value: options.year,
+		align: "center",
+	});
 
-	ws.getCell(infoRow2, 5).value = "YEAR";
-	ws.getCell(infoRow2, 5).alignment = {
-		horizontal: "center",
-		vertical: "middle",
-	};
-	ws.getCell(infoRow2, 5).font = { bold: true };
-	ws.getCell(infoRow2, 5).border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	const semLabelCell = ws.getCell(infoRow2, 9);
+	semLabelCell.value = "SEM";
+	styleCell(semLabelCell, { bold: true, align: "center" });
 
-	ws.mergeCells(infoRow2, 7, infoRow2, 8);
+	const semValueCell = ws.getCell(infoRow2, 10);
+	semValueCell.value = options.semester;
+	styleCell(semValueCell, { align: "center" });
 
-	ws.getCell(infoRow2, 7).value = options.year;
-	ws.getCell(infoRow2, 7).alignment = {
-		horizontal: "center",
-		vertical: "middle",
-	};
-	ws.getCell(infoRow2, 7).border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
-
-	ws.getCell(infoRow2, 9).value = "SEM";
-	ws.getCell(infoRow2, 9).alignment = {
-		horizontal: "center",
-		vertical: "middle",
-	};
-	ws.getCell(infoRow2, 9).font = { bold: true };
-	ws.getCell(infoRow2, 9).border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
-
-	ws.getCell(infoRow2, 10).value = options.semester;
-	ws.getCell(infoRow2, 10).alignment = {
-		horizontal: "center",
-		vertical: "middle",
-	};
-	ws.getCell(infoRow2, 10).border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
-
-	for (let col = 11; col <= 14; col++) {
-		ws.getCell(infoRow2, col).border = {
-			top: { style: "thin" },
-			right: { style: "thin" },
-			bottom: { style: "thin" },
-			left: { style: "thin" },
-		};
+	// Border empty spacing
+	for (let col = 11; col <= 12; col++) {
+		ws.getCell(infoRow2, col).border = standardCellBorder;
 	}
 
-	ws.mergeCells(infoRow2, 15, infoRow2, 22);
-	const courseCodeLabel = ws.getCell(infoRow2, 15);
-	courseCodeLabel.value = "Course Code:";
-	courseCodeLabel.alignment = { horizontal: "center", vertical: "middle" };
-	courseCodeLabel.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	// Partition remaining columns for Course Code Label, Value, Session Label, Value
+	const startColForCode = 13;
+	const remainingForCode = totalCols - startColForCode + 1;
+	
+	const codeLabelWidth = Math.max(2, Math.floor(remainingForCode * 0.35));
+	const codeValueWidth = Math.max(2, Math.floor(remainingForCode * 0.25));
+	const sessionLabelWidth = Math.max(2, Math.floor(remainingForCode * 0.15));
 
-	ws.mergeCells(infoRow2, 23, infoRow2, 26);
-	const courseCodeValue = ws.getCell(infoRow2, 23);
-	courseCodeValue.value = options.courseCode;
-	courseCodeValue.alignment = { horizontal: "center", vertical: "middle" };
-	courseCodeValue.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	const codeLabelEndCol = startColForCode + codeLabelWidth - 1;
+	const codeValueStartCol = codeLabelEndCol + 1;
+	const codeValueEndCol = codeValueStartCol + codeValueWidth - 1;
+	const sessionLabelStartCol = codeValueEndCol + 1;
+	const sessionLabelEndCol = sessionLabelStartCol + sessionLabelWidth - 1;
+	const sessionValueStartCol = sessionLabelEndCol + 1;
 
-	ws.mergeCells(infoRow2, 27, infoRow2, 28);
-	const sessionLabel = ws.getCell(infoRow2, 27);
-	sessionLabel.value = "SESSION";
-	sessionLabel.alignment = { horizontal: "center", vertical: "middle" };
-	sessionLabel.font = { bold: true };
-	sessionLabel.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow2, startColForCode, infoRow2, codeLabelEndCol, {
+		value: "Course Code:",
+		align: "center",
+	});
 
-	ws.mergeCells(infoRow2, 29, infoRow2, 31);
-	const sessionValue = ws.getCell(infoRow2, 29);
-	sessionValue.value = options.session;
-	sessionValue.alignment = { horizontal: "center", vertical: "middle" };
-	sessionValue.border = {
-		top: { style: "thin" },
-		right: { style: "thin" },
-		bottom: { style: "thin" },
-		left: { style: "thin" },
-	};
+	mergeAndStyle(ws, infoRow2, codeValueStartCol, infoRow2, codeValueEndCol, {
+		value: options.courseCode,
+		align: "center",
+	});
+
+	mergeAndStyle(ws, infoRow2, sessionLabelStartCol, infoRow2, sessionLabelEndCol, {
+		value: "SESSION",
+		bold: true,
+		align: "center",
+	});
+
+	mergeAndStyle(ws, infoRow2, sessionValueStartCol, infoRow2, totalCols, {
+		value: options.session,
+		align: "center",
+	});
 }

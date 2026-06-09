@@ -132,7 +132,8 @@ export function createCOAttainmentPointScaleTable(
 	coThreshold: number,
 	attainmentThresholds: AttainmentThreshold[],
 	coMaxMarks: COMarks,
-	coNames: string[]
+	coNames: string[],
+	coStartCol: number
 ): number {
 	const attainment = calculateCOAttainment(
 		studentsData,
@@ -143,7 +144,7 @@ export function createCOAttainmentPointScaleTable(
 
 	let currentRow = startRow;
 	const numCOs = coNames.length;
-	const totalCols = 4 + numCOs;
+	const totalCols = coStartCol + numCOs - 1;
 
 	// Title row
 	mergeAndStyle(ws, currentRow, 1, currentRow, totalCols, {
@@ -156,14 +157,14 @@ export function createCOAttainmentPointScaleTable(
 	currentRow++;
 
 	// Header row 1
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "ATTAINMENT TABLE",
 		bold: true,
 		align: "center",
 		fillColor: "FFFFFF00", // Yellow
 	});
 
-	mergeAndStyle(ws, currentRow, 5, currentRow, totalCols, {
+	mergeAndStyle(ws, currentRow, coStartCol, currentRow, totalCols, {
 		value: `${coNames[0]} to ${coNames[numCOs - 1]}`,
 		bold: true,
 		align: "center",
@@ -173,7 +174,7 @@ export function createCOAttainmentPointScaleTable(
 
 	// Header row 2 - CO columns
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		cell.value = co;
 		styleCell(cell, {
 			bold: true,
@@ -184,39 +185,39 @@ export function createCOAttainmentPointScaleTable(
 	currentRow++;
 
 	// Row 1: ABSENTEE+NOT ATTEMPT
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "ABSENTEE+NOT ATTEMPT",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((_, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		cell.value = attainment.absentees;
 		styleCell(cell, { align: "center" });
 	});
 	currentRow++;
 
 	// Row 2: PRESENT STUDENT OR ATTEMPT
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "PRESENT STUDENT OR ATTEMPT",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((_, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		cell.value = attainment.presentStudents;
 		styleCell(cell, { align: "center" });
 	});
 	currentRow++;
 
 	// Row 3: SECURED > THRESHOLD
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "NO. OF STUDENTS SECURE MARKS > THRESHOLD % FOR CO ATTAINMENT",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		const assessed = isCOAssessed(co, coMaxMarks);
 		cell.value = assessed ? attainment.coStats[co].above70 : "NA";
 		styleCell(cell, {
@@ -229,13 +230,13 @@ export function createCOAttainmentPointScaleTable(
 	currentRow++;
 
 	// Row 4: PC. OF STUDENTS
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "PC. OF STUDENTS SECURE MARKS > THRESHOLD % FOR CO ATTAINMENT",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		const assessed = isCOAssessed(co, coMaxMarks);
 		if (assessed) {
 			const percentage =
@@ -256,13 +257,13 @@ export function createCOAttainmentPointScaleTable(
 	currentRow++;
 
 	// Row 5: Attainment Level (Based on Criteria)
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "CO Attainment Level (Based on Criteria)",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		const assessed = isCOAssessed(co, coMaxMarks);
 		if (assessed) {
 			const percentage =
@@ -289,14 +290,14 @@ export function createCOAttainmentPointScaleTable(
 	currentRow++;
 
 	// Row 6: Final attainment level CO (by Direct Assessment)
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "Final attainment level CO (by Direct Assessment):",
 		bold: true,
 		align: "left",
 		fillColor: "FFFFA500", // Orange
 	});
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		const assessed = isCOAssessed(co, coMaxMarks);
 		if (assessed) {
 			const percentage =
@@ -337,6 +338,7 @@ export function createCOAttainmentAbsoluteScaleTable(
 	attainmentThresholds: AttainmentThreshold[],
 	coMaxMarks: COMarks,
 	coNames: string[],
+	coStartCol: number,
 	snapshotIndirectData?: Array<{
 		co_name: string;
 		indirect_attainment_percentage?: number | null;
@@ -354,7 +356,7 @@ export function createCOAttainmentAbsoluteScaleTable(
 
 	let currentRow = startRow;
 	const numCOs = coNames.length;
-	const totalCols = 4 + numCOs;
+	const totalCols = coStartCol + numCOs - 1;
 
 	// Title row
 	mergeAndStyle(ws, currentRow, 1, currentRow, totalCols, {
@@ -367,14 +369,14 @@ export function createCOAttainmentAbsoluteScaleTable(
 	currentRow++;
 
 	// Header row 1
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "ATTAINMENT TABLE",
 		bold: true,
 		align: "center",
 		fillColor: "FFFFFF00", // Yellow
 	});
 
-	mergeAndStyle(ws, currentRow, 5, currentRow, totalCols, {
+	mergeAndStyle(ws, currentRow, coStartCol, currentRow, totalCols, {
 		value: `${coNames[0]} to ${coNames[numCOs - 1]}`,
 		bold: true,
 		align: "center",
@@ -384,7 +386,7 @@ export function createCOAttainmentAbsoluteScaleTable(
 
 	// Header row 2 - CO columns
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		cell.value = co;
 		styleCell(cell, {
 			bold: true,
@@ -395,39 +397,39 @@ export function createCOAttainmentAbsoluteScaleTable(
 	currentRow++;
 
 	// Row 1: ABSENTEE+NOT ATTEMPT
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "ABSENTEE+NOT ATTEMPT",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((_, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		cell.value = attainment.absentees;
 		styleCell(cell, { align: "center" });
 	});
 	currentRow++;
 
 	// Row 2: PRESENT STUDENT OR ATTEMPT
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "PRESENT STUDENT OR ATTEMPT",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((_, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		cell.value = attainment.presentStudents;
 		styleCell(cell, { align: "center" });
 	});
 	currentRow++;
 
 	// Row 3: NO. OF STUDENTS SECURE MARKS > PASSING MARKS
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "NO. OF STUDENTS SECURE MARKS > PASSING MARKS",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		const assessed = isCOAssessed(co, coMaxMarks);
 		cell.value = assessed ? attainment.coStats[co].abovePass : "NA";
 		styleCell(cell, {
@@ -440,13 +442,13 @@ export function createCOAttainmentAbsoluteScaleTable(
 	currentRow++;
 
 	// Row 4: % of Students Above Passing Marks
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "% of Students Above Passing Marks",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		const assessed = isCOAssessed(co, coMaxMarks);
 		if (assessed) {
 			const percentage =
@@ -467,13 +469,13 @@ export function createCOAttainmentAbsoluteScaleTable(
 	currentRow++;
 
 	// Row 5: CO Attainment (AVERAGE OF PERCENTAGE ATTAINMENTS)
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "CO Attainment (AVERAGE OF PERCENTAGE ATTAINMENTS)",
 		bold: true,
 		align: "left",
 	});
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		const assessed = isCOAssessed(co, coMaxMarks);
 		if (assessed) {
 			const percentage = attainment.coStats[co].averagePercentage || 0;
@@ -496,14 +498,14 @@ export function createCOAttainmentAbsoluteScaleTable(
 	currentRow++;
 
 	// Row 6: Final attainment level CO (IN ABSOLUTE SCALE)
-	mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 		value: "Final attainment level CO (IN ABSOLUTE SCALE):",
 		bold: true,
 		align: "left",
 		fillColor: "FFFFA500", // Orange
 	});
 	coNames.forEach((co, idx) => {
-		const cell = ws.getCell(currentRow, idx + 5);
+		const cell = ws.getCell(currentRow, coStartCol + idx);
 		const assessed = isCOAssessed(co, coMaxMarks);
 		if (assessed) {
 			const percentage = attainment.coStats[co].averagePercentage || 0;
@@ -528,14 +530,14 @@ export function createCOAttainmentAbsoluteScaleTable(
 	// Dynamic addition of Indirect & Blended attainment if available
 	if (snapshotIndirectData && snapshotIndirectData.length > 0) {
 		// Row 7: Indirect CO Attainment Level (Based on surveys)
-		mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+		mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 			value: "Indirect CO Attainment Level (Based on surveys):",
 			bold: true,
 			align: "left",
 			fillColor: "FFF0F8FF", // Alice Blue
 		});
 		coNames.forEach((co, idx) => {
-			const cell = ws.getCell(currentRow, idx + 5);
+			const cell = ws.getCell(currentRow, coStartCol + idx);
 			const assessed = isCOAssessed(co, coMaxMarks);
 			const indirectItem = snapshotIndirectData.find(item => item.co_name === co);
 			
@@ -560,14 +562,14 @@ export function createCOAttainmentAbsoluteScaleTable(
 		currentRow++;
 
 		// Row 8: Final Blended Attainment Level (Direct + Indirect)
-		mergeAndStyle(ws, currentRow, 1, currentRow, 4, {
+		mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
 			value: "Final Blended Attainment Level (Direct + Indirect):",
 			bold: true,
 			align: "left",
 			fillColor: "FFADFF2F", // GreenYellow
 		});
 		coNames.forEach((co, idx) => {
-			const cell = ws.getCell(currentRow, idx + 5);
+			const cell = ws.getCell(currentRow, coStartCol + idx);
 			const assessed = isCOAssessed(co, coMaxMarks);
 			const indirectItem = snapshotIndirectData.find(item => item.co_name === co);
 

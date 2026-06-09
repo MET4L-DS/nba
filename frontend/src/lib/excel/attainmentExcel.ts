@@ -69,15 +69,17 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 	ws.getColumn(3).width = 30;
 	ws.getColumn(4).width = 20;
 
+	const totalCols = 4 + assessments.length * coNames.length + 1 + coNames.length + 1;
+
 	// Create header sections
 	const rowsNeeded = createAttainmentCriteriaSection(
 		ws,
 		attainmentThresholds
 	);
-	createPassingMarksSection(ws, passingThreshold, coThreshold);
+	createPassingMarksSection(ws, passingThreshold, coThreshold, totalCols);
 
 	const universityRow = rowsNeeded + 1;
-	createUniversitySection(ws, universityRow);
+	createUniversitySection(ws, universityRow, totalCols);
 
 	const infoRow1 = universityRow + 1;
 	const infoRow2 = universityRow + 2;
@@ -90,7 +92,7 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		semester,
 		courseCode,
 		session,
-	});
+	}, totalCols);
 
 	// Create student marks table
 	const tableStartRow = infoRow2 + 1;
@@ -135,7 +137,8 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		coThreshold,
 		attainmentThresholds,
 		coMaxMarks,
-		coNames
+		coNames,
+		coStartCol
 	);
 
 	// Create CO Attainment in Absolute Scale table (with snapshotIndirectData)
@@ -148,6 +151,7 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		attainmentThresholds,
 		coMaxMarks,
 		coNames,
+		coStartCol,
 		snapshotIndirectData
 	);
 

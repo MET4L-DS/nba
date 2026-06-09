@@ -65,7 +65,7 @@ class TestRepository
                 JOIN course_offerings co ON t.offering_id = co.offering_id
                 JOIN courses c ON co.course_id = c.course_id
                 WHERE t.offering_id = ? 
-                ORDER BY t.test_id DESC
+                ORDER BY t.test_id ASC
             ");
             $stmt->execute([$offeringId]);
             $tests = [];

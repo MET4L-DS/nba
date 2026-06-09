@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Download } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
 import { useCSVParser } from "@/features/shared/useCSVParser";
 import { debugLogger } from "@/lib/debugLogger";
@@ -176,7 +176,7 @@ export function CourseExitSurveyImport({
 				<div>
 					<input type="file" accept=".csv" onChange={handleFileSelected} className="hidden" id="survey-csv-input" />
 					<Button variant="outline" disabled={isParsing || !config || !config.questions} onClick={() => document.getElementById("survey-csv-input")?.click()}>
-						<Upload className="w-4 h-4 mr-2" />
+						<Download className="w-4 h-4 mr-2" />
 						{isParsing ? "Parsing..." : "Upload CSV"}
 					</Button>
 					{(!config || !config.questions || config.questions.length === 0) && (

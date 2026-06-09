@@ -18,7 +18,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, Upload, UserPlus, X } from "lucide-react";
+import { CheckCircle2, Download, UserPlus, X } from "lucide-react";
 import { CSVFormatInfo } from "./CSVFormatInfo";
 import { CSVFileUpload } from "./CSVFileUpload";
 import type { Course } from "@/services/api";
@@ -84,7 +84,7 @@ export function EnrollStudentsDialog({
 									value="csv"
 									className="flex items-center gap-2 rounded-lg font-semibold py-2 transition-all"
 								>
-									<Upload className="w-4 h-4" />
+									<Download className="w-4 h-4" />
 									CSV Upload
 								</TabsTrigger>
 								<TabsTrigger

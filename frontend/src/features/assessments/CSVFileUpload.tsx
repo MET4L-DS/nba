@@ -2,7 +2,7 @@ import React, { type RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload } from "lucide-react";
+import { Download } from "lucide-react";
 
 interface CSVFileUploadProps {
 	fileInputRef: RefObject<HTMLInputElement | null>;
@@ -36,7 +36,7 @@ export const CSVFileUpload = React.memo(function CSVFileUpload({
 					onClick={() => fileInputRef.current?.click()}
 					disabled={uploading || enrolling}
 				>
-					<Upload className="w-4 h-4" />
+					<Download className="w-4 h-4" />
 				</Button>
 			</div>
 		</div>

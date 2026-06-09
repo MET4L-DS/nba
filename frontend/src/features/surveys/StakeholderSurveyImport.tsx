@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Upload, Trash2 } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
 import { useCSVParser } from "@/features/shared/useCSVParser";
 
@@ -289,7 +289,7 @@ export function StakeholderSurveyImport({
 						document.getElementById("stk-csv-input")?.click()
 					}
 				>
-					<Upload className="w-4 h-4 mr-1.5" />
+					<Download className="w-4 h-4 mr-1.5" />
 					{isParsing ? "Parsing..." : "Upload CSV"}
 				</Button>
 				{parseError && (

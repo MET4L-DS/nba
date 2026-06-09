@@ -19,7 +19,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, Upload, UserPlus, X } from "lucide-react";
+import { CheckCircle2, Download, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { CSVFormatInfo } from "@/features/assessments/CSVFormatInfo";
 import { CSVFileUpload } from "@/features/assessments/CSVFileUpload";
@@ -307,7 +307,7 @@ export function BulkEnrollStudentsDialog({
 								value="csv"
 								className="flex items-center justify-center gap-2 rounded-lg text-sm font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm"
 							>
-								<Upload className="w-4 h-4" />
+								<Download className="w-4 h-4" />
 								CSV Upload
 							</TabsTrigger>
 							<TabsTrigger

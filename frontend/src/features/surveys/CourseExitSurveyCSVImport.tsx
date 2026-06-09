@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Download } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
 import { useCSVParser } from "@/features/shared/useCSVParser";
 import type {
@@ -164,7 +164,7 @@ export function CourseExitSurveyCSVImport({
 		<Card>
 			<CardContent className="p-5">
 				<div className="flex items-center gap-2 mb-4">
-					<Upload className="w-5 h-5 text-primary" />
+					<Download className="w-5 h-5 text-primary" />
 					<h3 className="font-semibold text-sm">
 						Course Exit Survey Integration
 					</h3>
@@ -181,7 +181,7 @@ export function CourseExitSurveyCSVImport({
 						className="border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30 flex flex-col items-center justify-center p-8 text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer group"
 						onClick={() => fileInputRef.current?.click()}
 					>
-						<Upload className="w-10 h-10 text-muted-foreground group-hover:text-primary mb-2" />
+						<Download className="w-10 h-10 text-muted-foreground group-hover:text-primary mb-2" />
 						<p className="text-sm font-semibold text-foreground">
 							Drag and drop CSV uploader
 						</p>

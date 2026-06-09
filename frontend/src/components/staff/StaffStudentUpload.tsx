@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-	Upload,
 	Download,
 	UserPlus,
 	FileText,
@@ -224,7 +223,7 @@ export function StaffStudentUpload({
 							value="csv"
 							className="flex items-center justify-center gap-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-200 active:scale-95 data-[state=active]:bg-background/90 data-[state=active]:shadow-sm px-3 py-1.5"
 						>
-							<Upload className="w-3.5 h-3.5" />
+							<Download className="w-3.5 h-3.5" />
 							CSV Upload
 						</TabsTrigger>
 						<TabsTrigger
@@ -275,7 +274,7 @@ export function StaffStudentUpload({
 							htmlFor="csv-upload"
 							className="flex flex-col items-center cursor-pointer w-full"
 						>
-							<Upload className="w-10 h-10 text-amber-500/70 group-hover:text-amber-500 group-hover:scale-110 mb-3 transition-all duration-300" />
+							<Download className="w-10 h-10 text-amber-500/70 group-hover:text-amber-500 group-hover:scale-110 mb-3 transition-all duration-300" />
 							<span className="text-sm font-bold text-foreground">
 								{file ? file.name : "Click to upload CSV file"}
 							</span>

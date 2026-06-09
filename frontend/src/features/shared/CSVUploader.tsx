@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import type { CSVParserOptions } from "./useCSVParser";
 import { useCSVParser } from "./useCSVParser";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,7 +77,7 @@ export function CSVUploader<T = any>({
 						{activeParsing ? (
 							<Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
 						) : (
-							<Upload className="w-4 h-4 mr-2" />
+							<Download className="w-4 h-4 mr-2" />
 						)}
 						{activeParsing ? "Parsing..." : buttonText}
 						

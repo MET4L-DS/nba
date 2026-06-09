@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Settings } from "lucide-react";
+import { Settings, Upload } from "lucide-react";
 import { useState, lazy, Suspense } from "react";
 import { CSVUploader } from "@/features/shared/CSVUploader";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -182,6 +182,7 @@ export function MatrixView({
 								size="sm"
 								className="flex items-center gap-2"
 							>
+								<Upload className="h-4 w-4" />
 								Export Attainment Excel
 							</Button>
 						</div>

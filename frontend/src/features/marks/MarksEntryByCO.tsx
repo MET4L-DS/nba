@@ -63,7 +63,7 @@ const COMarksCellInput = memo(function COMarksCellInput({
 });
 
 import {
-	Upload,
+	Download,
 	Save,
 	Search,
 	AlertCircle,
@@ -503,7 +503,7 @@ export function MarksEntryByCO({
 								onClick={() => fileInputRef.current?.click()}
 								className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
 							>
-								<Upload className="w-3.5 h-3.5 text-violet-500" />
+								<Download className="w-3.5 h-3.5 text-violet-500" />
 								Import
 							</Button>
 							<Button
@@ -633,7 +633,7 @@ export function MarksEntryByCO({
 									onClick={() => fileInputRef.current?.click()}
 									className="gap-2"
 								>
-									<Upload className="w-4 h-4" />
+									<Download className="w-4 h-4" />
 									Import CSV
 								</Button>
 							</>

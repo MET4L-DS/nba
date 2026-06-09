@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import {
 	Database,
-	Download,
+	Upload,
 	RefreshCw,
 	Settings2,
 	BarChart3,
@@ -171,7 +171,7 @@ export const FacultyCourseSurvey = memo(function FacultyCourseSurvey({
 							URL.revokeObjectURL(url);
 						}}
 					>
-						<Download className="w-4 h-4 mr-1.5" />
+						<Upload className="w-4 h-4 mr-1.5" />
 						Export CSV
 					</Button>
 					<Button 

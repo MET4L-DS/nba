@@ -1,4 +1,4 @@
-import { Upload } from "lucide-react";
+import { Download } from "lucide-react";
 import type { Course, Test } from "@/services/api";
 import { MarksEntryHeader } from "./MarksEntryHeader";
 import { TestInfoCard } from "./TestInfoCard";
@@ -85,7 +85,7 @@ export function MarksEntryByQuestion({
 							onClick={() => fileInputRef.current?.click()}
 							className="gap-2"
 						>
-							<Upload className="w-4 h-4" />
+							<Download className="w-4 h-4" />
 							Import CSV
 						</Button>
 					</>

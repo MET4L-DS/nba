@@ -907,12 +907,12 @@ class UserController
             $resetLink = rtrim($frontendUrl, '/') . '/reset-password?token=' . $token;
 
             // HTML Body for the email
-            $subject = "Reset Your Password - NBA Assessment System";
+            $subject = "Reset Your Password - OBEMS Platform";
             $bodyHTML = "
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;'>
                 <h2 style='color: #2b6cb0; text-align: center;'>Password Reset Request</h2>
                 <p>Hello,</p>
-                <p>We received a request to reset the password for your account in the NBA Assessment System.</p>
+                <p>We received a request to reset the password for your account in the OBEMS Platform.</p>
                 <p>Click the button below to reset your password. This link is valid for 1 hour.</p>
                 <div style='text-align: center; margin: 30px 0;'>
                     <a href='{$resetLink}' style='background-color: #3182ce; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;'>Reset Password</a>

@@ -39,7 +39,7 @@ class EmailService
 
             // Sender and Recipient
             $fromEmail = getenv('SMTP_FROM_EMAIL') ?: 'ayan14.ds@gmail.com';
-            $fromName  = getenv('SMTP_FROM_NAME') ?: 'NBA Assessment System';
+            $fromName  = getenv('SMTP_FROM_NAME') ?: 'OBEMS Platform';
             $mail->setFrom($fromEmail, $fromName);
             $mail->addAddress($toEmail);
 

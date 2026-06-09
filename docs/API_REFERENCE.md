@@ -28,7 +28,8 @@ Users have a fixed **base role** (`admin`, `faculty`, `hod`, `dean`, `staff`). A
 12. [Attainment Snapshots](#attainment-snapshots)
 13. [Survey Management](#survey-management)
 14. [Action Plan Management](#action-plan-management)
-15. [Error Codes](#error-codes)
+15. [System Settings](#system-settings)
+16. [Error Codes](#error-codes)
 
 ---
 
@@ -1244,6 +1245,84 @@ Clears attainment snapshots and sets `course_faculty_assignments.is_active = 1`.
     { "po_name": "PO1", "target_value": 2.5 },
     { "po_name": "PO2", "target_value": 2.0 }
   ]
+}
+```
+
+## System Settings
+
+### 69. Get Public System Settings
+
+**GET** `/settings/public`
+
+*Note: Public endpoint. Returns system configuration metadata used for UI branding.*
+
+```json
+// RESPONSE (200)
+{
+  "success": true,
+  "data": {
+    "university_name": "Tezpur University",
+    "university_subtitle": "A Central University • Est. 1994",
+    "system_name": "Outcome Based Education System",
+    "system_short_name": "OBEMS",
+    "logo_url": "/tulogo.png",
+    "motto_text": "विज्ञानं यज्ञं तनुते",
+    "motto_subtext": "Specialized knowledge promotes creativity"
+  }
+}
+```
+
+---
+
+### 70. Bulk Update Settings
+
+**POST** `/admin/settings` (aliases: `/settings`)
+
+*Note: Requires Admin role.*
+
+```json
+// REQUEST
+{
+  "university_name": "Tezpur University New",
+  "university_subtitle": "A Central University • Est. 1994",
+  "system_name": "Outcome Based Education System",
+  "system_short_name": "OBEMS",
+  "motto_text": "विज्ञानं यज्ञं तनुते",
+  "motto_subtext": "Specialized knowledge promotes creativity"
+}
+
+// RESPONSE (200)
+{
+  "success": true,
+  "message": "Settings updated successfully",
+  "data": {
+    "university_name": "Tezpur University New",
+    "university_subtitle": "A Central University • Est. 1994",
+    "system_name": "Outcome Based Education System",
+    "system_short_name": "OBEMS",
+    "logo_url": "/uploads/branding/logo_1716312345.png",
+    "motto_text": "विज्ञानं यज्ञं तनुते",
+    "motto_subtext": "Specialized knowledge promotes creativity"
+  }
+}
+```
+
+---
+
+### 71. Upload Branding Logo
+
+**POST** `/admin/settings/logo` (aliases: `/settings/logo`)
+
+*Note: Requires Admin role. Expects multipart/form-data upload with a 'logo' image file.*
+
+```json
+// RESPONSE (200)
+{
+  "success": true,
+  "message": "Logo uploaded and updated successfully",
+  "data": {
+    "logo_url": "/uploads/branding/logo_1716312345.png"
+  }
 }
 ```
 

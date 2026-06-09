@@ -26,6 +26,7 @@ erDiagram
     programme_batches ||--o{ course_offerings : "linked_to"
     programme_batches ||--o{ programme_batch_attainments : "scored_in"
     programme_batches ||--o{ action_plans : "batch_actions"
+    programme_batches ||--o{ stakeholder_surveys : "linked_to"
     course_offerings ||--o{ enrollments : "has_students"
     course_offerings ||--o{ course_faculty_assignments : "assigned_faculty"
     course_offerings ||--o{ tests : "assesses_via"
@@ -297,6 +298,7 @@ erDiagram
     stakeholder_surveys {
         bigint survey_id PK
         int programme_id FK
+        int batch_id FK "nullable"
         int batch_year
         enum stakeholder_type "Alumni, Employer, Graduate Exit, Parent, Academic Peer"
         string title
@@ -369,6 +371,12 @@ erDiagram
         string token
         timestamp created_at
         datetime expires_at
+    }
+
+    system_settings {
+        string setting_key PK
+        text setting_value
+        timestamp updated_at
     }
 ```
 
@@ -860,13 +868,14 @@ Survey per programme/batch/stakeholder-type, with configurable questions mapped 
 | ---------------- | ------------ | ---------------------------------------- | --------------------------------------- |
 | survey_id        | BIGINT       | PRIMARY KEY, AUTO_INCREMENT              | Unique identifier                       |
 | programme_id     | INT(11)      | FOREIGN KEY → programmes(programme_id)   | Programme being evaluated               |
+| batch_id         | INT(11)      | FOREIGN KEY → programme_batches(batch_id) NULL | Linked batch group                |
 | batch_year       | INT          | NOT NULL                                 | Batch year                              |
 | stakeholder_type | ENUM         | 'Alumni', 'Employer', 'Graduate Exit', 'Parent', 'Academic Peer' | Type of stakeholder |
 | title            | VARCHAR(255) | DEFAULT 'Stakeholder Survey'             | Survey title                            |
 | created_at       | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                | Record creation timestamp               |
 
-**Indexes**: PRIMARY KEY (survey_id), UNIQUE KEY (programme_id, batch_year, stakeholder_type)
-**Foreign Keys**: programme_id REFERENCES programmes(programme_id) ON DELETE CASCADE
+**Indexes**: PRIMARY KEY (survey_id), UNIQUE KEY (programme_id, batch_year, stakeholder_type), INDEX (batch_id)
+**Foreign Keys**: programme_id REFERENCES programmes(programme_id) ON DELETE CASCADE, batch_id REFERENCES programme_batches(batch_id) ON DELETE CASCADE
 
 ---
 
@@ -988,6 +997,18 @@ Stores temporary tokens generated for the self-service forgot password / passwor
 | expires_at  | DATETIME    | NOT NULL                    | Expiration timestamp of the token|
 
 **Indexes**: PRIMARY KEY (id), INDEX (email), INDEX (token)
+
+### 33. system_settings
+
+Stores global key-value configuration settings for the system branding, university names, motto texts and active logo path.
+
+| Column        | Type        | Constraints  | Description                            |
+| ------------- | ----------- | ------------ | -------------------------------------- |
+| setting_key   | VARCHAR(100)| PRIMARY KEY  | Setting identifier/key                 |
+| setting_value | TEXT        | NOT NULL     | Value configured for the setting       |
+| updated_at    | TIMESTAMP   | DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | Last update timestamp |
+
+**Indexes**: PRIMARY KEY (setting_key)
 
 ---
 

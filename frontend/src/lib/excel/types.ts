@@ -22,6 +22,8 @@ export interface AttainmentExportOptions {
 		final_attainment_percentage?: number | null;
 		final_attainment_level?: number | null;
 	}>;
+	directWeightage?: number;
+	indirectWeightage?: number;
 }
 
 export interface COPOMatrix {

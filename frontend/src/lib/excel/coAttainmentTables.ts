@@ -338,14 +338,7 @@ export function createCOAttainmentAbsoluteScaleTable(
 	attainmentThresholds: AttainmentThreshold[],
 	coMaxMarks: COMarks,
 	coNames: string[],
-	coStartCol: number,
-	snapshotIndirectData?: Array<{
-		co_name: string;
-		indirect_attainment_percentage?: number | null;
-		indirect_attainment_level?: number | null;
-		final_attainment_percentage?: number | null;
-		final_attainment_level?: number | null;
-	}>
+	coStartCol: number
 ): number {
 	const attainment = calculateCOAttainment(
 		studentsData,
@@ -527,72 +520,341 @@ export function createCOAttainmentAbsoluteScaleTable(
 	});
 	currentRow++;
 
-	// Dynamic addition of Indirect & Blended attainment if available
-	if (snapshotIndirectData && snapshotIndirectData.length > 0) {
-		// Row 7: Indirect CO Attainment Level (Based on surveys)
-		mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
-			value: "Indirect CO Attainment Level (Based on surveys):",
-			bold: true,
-			align: "left",
-			fillColor: "FFF0F8FF", // Alice Blue
-		});
-		coNames.forEach((co, idx) => {
-			const cell = ws.getCell(currentRow, coStartCol + idx);
-			const assessed = isCOAssessed(co, coMaxMarks);
-			const indirectItem = snapshotIndirectData.find(item => item.co_name === co);
-			
-			if (assessed && indirectItem && indirectItem.indirect_attainment_level != null) {
-				cell.value = Number(indirectItem.indirect_attainment_level.toFixed(2));
-				const pct = indirectItem.indirect_attainment_percentage || 0;
-				styleCell(cell, {
-					bold: true,
-					align: "center",
-					fillColor: getPercentageColor(pct, attainmentThresholds),
-				});
-			} else {
-				cell.value = assessed ? "Not Set" : "NA";
-				styleCell(cell, {
-					bold: true,
-					align: "center",
-					fillColor: "FFD3D3D3",
-					color: "FF808080",
-				});
-			}
-		});
-		currentRow++;
+	return currentRow;
+}
 
-		// Row 8: Final Blended Attainment Level (Direct + Indirect)
-		mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
-			value: "Final Blended Attainment Level (Direct + Indirect):",
-			bold: true,
-			align: "left",
-			fillColor: "FFADFF2F", // GreenYellow
-		});
-		coNames.forEach((co, idx) => {
-			const cell = ws.getCell(currentRow, coStartCol + idx);
-			const assessed = isCOAssessed(co, coMaxMarks);
-			const indirectItem = snapshotIndirectData.find(item => item.co_name === co);
+/**
+ * Create Attainment Weightage Configuration table
+ */
+export function createAttainmentWeightageTable(
+	ws: ExcelJS.Worksheet,
+	startRow: number,
+	directWeightage: number = 80,
+	indirectWeightage: number = 20,
+	coStartCol: number
+): number {
+	let currentRow = startRow;
 
-			if (assessed && indirectItem && indirectItem.final_attainment_level != null) {
-				cell.value = Number(indirectItem.final_attainment_level.toFixed(2));
-				const pct = indirectItem.final_attainment_percentage || 0;
-				styleCell(cell, {
-					bold: true,
-					align: "center",
-					fillColor: getPercentageColor(pct, attainmentThresholds),
-				});
-			} else {
-				cell.value = assessed ? "Not Set" : "NA";
-				styleCell(cell, {
-					bold: true,
-					align: "center",
-					fillColor: "FFD3D3D3",
-					color: "FF808080",
-				});
-			}
+	// Title row
+	mergeAndStyle(ws, currentRow, 1, currentRow, Math.max(4, coStartCol - 1), {
+		value: "ATTAINMENT WEIGHTAGE CONFIGURATION",
+		bold: true,
+		align: "center",
+		fillColor: "FFE6E6FA", // Lavender
+	});
+	currentRow++;
+
+	// Direct row
+	mergeAndStyle(ws, currentRow, 1, currentRow, Math.max(3, coStartCol - 2), {
+		value: "Direct Attainment Weightage",
+		bold: true,
+		align: "left",
+	});
+	const directCell = ws.getCell(currentRow, Math.max(4, coStartCol - 1));
+	directCell.value = `${directWeightage}%`;
+	styleCell(directCell, { align: "center", bold: true });
+	currentRow++;
+
+	// Indirect row
+	mergeAndStyle(ws, currentRow, 1, currentRow, Math.max(3, coStartCol - 2), {
+		value: "Indirect Attainment Weightage",
+		bold: true,
+		align: "left",
+	});
+	const indirectCell = ws.getCell(currentRow, Math.max(4, coStartCol - 1));
+	indirectCell.value = `${indirectWeightage}%`;
+	styleCell(indirectCell, { align: "center", bold: true });
+	currentRow++;
+
+	return currentRow;
+}
+
+/**
+ * Create Indirect Attainment Table
+ */
+export function createIndirectAttainmentTable(
+	ws: ExcelJS.Worksheet,
+	startRow: number,
+	snapshotIndirectData: Array<{
+		co_name: string;
+		indirect_attainment_percentage?: number | null;
+		indirect_attainment_level?: number | null;
+	}>,
+	attainmentThresholds: AttainmentThreshold[],
+	coNames: string[],
+	coStartCol: number
+): number {
+	let currentRow = startRow;
+	const numCOs = coNames.length;
+	const totalCols = coStartCol + numCOs - 1;
+
+	// Title row
+	mergeAndStyle(ws, currentRow, 1, currentRow, totalCols, {
+		value: "INDIRECT CO ATTAINMENT (SURVEYS)",
+		bold: true,
+		size: 12,
+		align: "center",
+		fillColor: "FFE6F2FF", // Very light blue
+	});
+	currentRow++;
+
+	// Header row - CO columns
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "INDIRECT CO ATTAINMENT TABLE",
+		bold: true,
+		align: "center",
+		fillColor: "FFD3D3D3",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		cell.value = co;
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: "FFD3D3D3",
 		});
-		currentRow++;
-	}
+	});
+	currentRow++;
+
+	// Row 1: Indirect Attainment Percentage (%)
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "Indirect Attainment Percentage (%)",
+		bold: true,
+		align: "left",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		const indirectItem = snapshotIndirectData.find(item => item.co_name === co);
+		if (indirectItem && indirectItem.indirect_attainment_percentage != null) {
+			cell.value = Number(indirectItem.indirect_attainment_percentage.toFixed(2));
+			styleCell(cell, { align: "center" });
+		} else {
+			cell.value = "Not Set";
+			styleCell(cell, { align: "center", color: "FF808080", bold: true });
+		}
+	});
+	currentRow++;
+
+	// Row 2: Indirect Attainment Level
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "Indirect Attainment Level",
+		bold: true,
+		align: "left",
+		fillColor: "FFF0F8FF", // Alice Blue
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		const indirectItem = snapshotIndirectData.find(item => item.co_name === co);
+		if (indirectItem && indirectItem.indirect_attainment_level != null) {
+			cell.value = Number(indirectItem.indirect_attainment_level.toFixed(2));
+			const pct = indirectItem.indirect_attainment_percentage || 0;
+			styleCell(cell, {
+				bold: true,
+				align: "center",
+				fillColor: getPercentageColor(pct, attainmentThresholds),
+			});
+		} else {
+			cell.value = "Not Set";
+			styleCell(cell, {
+				bold: true,
+				align: "center",
+				fillColor: "FFD3D3D3",
+				color: "FF808080",
+			});
+		}
+	});
+	currentRow++;
+
+	return currentRow;
+}
+
+/**
+ * Create CO Attainment - Direct vs Indirect vs Final Table
+ */
+export function createDirectVsIndirectFinalTable(
+	ws: ExcelJS.Worksheet,
+	startRow: number,
+	snapshotIndirectData: Array<{
+		co_name: string;
+		attainment_percentage: number;
+		attainment_level: number;
+		indirect_attainment_percentage?: number | null;
+		indirect_attainment_level?: number | null;
+		final_attainment_percentage?: number | null;
+		final_attainment_level?: number | null;
+	}>,
+	attainmentThresholds: AttainmentThreshold[],
+	coNames: string[],
+	coStartCol: number
+): number {
+	let currentRow = startRow;
+	const numCOs = coNames.length;
+	const totalCols = coStartCol + numCOs - 1;
+
+	// Title row
+	mergeAndStyle(ws, currentRow, 1, currentRow, totalCols, {
+		value: "CO ATTAINMENT — DIRECT VS INDIRECT VS FINAL",
+		bold: true,
+		size: 12,
+		align: "center",
+		fillColor: "FFE8F5E9", // Very light green
+	});
+	currentRow++;
+
+	// Header row - CO columns
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "OUTCOME",
+		bold: true,
+		align: "center",
+		fillColor: "FFD3D3D3",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		cell.value = co;
+		styleCell(cell, {
+			bold: true,
+			align: "center",
+			fillColor: "FFD3D3D3",
+		});
+	});
+	currentRow++;
+
+	// Row 1: Direct Attainment %
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "Direct Attainment (%)",
+		bold: true,
+		align: "left",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		const item = snapshotIndirectData.find(item => item.co_name === co);
+		if (item && item.attainment_percentage != null) {
+			cell.value = Number(item.attainment_percentage.toFixed(2));
+			styleCell(cell, { align: "center" });
+		} else {
+			cell.value = "—";
+			styleCell(cell, { align: "center", color: "FF808080" });
+		}
+	});
+	currentRow++;
+
+	// Row 2: Direct Attainment Level
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "Direct Attainment Level",
+		bold: true,
+		align: "left",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		const item = snapshotIndirectData.find(item => item.co_name === co);
+		if (item && item.attainment_level != null) {
+			cell.value = Number(item.attainment_level.toFixed(2));
+			styleCell(cell, { align: "center" });
+		} else {
+			cell.value = "—";
+			styleCell(cell, { align: "center", color: "FF808080" });
+		}
+	});
+	currentRow++;
+
+	// Row 3: Indirect Attainment %
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "Indirect Attainment (%)",
+		bold: true,
+		align: "left",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		const item = snapshotIndirectData.find(item => item.co_name === co);
+		if (item && item.indirect_attainment_percentage != null) {
+			cell.value = Number(item.indirect_attainment_percentage.toFixed(2));
+			styleCell(cell, { align: "center" });
+		} else {
+			cell.value = "—";
+			styleCell(cell, { align: "center", color: "FF808080" });
+		}
+	});
+	currentRow++;
+
+	// Row 4: Indirect Attainment Level
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "Indirect Attainment Level",
+		bold: true,
+		align: "left",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		const item = snapshotIndirectData.find(item => item.co_name === co);
+		if (item && item.indirect_attainment_level != null) {
+			cell.value = Number(item.indirect_attainment_level.toFixed(2));
+			styleCell(cell, { align: "center" });
+		} else {
+			cell.value = "—";
+			styleCell(cell, { align: "center", color: "FF808080" });
+		}
+	});
+	currentRow++;
+
+	// Row 5: Final Blended Attainment (%)
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "Final Blended Attainment (%)",
+		bold: true,
+		align: "left",
+		fillColor: "FFE8F5E9",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		const item = snapshotIndirectData.find(item => item.co_name === co);
+		const finalPct = item ? (item.final_attainment_percentage ?? item.attainment_percentage) : null;
+		if (finalPct != null) {
+			cell.value = Number(finalPct.toFixed(2));
+			styleCell(cell, {
+				bold: true,
+				align: "center",
+				fillColor: getPercentageColor(finalPct, attainmentThresholds),
+			});
+		} else {
+			cell.value = "—";
+			styleCell(cell, {
+				bold: true,
+				align: "center",
+				fillColor: "FFD3D3D3",
+				color: "FF808080",
+			});
+		}
+	});
+	currentRow++;
+
+	// Row 6: Final Blended Attainment Level
+	mergeAndStyle(ws, currentRow, 1, currentRow, coStartCol - 1, {
+		value: "Final Blended Attainment Level",
+		bold: true,
+		align: "left",
+		fillColor: "FFE8F5E9",
+	});
+	coNames.forEach((co, idx) => {
+		const cell = ws.getCell(currentRow, coStartCol + idx);
+		const item = snapshotIndirectData.find(item => item.co_name === co);
+		const finalPct = item ? (item.final_attainment_percentage ?? item.attainment_percentage) : null;
+		const finalLvl = item ? (item.final_attainment_level ?? item.attainment_level) : null;
+		if (finalLvl != null) {
+			cell.value = Number(finalLvl.toFixed(2));
+			styleCell(cell, {
+				bold: true,
+				align: "center",
+				fillColor: finalPct != null ? getPercentageColor(finalPct, attainmentThresholds) : undefined,
+			});
+		} else {
+			cell.value = "—";
+			styleCell(cell, {
+				bold: true,
+				align: "center",
+				fillColor: "FFD3D3D3",
+				color: "FF808080",
+			});
+		}
+	});
+	currentRow++;
 
 	return currentRow;
 }

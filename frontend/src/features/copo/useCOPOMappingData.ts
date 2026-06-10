@@ -754,13 +754,15 @@ export function useCOPOMappingData({
 				assessments: exportAssessments,
 				copoMatrix: copoMatrix,
 				snapshotIndirectData: snapshotIndirectData || [],
+				directWeightage,
+				indirectWeightage,
 			});
 			toast.success("Attainment Excel downloaded");
 		} catch (error) {
 			console.error("Export failed:", error);
 			toast.error("Failed to export Excel");
 		}
-	}, [studentsData, maxMarks, attainmentThresholds, coThreshold, passingThreshold, courseCode, facultyName, departmentName, year, semester, courseName, copoMatrix, snapshotIndirectData]);
+	}, [studentsData, maxMarks, attainmentThresholds, coThreshold, passingThreshold, courseCode, facultyName, departmentName, year, semester, courseName, copoMatrix, snapshotIndirectData, directWeightage, indirectWeightage]);
 
 	const poComputations = useMemo(() => {
 		if (!attainmentData) return null;

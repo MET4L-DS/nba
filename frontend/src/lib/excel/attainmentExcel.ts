@@ -14,6 +14,9 @@ import { fillStudentData } from "./studentRows";
 import {
 	createCOAttainmentPointScaleTable,
 	createCOAttainmentAbsoluteScaleTable,
+	createAttainmentWeightageTable,
+	createIndirectAttainmentTable,
+	createDirectVsIndirectFinalTable,
 } from "./coAttainmentTables";
 import { createCOPOMappingTable } from "./copoMappingTable";
 
@@ -43,6 +46,8 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		assessments = [],
 		copoMatrix = {},
 		snapshotIndirectData = [],
+		directWeightage,
+		indirectWeightage,
 	} = opts;
 
 	// Determine unique CO names dynamically from the data
@@ -141,8 +146,8 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		coStartCol
 	);
 
-	// Create CO Attainment in Absolute Scale table (with snapshotIndirectData)
-	createCOAttainmentAbsoluteScaleTable(
+	// Create CO Attainment in Absolute Scale table
+	const absoluteScaleEndRow = createCOAttainmentAbsoluteScaleTable(
 		ws,
 		pointScaleEndRow + 2, // Leave 1 empty row between tables
 		studentsData,
@@ -151,9 +156,44 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 		attainmentThresholds,
 		coMaxMarks,
 		coNames,
-		coStartCol,
-		snapshotIndirectData
+		coStartCol
 	);
+
+	let nextRow = absoluteScaleEndRow + 2;
+
+	// Render Attainment Weightage Configuration
+	if (directWeightage !== undefined && indirectWeightage !== undefined) {
+		nextRow = createAttainmentWeightageTable(
+			ws,
+			nextRow,
+			directWeightage,
+			indirectWeightage,
+			coStartCol
+		);
+		nextRow += 2; // Leave an empty row
+	}
+
+	// Render Indirect Attainment and Direct vs Indirect vs Final tables if snapshotIndirectData is available
+	if (snapshotIndirectData && snapshotIndirectData.length > 0) {
+		nextRow = createIndirectAttainmentTable(
+			ws,
+			nextRow,
+			snapshotIndirectData,
+			attainmentThresholds,
+			coNames,
+			coStartCol
+		);
+		nextRow += 2; // Leave an empty row
+
+		nextRow = createDirectVsIndirectFinalTable(
+			ws,
+			nextRow,
+			snapshotIndirectData,
+			attainmentThresholds,
+			coNames,
+			coStartCol
+		);
+	}
 
 	// Create CO-PO Mapping table on a separate sheet (only if copoMatrix is provided)
 	if (copoMatrix && Object.keys(copoMatrix).length > 0) {

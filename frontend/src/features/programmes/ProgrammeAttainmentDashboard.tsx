@@ -26,7 +26,7 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Target, FileText, TrendingUp, ChevronDown, BarChart3, ExternalLink } from "lucide-react";
+import { Target, FileText, TrendingUp, ChevronDown, BarChart3, ExternalLink, Download } from "lucide-react";
 import { SetTargetsDialog } from "@/features/programmes/SetTargetsDialog";
 import { ActionPlansSection } from "@/features/programmes/ActionPlansSection";
 import { AttainmentComparisonCharts } from "@/features/programmes/AttainmentComparisonCharts";
@@ -172,6 +172,25 @@ export function ProgrammeAttainmentDashboard() {
 			);
 		} finally {
 			setCalculating(false);
+		}
+	};
+
+	const handleExportExcel = async () => {
+		if (!data || !selectedProgramme) return;
+		try {
+			const { exportProgrammeAttainmentExcel } = await import(
+				"@/lib/excel/programmeAttainmentExcel"
+			);
+			await exportProgrammeAttainmentExcel({
+				programmeCode: selectedProgramme.programme_code,
+				programmeName: selectedProgramme.programme_name,
+				batchYear: batchYear,
+				data,
+			});
+		} catch (err) {
+			setError(
+				`Failed to export: ${err instanceof Error ? err.message : String(err)}`,
+			);
 		}
 	};
 
@@ -337,6 +356,15 @@ export function ProgrammeAttainmentDashboard() {
 						>
 							<BarChart3 className="w-3.5 h-3.5" />
 							{calculating ? "Calculating..." : "Recalculate"}
+						</Button>
+						<Button
+							onClick={handleExportExcel}
+							disabled={loading || !data}
+							variant="outline"
+							className="gap-1.5 h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95 border-emerald-500/20 hover:border-emerald-500/50 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+						>
+							<Download className="w-3.5 h-3.5" />
+							Export Excel
 						</Button>
 						{selectedProgrammeId && batchYear && (
 							<SetTargetsDialog

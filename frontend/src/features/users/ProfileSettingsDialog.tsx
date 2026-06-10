@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PhoneListInput } from "../shared/PhoneListInput";
 import { apiService, type User } from "@/services/api";
-import { UserCog, ShieldAlert } from "lucide-react";
+import { UserCog, ShieldAlert, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Sheet,
@@ -39,6 +39,9 @@ export function ProfileSettingsDialog({
 		newPassword: "",
 		confirmPassword: "",
 	});
+	const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+	const [showNewPassword, setShowNewPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -78,6 +81,9 @@ export function ProfileSettingsDialog({
 				newPassword: "",
 				confirmPassword: "",
 			});
+			setShowCurrentPassword(false);
+			setShowNewPassword(false);
+			setShowConfirmPassword(false);
 			setErrors({});
 			setActiveTab("profile");
 		}
@@ -301,17 +307,32 @@ export function ProfileSettingsDialog({
 							<div className="space-y-4">
 								<div className="space-y-1.5">
 									<Label htmlFor="currentPassword">Current Password *</Label>
-									<Input
-										id="currentPassword"
-										type="password"
-										value={passwordData.currentPassword}
-										onChange={(e) =>
-											setPasswordData({ ...passwordData, currentPassword: e.target.value })
-										}
-										disabled={isLoading}
-										className={errors.currentPassword ? "border-red-500 bg-background/50" : "bg-background/50"}
-										placeholder="••••••••"
-									/>
+									<div className="relative">
+										<Input
+											id="currentPassword"
+											type={showCurrentPassword ? "text" : "password"}
+											value={passwordData.currentPassword}
+											onChange={(e) =>
+												setPasswordData({ ...passwordData, currentPassword: e.target.value })
+											}
+											disabled={isLoading}
+											className={errors.currentPassword ? "border-red-500 bg-background/50 pr-10" : "bg-background/50 pr-10"}
+											placeholder="••••••••"
+										/>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground active:scale-95 duration-200 transition-all rounded-r-xl cursor-pointer"
+											onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+										>
+											{showCurrentPassword ? (
+												<EyeOff className="h-4 w-4" />
+											) : (
+												<Eye className="h-4 w-4" />
+											)}
+										</Button>
+									</div>
 									{errors.currentPassword && (
 										<p className="text-xs text-red-500 mt-1">{errors.currentPassword}</p>
 									)}
@@ -319,17 +340,32 @@ export function ProfileSettingsDialog({
 
 								<div className="space-y-1.5">
 									<Label htmlFor="newPassword">New Password *</Label>
-									<Input
-										id="newPassword"
-										type="password"
-										value={passwordData.newPassword}
-										onChange={(e) =>
-											setPasswordData({ ...passwordData, newPassword: e.target.value })
-										}
-										disabled={isLoading}
-										className={errors.newPassword ? "border-red-500 bg-background/50" : "bg-background/50"}
-										placeholder="Min 6 characters"
-									/>
+									<div className="relative">
+										<Input
+											id="newPassword"
+											type={showNewPassword ? "text" : "password"}
+											value={passwordData.newPassword}
+											onChange={(e) =>
+												setPasswordData({ ...passwordData, newPassword: e.target.value })
+											}
+											disabled={isLoading}
+											className={errors.newPassword ? "border-red-500 bg-background/50 pr-10" : "bg-background/50 pr-10"}
+											placeholder="Min 6 characters"
+										/>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground active:scale-95 duration-200 transition-all rounded-r-xl cursor-pointer"
+											onClick={() => setShowNewPassword(!showNewPassword)}
+										>
+											{showNewPassword ? (
+												<EyeOff className="h-4 w-4" />
+											) : (
+												<Eye className="h-4 w-4" />
+											)}
+										</Button>
+									</div>
 									{errors.newPassword && (
 										<p className="text-xs text-red-500 mt-1">{errors.newPassword}</p>
 									)}
@@ -337,17 +373,32 @@ export function ProfileSettingsDialog({
 
 								<div className="space-y-1.5">
 									<Label htmlFor="confirmPassword">Confirm New Password *</Label>
-									<Input
-										id="confirmPassword"
-										type="password"
-										value={passwordData.confirmPassword}
-										onChange={(e) =>
-											setPasswordData({ ...passwordData, confirmPassword: e.target.value })
-										}
-										disabled={isLoading}
-										className={errors.confirmPassword ? "border-red-500 bg-background/50" : "bg-background/50"}
-										placeholder="••••••••"
-									/>
+									<div className="relative">
+										<Input
+											id="confirmPassword"
+											type={showConfirmPassword ? "text" : "password"}
+											value={passwordData.confirmPassword}
+											onChange={(e) =>
+												setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+											}
+											disabled={isLoading}
+											className={errors.confirmPassword ? "border-red-500 bg-background/50 pr-10" : "bg-background/50 pr-10"}
+											placeholder="••••••••"
+										/>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground active:scale-95 duration-200 transition-all rounded-r-xl cursor-pointer"
+											onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+										>
+											{showConfirmPassword ? (
+												<EyeOff className="h-4 w-4" />
+											) : (
+												<Eye className="h-4 w-4" />
+											)}
+										</Button>
+									</div>
 									{errors.confirmPassword && (
 										<p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>
 									)}

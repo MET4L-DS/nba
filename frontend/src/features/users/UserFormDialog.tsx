@@ -14,6 +14,8 @@ import { adminApi } from "@/services/api";
 import { FormDialog } from "../shared/FormDialog";
 import { PhoneListInput } from "../shared/PhoneListInput";
 import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export interface UserFormDialogProps {
 	mode: "create" | "edit";
@@ -37,6 +39,7 @@ export function UserFormDialog({
 	isLoading = false,
 }: UserFormDialogProps) {
 	const isEdit = mode === "edit";
+	const [showPassword, setShowPassword] = useState(false);
 
 	const [formData, setFormData] = useState({
 		employee_id: "",
@@ -90,6 +93,7 @@ export function UserFormDialog({
 						phones: phoneNumbers,
 					});
 					setErrors({});
+					setShowPassword(false);
 				};
 				loadUserData();
 			} else {
@@ -105,6 +109,7 @@ export function UserFormDialog({
 					phones: [""],
 				});
 				setErrors({});
+				setShowPassword(false);
 			}
 		}
 	}, [open, isEdit, initialData]);
@@ -315,19 +320,34 @@ export function UserFormDialog({
 							>
 								Password *
 							</Label>
-							<Input
-								id="password"
-								type="password"
-								value={formData.password}
-								onChange={(e) =>
-									setFormData({
-										...formData,
-										password: e.target.value,
-									})
-								}
-								disabled={isLoading}
-								className={errors.password ? "border-red-500" : ""}
-							/>
+							<div className="relative">
+								<Input
+									id="password"
+									type={showPassword ? "text" : "password"}
+									value={formData.password}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											password: e.target.value,
+										})
+									}
+									disabled={isLoading}
+									className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+								/>
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground active:scale-95 duration-200 transition-all rounded-r-xl cursor-pointer"
+									onClick={() => setShowPassword(!showPassword)}
+								>
+									{showPassword ? (
+										<EyeOff className="h-4 w-4" />
+									) : (
+										<Eye className="h-4 w-4" />
+									)}
+								</Button>
+							</div>
 							{errors.password && (
 								<p className="text-xs text-red-500">
 									{errors.password}

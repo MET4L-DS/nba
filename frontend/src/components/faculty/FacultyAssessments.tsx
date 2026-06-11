@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, memo } from "react";
+import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +35,7 @@ interface FacultyAssessmentsProps {
 export const FacultyAssessments = memo(function FacultyAssessments({
 	selectedCourse,
 }: FacultyAssessmentsProps) {
+	const navigate = useNavigate();
 	const isListMounted = useDeferredMount(120);
 
 	const {
@@ -57,9 +59,9 @@ export const FacultyAssessments = memo(function FacultyAssessments({
 		triggerRefresh();
 	}, [setShowCreateForm, triggerRefresh]);
 
-	const handleGoToMarks = useCallback(() => {
-		// Navigate to marks entry — parent handles this via nav
-	}, []);
+	const handleGoToMarks = useCallback((test: any) => {
+		navigate("/faculty/marks", { state: { testId: test.id } });
+	}, [navigate]);
 
 	return (
 		<div className="h-full flex flex-col w-full max-w-full min-w-0">

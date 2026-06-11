@@ -69,7 +69,7 @@ export function ProgrammeAttainmentDashboard() {
 		routeState?.batchYear ?? "",
 	);
 	const [loading, setLoading] = useState(false);
-	const [calculating, setCalculating] = useState(false);
+
 	const [data, setData] =
 		useState<CourseLevelProgrammeAttainmentResponse | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -154,43 +154,98 @@ export function ProgrammeAttainmentDashboard() {
 		[programmes, selectedProgrammeId],
 	);
 
-	const handleCalculate = async () => {
-		if (!selectedProgrammeId) return;
-		const year = batchYear.trim();
-		if (year === "") return;
-		setCalculating(true);
-		setError(null);
-		try {
-			await attainmentApi.calculateProgrammeAttainment(
-				selectedProgrammeId,
-				Number(year),
-			);
-			await loadAttainment();
-		} catch (err) {
-			setError(
-				`Failed to calculate: ${err instanceof Error ? err.message : String(err)}`,
-			);
-		} finally {
-			setCalculating(false);
-		}
-	};
+
 
 	const handleExportExcel = async () => {
 		if (!data || !selectedProgramme) return;
+		setLoading(true);
+		setError(null);
 		try {
+			const { surveyApi } = await import("@/services/api");
+			const { actionPlanApi } = await import("@/services/api/actionPlans");
+			const { coursesApi } = await import("@/services/api");
+
+			const currentYear = Number(batchYear);
+
+			// 1. Fetch Stakeholder Consolidated Matrix
+			let stakeholderMatrix = null;
+			try {
+				const res = await surveyApi.getStakeholderResults(selectedProgramme.programme_id, currentYear);
+				stakeholderMatrix = res.consolidated_matrix || null;
+			} catch (e) {
+				debugLogger.error("ProgrammeAttainmentDashboard", "Failed to fetch stakeholder matrix", e);
+			}
+
+			// 2. Fetch Action Plans
+			let actionPlans: any[] = [];
+			try {
+				actionPlans = await actionPlanApi.listByProgramme(selectedProgramme.programme_id, currentYear);
+			} catch (e) {
+				debugLogger.error("ProgrammeAttainmentDashboard", "Failed to fetch action plans", e);
+			}
+
+			// 3. Fetch CO-PO matrices for all courses in parallel
+			const courseMappings: Record<number, any[]> = {};
+			try {
+				const mappingPromises = data.courses.map(async (course) => {
+					try {
+						const mappings = await coursesApi.getCoPoMatrix(course.offering_id);
+						courseMappings[course.offering_id] = mappings || [];
+					} catch (e) {
+						debugLogger.error(`ProgrammeAttainmentDashboard`, `Failed to fetch CO-PO matrix for offering ${course.offering_id}`, e);
+						courseMappings[course.offering_id] = [];
+					}
+				});
+				await Promise.all(mappingPromises);
+			} catch (e) {
+				debugLogger.error("ProgrammeAttainmentDashboard", "Failed to fetch course mappings", e);
+			}
+
+			// 4. Fetch Previous 2 batch years attainment (for batch-wise comparison)
+			const pastBatchesAttainment: Array<{ batchYear: string; poAttainment: Record<string, number> }> = [];
+			const previousYears = [currentYear - 2, currentYear - 1];
+			for (const prevYear of previousYears) {
+				try {
+					const res = await attainmentApi.getProgrammeAttainment(selectedProgramme.programme_id, prevYear);
+					if (res && res.po_attainment) {
+						const poAttainmentMap: Record<string, number> = {};
+						res.po_attainment.forEach((po) => {
+							if (po.po_name && po.attainment_value !== null) {
+								poAttainmentMap[po.po_name] = po.attainment_value;
+							}
+						});
+						pastBatchesAttainment.push({
+							batchYear: String(prevYear),
+							poAttainment: poAttainmentMap,
+						});
+					}
+				} catch (e) {
+					debugLogger.error(`ProgrammeAttainmentDashboard`, `Failed to fetch attainment for batch ${prevYear}`, e);
+				}
+			}
+
 			const { exportProgrammeAttainmentExcel } = await import(
 				"@/lib/excel/programmeAttainmentExcel"
 			);
+
 			await exportProgrammeAttainmentExcel({
 				programmeCode: selectedProgramme.programme_code,
 				programmeName: selectedProgramme.programme_name,
 				batchYear: batchYear,
+				directWeightage: selectedProgramme.direct_weightage,
+				indirectWeightage: selectedProgramme.indirect_weightage,
 				data,
+				stakeholderMatrix,
+				actionPlans,
+				courseMappings,
+				pastBatchesAttainment,
 			});
 		} catch (err) {
 			setError(
 				`Failed to export: ${err instanceof Error ? err.message : String(err)}`,
 			);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -348,15 +403,6 @@ export function ProgrammeAttainmentDashboard() {
 						/>
 					</div>
 					<div className="flex flex-wrap items-center gap-2">
-						<Button
-							onClick={handleCalculate}
-							disabled={calculating || !selectedProgrammeId || !batchYear.trim()}
-							variant="outline"
-							className="gap-1.5 h-9 text-xs font-semibold hover:bg-primary/[0.04] hover:text-primary transition-all duration-200 active:scale-95"
-						>
-							<BarChart3 className="w-3.5 h-3.5" />
-							{calculating ? "Calculating..." : "Recalculate"}
-						</Button>
 						<Button
 							onClick={handleExportExcel}
 							disabled={loading || !data}

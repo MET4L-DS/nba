@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, X, Printer, Pencil } from "lucide-react";
+import { FileText, Printer } from "lucide-react";
 import { apiService } from "@/services/api";
 import type { Test, QuestionResponse, Course } from "@/services/api";
 import { AssessmentSummaryPanel } from "./AssessmentSummaryPanel";
@@ -61,38 +61,16 @@ export function ViewAssessmentDialog({
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-[min(92vw,1000px)] max-w-none sm:max-w-none p-0 flex flex-col gap-0 [&>button]:hidden border-l border-slate-200/80 dark:border-slate-800/80 bg-background/95 backdrop-blur-md shadow-2xl">
+            <SheetContent side="right" className="w-[min(92vw,1000px)] max-w-none sm:max-w-none p-0 flex flex-col gap-0 border-l border-slate-200/80 dark:border-slate-800/80 bg-background/95 backdrop-blur-md shadow-2xl">
                 <SheetTitle className="sr-only">Assessment Details</SheetTitle>
                 <SheetDescription className="sr-only">View complete assessment information and question breakdown</SheetDescription>
                 
                 {/* Header */}
                 <div className="px-8 py-6 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between bg-white/50 dark:bg-slate-900/50 shrink-0 relative">
                     <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500"></div>
-                    <div>
+                    <div className="pr-8">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">Assessment Details</h3>
                         <p className="text-sm text-muted-foreground mt-0.5">View complete assessment information and question breakdown</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <MotionButton 
-                            size="sm"
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
-                        >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit Details
-                        </MotionButton>
-                        <SheetClose asChild>
-                            <MotionButton 
-                                variant="ghost" 
-                                size="icon" 
-                                whileHover={{ scale: 1.08, backgroundColor: "rgba(0,0,0,0.03)" }}
-                                whileTap={{ scale: 0.92 }}
-                                className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground"
-                            >
-                                <X className="h-5 w-5" />
-                            </MotionButton>
-                        </SheetClose>
                     </div>
                 </div>
 
@@ -154,7 +132,7 @@ export function ViewAssessmentDialog({
 
                 {/* Footer */}
                 {details && (
-                    <div className="px-8 py-4.5 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/60 dark:border-slate-800/60 flex justify-between items-center shrink-0">
+                    <div className="px-8 py-4 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/60 dark:border-slate-800/60 flex justify-between items-center shrink-0">
                         <MotionButton 
                             variant="ghost" 
                             size="sm" 
@@ -167,21 +145,22 @@ export function ViewAssessmentDialog({
                         </MotionButton>
                         <div className="flex gap-3">
                             <SheetClose asChild>
-                                <MotionButton 
+                                <Button 
                                     variant="outline"
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.99 }}
                                     className="font-semibold h-9.5"
                                 >
                                     Close
-                                </MotionButton>
+                                </Button>
                             </SheetClose>
                             <MotionButton 
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
                                 className="font-bold shadow-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 border-none px-5 h-9.5" 
-                                onClick={() => onGoToMarks?.(details.test)}
+                                onClick={() => {
+                                    onOpenChange(false);
+                                    onGoToMarks?.(details.test);
+                                }}
                             >
                                 Go to Marks Entry
                             </MotionButton>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { apiService } from "@/services/api";
 import type { Course, Test } from "@/services/api";
 
@@ -10,6 +11,8 @@ interface UseFacultyMarksProps {
 
 export function useFacultyMarks({ selectedCourse }: UseFacultyMarksProps) {
 	const courseId = selectedCourse?.offering_id ?? selectedCourse?.course_id;
+	const location = useLocation();
+	const stateTestId = location.state?.testId;
 
 	const [tests, setTests] = useState<Test[]>([]);
 	const [testsLoading, setTestsLoading] = useState(false);
@@ -29,7 +32,8 @@ export function useFacultyMarks({ selectedCourse }: UseFacultyMarksProps) {
 			const list: Test[] = Array.isArray(testsData) ? testsData : [];
 			setTests(list);
 			if (list.length > 0) {
-				setSelectedTest(list[0]);
+				const matchingTest = stateTestId ? list.find(t => t.id === stateTestId) : null;
+				setSelectedTest(matchingTest || list[0]);
 			} else {
 				setSelectedTest(null);
 			}
@@ -40,7 +44,7 @@ export function useFacultyMarks({ selectedCourse }: UseFacultyMarksProps) {
 		} finally {
 			setTestsLoading(false);
 		}
-	}, [courseId]);
+	}, [courseId, stateTestId]);
 
 	useEffect(() => {
 		if (courseId) {

@@ -34,12 +34,12 @@ export function FormDialog({
 	saveLabel = "Save Changes",
 	cancelLabel = "Cancel",
 	isLoading = false,
-	className = "max-w-2xl max-h-[90vh] overflow-y-auto",
+	className = "max-w-2xl",
 	footer,
 }: FormDialogProps) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className={`${className} bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-2xl rounded-xl p-6 overflow-hidden`}>
+			<DialogContent className={`${className} max-h-[90vh] flex flex-col bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-2xl rounded-xl p-6 overflow-hidden`}>
 				<AnimatePresence mode="wait">
 					{open && (
 						<motion.div
@@ -47,9 +47,9 @@ export function FormDialog({
 							animate={{ opacity: 1, y: 0, scale: 1 }}
 							exit={{ opacity: 0, y: 15, scale: 0.98 }}
 							transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
-							className="space-y-4 w-full"
+							className="flex flex-col flex-1 min-h-0 space-y-4 w-full overflow-hidden"
 						>
-							<DialogHeader>
+							<DialogHeader className="shrink-0">
 								<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 									{title}
 								</DialogTitle>
@@ -60,12 +60,12 @@ export function FormDialog({
 								)}
 							</DialogHeader>
 
-							<div className="py-2">{children}</div>
+							<div className="flex-1 overflow-y-auto pr-1 py-2 min-h-0">{children}</div>
 
 							{footer ? (
-								<DialogFooter>{footer}</DialogFooter>
+								<DialogFooter className="shrink-0">{footer}</DialogFooter>
 							) : (
-								<DialogFooter className="gap-2 sm:gap-0 border-t pt-4 border-muted/30">
+								<DialogFooter className="shrink-0 gap-2 sm:gap-0 border-t pt-4 border-muted/30">
 									<Button
 										variant="outline"
 										onClick={() => onOpenChange(false)}

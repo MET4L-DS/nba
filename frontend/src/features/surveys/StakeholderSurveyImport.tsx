@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Trash2, FileSpreadsheet } from "lucide-react";
 import { surveyApi } from "@/services/api/surveys";
 import { useCSVParser } from "@/features/shared/useCSVParser";
+import { downloadCSVTemplate } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const PO_PATTERNS = [
 	/^PO\s*(\d+)$/i,
@@ -79,6 +81,20 @@ export function StakeholderSurveyImport({
 		() => [...Array(3)].map((_, i) => `PSO${i + 1}`),
 		[],
 	);
+
+	const handleDownloadTemplate = () => {
+		const headers = [
+			"Respondent Name",
+			"Designation/Qualification",
+			...poOptions,
+			...psoOptions,
+		];
+		const sampleRows = [
+			["John Doe", "Software Engineer", ...poOptions.map(() => "5"), ...psoOptions.map(() => "4")],
+			["Jane Smith", "HR Manager", ...poOptions.map(() => "4"), ...psoOptions.map(() => "5")],
+		];
+		downloadCSVTemplate("stakeholder_survey_template.csv", headers, sampleRows);
+	};
 
 	const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -273,7 +289,7 @@ export function StakeholderSurveyImport({
 				Likert text ("Strongly Agree"→5) or numeric values supported.
 			</p>
 
-			<div>
+			<div className="flex flex-col gap-2">
 				<input
 					type="file"
 					accept=".csv"
@@ -281,17 +297,44 @@ export function StakeholderSurveyImport({
 					className="hidden"
 					id="stk-csv-input"
 				/>
-				<Button
-					variant="outline"
-					size="sm"
-					disabled={isParsing}
-					onClick={() =>
-						document.getElementById("stk-csv-input")?.click()
-					}
-				>
-					<Download className="w-4 h-4 mr-1.5" />
-					{isParsing ? "Parsing..." : "Upload CSV"}
-				</Button>
+				<div className="flex items-center gap-2">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="outline"
+								size="sm"
+								disabled={isParsing}
+								onClick={() =>
+									document.getElementById("stk-csv-input")?.click()
+								}
+								className="gap-1.5 text-xs font-medium"
+							>
+								<Download className="w-4 h-4" />
+								{isParsing ? "Parsing..." : "Upload CSV"}
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							Upload stakeholder survey CSV file
+						</TooltipContent>
+					</Tooltip>
+
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleDownloadTemplate}
+								className="gap-1.5 text-xs font-medium"
+							>
+								<FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+								Download Template
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							Download sample CSV template for stakeholder survey import
+						</TooltipContent>
+					</Tooltip>
+				</div>
 				{parseError && (
 					<p className="text-sm text-red-500 mt-1">{parseError}</p>
 				)}
@@ -340,27 +383,45 @@ export function StakeholderSurveyImport({
 					)}
 
 					<div className="flex gap-2 pt-1">
-						<Button
-							size="sm"
-							onClick={handleImport}
-							disabled={
-								importing ||
-								!batchYear ||
-								!stakeholderType ||
-								getPoColumns().length === 0
-							}
-						>
-							{importing ? "Importing..." : "Import Responses"}
-						</Button>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<span>
+									<Button
+										size="sm"
+										onClick={handleImport}
+										disabled={
+											importing ||
+											!batchYear ||
+											!stakeholderType ||
+											getPoColumns().length === 0
+										}
+										className="disabled:opacity-50 disabled:pointer-events-none"
+									>
+										{importing ? "Importing..." : "Import Responses"}
+									</Button>
+								</span>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								Save stakeholder survey responses to database
+							</TooltipContent>
+						</Tooltip>
 						{hasData && (
-							<Button
-								variant="destructive"
-								size="sm"
-								onClick={handleClear}
-							>
-								<Trash2 className="w-4 h-4 mr-1" />
-								Clear
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="destructive"
+										size="sm"
+										onClick={handleClear}
+										className="gap-1.5"
+									>
+										<Trash2 className="w-4 h-4" />
+										Clear
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Clear all imported survey responses for this batch/type
+								</TooltipContent>
+							</Tooltip>
 						)}
 					</div>
 				</div>

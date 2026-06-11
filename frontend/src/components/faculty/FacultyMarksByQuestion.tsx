@@ -6,8 +6,11 @@ import {
 	BarChart2,
 	CheckCircle,
 	AlertCircle,
+	FileSpreadsheet,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { downloadCSVTemplate } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type {
 	Course,
 	Test,
@@ -78,6 +81,15 @@ export const FacultyMarksByQuestion = memo(function FacultyMarksByQuestion({
 		readOnly,
 		onStatsUpdate,
 	});
+
+	const handleDownloadTemplate = () => {
+		const headers = ["rollno", "name", ...questions.map(q => q.question_identifier)];
+		const sampleRows = [
+			["22CS001", "John Doe", ...questions.map(q => String(q.max_marks > 0 ? Math.round(q.max_marks * 0.8) : 8))],
+			["22CS002", "Jane Smith", ...questions.map(q => String(q.max_marks > 0 ? Math.round(q.max_marks * 0.9) : 9))],
+		];
+		downloadCSVTemplate(`${selectedTest.name.toLowerCase().replace(/\s+/g, "_")}_question_template.csv`, headers, sampleRows);
+	};
 
 	const containerVariants = {
 		initial: {},
@@ -167,24 +179,58 @@ export const FacultyMarksByQuestion = memo(function FacultyMarksByQuestion({
 						accept=".csv"
 						onChange={handleFileUpload}
 					/>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => fileInputRef.current?.click()}
-						className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
-					>
-						<Download className="w-3.5 h-3.5 text-violet-500" />
-						Import
-					</Button>
-					<Button
-						size="sm"
-						onClick={handleSubmit}
-						disabled={readOnly || submitting || dirtyRows.size === 0}
-						className="gap-1.5 text-xs h-9 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-medium shadow-md shadow-violet-600/10 active:scale-95 duration-200 transition-all"
-					>
-						<Save className="w-3.5 h-3.5" />
-						{submitting ? "Saving…" : "Save"}
-					</Button>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleDownloadTemplate}
+								className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
+							>
+								<FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
+								Template
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							Download sample CSV template for question-wise marks import
+						</TooltipContent>
+					</Tooltip>
+
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => fileInputRef.current?.click()}
+								className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
+							>
+								<Download className="w-3.5 h-3.5 text-violet-500" />
+								Import
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							Upload question-wise marks CSV file
+						</TooltipContent>
+					</Tooltip>
+
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<span>
+								<Button
+									size="sm"
+									onClick={handleSubmit}
+									disabled={readOnly || submitting || dirtyRows.size === 0}
+									className="gap-1.5 text-xs h-9 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-medium shadow-md shadow-violet-600/10 active:scale-95 duration-200 transition-all disabled:opacity-50 disabled:pointer-events-none"
+								>
+									<Save className="w-3.5 h-3.5" />
+									{submitting ? "Saving…" : "Save"}
+								</Button>
+							</span>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							Save modified marks to database
+						</TooltipContent>
+					</Tooltip>
 				</div>
 			</motion.div>
 			{/* Content Area */}

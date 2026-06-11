@@ -69,6 +69,7 @@ import {
 	AlertCircle,
 	BarChart2,
 	CheckCircle,
+	FileSpreadsheet,
 } from "lucide-react";
 import type { Course, Test } from "@/services/api";
 import { MarksEntryHeader } from "./MarksEntryHeader";
@@ -78,7 +79,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, downloadCSVTemplate } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
 	TableBody,
 	TableCell,
@@ -133,6 +135,15 @@ export function MarksEntryByCO({
 		fileInputRef,
 		handleFileUpload,
 	} = useMarksEntryByCO(test, course);
+
+	const handleDownloadTemplate = () => {
+		const headers = ["rollno", "name", ...CO_KEYS];
+		const sampleRows = [
+			["22CS001", "John Doe", ...CO_KEYS.map(co => String(coMaxMarks[co] > 0 ? Math.round(coMaxMarks[co] * 0.8) : 10))],
+			["22CS002", "Jane Smith", ...CO_KEYS.map(co => String(coMaxMarks[co] > 0 ? Math.round(coMaxMarks[co] * 0.9) : 12))],
+		];
+		downloadCSVTemplate(`${test.name.toLowerCase().replace(/\s+/g, "_")}_co_template.csv`, headers, sampleRows);
+	};
 
 	// Filtering + Pagination
 	const filteredEnrollments = enrollments.filter(
@@ -497,24 +508,58 @@ export function MarksEntryByCO({
 								accept=".csv"
 								onChange={handleFileUpload}
 							/>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => fileInputRef.current?.click()}
-								className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
-							>
-								<Download className="w-3.5 h-3.5 text-violet-500" />
-								Import
-							</Button>
-							<Button
-								size="sm"
-								onClick={handleSubmit}
-								disabled={readOnly || submitting || dirtyRows.size === 0}
-								className="gap-1.5 text-xs h-9 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-medium shadow-md shadow-violet-600/10 active:scale-95 duration-200 transition-all"
-							>
-								<Save className="w-3.5 h-3.5" />
-								{submitting ? "Saving…" : "Save"}
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={handleDownloadTemplate}
+										className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
+									>
+										<FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
+										Template
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Download sample CSV template for CO-wise marks import
+								</TooltipContent>
+							</Tooltip>
+
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => fileInputRef.current?.click()}
+										className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
+									>
+										<Download className="w-3.5 h-3.5 text-violet-500" />
+										Import
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Upload CO-wise marks CSV file
+								</TooltipContent>
+							</Tooltip>
+
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span>
+										<Button
+											size="sm"
+											onClick={handleSubmit}
+											disabled={readOnly || submitting || dirtyRows.size === 0}
+											className="gap-1.5 text-xs h-9 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-medium shadow-md shadow-violet-600/10 active:scale-95 duration-200 transition-all disabled:opacity-50 disabled:pointer-events-none"
+										>
+											<Save className="w-3.5 h-3.5" />
+											{submitting ? "Saving…" : "Save"}
+										</Button>
+									</span>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Save modified marks to database
+								</TooltipContent>
+							</Tooltip>
 						</div>
 					</motion.div>
 
@@ -628,14 +673,37 @@ export function MarksEntryByCO({
 									accept=".csv"
 									onChange={handleFileUpload}
 								/>
-								<Button
-									variant="outline"
-									onClick={() => fileInputRef.current?.click()}
-									className="gap-2"
-								>
-									<Download className="w-4 h-4" />
-									Import CSV
-								</Button>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											variant="outline"
+											onClick={handleDownloadTemplate}
+											className="gap-2"
+										>
+											<FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+											Download Template
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent side="top">
+										Download sample CSV template for CO-wise marks import
+									</TooltipContent>
+								</Tooltip>
+
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											variant="outline"
+											onClick={() => fileInputRef.current?.click()}
+											className="gap-2"
+										>
+											<Download className="w-4 h-4 text-violet-500" />
+											Import CSV
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent side="top">
+										Upload CO-wise marks CSV file
+									</TooltipContent>
+								</Tooltip>
 							</>
 						}
 					>

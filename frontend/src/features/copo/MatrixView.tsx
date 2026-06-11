@@ -6,6 +6,8 @@ import { Settings, Upload } from "lucide-react";
 import { useState, lazy, Suspense } from "react";
 import { CSVUploader } from "@/features/shared/CSVUploader";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { downloadCSVTemplate } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const AttainmentSettingsPanel = lazy(() =>
 	import("./AttainmentSettingsPanel").then((m) => ({
@@ -141,6 +143,16 @@ export function MatrixView({
 		setEditableSession(e.target.value);
 	};
 
+	const handleDownloadTemplate = () => {
+		const headers = ["CO", "PO1", "PO2", "PO3", "PO4", "PO5", "PO6", "PO7", "PO8", "PO9", "PO10", "PO11", "PO12", "PSO1", "PSO2", "PSO3"];
+		const sampleRows = [
+			["CO1", "3", "2", "1", "", "", "", "", "", "", "", "", "", "2", "", ""],
+			["CO2", "2", "3", "", "", "", "", "", "", "", "", "", "", "", "3", ""],
+			["CO3", "", "", "3", "2", "", "", "", "", "", "", "", "", "", "", "2"],
+		];
+		downloadCSVTemplate("co_po_matrix_template.csv", headers, sampleRows);
+	};
+
 	return (
 		<div className="space-y-6 pb-8">
 			{/* Header Section with Card */}
@@ -157,34 +169,48 @@ export function MatrixView({
 						</div>
 						<div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
 							{!readOnly && (
-								<Button
-									onClick={() =>
-										setShowSettings(!showSettings)
-									}
-									variant="outline"
-									size="sm"
-									className="flex items-center gap-2"
-								>
-									<Settings className="h-4 w-4" />
-									Attainment Settings
-								</Button>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											onClick={() =>
+												setShowSettings(!showSettings)
+											}
+											variant="outline"
+											size="sm"
+											className="flex items-center gap-2"
+										>
+											<Settings className="h-4 w-4" />
+											Attainment Settings
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent side="top">
+										Configure attainment levels and threshold options
+									</TooltipContent>
+								</Tooltip>
 							)}
-							<Button
-								onClick={() =>
-									handleExportAttainment({
-										programme: editableProgramme,
-										year: editableYear,
-										semester: editableSemester,
-										session: editableSession,
-									})
-								}
-								variant="outline"
-								size="sm"
-								className="flex items-center gap-2"
-							>
-								<Upload className="h-4 w-4" />
-								Export Attainment Excel
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										onClick={() =>
+											handleExportAttainment({
+												programme: editableProgramme,
+												year: editableYear,
+												semester: editableSemester,
+												session: editableSession,
+											})
+										}
+										variant="outline"
+										size="sm"
+										className="flex items-center gap-2"
+									>
+										<Upload className="h-4 w-4" />
+										Export Attainment Excel
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Export direct and indirect CO attainment tables to Excel
+								</TooltipContent>
+							</Tooltip>
 						</div>
 					</div>
 				</CardHeader>
@@ -341,16 +367,28 @@ export function MatrixView({
 						onDataParsed={handleCSVDataParsed}
 						accept=".csv"
 						buttonText="Import Matrix"
+						onDownloadTemplate={handleDownloadTemplate}
+						uploadTooltipText="Upload CO-PO mapping CSV file"
+						downloadTooltipText="Download sample CSV template for CO-PO matrix mapping"
 					/>
-					<Button
-						onClick={saveMatrix}
-						disabled={saving}
-						variant="default"
-						size="sm"
-						className="gap-2"
-					>
-						Save Matrix
-					</Button>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<span>
+								<Button
+									onClick={saveMatrix}
+									disabled={saving}
+									variant="default"
+									size="sm"
+									className="gap-2 disabled:opacity-50 disabled:pointer-events-none"
+								>
+									Save Matrix
+								</Button>
+							</span>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							Save CO-PO-PSO matrix mappings to database
+						</TooltipContent>
+					</Tooltip>
 				</div>
 			)}
 

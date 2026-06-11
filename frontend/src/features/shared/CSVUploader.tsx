@@ -1,9 +1,10 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, FileSpreadsheet } from "lucide-react";
 import type { CSVParserOptions } from "./useCSVParser";
 import { useCSVParser } from "./useCSVParser";
 import { motion, AnimatePresence } from "framer-motion";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export interface CSVUploaderProps<T> {
 	onDataParsed: (data: T[]) => void;
@@ -14,6 +15,9 @@ export interface CSVUploaderProps<T> {
 	buttonText?: string;
 	accept?: string;
 	isLoading?: boolean;
+	onDownloadTemplate?: () => void;
+	uploadTooltipText?: string;
+	downloadTooltipText?: string;
 }
 
 export function CSVUploader<T = any>({
@@ -22,6 +26,9 @@ export function CSVUploader<T = any>({
 	buttonText = "Upload CSV",
 	accept = ".csv",
 	isLoading = false,
+	onDownloadTemplate,
+	uploadTooltipText,
+	downloadTooltipText,
 }: CSVUploaderProps<T>) {
 	const { parseCSV, isParsing, error, setError } = useCSVParser<T>();
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,32 +71,62 @@ export function CSVUploader<T = any>({
 				className="hidden"
 			/>
 			<div className="flex items-center gap-2">
-				<motion.div
-					whileHover={{ scale: 1.03 }}
-					whileTap={{ scale: 0.97 }}
-				>
-					<Button
-						variant="outline"
-						onClick={handleButtonClick}
-						disabled={activeParsing}
-						className="relative overflow-hidden cursor-pointer active:scale-95 transition-transform duration-100 pr-5"
-					>
-						{activeParsing ? (
-							<Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
-						) : (
-							<Download className="w-4 h-4 mr-2" />
-						)}
-						{activeParsing ? "Parsing..." : buttonText}
-						
-						{activeParsing && (
-							<motion.span
-								className="absolute inset-0 bg-primary/5 dark:bg-primary/10"
-								animate={{ opacity: [0.3, 0.6, 0.3] }}
-								transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-							/>
-						)}
-					</Button>
-				</motion.div>
+				{onDownloadTemplate && (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<motion.div
+								whileHover={{ scale: 1.03 }}
+								whileTap={{ scale: 0.97 }}
+							>
+								<Button
+									variant="outline"
+									onClick={onDownloadTemplate}
+									className="relative overflow-hidden cursor-pointer active:scale-95 transition-transform duration-100 font-medium"
+								>
+									<FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-500" />
+									Download Template
+								</Button>
+							</motion.div>
+						</TooltipTrigger>
+						<TooltipContent side="top">
+							{downloadTooltipText || "Download sample CSV template"}
+						</TooltipContent>
+					</Tooltip>
+				)}
+
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<motion.div
+							whileHover={{ scale: 1.03 }}
+							whileTap={{ scale: 0.97 }}
+						>
+							<Button
+								variant="outline"
+								onClick={handleButtonClick}
+								disabled={activeParsing}
+								className="relative overflow-hidden cursor-pointer active:scale-95 transition-transform duration-100 font-medium"
+							>
+								{activeParsing ? (
+									<Loader2 className="w-4 h-4 mr-2 animate-spin text-primary" />
+								) : (
+									<Download className="w-4 h-4 mr-2" />
+								)}
+								{activeParsing ? "Parsing..." : buttonText}
+								
+								{activeParsing && (
+									<motion.span
+										className="absolute inset-0 bg-primary/5 dark:bg-primary/10"
+										animate={{ opacity: [0.3, 0.6, 0.3] }}
+										transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+									/>
+								)}
+							</Button>
+						</motion.div>
+					</TooltipTrigger>
+					<TooltipContent side="top">
+						{uploadTooltipText || "Upload CSV file"}
+					</TooltipContent>
+				</Tooltip>
 			</div>
 			
 			<AnimatePresence>

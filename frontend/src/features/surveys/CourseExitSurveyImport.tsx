@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
+import { downloadCSVTemplate } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { surveyApi } from "@/services/api/surveys";
 import { useCSVParser } from "@/features/shared/useCSVParser";
 import { debugLogger } from "@/lib/debugLogger";
@@ -60,6 +62,19 @@ export function CourseExitSurveyImport({
 		} finally {
 			setLoadingConfig(false);
 		}
+	};
+
+	const handleDownloadTemplate = () => {
+		if (!config?.questions?.length) {
+			toast.error("Configure survey questions first.");
+			return;
+		}
+		const headers = ["rollno", ...config.questions.map(q => q.question_text)];
+		const sampleRows = [
+			["22CS001", ...config.questions.map(() => "5")],
+			["22CS002", ...config.questions.map(() => "4")]
+		];
+		downloadCSVTemplate("course_exit_survey_template.csv", headers, sampleRows);
 	};
 
 	const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,14 +188,39 @@ export function CourseExitSurveyImport({
 					Upload a Google Forms CSV export. Columns will be auto-mapped chronologically to the questions configured above.
 				</p>
 
-				<div>
+				<div className="flex flex-col gap-3">
 					<input type="file" accept=".csv" onChange={handleFileSelected} className="hidden" id="survey-csv-input" />
-					<Button variant="outline" disabled={isParsing || !config || !config.questions} onClick={() => document.getElementById("survey-csv-input")?.click()}>
-						<Download className="w-4 h-4 mr-2" />
-						{isParsing ? "Parsing..." : "Upload CSV"}
-					</Button>
+					<div className="flex items-center gap-2">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<span>
+									<Button variant="outline" disabled={isParsing || !config || !config.questions} onClick={() => document.getElementById("survey-csv-input")?.click()}>
+										<Download className="w-4 h-4 mr-2" />
+										{isParsing ? "Parsing..." : "Upload CSV"}
+									</Button>
+								</span>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								Upload course exit survey responses from CSV file
+							</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<span>
+									<Button variant="outline" disabled={!config || !config.questions} onClick={handleDownloadTemplate} className="gap-2">
+										<FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+										Download Template
+									</Button>
+								</span>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								Download sample CSV template with configured survey questions
+							</TooltipContent>
+						</Tooltip>
+					</div>
 					{(!config || !config.questions || config.questions.length === 0) && (
-						<p className="text-sm text-amber-600 mt-2">Configure questions first before importing.</p>
+						<p className="text-sm text-amber-600 mt-1">Configure questions first before importing.</p>
 					)}
 					{error && <p className="text-sm text-red-500 mt-1">{error}</p>}
 				</div>
@@ -210,9 +250,18 @@ export function CourseExitSurveyImport({
 						</div>
 
 						<div className="flex gap-2 pt-2">
-							<Button onClick={handleImport} disabled={importing || !rollnoCol}>
-								{importing ? "Importing..." : "Import Responses"}
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span>
+										<Button onClick={handleImport} disabled={importing || !rollnoCol} className="disabled:opacity-50 disabled:pointer-events-none">
+											{importing ? "Importing..." : "Import Responses"}
+										</Button>
+									</span>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Confirm and save survey responses to database
+								</TooltipContent>
+							</Tooltip>
 						</div>
 					</div>
 				)}

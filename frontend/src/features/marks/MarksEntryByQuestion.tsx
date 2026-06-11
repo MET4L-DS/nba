@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
 import type { Course, Test } from "@/services/api";
 import { MarksEntryHeader } from "./MarksEntryHeader";
 import { TestInfoCard } from "./TestInfoCard";
@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useMarksEntryByQuestion } from "./useMarksEntryByQuestion";
+import { downloadCSVTemplate } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface MarksEntryByQuestionProps {
 	test: Test;
@@ -35,6 +37,15 @@ export function MarksEntryByQuestion({
 		handleMarkChange,
 		handleSubmit,
 	} = useMarksEntryByQuestion(test, course);
+
+	const handleDownloadTemplate = () => {
+		const headers = ["rollno", "name", ...questions.map(q => q.question_identifier)];
+		const sampleRows = [
+			["22CS001", "John Doe", ...questions.map(q => String(q.max_marks > 0 ? Math.round(q.max_marks * 0.8) : 8))],
+			["22CS002", "Jane Smith", ...questions.map(q => String(q.max_marks > 0 ? Math.round(q.max_marks * 0.9) : 9))],
+		];
+		downloadCSVTemplate(`${test.name.toLowerCase().replace(/\s+/g, "_")}_question_template.csv`, headers, sampleRows);
+	};
 
 	const filteredEnrollments = enrollments.filter(
 		(e) =>
@@ -80,14 +91,37 @@ export function MarksEntryByQuestion({
 							accept=".csv"
 							onChange={handleFileUpload}
 						/>
-						<Button
-							variant="outline"
-							onClick={() => fileInputRef.current?.click()}
-							className="gap-2"
-						>
-							<Download className="w-4 h-4" />
-							Import CSV
-						</Button>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="outline"
+									onClick={handleDownloadTemplate}
+									className="gap-2"
+								>
+									<FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+									Download Template
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								Download sample CSV template for question-wise marks import
+							</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="outline"
+									onClick={() => fileInputRef.current?.click()}
+									className="gap-2"
+								>
+									<Download className="w-4 h-4 text-violet-500" />
+									Import CSV
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								Upload question-wise marks CSV file
+							</TooltipContent>
+						</Tooltip>
 					</>
 				}
 			>

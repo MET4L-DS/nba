@@ -2,7 +2,9 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
+import { downloadCSVTemplate } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { surveyApi } from "@/services/api/surveys";
 import { useCSVParser } from "@/features/shared/useCSVParser";
 import type {
@@ -49,6 +51,19 @@ export function CourseExitSurveyCSVImport({
 	>({});
 	const [importing, setImporting] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const handleDownloadTemplate = () => {
+		if (!config?.questions?.length) {
+			toast.error("Configure survey questions first.");
+			return;
+		}
+		const headers = ["rollno", ...config.questions.map(q => q.question_text)];
+		const sampleRows = [
+			["22CS001", ...config.questions.map(() => "5")],
+			["22CS002", ...config.questions.map(() => "4")]
+		];
+		downloadCSVTemplate("course_exit_survey_template.csv", headers, sampleRows);
+	};
 
 	const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -177,17 +192,44 @@ export function CourseExitSurveyCSVImport({
 					onChange={handleFileSelected}
 				/>
 				{!parsedData ? (
-					<div
-						className="border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30 flex flex-col items-center justify-center p-8 text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer group"
-						onClick={() => fileInputRef.current?.click()}
-					>
-						<Download className="w-10 h-10 text-muted-foreground group-hover:text-primary mb-2" />
-						<p className="text-sm font-semibold text-foreground">
-							Drag and drop CSV uploader
-						</p>
-						<p className="text-xs text-muted-foreground mt-1">
-							or click to browse from your computer
-						</p>
+					<div className="space-y-4">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<div
+									className="border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/30 flex flex-col items-center justify-center p-8 text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer group"
+									onClick={() => fileInputRef.current?.click()}
+								>
+									<Download className="w-10 h-10 text-muted-foreground group-hover:text-primary mb-2" />
+									<p className="text-sm font-semibold text-foreground">
+										Drag and drop CSV uploader
+									</p>
+									<p className="text-xs text-muted-foreground mt-1">
+										or click to browse from your computer
+									</p>
+								</div>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								Upload course exit survey responses from CSV file
+							</TooltipContent>
+						</Tooltip>
+						<div className="flex justify-end">
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={handleDownloadTemplate}
+										className="gap-2 text-xs"
+									>
+										<FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+										Download Template
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Download sample CSV template with configured survey questions
+								</TooltipContent>
+							</Tooltip>
+						</div>
 					</div>
 				) : (
 					<div className="space-y-3">
@@ -222,9 +264,9 @@ export function CourseExitSurveyCSVImport({
 											handleMappingChange(
 												col,
 												e.target.value,
-											)
-										}
-									>
+												)
+											}
+										>
 										<option value="">Skip</option>
 										<option value="0">
 											Student Roll No
@@ -247,15 +289,25 @@ export function CourseExitSurveyCSVImport({
 							))}
 						</div>
 						<div className="flex gap-2">
-							<Button
-								size="sm"
-								onClick={handleImport}
-								disabled={importing || !rollnoCol}
-							>
-								{importing
-									? "Importing..."
-									: "Import Responses"}
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<span>
+										<Button
+											size="sm"
+											onClick={handleImport}
+											disabled={importing || !rollnoCol}
+											className="disabled:opacity-50 disabled:pointer-events-none"
+										>
+											{importing
+												? "Importing..."
+												: "Import Responses"}
+										</Button>
+									</span>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Confirm and save survey responses
+								</TooltipContent>
+							</Tooltip>
 							<Button
 								size="sm"
 								variant="outline"

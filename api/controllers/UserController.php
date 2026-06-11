@@ -903,7 +903,13 @@ class UserController
             $this->userRepository->createPasswordReset($email, $token, $expiresAt);
 
             // Determine frontend URL
-            $frontendUrl = getenv('FRONTEND_URL') ?: ($_SERVER['HTTP_ORIGIN'] ?? 'http://localhost:5173');
+            $origin = $_SERVER['HTTP_ORIGIN'] ?? (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+            
+            $frontendUrl = getenv('FRONTEND_URL');
+            if (!$frontendUrl) {
+                $basePath = getenv('FRONTEND_BASE_PATH') ?: '';
+                $frontendUrl = rtrim($origin, '/') . '/' . ltrim($basePath, '/');
+            }
             $resetLink = rtrim($frontendUrl, '/') . '/reset-password?token=' . $token;
 
             // HTML Body for the email

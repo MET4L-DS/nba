@@ -95,23 +95,23 @@ export function SetTargetsDialog({
 					Set Targets
 				</MotionButton>
 			</DialogTrigger>
-			<DialogContent className="max-w-lg border border-muted/80 bg-background/95 backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden p-6">
+			<DialogContent className="max-w-lg border border-muted/80 bg-background/95 backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden p-6 max-h-[90vh] flex flex-col">
 				<motion.div
 					initial={{ opacity: 0, y: 15, scale: 0.98 }}
 					animate={{ opacity: 1, y: 0, scale: 1 }}
 					transition={{ type: "spring" as const, stiffness: 280, damping: 22 }}
-					className="space-y-4"
+					className="space-y-4 w-full flex flex-col flex-1 min-h-0"
 				>
-					<DialogHeader>
+					<DialogHeader className="shrink-0">
 						<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 							Set PO/PSO Target Levels
 						</DialogTitle>
 					</DialogHeader>
-					<div className="space-y-4 py-1">
-						<p className="text-sm text-muted-foreground">
+					<div className="space-y-4 py-1 flex-1 flex flex-col min-h-0">
+						<p className="text-sm text-muted-foreground shrink-0">
 							Set the target attainment level (0-3) for each PO/PSO.
 						</p>
-						<div className="max-h-[50vh] overflow-y-auto pr-2 overflow-x-hidden">
+						<div className="flex-1 overflow-y-auto pr-2 overflow-x-hidden min-h-0">
 							<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-1">
 								{poList.map((po, index) => (
 									<motion.div
@@ -151,7 +151,7 @@ export function SetTargetsDialog({
 						<MotionButton
 							onClick={handleSave}
 							disabled={loading}
-							className="w-full font-semibold shadow-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 border-none h-11"
+							className="w-full font-semibold shadow-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 border-none h-11 shrink-0 mt-2"
 							whileHover={{ scale: 1.01 }}
 							whileTap={{ scale: 0.99 }}
 						>

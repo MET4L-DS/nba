@@ -64,8 +64,8 @@ export function CourseDialog({
 }: CourseDialogProps) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-card/90 backdrop-blur-lg border border-muted/50 rounded-2xl max-w-[500px] shadow-2xl">
-				<DialogHeader>
+			<DialogContent className="bg-card/90 backdrop-blur-lg border border-muted/50 rounded-2xl max-w-[500px] shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+				<DialogHeader className="shrink-0">
 					<DialogTitle className="text-lg font-bold text-foreground">
 						{mode === "add" ? "Add New Course" : "Edit Course"}
 					</DialogTitle>
@@ -76,7 +76,7 @@ export function CourseDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="grid gap-4 py-4">
+				<div className="grid gap-4 py-4 flex-1 overflow-y-auto pr-1 min-h-0">
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-2">
 							<Label htmlFor={`${mode}_course_code`} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -243,7 +243,7 @@ export function CourseDialog({
 					)}
 				</div>
 
-				<DialogFooter className="mt-4 gap-2">
+				<DialogFooter className="mt-4 gap-2 shrink-0">
 					<Button variant="outline" onClick={onCancel} className="bg-background/60 shadow-sm border-muted/50 rounded-xl active:scale-95 duration-200 transition-all font-semibold h-10 px-4">
 						Cancel
 					</Button>

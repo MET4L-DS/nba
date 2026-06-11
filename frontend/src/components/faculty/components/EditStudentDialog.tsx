@@ -99,9 +99,9 @@ export function EditStudentDialog({
 			open={!!student}
 			onOpenChange={(open: boolean) => !open && onClose()}
 		>
-			<DialogContent className="max-w-md bg-background/95 backdrop-blur-md border border-muted/50 shadow-2xl rounded-2xl p-6 relative overflow-hidden">
+			<DialogContent className="max-w-md bg-background/95 backdrop-blur-md border border-muted/50 shadow-2xl rounded-2xl p-6 relative overflow-hidden max-h-[90vh] flex flex-col">
 				<div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent" />
-				<DialogHeader>
+				<DialogHeader className="shrink-0">
 					<DialogTitle className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
 						Edit Student Info
 					</DialogTitle>
@@ -110,7 +110,7 @@ export function EditStudentDialog({
 					</p>
 				</DialogHeader>
 
-				<div className="space-y-4 py-3">
+				<div className="space-y-4 py-3 flex-1 overflow-y-auto pr-1 min-h-0">
 					<div className="space-y-1.5">
 						<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Full Name</Label>
 						<Input
@@ -247,7 +247,7 @@ export function EditStudentDialog({
 					</div>
 				</div>
 
-				<DialogFooter className="mt-4 gap-2">
+				<DialogFooter className="mt-4 gap-2 shrink-0">
 					<Button
 						variant="outline"
 						onClick={onClose}

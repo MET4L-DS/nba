@@ -60,14 +60,14 @@ export function EnrollStudentsDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-[600px] border border-muted/80 bg-background/95 backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden p-6">
+			<DialogContent className="sm:max-w-[600px] border border-muted/80 bg-background/95 backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden p-6 max-h-[90vh] flex flex-col">
 				<motion.div
 					initial={{ opacity: 0, y: 15, scale: 0.98 }}
 					animate={{ opacity: 1, y: 0, scale: 1 }}
 					transition={{ type: "spring" as const, stiffness: 280, damping: 22 }}
-					className="space-y-4"
+					className="space-y-4 w-full flex flex-col flex-1 min-h-0"
 				>
-					<DialogHeader>
+					<DialogHeader className="shrink-0">
 						<DialogTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 							Enroll Students
 						</DialogTitle>
@@ -77,7 +77,7 @@ export function EnrollStudentsDialog({
 						</DialogDescription>
 					</DialogHeader>
 
-					<div className="space-y-4 py-2">
+					<div className="space-y-4 py-2 flex-1 overflow-y-auto pr-1 min-h-0">
 						<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 							<TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/65 p-1 rounded-xl">
 								<TabsTrigger
@@ -285,7 +285,7 @@ export function EnrollStudentsDialog({
 						</AnimatePresence>
 					</div>
 
-					<DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+					<DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 shrink-0">
 						<MotionButton
 							variant="outline"
 							onClick={handleClose}

@@ -54,8 +54,8 @@ export function DepartmentMemberDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[500px]">
-				<DialogHeader>
+			<DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col overflow-hidden">
+				<DialogHeader className="shrink-0">
 					<DialogTitle>
 						{mode === "add" ? "Add New Member" : "Edit Member"}
 					</DialogTitle>
@@ -65,7 +65,7 @@ export function DepartmentMemberDialog({
 							: "Update member information"}
 					</DialogDescription>
 				</DialogHeader>
-				<div className="grid gap-4 py-4">
+				<div className="grid gap-4 py-4 flex-1 overflow-y-auto pr-1 min-h-0">
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-2">
 							<Label htmlFor={`${mode}_employee_id`}>
@@ -271,7 +271,7 @@ export function DepartmentMemberDialog({
 						</div>
 					)}
 				</div>
-				<DialogFooter>
+				<DialogFooter className="shrink-0">
 					<Button variant="outline" onClick={onCancel}>
 						Cancel
 					</Button>

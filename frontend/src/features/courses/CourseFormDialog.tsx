@@ -225,7 +225,7 @@ export function CourseFormDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-2xl bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-2xl rounded-xl p-6 overflow-hidden">
+			<DialogContent className="max-w-2xl bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-2xl rounded-xl p-6 max-h-[90vh] flex flex-col overflow-hidden">
 				<AnimatePresence mode="wait">
 					{open && (
 						<motion.div
@@ -233,15 +233,15 @@ export function CourseFormDialog({
 							animate={{ opacity: 1, y: 0, scale: 1 }}
 							exit={{ opacity: 0, y: 15, scale: 0.98 }}
 							transition={{ type: "spring", duration: 0.45, bounce: 0.15 }}
-							className="space-y-4 w-full"
+							className="space-y-4 w-full flex flex-col flex-1 min-h-0"
 						>
-							<DialogHeader>
+							<DialogHeader className="shrink-0">
 								<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 									{title}
 								</DialogTitle>
 							</DialogHeader>
 
-							<div className="space-y-4 py-2">
+							<div className="space-y-4 py-2 flex-1 overflow-y-auto pr-1 min-h-0">
 								{mode === "create" && courseType === "offering" && (
 									<motion.div 
 										initial={{ opacity: 0, height: 0 }}
@@ -670,7 +670,7 @@ export function CourseFormDialog({
 								)}
 							</div>
 
-							<DialogFooter className="border-t pt-4 border-muted/30">
+							<DialogFooter className="border-t pt-4 border-muted/30 shrink-0">
 								<Button
 									variant="outline"
 									onClick={() => onOpenChange(false)}

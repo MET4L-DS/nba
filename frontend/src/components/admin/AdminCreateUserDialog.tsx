@@ -45,15 +45,15 @@ export function AdminCreateUserDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[500px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
+			<DialogContent className="sm:max-w-[500px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl max-h-[90vh] flex flex-col overflow-hidden">
 				<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent" />
-				<DialogHeader className="pt-2">
+				<DialogHeader className="pt-2 shrink-0">
 					<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Add New User</DialogTitle>
 					<DialogDescription className="text-muted-foreground text-sm">
 						Create a new system user account. Fields marked with * are required.
 					</DialogDescription>
 				</DialogHeader>
-				<div className="grid gap-4 py-4">
+				<div className="grid gap-4 py-4 flex-1 overflow-y-auto pr-1 min-h-0">
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-2">
 							<Label htmlFor="employee_id" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Employee ID *</Label>
@@ -341,7 +341,7 @@ export function AdminCreateUserDialog({
 						</div>
 					</div>
 				</div>
-				<DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-muted/30">
+				<DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-muted/30 shrink-0">
 					<Button
 						variant="outline"
 						onClick={() => onOpenChange(false)}

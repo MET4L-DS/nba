@@ -275,9 +275,9 @@ export function BulkEnrollStudentsDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-[600px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
+			<DialogContent className="sm:max-w-[600px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl max-h-[90vh] flex flex-col overflow-hidden">
 				<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent" />
-				<DialogHeader className="pt-2">
+				<DialogHeader className="pt-2 shrink-0">
 					<DialogTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Bulk Enroll Students</DialogTitle>
 					<DialogDescription className="text-muted-foreground text-sm">
 						Upload a CSV file or manually add students to enroll in{" "}
@@ -285,7 +285,7 @@ export function BulkEnrollStudentsDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="space-y-5 py-2">
+				<div className="space-y-5 py-2 flex-1 overflow-y-auto pr-1 min-h-0">
 					<div className="space-y-2">
 						<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Batch <span className="text-muted-foreground/60">(optional)</span></Label>
 						<BatchSelector
@@ -469,7 +469,7 @@ export function BulkEnrollStudentsDialog({
 					)}
 				</div>
 
-				<DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-muted/30">
+				<DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-muted/30 shrink-0">
 					<Button
 						variant="outline"
 						onClick={handleClose}

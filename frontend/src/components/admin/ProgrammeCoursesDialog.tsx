@@ -117,9 +117,9 @@ export function ProgrammeCoursesDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-[600px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
+			<DialogContent className="sm:max-w-[600px] border border-muted/50 bg-card/95 backdrop-blur-md rounded-2xl shadow-xl max-h-[90vh] flex flex-col overflow-hidden">
 				<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-slate-500 to-transparent" />
-				<DialogHeader className="pt-2">
+				<DialogHeader className="pt-2 shrink-0">
 					<DialogTitle className="flex items-center gap-2 text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
 						<BookOpen className="w-5 h-5 text-indigo-500" />
 						Programme Courses
@@ -130,7 +130,7 @@ export function ProgrammeCoursesDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="space-y-5 py-2">
+				<div className="space-y-5 py-2 flex-1 overflow-y-auto pr-1 min-h-0">
 					{/* Add Course Section */}
 					<div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4">
 						<h4 className="text-sm font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2 mb-3">
@@ -244,7 +244,7 @@ export function ProgrammeCoursesDialog({
 					</div>
 				</div>
 
-				<DialogFooter className="pt-2 border-t border-muted/30">
+				<DialogFooter className="pt-2 border-t border-muted/30 shrink-0">
 					<Button
 						variant="outline"
 						onClick={handleClose}

@@ -116,14 +116,14 @@ export function EditStudentDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogContent className="sm:max-w-[425px]">
-				<DialogHeader>
+			<DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col overflow-hidden">
+				<DialogHeader className="shrink-0">
 					<DialogTitle>Edit Student</DialogTitle>
 					<DialogDescription>
 						Update student information for {student.roll_no}
 					</DialogDescription>
 				</DialogHeader>
-				<div className="grid gap-4 py-4">
+				<div className="grid gap-4 py-4 flex-1 overflow-y-auto pr-1 min-h-0">
 					<div className="grid grid-cols-4 items-center gap-4">
 						<Label htmlFor="name" className="text-right">
 							Name
@@ -196,7 +196,7 @@ export function EditStudentDialog({
 						/>
 					</div>
 				</div>
-				<DialogFooter>
+				<DialogFooter className="shrink-0">
 					<Button
 						type="button"
 						variant="outline"

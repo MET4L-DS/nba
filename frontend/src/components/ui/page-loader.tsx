@@ -51,9 +51,9 @@ export function PageLoader() {
 					<div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/10 to-transparent w-full animate-loader-diagonal" />
 					
 					<picture>
-						<source srcSet="/tulogo.webp" type="image/webp" />
+						<source srcSet={`${import.meta.env.BASE_URL}tulogo.webp`} type="image/webp" />
 						<img
-							src="/tulogo.png"
+							src={`${import.meta.env.BASE_URL}tulogo.png`}
 							alt="Tezpur University Logo"
 							className="w-14 h-14 object-contain drop-shadow-md select-none"
 						/>

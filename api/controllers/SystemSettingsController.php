@@ -186,12 +186,7 @@ class SystemSettingsController
             $destination = $uploadDir . $filename;
 
             if (move_uploaded_file($file['tmp_name'], $destination)) {
-                // Construct relative path served by Webserver
-                // dirname($_SERVER['SCRIPT_NAME']) gives the base path e.g. /nba-met4l/api or /api
-                $apiDir = dirname($_SERVER['SCRIPT_NAME']);
-                // Normalize slashes
-                $apiDir = rtrim(str_replace('\\', '/', $apiDir), '/');
-                $logoUrl = $apiDir . '/uploads/branding/' . $filename;
+                $logoUrl = 'uploads/branding/' . $filename;
 
                 $this->settingsRepository->update('logo_url', $logoUrl);
 

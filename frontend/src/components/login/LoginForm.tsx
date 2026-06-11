@@ -55,9 +55,9 @@ export function LoginForm({ onSubmit, loading }: LoginFormProps) {
 				>
 					<div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center overflow-hidden shadow-lg">
 						<picture>
-							<source srcSet="/tulogo.webp" type="image/webp" />
+							<source srcSet={`${import.meta.env.BASE_URL}tulogo.webp`} type="image/webp" />
 							<img
-								src="/tulogo.png"
+								src={`${import.meta.env.BASE_URL}tulogo.png`}
 								alt="Tezpur University"
 								className="h-12 w-12 object-contain"
 							/>

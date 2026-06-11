@@ -5,7 +5,7 @@ import type { User } from "@/services/api";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
-import { useSettings } from "@/context/SettingsContext";
+import { useSettings, resolveLogoUrl } from "@/context/SettingsContext";
 
 export interface NavItem {
 	id: string;
@@ -42,9 +42,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
 	const { settings } = useSettings();
 	const displayTitle =
-		title === "Tezpur University" && settings
-			? settings.university_name
-			: title;
+		settings?.university_name || title || "Tezpur University";
 
 	const renderNavItem = (item: NavItem) => {
 		const Icon = item.icon;
@@ -133,7 +131,7 @@ export function AppSidebar({
 							}}
 						>
 							<img
-								src={settings?.logo_url || "/tulogo.png"}
+								src={settings?.logo_url || resolveLogoUrl(null)}
 								alt="Logo"
 								className="w-8 h-8 object-contain"
 							/>
@@ -172,7 +170,7 @@ export function AppSidebar({
 					<div>
 						<motion.button
 							onClick={onLogout}
-							className="w-full mt-auto flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+							className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-300 transition-colors"
 							whileTap={{ scale: 0.97 }}
 						>
 							<LogOut className="w-4 h-4 shrink-0" />

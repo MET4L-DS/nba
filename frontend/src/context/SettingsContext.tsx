@@ -31,6 +31,29 @@ export const DEFAULT_SETTINGS: SystemSettings = {
 	motto_subtext: "Specialized knowledge promotes creativity",
 };
 
+export const resolveLogoUrl = (url: string | null | undefined): string => {
+	if (!url) return `${import.meta.env.BASE_URL}tulogo.png`;
+	if (url.startsWith("http://") || url.startsWith("https://")) return url;
+	if (url.startsWith("/tulogo.png") || url.startsWith("tulogo.png")) {
+		return `${import.meta.env.BASE_URL}tulogo.png`;
+	}
+	if (url.startsWith("/tulogo.webp") || url.startsWith("tulogo.webp")) {
+		return `${import.meta.env.BASE_URL}tulogo.webp`;
+	}
+	// Handle uploaded assets safely to avoid duplication (e.g. if DB stored /nba-met4l/api/uploads/...)
+	if (url.includes("uploads/branding/")) {
+		const relativePath = url.substring(url.indexOf("uploads/branding/"));
+		return `${API_BASE_URL}/${relativePath}`;
+	}
+
+	// If it starts with "/" but is an uploaded asset
+	if (url.startsWith("/")) {
+		return `${API_BASE_URL}${url}`;
+	}
+	// Relative path from backend
+	return `${API_BASE_URL}/${url}`;
+};
+
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const [settings, setSettings] = useState<SystemSettings | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
@@ -39,13 +62,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 	const fetchSettings = async () => {
 		try {
 			const data = await settingsApi.getPublicSettings({ bypassCache: true });
-			setSettings(data);
+			setSettings({
+				...data,
+				logo_url: resolveLogoUrl(data.logo_url),
+			});
 			setError(null);
 		} catch (err: any) {
 			console.error("Failed to load branding settings, using defaults.", err);
 			setError(err.message || "Failed to load settings");
 			// Fallback to defaults to prevent app crash
-			setSettings(DEFAULT_SETTINGS);
+			setSettings({
+				...DEFAULT_SETTINGS,
+				logo_url: resolveLogoUrl(DEFAULT_SETTINGS.logo_url),
+			});
 		} finally {
 			setLoading(false);
 		}
@@ -58,7 +87,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 	useEffect(() => {
 		if (settings) {
 			// Update Document Title
-			document.title = `${settings.system_short_name} | ${settings.university_name}`;
+			const shortName = settings.system_short_name || DEFAULT_SETTINGS.system_short_name;
+			const uniName = settings.university_name || DEFAULT_SETTINGS.university_name;
+			document.title = `${shortName} | ${uniName}`;
 
 			// Update Favicon dynamically
 			let faviconUrl = settings.logo_url;

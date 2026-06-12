@@ -70,6 +70,7 @@ import {
 	BarChart2,
 	CheckCircle,
 	FileSpreadsheet,
+	Upload,
 } from "lucide-react";
 import type { Course, Test } from "@/services/api";
 import { MarksEntryHeader } from "./MarksEntryHeader";
@@ -143,6 +144,25 @@ export function MarksEntryByCO({
 			["22CS002", "Jane Smith", ...CO_KEYS.map(co => String(coMaxMarks[co] > 0 ? Math.round(coMaxMarks[co] * 0.9) : 12))],
 		];
 		downloadCSVTemplate(`${test.name.toLowerCase().replace(/\s+/g, "_")}_co_template.csv`, headers, sampleRows);
+	};
+
+	const handleExportMarks = () => {
+		const headers = ["rollno", "name", ...CO_KEYS];
+		const rows = enrollments.map((e) => {
+			const rollno = e.student_rollno;
+			const name = e.student_name;
+			const row = marks[rollno] ?? emptyRow();
+			return [
+				rollno,
+				name,
+				...CO_KEYS.map((co) => row[co] ?? ""),
+			];
+		});
+		downloadCSVTemplate(
+			`${test.name.toLowerCase().replace(/\s+/g, "_")}_co_marks.csv`,
+			headers,
+			rows
+		);
 	};
 
 	// Filtering + Pagination
@@ -530,6 +550,23 @@ export function MarksEntryByCO({
 									<Button
 										variant="outline"
 										size="sm"
+										onClick={handleExportMarks}
+										className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
+									>
+										<Upload className="w-3.5 h-3.5 text-blue-500" />
+										Export
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent side="top">
+									Export current marks to a CSV file
+								</TooltipContent>
+							</Tooltip>
+
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="outline"
+										size="sm"
 										onClick={() => fileInputRef.current?.click()}
 										className="gap-1.5 text-xs h-9 rounded-xl border-muted/60 bg-background/50 hover:bg-violet-500/5 active:scale-95 duration-200 transition-all font-medium"
 									>
@@ -686,6 +723,22 @@ export function MarksEntryByCO({
 									</TooltipTrigger>
 									<TooltipContent side="top">
 										Download sample CSV template for CO-wise marks import
+									</TooltipContent>
+								</Tooltip>
+
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											variant="outline"
+											onClick={handleExportMarks}
+											className="gap-2"
+										>
+											<Upload className="w-4 h-4 text-blue-500" />
+											Export CSV
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent side="top">
+										Export current marks to a CSV file
 									</TooltipContent>
 								</Tooltip>
 

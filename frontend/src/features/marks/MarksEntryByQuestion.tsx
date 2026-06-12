@@ -1,4 +1,4 @@
-import { Download, FileSpreadsheet } from "lucide-react";
+import { Download, FileSpreadsheet, Upload } from "lucide-react";
 import type { Course, Test } from "@/services/api";
 import { MarksEntryHeader } from "./MarksEntryHeader";
 import { TestInfoCard } from "./TestInfoCard";
@@ -45,6 +45,25 @@ export function MarksEntryByQuestion({
 			["22CS002", "Jane Smith", ...questions.map(q => String(q.max_marks > 0 ? Math.round(q.max_marks * 0.9) : 9))],
 		];
 		downloadCSVTemplate(`${test.name.toLowerCase().replace(/\s+/g, "_")}_question_template.csv`, headers, sampleRows);
+	};
+
+	const handleExportMarks = () => {
+		const headers = ["rollno", "name", ...questions.map(q => q.question_identifier)];
+		const rows = enrollments.map((e) => {
+			const rollno = e.student_rollno;
+			const name = e.student_name;
+			const studentMarks = marks[rollno] || {};
+			return [
+				rollno,
+				name,
+				...questions.map((q) => studentMarks[q.question_identifier] ?? ""),
+			];
+		});
+		downloadCSVTemplate(
+			`${test.name.toLowerCase().replace(/\s+/g, "_")}_question_marks.csv`,
+			headers,
+			rows
+		);
 	};
 
 	const filteredEnrollments = enrollments.filter(
@@ -104,6 +123,22 @@ export function MarksEntryByQuestion({
 							</TooltipTrigger>
 							<TooltipContent side="top">
 								Download sample CSV template for question-wise marks import
+							</TooltipContent>
+						</Tooltip>
+
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="outline"
+									onClick={handleExportMarks}
+									className="gap-2"
+								>
+									<Upload className="w-4 h-4 text-blue-500" />
+									Export CSV
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								Export current marks to a CSV file
 							</TooltipContent>
 						</Tooltip>
 

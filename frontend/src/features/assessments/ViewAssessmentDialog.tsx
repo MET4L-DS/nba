@@ -117,7 +117,7 @@ export function ViewAssessmentDialog({
                                         Question Breakdown
                                     </h4>
                                 </div>
-                                <AssessmentQuestionBreakdown questions={details.questions} onQuestionUpdated={loadAssessmentDetails} />
+                                <AssessmentQuestionBreakdown questions={details.questions} />
                             </motion.div>
                         </motion.div>
                     ) : (

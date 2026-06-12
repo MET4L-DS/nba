@@ -96,103 +96,111 @@ export function EnrollStudentsDialog({
 								</TabsTrigger>
 							</TabsList>
 
-							{/* CSV Upload Tab */}
-							<TabsContent value="csv" className="space-y-4 mt-0 focus-visible:ring-0">
-								<motion.div
-									initial={{ opacity: 0, x: -12 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ type: "spring" as const, stiffness: 300, damping: 24 }}
-									className="space-y-4"
-								>
-									<CSVFormatInfo
-										onDownloadTemplate={downloadTemplate}
-									/>
-									<CSVFileUpload
-										fileInputRef={fileInputRef}
-										onFileChange={handleFileChange}
-										uploading={uploading}
-										enrolling={enrolling}
-									/>
-								</motion.div>
-							</TabsContent>
-
-							{/* Manual Entry Tab */}
-							<TabsContent value="manual" className="space-y-4 mt-0 focus-visible:ring-0">
-								<motion.div
-									initial={{ opacity: 0, x: 12 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ type: "spring" as const, stiffness: 300, damping: 24 }}
-									className="space-y-4"
-								>
-									<div className="bg-green-50/50 dark:bg-green-950/10 rounded-xl p-4 border border-green-100/30">
-										<h4 className="text-sm font-bold text-green-900 dark:text-green-300 flex items-center gap-2">
-											<UserPlus className="w-4 h-4 text-green-600 dark:text-green-400" />
-											Manual Student Entry
-										</h4>
-										<p className="text-xs text-green-700 dark:text-green-400 mt-1">
-											Add students one by one to the enrollment list
-										</p>
-									</div>
-
-									<div className="grid grid-cols-1 gap-4">
-										<div className="grid grid-cols-2 gap-4">
-											<div className="space-y-2">
-												<Label htmlFor="rollno" className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-0.5">
-													Roll Number
-												</Label>
-												<Input
-													id="rollno"
-													placeholder="e.g., CS101"
-													value={manualRollno}
-													onChange={(e) =>
-														setManualRollno(e.target.value)
-													}
-													className="focus-visible:ring-indigo-500/30 transition-all font-mono font-bold bg-background/50 h-10"
-													onKeyDown={(e) => {
-														if (e.key === "Enter") {
-															e.preventDefault();
-															document
-																.getElementById(
-																	"studentName",
-																)
-																?.focus();
-														}
-													}}
-												/>
-											</div>
-											<div className="space-y-2">
-												<Label htmlFor="studentName" className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-0.5">
-													Student Name
-												</Label>
-												<Input
-													id="studentName"
-													placeholder="e.g., John Doe"
-													value={manualName}
-													onChange={(e) =>
-														setManualName(e.target.value)
-													}
-													className="focus-visible:ring-indigo-500/30 transition-all font-semibold bg-background/50 h-10"
-													onKeyDown={(e) => {
-														if (e.key === "Enter") {
-															e.preventDefault();
-															handleAddManualStudent();
-														}
-													}}
-												/>
-											</div>
-										</div>
-										<MotionButton
-											onClick={handleAddManualStudent}
-											whileHover={{ scale: 1.01 }}
-											whileTap={{ scale: 0.99 }}
-											className="w-full font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100/50 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800/40 h-10 transition-all gap-1.5"
+							<AnimatePresence mode="wait">
+								{/* CSV Upload Tab */}
+								{activeTab === "csv" && (
+									<TabsContent key="csv" value="csv" forceMount asChild>
+										<motion.div
+											initial={{ opacity: 0, x: -12 }}
+											animate={{ opacity: 1, x: 0 }}
+											exit={{ opacity: 0, x: 12 }}
+											transition={{ type: "spring" as const, stiffness: 300, damping: 24 }}
+											className="space-y-4 mt-0 focus-visible:ring-0"
 										>
-											<UserPlus className="w-4 h-4" />
-											Add Student
-										</MotionButton>
-									</div>
-								</motion.div>
-							</TabsContent>
+											<CSVFormatInfo
+												onDownloadTemplate={downloadTemplate}
+											/>
+											<CSVFileUpload
+												fileInputRef={fileInputRef}
+												onFileChange={handleFileChange}
+												uploading={uploading}
+												enrolling={enrolling}
+											/>
+										</motion.div>
+									</TabsContent>
+								)}
+
+								{/* Manual Entry Tab */}
+								{activeTab === "manual" && (
+									<TabsContent key="manual" value="manual" forceMount asChild>
+										<motion.div
+											initial={{ opacity: 0, x: 12 }}
+											animate={{ opacity: 1, x: 0 }}
+											exit={{ opacity: 0, x: -12 }}
+											transition={{ type: "spring" as const, stiffness: 300, damping: 24 }}
+											className="space-y-4 mt-0 focus-visible:ring-0"
+										>
+											<div className="bg-green-50/50 dark:bg-green-950/10 rounded-xl p-4 border border-green-100/30">
+												<h4 className="text-sm font-bold text-green-900 dark:text-green-300 flex items-center gap-2">
+													<UserPlus className="w-4 h-4 text-green-600 dark:text-green-400" />
+													Manual Student Entry
+												</h4>
+												<p className="text-xs text-green-700 dark:text-green-400 mt-1">
+													Add students one by one to the enrollment list
+												</p>
+											</div>
+
+											<div className="grid grid-cols-1 gap-4">
+												<div className="grid grid-cols-2 gap-4">
+													<div className="space-y-2">
+														<Label htmlFor="rollno" className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-0.5">
+															Roll Number
+														</Label>
+														<Input
+															id="rollno"
+															placeholder="e.g., CS101"
+															value={manualRollno}
+															onChange={(e) =>
+																setManualRollno(e.target.value)
+															}
+															className="focus-visible:ring-indigo-500/30 transition-all font-mono font-bold bg-background/50 h-10"
+															onKeyDown={(e) => {
+																if (e.key === "Enter") {
+																	e.preventDefault();
+																	document
+																		.getElementById(
+																			"studentName",
+																		)
+																		?.focus();
+																}
+															}}
+														/>
+													</div>
+													<div className="space-y-2">
+														<Label htmlFor="studentName" className="text-xs font-bold text-muted-foreground uppercase tracking-wider ml-0.5">
+															Student Name
+														</Label>
+														<Input
+															id="studentName"
+															placeholder="e.g., John Doe"
+															value={manualName}
+															onChange={(e) =>
+																setManualName(e.target.value)
+															}
+															className="focus-visible:ring-indigo-500/30 transition-all font-semibold bg-background/50 h-10"
+															onKeyDown={(e) => {
+																if (e.key === "Enter") {
+																	e.preventDefault();
+																	handleAddManualStudent();
+																}
+															}}
+														/>
+													</div>
+												</div>
+												<MotionButton
+													onClick={handleAddManualStudent}
+													whileHover={{ scale: 1.01 }}
+													whileTap={{ scale: 0.99 }}
+													className="w-full font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100/50 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800/40 h-10 transition-all gap-1.5"
+												>
+													<UserPlus className="w-4 h-4" />
+													Add Student
+												</MotionButton>
+											</div>
+										</motion.div>
+									</TabsContent>
+								)}
+							</AnimatePresence>
 						</Tabs>
 
 						{/* Preview Table - Shows for both tabs */}

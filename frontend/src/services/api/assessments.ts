@@ -1,4 +1,4 @@
-import { apiGet, apiPostFull, apiDelete, apiPut } from "./base";
+import { apiGet, apiPostFull, apiDelete } from "./base";
 import { debugLogger } from "@/lib/debugLogger";
 import type {
 	Course,
@@ -53,16 +53,5 @@ export const assessmentsApi = {
 			students_affected: number;
 			raw_marks_deleted: number;
 		}>(`/tests/${testId}`);
-	},
-
-	async updateQuestion(
-		questionId: number,
-		data: Partial<QuestionResponse>
-	): Promise<QuestionResponse> {
-		debugLogger.info("assessmentsApi", "updateQuestion called");
-		return apiPut<Partial<QuestionResponse>, QuestionResponse>(
-			`/questions/${questionId}`,
-			data
-		);
 	},
 };

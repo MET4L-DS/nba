@@ -462,17 +462,34 @@ class AttainmentSnapshotService
         for ($i = 1; $i <= 12; $i++) { $poList[] = 'PO' . $i; }
         for ($i = 1; $i <= 3; $i++) { $poList[] = 'PSO' . $i; }
 
-        // Preserve existing targets before deleting
+        // Resolve or create batch_id from programme_batches to maintain database integrity
+        $batchStmt = $this->db->prepare(
+            'SELECT batch_id FROM programme_batches WHERE programme_id = ? AND batch_year = ?'
+        );
+        $batchStmt->execute([$programmeId, $batchYear]);
+        $batchId = $batchStmt->fetchColumn();
+
+        if (!$batchId) {
+            $createStmt = $this->db->prepare(
+                'INSERT IGNORE INTO programme_batches (programme_id, batch_year, status) VALUES (?, ?, ?)'
+            );
+            $createStmt->execute([$programmeId, $batchYear, 'active']);
+            $batchStmt->execute([$programmeId, $batchYear]);
+            $batchId = $batchStmt->fetchColumn();
+        }
+        $batchId = $batchId ? (int)$batchId : null;
+
+        $this->db->beginTransaction();
+
+        // Preserve existing targets before deleting (inside transaction with FOR UPDATE to prevent race condition)
         $targetStmt = $this->db->prepare(
-            'SELECT po_name, target FROM programme_batch_attainments WHERE programme_id = ? AND batch_year = ?'
+            'SELECT po_name, target FROM programme_batch_attainments WHERE programme_id = ? AND batch_year = ? FOR UPDATE'
         );
         $targetStmt->execute([$programmeId, $batchYear]);
         $existingTargets = [];
         foreach ($targetStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $existingTargets[$row['po_name']] = (float)$row['target'];
         }
-
-        $this->db->beginTransaction();
 
         // Delete stale rows for this programme/batch
         $deleteStmt = $this->db->prepare(
@@ -483,8 +500,8 @@ class AttainmentSnapshotService
         // Upsert all 15 PO rows deterministically
         $insertStmt = $this->db->prepare(
             'INSERT INTO programme_batch_attainments
-                (programme_id, batch_year, po_name, direct_attainment, indirect_attainment, final_attainment, target)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+                (programme_id, batch_id, batch_year, po_name, direct_attainment, indirect_attainment, final_attainment, target)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
         $results = [];
@@ -511,6 +528,7 @@ class AttainmentSnapshotService
 
             $insertStmt->execute([
                 $programmeId,
+                $batchId,
                 $batchYear,
                 $poName,
                 $directVal,

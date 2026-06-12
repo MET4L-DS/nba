@@ -21,11 +21,28 @@ class StakeholderSurveyRepository
 
     public function createSurvey(int $programmeId, int $batchYear, string $stakeholderType, string $title = 'Stakeholder Survey'): int
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO stakeholder_surveys (programme_id, batch_year, stakeholder_type, title) 
-             VALUES (?, ?, ?, ?)'
+        // Resolve or create batch_id from programme_batches to maintain database integrity
+        $batchStmt = $this->db->prepare(
+            'SELECT batch_id FROM programme_batches WHERE programme_id = ? AND batch_year = ?'
         );
-        $stmt->execute([$programmeId, $batchYear, $stakeholderType, $title]);
+        $batchStmt->execute([$programmeId, $batchYear]);
+        $batchId = $batchStmt->fetchColumn();
+
+        if (!$batchId) {
+            $createStmt = $this->db->prepare(
+                'INSERT IGNORE INTO programme_batches (programme_id, batch_year, status) VALUES (?, ?, ?)'
+            );
+            $createStmt->execute([$programmeId, $batchYear, 'active']);
+            $batchStmt->execute([$programmeId, $batchYear]);
+            $batchId = $batchStmt->fetchColumn();
+        }
+        $batchId = $batchId ? (int)$batchId : null;
+
+        $stmt = $this->db->prepare(
+            'INSERT INTO stakeholder_surveys (programme_id, batch_id, batch_year, stakeholder_type, title) 
+             VALUES (?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([$programmeId, $batchId, $batchYear, $stakeholderType, $title]);
         return (int)$this->db->lastInsertId();
     }
 

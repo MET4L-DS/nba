@@ -74,7 +74,8 @@ export async function exportAttainmentExcel(opts: AttainmentExportOptions) {
 	ws.getColumn(3).width = 30;
 	ws.getColumn(4).width = 20;
 
-	const totalCols = 4 + assessments.length * coNames.length + 1 + coNames.length + 1;
+	const dataCols = 4 + assessments.length * coNames.length + 1 + coNames.length + 1;
+	const totalCols = Math.max(dataCols, 20);
 
 	// Create header sections
 	const rowsNeeded = createAttainmentCriteriaSection(

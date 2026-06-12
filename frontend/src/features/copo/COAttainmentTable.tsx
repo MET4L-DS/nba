@@ -92,7 +92,7 @@ export function COAttainmentTable({
 					},
 					{
 						label: `NO. OF STUDENTS SECURE MARKS > ${coThreshold}% (CO THRESHOLD)`,
-						rowClass: "bg-gray-900 dark:bg-gray-950 text-white",
+						rowClass: "bg-gray-900 dark:bg-gray-950 text-white hover:bg-gray-800 dark:hover:bg-slate-900",
 						getValue: (_co, isAssessed) => isAssessed ? attainmentData.coStats[_co as keyof typeof attainmentData.coStats].aboveCOThreshold : "NA"
 					},
 					{
@@ -114,7 +114,7 @@ export function COAttainmentTable({
 					},
 					{
 						label: "Final attainment level CO (by Direct Assessment):",
-						rowClass: "bg-orange-100 dark:bg-orange-950 font-bold",
+						rowClass: "bg-orange-100 dark:bg-orange-950 font-bold hover:bg-orange-200/80 dark:hover:bg-orange-900/40",
 						getValue: (co, isAssessed) => {
 							if (!isAssessed) return "NA";
 							const p = getPercentage(co, 'aboveCOThreshold');
@@ -141,7 +141,7 @@ export function COAttainmentTable({
 					},
 					{
 						label: "NO. OF STUDENTS SECURE MARKS > PASSING MARKS",
-						rowClass: "bg-gray-900 dark:bg-gray-950 text-white",
+						rowClass: "bg-gray-900 dark:bg-gray-950 text-white hover:bg-gray-800 dark:hover:bg-slate-900",
 						getValue: (_co, isAssessed) => isAssessed ? attainmentData.coStats[_co as keyof typeof attainmentData.coStats].abovePass : "NA"
 					},
 					{
@@ -159,7 +159,7 @@ export function COAttainmentTable({
 					},
 					{
 						label: "Final attainment level CO (IN ABSOLUTE SCALE):",
-						rowClass: "bg-orange-100 dark:bg-orange-950 font-bold",
+						rowClass: "bg-orange-100 dark:bg-orange-950 font-bold hover:bg-orange-200/80 dark:hover:bg-orange-900/40",
 						getValue: (co, isAssessed) => isAssessed ? getAveragePercentage(co).toFixed(2) + "%" : "NA",
 						cellClass: (co) => !isCOAssessed(co) ? "text-gray-500" : "font-bold text-lg"
 					}

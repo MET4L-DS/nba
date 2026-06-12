@@ -197,7 +197,7 @@ CREATE TABLE `course_offerings` (
   `year` int(11) NOT NULL CHECK (`year` between 1000 and 9999),
   `semester` enum('Spring','Autumn') NOT NULL,
   `co_threshold` decimal(5,2) DEFAULT 40.00 CHECK (`co_threshold` >= 0 and `co_threshold` <= 100),
-  `passing_threshold` decimal(5,2) DEFAULT 60.00 CHECK (`passing_threshold` >= 0 and `passing_threshold` <= 100),
+  `passing_threshold` decimal(5,2) DEFAULT 30.00 CHECK (`passing_threshold` >= 0 and `passing_threshold` <= 100),
   `syllabus_pdf` longblob DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),

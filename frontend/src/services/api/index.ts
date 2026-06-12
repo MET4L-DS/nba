@@ -45,6 +45,7 @@ class ApiService {
 	createAssessment = assessmentsApi.createAssessment;
 	getAssessment = assessmentsApi.getAssessment;
 	deleteTest = assessmentsApi.deleteTest;
+	updateQuestion = assessmentsApi.updateQuestion;
 
 	// Marks methods
 	saveMarksByQuestion = marksApi.saveMarksByQuestion;

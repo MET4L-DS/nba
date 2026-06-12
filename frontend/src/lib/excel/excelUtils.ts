@@ -71,7 +71,9 @@ export function mergeAndStyle(
 	endCol: number,
 	options: CellStyleOptions & { value?: any }
 ) {
-	ws.mergeCells(startRow, startCol, endRow, endCol);
+	if (startRow !== endRow || startCol !== endCol) {
+		ws.mergeCells(startRow, startCol, endRow, endCol);
+	}
 	const cell = ws.getCell(startRow, startCol);
 	if (options.value !== undefined) {
 		cell.value = options.value;

@@ -25,7 +25,7 @@ class CourseOffering
         $year,
         $semester,
         $coThreshold = 40.00,
-        $passingThreshold = 60.00,
+        $passingThreshold = 30.00,
         $syllabusPdf = null,
         $isActive = 1,
         $createdAt = null,

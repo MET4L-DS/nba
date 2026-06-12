@@ -63,7 +63,10 @@ export function CreateAssessmentForm({
 	} = useCreateAssessment({ selectedCourse, onSuccess });
 
 	return (
-		<form onSubmit={handleSubmit} className="h-full flex flex-col relative overflow-hidden bg-slate-50/30 dark:bg-slate-950/20">
+		<form
+			onSubmit={handleSubmit}
+			className="h-full flex flex-col relative overflow-hidden bg-slate-50/30 dark:bg-slate-950/20"
+		>
 			{/* Top header bar */}
 			<header className="h-auto py-3 md:h-16 md:py-0 shrink-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 gap-3 relative z-20">
 				<div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
@@ -73,7 +76,10 @@ export function CreateAssessmentForm({
 						variant="ghost"
 						size="icon"
 						onClick={onCancel}
-						whileHover={{ scale: 1.08, backgroundColor: "rgba(0,0,0,0.03)" }}
+						whileHover={{
+							scale: 1.08,
+							backgroundColor: "rgba(0,0,0,0.03)",
+						}}
 						whileTap={{ scale: 0.92 }}
 						className="rounded-full shrink-0 h-9 w-9 text-muted-foreground hover:text-foreground"
 					>
@@ -101,7 +107,8 @@ export function CreateAssessmentForm({
 								Course:
 							</span>
 							<span className="text-[11px] font-bold text-primary truncate max-w-[240px]">
-								{selectedCourse.course_code} — {selectedCourse.course_name}
+								{selectedCourse.course_code} —{" "}
+								{selectedCourse.course_name}
 							</span>
 						</motion.div>
 					)}
@@ -111,11 +118,15 @@ export function CreateAssessmentForm({
 						disabled={isSubmitting || !selectedCourse}
 						whileHover={{ scale: 1.02 }}
 						whileTap={{ scale: 0.98 }}
-						transition={{ type: "spring" as const, stiffness: 450, damping: 14 }}
+						transition={{
+							type: "spring" as const,
+							stiffness: 450,
+							damping: 14,
+						}}
 						className="gap-2 font-bold shadow-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 border-none px-4 h-9.5 w-full sm:w-auto"
 					>
 						<Rocket className="w-4 h-4" />
-						{isSubmitting ? "Creating..." : "Create Assessment"}
+						{isSubmitting ? "Creating..." : "Done"}
 					</MotionButton>
 				</div>
 			</header>
@@ -126,7 +137,11 @@ export function CreateAssessmentForm({
 				<motion.aside
 					initial={{ opacity: 0, x: -30 }}
 					animate={{ opacity: 1, x: 0 }}
-					transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
+					transition={{
+						type: "spring" as const,
+						stiffness: 280,
+						damping: 24,
+					}}
 					className="w-full md:w-80 lg:w-96 bg-white/75 dark:bg-slate-900/75 backdrop-blur-md border-b md:border-b-0 md:border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col shrink-0 overflow-y-auto relative z-10"
 				>
 					<div className="p-6 space-y-8">
@@ -134,7 +149,10 @@ export function CreateAssessmentForm({
 						<motion.div
 							initial={{ opacity: 0, y: 15 }}
 							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.05, type: "spring" as const }}
+							transition={{
+								delay: 0.05,
+								type: "spring" as const,
+							}}
 						>
 							<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3.5 ml-0.5">
 								Context
@@ -143,10 +161,12 @@ export function CreateAssessmentForm({
 								<div className="relative group overflow-hidden bg-gradient-to-br from-blue-50/50 to-indigo-50/20 dark:from-blue-950/20 dark:to-indigo-950/10 rounded-2xl p-4.5 border border-blue-100/70 dark:border-blue-900/30 shadow-xs transition-all hover:shadow-md hover:border-blue-200/50 dark:hover:border-blue-800/30">
 									<div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
 									<p className="text-sm font-bold text-indigo-900 dark:text-blue-300 leading-snug">
-										{selectedCourse.course_code} - {selectedCourse.course_name}
+										{selectedCourse.course_code} -{" "}
+										{selectedCourse.course_name}
 									</p>
 									<p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-1">
-										Semester {selectedCourse.semester}, Year {selectedCourse.year}
+										Semester {selectedCourse.semester}, Year{" "}
+										{selectedCourse.year}
 									</p>
 									{contextStats != null && (
 										<div className="mt-4 pt-3.5 border-t border-blue-100/80 dark:border-blue-900/40 flex gap-4">
@@ -202,7 +222,9 @@ export function CreateAssessmentForm({
 													className="w-full justify-between bg-background/50 border-slate-200 dark:border-slate-800 h-10 px-3.5 hover:bg-background shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
 												>
 													<span className="text-sm font-semibold">
-														{TEST_TYPES.includes(name)
+														{TEST_TYPES.includes(
+															name,
+														)
 															? name
 															: name
 																? "Other"
@@ -211,12 +233,17 @@ export function CreateAssessmentForm({
 													<ChevronDown className="w-4 h-4 ml-2 text-muted-foreground/75" />
 												</MotionButton>
 											</DropdownMenuTrigger>
-											<DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width) rounded-2xl shadow-xl border border-muted/80 backdrop-blur-md p-1">
+											<DropdownMenuContent
+												align="start"
+												className="w-(--radix-dropdown-menu-trigger-width) rounded-2xl shadow-xl border border-muted/80 backdrop-blur-md p-1"
+											>
 												{TEST_TYPES.map((t) => (
 													<DropdownMenuItem
 														key={t}
 														onSelect={() =>
-															handleTestTypeChange(t)
+															handleTestTypeChange(
+																t,
+															)
 														}
 														className="rounded-xl py-2 px-3 font-semibold text-xs transition-colors hover:bg-accent"
 													>
@@ -231,7 +258,10 @@ export function CreateAssessmentForm({
 										name === "Other") && (
 										<motion.div
 											initial={{ opacity: 0, height: 0 }}
-											animate={{ opacity: 1, height: "auto" }}
+											animate={{
+												opacity: 1,
+												height: "auto",
+											}}
 											exit={{ opacity: 0, height: 0 }}
 											className="space-y-2 overflow-hidden"
 										>
@@ -244,7 +274,9 @@ export function CreateAssessmentForm({
 											<Input
 												id="customName"
 												type="text"
-												value={name === "Other" ? "" : name}
+												value={
+													name === "Other" ? "" : name
+												}
 												onChange={(e) =>
 													setName(e.target.value)
 												}
@@ -318,7 +350,10 @@ export function CreateAssessmentForm({
 								type="button"
 								variant="ghost"
 								onClick={onCancel}
-								whileHover={{ scale: 1.01, backgroundColor: "rgba(239,68,68,0.06)" }}
+								whileHover={{
+									scale: 1.01,
+									backgroundColor: "rgba(239,68,68,0.06)",
+								}}
 								whileTap={{ scale: 0.99 }}
 								className="w-full text-muted-foreground hover:text-destructive gap-2 h-10 font-bold rounded-xl transition-all"
 							>
@@ -333,7 +368,11 @@ export function CreateAssessmentForm({
 				<motion.section
 					initial={{ opacity: 0, x: 30 }}
 					animate={{ opacity: 1, x: 0 }}
-					transition={{ type: "spring" as const, stiffness: 280, damping: 24 }}
+					transition={{
+						type: "spring" as const,
+						stiffness: 280,
+						damping: 24,
+					}}
 					className="flex-1 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col md:overflow-hidden overflow-visible relative h-auto md:h-full"
 				>
 					{/* Sticky sub-header */}
@@ -352,7 +391,11 @@ export function CreateAssessmentForm({
 						{/* Dynamic Matching Badge */}
 						<motion.div
 							animate={marksMatch ? { scale: [1, 1.02, 1] } : {}}
-							transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+							transition={{
+								repeat: Infinity,
+								duration: 2,
+								ease: "easeInOut",
+							}}
 							className={`flex items-center bg-white dark:bg-slate-900 border rounded-full pl-2 pr-4.5 py-1.5 shadow-xs gap-3 transition-all ${
 								marksMatch
 									? "border-green-500/40 bg-green-500/[0.04] dark:bg-green-950/20 shadow-green-500/5"
@@ -384,10 +427,26 @@ export function CreateAssessmentForm({
 									<AnimatePresence mode="popLayout">
 										<motion.span
 											key={totalMarks}
-											initial={{ scale: 1.3, y: -4, opacity: 0 }}
-											animate={{ scale: 1, y: 0, opacity: 1 }}
-											exit={{ scale: 0.8, y: 4, opacity: 0 }}
-											transition={{ type: "spring", stiffness: 350, damping: 15 }}
+											initial={{
+												scale: 1.3,
+												y: -4,
+												opacity: 0,
+											}}
+											animate={{
+												scale: 1,
+												y: 0,
+												opacity: 1,
+											}}
+											exit={{
+												scale: 0.8,
+												y: 4,
+												opacity: 0,
+											}}
+											transition={{
+												type: "spring",
+												stiffness: 350,
+												damping: 15,
+											}}
 											className={`text-sm font-bold font-mono ${
 												marksMatch
 													? "text-green-600 dark:text-green-400"
@@ -433,7 +492,11 @@ export function CreateAssessmentForm({
 							}
 							whileHover={{ scale: 1.03, y: -1 }}
 							whileTap={{ scale: 0.97 }}
-							transition={{ type: "spring" as const, stiffness: 400, damping: 15 }}
+							transition={{
+								type: "spring" as const,
+								stiffness: 400,
+								damping: 15,
+							}}
 							className="gap-2 rounded-full h-11 px-8 shadow-xs hover:shadow-md bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 hover:border-indigo-505 text-indigo-600 dark:text-indigo-400 font-bold"
 						>
 							<Plus className="w-5 h-5 text-indigo-505" />

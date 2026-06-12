@@ -34,7 +34,7 @@ class CourseOfferingRepository
                     $data['year'],
                     $data['semester'],
                     $data['co_threshold'] ?? 40.00,
-                    $data['passing_threshold'] ?? 60.00,
+                    $data['passing_threshold'] ?? 30.00,
                     $data['syllabus_pdf'],
                     $data['is_active'] ?? 1,
                     $data['created_at'] ?? null,
@@ -70,7 +70,7 @@ class CourseOfferingRepository
                     $data['year'],
                     $data['semester'],
                     $data['co_threshold'] ?? 40.00,
-                    $data['passing_threshold'] ?? 60.00,
+                    $data['passing_threshold'] ?? 30.00,
                     $data['syllabus_pdf'],
                     $data['is_active'] ?? 1,
                     $data['created_at'] ?? null,
@@ -287,58 +287,6 @@ class CourseOfferingRepository
                     'passing_threshold' => $data['passing_threshold'],
                     'primary_faculty_id' => $data['primary_faculty_id'],
                     'primary_faculty_name' => $data['primary_faculty_name'],
-                    'is_active' => $data['is_active'] ?? 1,
-                    'created_at' => $data['created_at'],
-                    'updated_at' => $data['updated_at']
-                ];
-            }
-
-            return $offerings;
-        } catch (PDOException $e) {
-            throw new Exception("Database error: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Find offerings by school
-     */
-    public function findBySchool($schoolId)
-    {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT co.*, c.course_code, c.course_name, c.credit,
-                       d.department_code, d.department_name,
-                       u.username as primary_faculty_name,
-                       cfa.employee_id as primary_faculty_id
-                FROM course_offerings co
-                INNER JOIN courses c ON co.course_id = c.course_id
-                INNER JOIN departments d ON c.department_id = d.department_id
-                LEFT JOIN course_faculty_assignments cfa 
-                    ON co.offering_id = cfa.offering_id 
-                    AND cfa.assignment_type = 'Primary' 
-                    AND cfa.is_active = 1
-                LEFT JOIN users u ON cfa.employee_id = u.employee_id
-                WHERE d.school_id = ?
-                ORDER BY co.year DESC, co.semester DESC, d.department_code, c.course_code
-            ");
-            $stmt->execute([$schoolId]);
-            $offerings = [];
-
-            while ($data = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $offerings[] = [
-                    'offering_id' => $data['offering_id'],
-                    'course_id' => $data['course_id'],
-                    'course_code' => $data['course_code'],
-                    'course_name' => $data['course_name'],
-                    'credit' => $data['credit'],
-                    'department_code' => $data['department_code'],
-                    'department_name' => $data['department_name'],
-                    'year' => $data['year'],
-                    'semester' => $data['semester'],
-                    'co_threshold' => $data['co_threshold'],
-                    'passing_threshold' => $data['passing_threshold'],
-                    'primary_faculty_id' => $data['primary_faculty_id'],
-                    'primary_faculty_name' => $data['primary_faculty_name'],
                     'is_active' => $data['is_active'] ?? 1
                 ];
             }
@@ -410,7 +358,15 @@ class CourseOfferingRepository
                 ]);
 
                 if ($result) {
-                    $offering->setOfferingId($this->db->lastInsertId());
+                    $offeringId = $this->db->lastInsertId();
+                    $offering->setOfferingId($offeringId);
+                    
+                    // Add default attainment scales
+                    $stmtScale = $this->db->prepare("
+                        INSERT INTO attainment_scale (offering_id, level, min_percentage) 
+                        VALUES (?, 3, 60.00), (?, 2, 50.00), (?, 1, 40.00)
+                    ");
+                    $stmtScale->execute([$offeringId, $offeringId, $offeringId]);
                 }
 
                 return $result;

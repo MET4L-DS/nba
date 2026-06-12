@@ -96,7 +96,9 @@ export function BaseAttainmentTable({
 								{rows.map((row, i) => (
 									<motion.tr
 										key={i}
-										className={`border-b border-muted/20 last:border-b-0 transition-colors hover:bg-muted/[0.04] ${row.rowClass || ""}`}
+										className={`border-b border-muted/20 last:border-b-0 transition-colors ${
+											row.rowClass?.includes("bg-") ? "" : "hover:bg-muted/[0.04]"
+										} ${row.rowClass || ""}`}
 										initial={{ opacity: 0, x: -6 }}
 										animate={{ opacity: 1, x: 0 }}
 										transition={{
@@ -106,7 +108,9 @@ export function BaseAttainmentTable({
 											delay: i * 0.05,
 										}}
 									>
-										<TableCell className="border-r border-muted/20 font-semibold text-xs text-foreground/85 py-3 px-4 max-w-[280px]">
+										<TableCell className={`border-r border-muted/20 font-semibold text-xs py-3 px-4 max-w-[280px] ${
+											row.rowClass?.includes("text-") ? "text-inherit" : "text-foreground/85"
+										}`}>
 											{row.label}
 										</TableCell>
 										{coList.map((co) => (

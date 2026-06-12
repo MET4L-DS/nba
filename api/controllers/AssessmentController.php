@@ -572,8 +572,10 @@ class AssessmentController
             }
 
             // Update question properties
-            if (isset($data['co'])) {
+            $coChanged = false;
+            if (isset($data['co']) && $question->getCo() != $data['co']) {
                 $question->setCo($data['co']);
+                $coChanged = true;
             }
             if (isset($data['max_marks'])) {
                 $question->setMaxMarks($data['max_marks']);
@@ -582,8 +584,36 @@ class AssessmentController
                 $question->setIsOptional($data['is_optional']);
             }
 
-            // Save updated question
-            $this->questionRepository->save($question);
+            // Save updated question and recalculate grades if CO changed
+            if ($this->db) {
+                $this->db->beginTransaction();
+            }
+
+            try {
+                $this->questionRepository->save($question);
+
+                if ($coChanged) {
+                    $stmt = $this->db->prepare("SELECT DISTINCT student_id FROM raw_marks WHERE question_id = ?");
+                    $stmt->execute([$questionId]);
+                    $studentIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                    if (!empty($studentIds)) {
+                        $marksRepository = new MarksRepository($this->db);
+                        foreach ($studentIds as $studentId) {
+                            $marksRepository->aggregateFromRawMarks($test->getTestId(), $studentId);
+                        }
+                    }
+                }
+
+                if ($this->db) {
+                    $this->db->commit();
+                }
+            } catch (Exception $e) {
+                if ($this->db) {
+                    $this->db->rollBack();
+                }
+                throw $e;
+            }
 
             http_response_code(200);
             

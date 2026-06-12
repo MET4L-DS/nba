@@ -277,7 +277,7 @@ class StaffController
                 $input['year'],
                 $input['semester'],
                 $input['co_threshold'] ?? 40.00,
-                $input['passing_threshold'] ?? 60.00
+                $input['passing_threshold'] ?? 30.00
             );
             $this->courseOfferingRepository->save($offering);
 

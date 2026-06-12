@@ -5,6 +5,7 @@ import type {
 	Student,
 	Department,
 	Programme,
+	ProgrammeBatch,
 	AdminStats,
 	AdminCourse,
 	AdminTest,
@@ -201,6 +202,36 @@ export const adminApi = {
 	): Promise<void> {
 		debugLogger.info("adminApi", "removeProgrammeCourse called");
 		return apiDelete(`/admin/programmes/${programmeId}/courses/${courseId}`);
+	},
+
+	async getProgrammeBatches(
+		programmeId: number,
+	): Promise<{ success: boolean; data: ProgrammeBatch[] }> {
+		debugLogger.info("adminApi", "getProgrammeBatches called");
+		return apiGet<{ success: boolean; data: ProgrammeBatch[] }>(
+			`/admin/programmes/${programmeId}/batches`,
+		);
+	},
+
+	async createProgrammeBatch(
+		programmeId: number,
+		data: { batch_year: number; status: string },
+	): Promise<any> {
+		debugLogger.info("adminApi", "createProgrammeBatch called");
+		return apiPost<any, any>(`/admin/programmes/${programmeId}/batches`, data);
+	},
+
+	async updateProgrammeBatch(
+		batchId: number,
+		data: { batch_year?: number; coordinator_id?: number | null; status?: string; start_date?: string | null; end_date?: string | null },
+	): Promise<any> {
+		debugLogger.info("adminApi", "updateProgrammeBatch called");
+		return apiPut<any, any>(`/admin/batches/${batchId}`, data);
+	},
+
+	async deleteProgrammeBatch(batchId: number): Promise<void> {
+		debugLogger.info("adminApi", "deleteProgrammeBatch called");
+		return apiDelete(`/admin/batches/${batchId}`);
 	},
 
 

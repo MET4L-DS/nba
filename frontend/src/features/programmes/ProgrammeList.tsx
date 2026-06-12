@@ -19,6 +19,9 @@ interface ProgrammeListProps {
 	onViewAttainment?: (programme: Programme) => void;
 	onEnroll?: (programme: Programme) => void;
 	onManageCourses?: (programme: Programme) => void;
+	onOffer?: (programme: Programme) => void;
+	onEditBatch?: (programme: Programme) => void;
+	onDeleteBatch?: (programme: Programme) => void;
 }
 
 export function ProgrammeList({
@@ -29,6 +32,9 @@ export function ProgrammeList({
 	onViewAttainment,
 	onEnroll,
 	onManageCourses,
+	onOffer,
+	onEditBatch,
+	onDeleteBatch,
 }: ProgrammeListProps) {
 	const {
 		data: programmes,
@@ -51,8 +57,8 @@ export function ProgrammeList({
 	});
 
 	const columns = useMemo(
-		() => getProgrammeColumns({ onEdit, onDelete, onViewAttainment, onEnroll, onManageCourses }),
-		[onEdit, onDelete, onViewAttainment, onEnroll, onManageCourses],
+		() => getProgrammeColumns({ onEdit, onDelete, onViewAttainment, onEnroll, onManageCourses, onOffer, onEditBatch, onDeleteBatch }),
+		[onEdit, onDelete, onViewAttainment, onEnroll, onManageCourses, onOffer, onEditBatch, onDeleteBatch],
 	);
 
 	return (

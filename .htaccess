@@ -1,46 +1,8 @@
-# Enable URL rewriting
-RewriteEngine On
-RewriteBase /nba/
-
-# Enable Authorization Header
-RewriteCond %{HTTP:Authorization} .
-RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-# Set directory index to serve from dist folder
-DirectoryIndex dist/index.html
-
-# ==========================================
-# API Routes - Handle API requests first
-# ==========================================
-RewriteRule ^api/(.*)$ api/index.php [QSA,L]
-RewriteRule ^api$ api/index.php [QSA,L]
-
-# ==========================================
-# Static Files - Serve directly from dist
-# ==========================================
-# Serve static files directly from dist folder
-RewriteCond %{REQUEST_URI} \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json)$ [NC]
-RewriteCond %{DOCUMENT_ROOT}/nba/dist/%{REQUEST_URI} -f
-RewriteRule ^(.*)$ dist/$1 [L]
-
-# ==========================================
-# React App - Serve index.html for all other routes
-# ==========================================
-# Serve index.html from dist for all other requests
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !^/nba/api/
-RewriteRule ^.*$ dist/index.html [L]
-
-# ==========================================
-# Security Rules
-# ==========================================
-<FilesMatch "^(setup_database|test_setup)\.php$">
-    Require all denied
-</FilesMatch>
-
-<FilesMatch "^\.git">
-    Require all denied
-</FilesMatch>
-
-Options -Indexes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /nba-frontend/
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /nba-frontend/index.html [L]
+</IfModule>

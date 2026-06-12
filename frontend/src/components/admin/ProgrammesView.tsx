@@ -1,5 +1,4 @@
-import { DataTable } from "@/features/shared/DataTable";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -19,12 +18,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, GraduationCap, X } from "lucide-react";
 import { toast } from "sonner";
 import { adminApi } from "@/services/api/admin";
-import { usePaginatedData } from "@/lib/usePaginatedData";
-import type { Programme, Department } from "@/services/api";
-import { getProgrammeColumns } from "./ProgrammesView.columns";
+import type { Programme, Department, PaginationParams } from "@/services/api";
+import { ProgrammeList } from "@/features/programmes/ProgrammeList";
+import { ProgrammeOfferDialog } from "./ProgrammeOfferDialog";
 import { BulkEnrollStudentsDialog } from "./BulkEnrollStudentsDialog";
 import { ProgrammeCoursesDialog } from "./ProgrammeCoursesDialog";
 import { motion } from "framer-motion";
@@ -32,26 +32,12 @@ import { motion } from "framer-motion";
 const MotionButton = motion(Button);
 
 export function ProgrammesView() {
-	const {
-		data: programmes,
-		loading: refreshing,
-		refresh: onDataRefresh,
-		pagination,
-		goNext,
-		goPrev,
-		canPrev,
-		pageIndex,
-		search,
-		setSearch,
-		filters,
-		setFilter,
-	} = usePaginatedData<Programme, { department_id: string }>(({
-		fetchFn: (params) => adminApi.getAllProgrammes(params),
-		limit: 20,
-		defaultSort: "p.programme_code",
-	}));
-
+	const [activeTab, setActiveTab] = useState<"ongoing" | "offered" | "catalog">("ongoing");
+	const [selectedDeptId, setSelectedDeptId] = useState<string>("all");
 	const [departments, setDepartments] = useState<Department[]>([]);
+	const [refreshKey, setRefreshKey] = useState(0);
+
+	// Load departments
 	useEffect(() => {
 		adminApi
 			.getAllDepartments({ limit: 100 })
@@ -59,11 +45,19 @@ export function ProgrammesView() {
 			.catch(() => {});
 	}, []);
 
+	const triggerRefresh = useCallback(() => {
+		setRefreshKey((k) => k + 1);
+	}, []);
+
+	// Dialog states
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false);
 	const [isCoursesDialogOpen, setIsCoursesDialogOpen] = useState(false);
+	const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
+	const [isEditBatchDialogOpen, setIsEditBatchDialogOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
 	const [selectedProgramme, setSelectedProgramme] = useState<Programme | null>(null);
 
 	const [formData, setFormData] = useState({
@@ -82,6 +76,7 @@ export function ProgrammesView() {
 		duration_years: 4,
 	});
 
+	// Dialog opening handlers
 	const openEditDialog = (programme: Programme) => {
 		setSelectedProgramme(programme);
 		setEditFormData({
@@ -104,37 +99,17 @@ export function ProgrammesView() {
 		setIsCoursesDialogOpen(true);
 	};
 
-	const handleDeleteProgramme = async (programme: Programme) => {
-		try {
-			await adminApi.deleteProgramme(programme.programme_id);
-			toast.success(`Programme "${programme.programme_name}" deleted`);
-			onDataRefresh();
-		} catch (error) {
-			toast.error(error instanceof Error ? error.message : "Failed to delete programme");
-		}
+	const openOfferDialog = (programme: Programme) => {
+		setSelectedProgramme(programme);
+		setIsOfferDialogOpen(true);
 	};
 
-	const columns = useMemo(
-		() =>
-			getProgrammeColumns({
-				onEdit: openEditDialog,
-				onDelete: handleDeleteProgramme,
-				onEnroll: openEnrollDialog,
-				onManageCourses: openCoursesDialog,
-			}),
-		[],
-	);
-
-	const resetForm = () => {
-		setFormData({
-			programme_name: "",
-			programme_code: "",
-			department_id: "",
-			degree_level: "UG",
-			duration_years: 4,
-		});
+	const openEditBatchDialog = (programme: Programme) => {
+		setSelectedProgramme(programme);
+		setIsEditBatchDialogOpen(true);
 	};
 
+	// CRUD for base programmes
 	const handleCreateProgramme = async () => {
 		if (!formData.programme_name || !formData.programme_code || !formData.department_id) {
 			toast.error("Please fill in all required fields");
@@ -153,7 +128,7 @@ export function ProgrammesView() {
 			toast.success("Programme created successfully");
 			setIsAddDialogOpen(false);
 			resetForm();
-			onDataRefresh();
+			triggerRefresh();
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : "Failed to create programme");
 		} finally {
@@ -181,13 +156,111 @@ export function ProgrammesView() {
 			toast.success("Programme updated successfully");
 			setIsEditDialogOpen(false);
 			setSelectedProgramme(null);
-			onDataRefresh();
+			triggerRefresh();
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : "Failed to update programme");
 		} finally {
 			setIsSubmitting(false);
 		}
 	};
+
+	const handleDeleteProgramme = async (programme: Programme) => {
+		try {
+			await adminApi.deleteProgramme(programme.programme_id);
+			toast.success(`Programme "${programme.programme_name}" deleted`);
+			triggerRefresh();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to delete programme");
+		}
+	};
+
+	// CRUD for offered batches
+	const handleOfferBatch = async (data: { batch_year: number; status: "upcoming" | "active" | "completed" }) => {
+		if (!selectedProgramme) return;
+		setIsSubmitting(true);
+		try {
+			await adminApi.createProgrammeBatch(selectedProgramme.programme_id, data);
+			toast.success("Programme offered to batch successfully");
+			setIsOfferDialogOpen(false);
+			setSelectedProgramme(null);
+			triggerRefresh();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to offer programme");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const handleUpdateBatch = async (data: { status: "upcoming" | "active" | "completed" }) => {
+		if (!selectedProgramme || !selectedProgramme.batch_id) return;
+		setIsSubmitting(true);
+		try {
+			await adminApi.updateProgrammeBatch(selectedProgramme.batch_id, {
+				status: data.status,
+			});
+			toast.success("Batch status updated successfully");
+			setIsEditBatchDialogOpen(false);
+			setSelectedProgramme(null);
+			triggerRefresh();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to update batch status");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const handleDeleteBatch = async (programme: Programme) => {
+		if (!programme.batch_id) return;
+		try {
+			await adminApi.deleteProgrammeBatch(programme.batch_id);
+			toast.success("Offered batch deleted successfully");
+			triggerRefresh();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to delete batch offering");
+		}
+	};
+
+	const resetForm = () => {
+		setFormData({
+			programme_name: "",
+			programme_code: "",
+			department_id: "",
+			degree_level: "UG",
+			duration_years: 4,
+		});
+	};
+
+	// Data fetching functions
+	const fetchOngoing = useCallback((params: PaginationParams) => {
+		const now = new Date();
+		const academicYear = now.getMonth() < 6 ? now.getFullYear() - 1 : now.getFullYear();
+		return adminApi.getAllProgrammes({
+			limit: 20,
+			...params,
+			year: String(academicYear),
+			department_id: selectedDeptId === "all" ? undefined : selectedDeptId,
+		});
+	}, [selectedDeptId]);
+
+	const fetchOffered = useCallback((params: PaginationParams) => {
+		const now = new Date();
+		const academicYear = now.getMonth() < 6 ? now.getFullYear() - 1 : now.getFullYear();
+		return adminApi.getAllProgrammes({
+			limit: 20,
+			...params,
+			has_batches: "1",
+			batch_year_max: String(academicYear),
+			department_id: selectedDeptId === "all" ? undefined : selectedDeptId,
+		});
+	}, [selectedDeptId]);
+
+	const fetchAll = useCallback((params: PaginationParams) => {
+		return adminApi.getAllProgrammes({
+			limit: 20,
+			...params,
+			department_id: selectedDeptId === "all" ? undefined : selectedDeptId,
+		});
+	}, [selectedDeptId]);
 
 	return (
 		<motion.div
@@ -211,7 +284,7 @@ export function ProgrammesView() {
 					<div>
 						<h3 className="text-xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">Programmes</h3>
 						<p className="text-sm text-muted-foreground mt-0.5">
-							Manage academic programmes
+							Manage academic programmes and offered batches
 						</p>
 					</div>
 				</div>
@@ -312,55 +385,83 @@ export function ProgrammesView() {
 				</Dialog>
 			</motion.div>
 
-			<motion.div
-				initial={{ opacity: 0, y: 15 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ delay: 0.1, type: "spring", duration: 0.5 }}
+			<Tabs
+				value={activeTab}
+				onValueChange={(v) => setActiveTab(v as "ongoing" | "offered" | "catalog")}
+				className="w-full"
 			>
-				<DataTable
-					columns={columns}
-					data={programmes || []}
-					searchPlaceholder="Search programmes..."
-					refreshing={refreshing}
-					serverPagination={{
-						pagination,
-						onNext: goNext,
-						onPrev: goPrev,
-						canPrev,
-						pageIndex,
-						search,
-						onSearch: setSearch,
-						filters,
-						setFilter,
-					}}
-				>
-					{(_, currentFilters, currentSetFilter) => (
-						<>
-							<Select
-								value={(currentFilters?.department_id as string) || "all"}
-								onValueChange={(val) => currentSetFilter?.("department_id", val === "all" ? undefined : val)}
-							>
-								<SelectTrigger className="w-[200px] bg-background/60 shadow-inner hover:border-indigo-500/50 transition-colors">
-									<SelectValue placeholder="All Departments" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">All Departments</SelectItem>
-									{departments.map((dept) => (
-										<SelectItem key={dept.department_id} value={dept.department_id.toString()}>
-											{dept.department_code}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							{currentFilters?.department_id && (
-								<Button variant="ghost" onClick={() => currentSetFilter?.("department_id", undefined)} className="h-9 px-2 lg:px-3 hover:bg-destructive/10 hover:text-destructive">
-									Reset <X className="ml-2 h-4 w-4" />
-								</Button>
-							)}
-						</>
-					)}
-				</DataTable>
-			</motion.div>
+				<div className="flex flex-wrap gap-4 items-center justify-between mb-4 bg-card/40 border border-muted/50 rounded-xl p-2 backdrop-blur-sm">
+					<TabsList className="bg-muted/50 p-1 rounded-lg">
+						<TabsTrigger value="ongoing" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">On-going Batches</TabsTrigger>
+						<TabsTrigger value="offered" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">Offered Batches</TabsTrigger>
+						<TabsTrigger value="catalog" className="px-4 py-1.5 text-xs font-semibold rounded-md data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200">Programme Catalog</TabsTrigger>
+					</TabsList>
+
+					<div className="flex items-center gap-2">
+						<Select
+							value={selectedDeptId}
+							onValueChange={(val) => setSelectedDeptId(val)}
+						>
+							<SelectTrigger className="w-[200px] bg-background/60 shadow-inner hover:border-indigo-500/50 transition-colors">
+								<SelectValue placeholder="All Departments" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">All Departments</SelectItem>
+								{departments.map((dept) => (
+									<SelectItem key={dept.department_id} value={dept.department_id.toString()}>
+										{dept.department_code}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						{selectedDeptId !== "all" && (
+							<Button variant="ghost" onClick={() => setSelectedDeptId("all")} className="h-9 px-2 lg:px-3 hover:bg-destructive/10 hover:text-destructive">
+								Reset <X className="ml-2 h-4 w-4" />
+							</Button>
+						)}
+					</div>
+				</div>
+
+				<TabsContent value="ongoing" className="space-y-4">
+					<ProgrammeList
+						key={`ongoing-${selectedDeptId}-${refreshKey}`}
+						fetchFn={fetchOngoing}
+						title="On-going Batches"
+						onEdit={openEditDialog}
+						onDelete={handleDeleteProgramme}
+						onEnroll={openEnrollDialog}
+						onManageCourses={openCoursesDialog}
+						onEditBatch={openEditBatchDialog}
+						onDeleteBatch={handleDeleteBatch}
+					/>
+				</TabsContent>
+
+				<TabsContent value="offered" className="space-y-4">
+					<ProgrammeList
+						key={`offered-${selectedDeptId}-${refreshKey}`}
+						fetchFn={fetchOffered}
+						title="Offered Batches"
+						onEdit={openEditDialog}
+						onDelete={handleDeleteProgramme}
+						onEnroll={openEnrollDialog}
+						onManageCourses={openCoursesDialog}
+						onEditBatch={openEditBatchDialog}
+						onDeleteBatch={handleDeleteBatch}
+					/>
+				</TabsContent>
+
+				<TabsContent value="catalog" className="space-y-4">
+					<ProgrammeList
+						key={`catalog-${selectedDeptId}-${refreshKey}`}
+						fetchFn={fetchAll}
+						title="Programme Catalog"
+						onEdit={openEditDialog}
+						onDelete={handleDeleteProgramme}
+						onOffer={openOfferDialog}
+						onManageCourses={openCoursesDialog}
+					/>
+				</TabsContent>
+			</Tabs>
 
 			{/* Edit Dialog */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -447,12 +548,31 @@ export function ProgrammesView() {
 				</DialogContent>
 			</Dialog>
 
+			{/* Offer/Edit Batch Dialogs */}
+			<ProgrammeOfferDialog
+				mode="create"
+				open={isOfferDialogOpen}
+				onOpenChange={setIsOfferDialogOpen}
+				onSave={handleOfferBatch}
+				isLoading={isSubmitting}
+				initialData={selectedProgramme}
+			/>
+
+			<ProgrammeOfferDialog
+				mode="edit"
+				open={isEditBatchDialogOpen}
+				onOpenChange={setIsEditBatchDialogOpen}
+				onSave={handleUpdateBatch}
+				isLoading={isSubmitting}
+				initialData={selectedProgramme}
+			/>
+
 			{/* Bulk Enroll Dialog */}
 			<BulkEnrollStudentsDialog
 				open={isEnrollDialogOpen}
 				onOpenChange={setIsEnrollDialogOpen}
 				programme={selectedProgramme}
-				onSuccess={onDataRefresh}
+				onSuccess={triggerRefresh}
 				api={adminApi}
 			/>
 
@@ -461,7 +581,7 @@ export function ProgrammesView() {
 				open={isCoursesDialogOpen}
 				onOpenChange={setIsCoursesDialogOpen}
 				programme={selectedProgramme}
-				onSuccess={onDataRefresh}
+				onSuccess={triggerRefresh}
 			/>
 		</motion.div>
 	);

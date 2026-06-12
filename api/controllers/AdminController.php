@@ -1500,4 +1500,132 @@ class AdminController
         }
     }
 
+	/**
+	 * GET /admin/programmes/{id}/batches — List batches for a programme (Admin only)
+	 */
+	public function listBatches($programmeId)
+	{
+		try {
+			if (!$this->requireAdmin()) return;
+
+			$rows = $this->programmeRepository->getBatchesByProgramme((int)$programmeId);
+
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => true, 'data' => $rows]);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to list batches', 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * POST /admin/programmes/{id}/batches — Create a new batch for a programme (Admin only)
+	 */
+	public function createBatch($programmeId)
+	{
+		try {
+			if (!$this->requireAdmin()) return;
+
+			$input = json_decode(file_get_contents('php://input'), true);
+			$batchYear = isset($input['batch_year']) ? (int)$input['batch_year'] : 0;
+			$status = $input['status'] ?? 'upcoming';
+
+			if ($batchYear < 2000 || $batchYear > 2100) {
+				http_response_code(400);
+				echo json_encode(['success' => false, 'message' => 'Invalid batch_year']);
+				return;
+			}
+
+			$batchId = $this->programmeRepository->createBatch((int)$programmeId, $batchYear, $status);
+
+			http_response_code(201);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => true, 'data' => ['batch_id' => $batchId]]);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to create batch', 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * GET /admin/batches/{id} — Get batch details (Admin only)
+	 */
+	public function getBatch($batchId)
+	{
+		try {
+			if (!$this->requireAdmin()) return;
+
+			$batch = $this->programmeRepository->getBatchById((int)$batchId);
+			if (!$batch) {
+				http_response_code(404);
+				echo json_encode(['success' => false, 'message' => 'Batch not found']);
+				return;
+			}
+
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => true, 'data' => $batch]);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to get batch', 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * PUT /admin/batches/{id} — Update batch details (Admin only)
+	 */
+	public function updateBatch($batchId)
+	{
+		try {
+			if (!$this->requireAdmin()) return;
+
+			$input = json_decode(file_get_contents('php://input'), true);
+			$allowed = ['batch_year', 'coordinator_id', 'status', 'start_date', 'end_date'];
+			$data = array_intersect_key($input, array_flip($allowed));
+
+			if (empty($data)) {
+				http_response_code(400);
+				echo json_encode(['success' => false, 'message' => 'No valid fields to update']);
+				return;
+			}
+
+			if (isset($data['batch_year'])) {
+				$by = (int)$data['batch_year'];
+				if ($by < 2000 || $by > 2100) {
+					http_response_code(400);
+					echo json_encode(['success' => false, 'message' => 'Invalid batch_year']);
+					return;
+				}
+			}
+
+			$success = $this->programmeRepository->updateBatch((int)$batchId, $data);
+
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => $success, 'message' => 'Batch updated successfully']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to update batch', 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * DELETE /admin/batches/{id} — Delete a batch (Admin only)
+	 */
+	public function deleteBatch($batchId)
+	{
+		try {
+			if (!$this->requireAdmin()) return;
+
+			$success = $this->programmeRepository->deleteBatch((int)$batchId);
+
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => $success, 'message' => 'Batch deleted successfully']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to delete batch', 'error' => $e->getMessage()]);
+		}
+	}
 }

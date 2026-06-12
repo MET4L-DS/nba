@@ -110,7 +110,7 @@ class ProgrammeRepository
 
 		$selectBatchFields = "";
 		if (!empty($params['filters']['year']) || (!empty($params['filters']['has_batches']) && $params['filters']['has_batches'] === '1')) {
-			$selectBatchFields = ", pb.batch_id, pb.batch_year AS specific_batch_year";
+			$selectBatchFields = ", pb.batch_id, pb.batch_year AS specific_batch_year, pb.status AS batch_status";
 		}
 
 		$sql = "
@@ -164,6 +164,7 @@ class ProgrammeRepository
 				'latest_batch_year' => isset($row['latest_batch_year']) && $row['latest_batch_year'] !== null ? (int)$row['latest_batch_year'] : null,
 				'batch_id' => isset($row['batch_id']) ? (int)$row['batch_id'] : null,
 				'specific_batch_year' => isset($row['specific_batch_year']) && $row['specific_batch_year'] !== null ? (int)$row['specific_batch_year'] : null,
+				'batch_status' => $row['batch_status'] ?? null,
 			];
 		}, $rows);
 	}
@@ -371,4 +372,30 @@ class ProgrammeRepository
         $stmt->execute([(int)$programmeId]);
         return (int)$stmt->fetchColumn();
     }
+
+	public function updateBatch(int $batchId, array $data): bool
+	{
+		$allowed = ['batch_year', 'coordinator_id', 'status', 'start_date', 'end_date'];
+		$fields = [];
+		$params = [];
+		foreach ($allowed as $key) {
+			if (array_key_exists($key, $data)) {
+				$fields[] = "`$key` = ?";
+				$params[] = $data[$key];
+			}
+		}
+		if (empty($fields)) {
+			return false;
+		}
+		$params[] = $batchId;
+		$sql = "UPDATE programme_batches SET " . implode(', ', $fields) . " WHERE batch_id = ?";
+		$stmt = $this->db->prepare($sql);
+		return $stmt->execute($params);
+	}
+
+	public function deleteBatch(int $batchId): bool
+	{
+		$stmt = $this->db->prepare("DELETE FROM programme_batches WHERE batch_id = ?");
+		return $stmt->execute([$batchId]);
+	}
 }

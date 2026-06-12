@@ -1379,6 +1379,14 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->hodController->getBatch($batchId);
+                    } elseif ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->updateBatch($batchId);
+                    } elseif ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->hodController->deleteBatch($batchId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }
@@ -1485,6 +1493,36 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->adminController->deleteProgramme($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^admin/programmes/(\d+)/batches$#', $path, $matches)) {
+                    $programmeId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->listBatches($programmeId);
+                    } elseif ($method === 'POST') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->createBatch($programmeId);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
+                } elseif (preg_match('#^admin/batches/(\d+)$#', $path, $matches)) {
+                    $batchId = $matches[1];
+                    if ($method === 'GET') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->getBatch($batchId);
+                    } elseif ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->updateBatch($batchId);
+                    } elseif ($method === 'DELETE') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->adminController->deleteBatch($batchId);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

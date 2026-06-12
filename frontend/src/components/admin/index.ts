@@ -8,5 +8,6 @@ export { DepartmentsView } from "./DepartmentsView";
 export { SchoolsView } from "./SchoolsView";
 export { DeanHistoryView } from "./DeanHistoryView";
 export { ProgrammesView } from "./ProgrammesView";
+export { ProgrammeOfferDialog } from "./ProgrammeOfferDialog";
 
 

@@ -1849,4 +1849,81 @@ class HODController
 			echo json_encode(['success' => false, 'message' => 'Failed to get batch', 'error' => $e->getMessage()]);
 		}
 	}
+
+	private function requireBatchAccess(int $batchId): ?array
+	{
+		$batch = $this->programmeRepository->getBatchById($batchId);
+		if (!$batch) {
+			http_response_code(404);
+			echo json_encode(['success' => false, 'message' => 'Batch not found']);
+			return null;
+		}
+		$programmeId = (int)$batch['programme_id'];
+		$access = $this->requireProgrammeAccess($programmeId);
+		if (!$access) {
+			return null;
+		}
+		return array_merge($access, ['batch' => $batch]);
+	}
+
+	/**
+	 * PUT /hod/batches/{id} — Update batch details
+	 */
+	public function updateBatch($batchId)
+	{
+		try {
+			if (!$this->requireHOD()) return;
+			$access = $this->requireBatchAccess((int)$batchId);
+			if (!$access) return;
+
+			$input = json_decode(file_get_contents('php://input'), true);
+			$allowed = ['batch_year', 'coordinator_id', 'status', 'start_date', 'end_date'];
+			$data = array_intersect_key($input, array_flip($allowed));
+
+			if (empty($data)) {
+				http_response_code(400);
+				echo json_encode(['success' => false, 'message' => 'No valid fields to update']);
+				return;
+			}
+
+			if (isset($data['batch_year'])) {
+				$by = (int)$data['batch_year'];
+				if ($by < 2000 || $by > 2100) {
+					http_response_code(400);
+					echo json_encode(['success' => false, 'message' => 'Invalid batch_year']);
+					return;
+				}
+			}
+
+			$success = $this->programmeRepository->updateBatch((int)$batchId, $data);
+
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => $success, 'message' => 'Batch updated successfully']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to update batch', 'error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * DELETE /hod/batches/{id} — Delete a batch
+	 */
+	public function deleteBatch($batchId)
+	{
+		try {
+			if (!$this->requireHOD()) return;
+			$access = $this->requireBatchAccess((int)$batchId);
+			if (!$access) return;
+
+			$success = $this->programmeRepository->deleteBatch((int)$batchId);
+
+			http_response_code(200);
+			header('Content-Type: application/json');
+			echo json_encode(['success' => $success, 'message' => 'Batch deleted successfully']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['success' => false, 'message' => 'Failed to delete batch', 'error' => $e->getMessage()]);
+		}
+	}
 }

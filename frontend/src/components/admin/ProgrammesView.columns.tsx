@@ -12,6 +12,9 @@ interface ProgrammeColumnProps {
 	onEnroll?: (programme: Programme) => void;
 	onManageCourses?: (programme: Programme) => void;
 	onViewAttainment?: (programme: Programme) => void;
+	onOffer?: (programme: Programme) => void;
+	onEditBatch?: (programme: Programme) => void;
+	onDeleteBatch?: (programme: Programme) => void;
 }
 
 export function getProgrammeColumns({
@@ -20,6 +23,9 @@ export function getProgrammeColumns({
 	onEnroll,
 	onManageCourses,
 	onViewAttainment,
+	onOffer,
+	onEditBatch,
+	onDeleteBatch,
 }: ProgrammeColumnProps): ColumnDef<Programme>[] {
 	return [
 		{
@@ -47,13 +53,31 @@ export function getProgrammeColumns({
 			header: "Batch",
 			cell: ({ row }) => {
 				const batchYear = row.original.specific_batch_year;
+				const status = row.original.batch_status;
 				if (!batchYear) return <span className="text-muted-foreground/40 text-xs">—</span>;
+
+				let statusColor = "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20";
+				if (status === "active") {
+					statusColor = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+				} else if (status === "upcoming") {
+					statusColor = "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+				} else if (status === "completed") {
+					statusColor = "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20";
+				}
+
 				return (
-					<Badge 
-						className="font-mono font-bold text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-none"
-					>
-						{batchYear}
-					</Badge>
+					<div className="flex items-center gap-1.5 justify-center">
+						<Badge
+							className="font-mono font-bold text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-none"
+						>
+							{batchYear}
+						</Badge>
+						{status && (
+							<Badge className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded shadow-none ${statusColor}`}>
+								{status}
+							</Badge>
+						)}
+					</div>
 				);
 			},
 		},
@@ -61,7 +85,7 @@ export function getProgrammeColumns({
 			accessorKey: "degree_level",
 			header: sortableHeader("Level"),
 			cell: ({ row }) => (
-				<Badge 
+				<Badge
 					className="font-bold text-[10px] bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 shadow-none"
 				>
 					{row.getValue("degree_level")}
@@ -138,8 +162,19 @@ export function getProgrammeColumns({
 			header: () => <div className="text-center">Actions</div>,
 			cell: ({ row }) => {
 				const prog = row.original;
+				const isBatch = !!prog.batch_id;
 				return (
 					<div className="flex justify-center gap-2">
+						{!isBatch && onOffer && (
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => onOffer(prog)}
+								className="text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-semibold active:scale-95 duration-200 transition-all"
+							>
+								Offer Batch
+							</Button>
+						)}
 						{onManageCourses && (
 							<Button
 								variant="ghost"
@@ -151,7 +186,7 @@ export function getProgrammeColumns({
 								<BookOpen className="w-4 h-4" />
 							</Button>
 						)}
-						{onEnroll && (
+						{isBatch && onEnroll && (
 							<Button
 								variant="ghost"
 								size="icon"
@@ -162,39 +197,79 @@ export function getProgrammeColumns({
 								<UserPlus className="w-4 h-4" />
 							</Button>
 						)}
-						{onEdit && (
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={() => onEdit(prog)}
-								className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-blue-500/20 hover:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
-								title="Edit Programme"
-							>
-								<Pencil className="w-4 h-4" />
-							</Button>
+						{isBatch ? (
+							onEditBatch && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => onEditBatch(prog)}
+									className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-blue-500/20 hover:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+									title="Edit Batch Status"
+								>
+									<Pencil className="w-4 h-4" />
+								</Button>
+							)
+						) : (
+							onEdit && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => onEdit(prog)}
+									className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-blue-500/20 hover:shadow-[0_0_12px_rgba(59,130,246,0.15)]"
+									title="Edit Programme"
+								>
+									<Pencil className="w-4 h-4" />
+								</Button>
+							)
 						)}
-						{onDelete && (
-							<ConfirmDeleteDialog
-								title={<>Are you absolutely sure?</>}
-								description={
-									<>
-										This will permanently delete the{" "}
-										<strong>{prog.programme_name}</strong>{" "}
-										programme. This action cannot be undone.
-									</>
-								}
-								onConfirm={() => onDelete(prog)}
-								trigger={
-									<Button
-										variant="ghost"
-										size="icon"
-										className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-red-500/20 hover:shadow-[0_0_12px_rgba(239,68,68,0.15)]"
-										title="Delete Programme"
-									>
-										<Trash2 className="w-4 h-4" />
-									</Button>
-								}
-							/>
+						{isBatch ? (
+							onDeleteBatch && (
+								<ConfirmDeleteDialog
+									title={<>Are you absolutely sure?</>}
+									description={
+										<>
+											This will permanently delete the offered batch{" "}
+											<strong>{prog.specific_batch_year}</strong> for{" "}
+											<strong>{prog.programme_name}</strong>. This action cannot be undone.
+										</>
+									}
+									onConfirm={() => onDeleteBatch(prog)}
+									trigger={
+										<Button
+											variant="ghost"
+											size="icon"
+											className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-red-500/20 hover:shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+											title="Delete Offered Batch"
+										>
+											<Trash2 className="w-4 h-4" />
+										</Button>
+									}
+								/>
+							)
+						) : (
+							onDelete && (
+								<ConfirmDeleteDialog
+									title={<>Are you absolutely sure?</>}
+									description={
+										<>
+											This will permanently delete the{" "}
+											<strong>{prog.programme_name}</strong>{" "}
+											programme catalog template. This action cannot be undone.
+										</>
+									}
+									onConfirm={() => onDelete(prog)}
+									trigger={
+										<Button
+											variant="ghost"
+											size="icon"
+											className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg active:scale-95 hover:scale-110 transition-all duration-200 border border-transparent hover:border-red-500/20 hover:shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+											title="Delete Programme"
+										>
+											<Trash2 className="w-4 h-4" />
+										</Button>
+									}
+								/>
+							)
 						)}
 					</div>
 				);

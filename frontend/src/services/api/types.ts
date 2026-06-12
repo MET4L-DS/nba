@@ -330,6 +330,7 @@ export interface Programme {
 	latest_batch_year?: number | null;
 	batch_id?: number | null;
 	specific_batch_year?: number | null;
+	batch_status?: "upcoming" | "active" | "completed" | null;
 }
 
 export interface ProgrammeBatch {

@@ -52,6 +52,19 @@ export const hodApi = {
 		return apiGet<ProgrammeBatch>(`/hod/batches/${batchId}`);
 	},
 
+	async updateProgrammeBatch(
+		batchId: number,
+		data: { batch_year?: number; coordinator_id?: number | null; status?: string; start_date?: string | null; end_date?: string | null },
+	): Promise<any> {
+		debugLogger.info("hodApi", "updateProgrammeBatch called", { batchId, data });
+		return apiPut<any, any>(`/hod/batches/${batchId}`, data);
+	},
+
+	async deleteProgrammeBatch(batchId: number): Promise<void> {
+		debugLogger.info("hodApi", "deleteProgrammeBatch called", { batchId });
+		return apiDelete(`/hod/batches/${batchId}`);
+	},
+
 	// Programme CRUD
 	async createProgramme(data: CreateProgrammeRequest): Promise<Programme> {
 		debugLogger.info("hodApi", "createProgramme called", data);

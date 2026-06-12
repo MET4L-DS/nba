@@ -27,6 +27,9 @@ import { toast } from "sonner";
 import { hodApi } from "@/services/api/hod";
 import type { Programme, PaginationParams } from "@/services/api";
 import { ProgrammeList } from "@/features/programmes/ProgrammeList";
+import { ProgrammeOfferDialog } from "@/components/admin/ProgrammeOfferDialog";
+import { BulkEnrollStudentsDialog } from "@/components/admin/BulkEnrollStudentsDialog";
+import { ProgrammeCoursesDialog } from "@/components/admin/ProgrammeCoursesDialog";
 
 const currentYear = new Date().getFullYear();
 
@@ -44,6 +47,10 @@ export function HODProgrammes() {
 	// Dialog state
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+	const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
+	const [isEditBatchDialogOpen, setIsEditBatchDialogOpen] = useState(false);
+	const [isEnrollDialogOpen, setIsEnrollDialogOpen] = useState(false);
+	const [isCoursesDialogOpen, setIsCoursesDialogOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [selectedProgramme, setSelectedProgramme] =
 		useState<Programme | null>(null);
@@ -205,6 +212,71 @@ export function HODProgrammes() {
 			);
 		} finally {
 			setIsSubmitting(false);
+		}
+	};
+
+	const openOfferDialog = (programme: Programme) => {
+		setSelectedProgramme(programme);
+		setIsOfferDialogOpen(true);
+	};
+
+	const openEditBatchDialog = (programme: Programme) => {
+		setSelectedProgramme(programme);
+		setIsEditBatchDialogOpen(true);
+	};
+
+	const openEnrollDialog = (programme: Programme) => {
+		setSelectedProgramme(programme);
+		setIsEnrollDialogOpen(true);
+	};
+
+	const openCoursesDialog = (programme: Programme) => {
+		setSelectedProgramme(programme);
+		setIsCoursesDialogOpen(true);
+	};
+
+	const handleOfferBatch = async (data: { batch_year: number; status: "upcoming" | "active" | "completed" }) => {
+		if (!selectedProgramme) return;
+		setIsSubmitting(true);
+		try {
+			await hodApi.createBatch(selectedProgramme.programme_id, data.batch_year, data.status);
+			toast.success("Programme offered to batch successfully");
+			setIsOfferDialogOpen(false);
+			setSelectedProgramme(null);
+			triggerRefresh();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to offer programme");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const handleUpdateBatch = async (data: { status: "upcoming" | "active" | "completed" }) => {
+		if (!selectedProgramme || !selectedProgramme.batch_id) return;
+		setIsSubmitting(true);
+		try {
+			await hodApi.updateProgrammeBatch(selectedProgramme.batch_id, {
+				status: data.status,
+			});
+			toast.success("Batch status updated successfully");
+			setIsEditBatchDialogOpen(false);
+			setSelectedProgramme(null);
+			triggerRefresh();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to update batch status");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const handleDeleteBatch = async (programme: Programme) => {
+		if (!programme.batch_id) return;
+		try {
+			await hodApi.deleteProgrammeBatch(programme.batch_id);
+			toast.success("Offered batch deleted successfully");
+			triggerRefresh();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to delete batch offering");
 		}
 	};
 
@@ -450,6 +522,10 @@ export function HODProgrammes() {
 							onEdit={openEditDialog}
 							onDelete={handleDeleteProgramme}
 							onViewAttainment={handleViewAttainment}
+							onEnroll={openEnrollDialog}
+							onManageCourses={openCoursesDialog}
+							onEditBatch={openEditBatchDialog}
+							onDeleteBatch={handleDeleteBatch}
 						/>
 					</TabsContent>
 
@@ -461,6 +537,10 @@ export function HODProgrammes() {
 							onEdit={openEditDialog}
 							onDelete={handleDeleteProgramme}
 							onViewAttainment={handleViewAttainment}
+							onEnroll={openEnrollDialog}
+							onManageCourses={openCoursesDialog}
+							onEditBatch={openEditBatchDialog}
+							onDeleteBatch={handleDeleteBatch}
 						/>
 					</TabsContent>
 
@@ -471,6 +551,8 @@ export function HODProgrammes() {
 							title="Programme Catalog"
 							onEdit={openEditDialog}
 							onDelete={handleDeleteProgramme}
+							onOffer={openOfferDialog}
+							onManageCourses={openCoursesDialog}
 						/>
 					</TabsContent>
 				</Tabs>
@@ -595,6 +677,43 @@ export function HODProgrammes() {
 						</DialogFooter>
 					</DialogContent>
 				</Dialog>
+
+				{/* Offer/Edit Batch Dialogs */}
+				<ProgrammeOfferDialog
+					mode="create"
+					open={isOfferDialogOpen}
+					onOpenChange={setIsOfferDialogOpen}
+					onSave={handleOfferBatch}
+					isLoading={isSubmitting}
+					initialData={selectedProgramme}
+				/>
+
+				<ProgrammeOfferDialog
+					mode="edit"
+					open={isEditBatchDialogOpen}
+					onOpenChange={setIsEditBatchDialogOpen}
+					onSave={handleUpdateBatch}
+					isLoading={isSubmitting}
+					initialData={selectedProgramme}
+				/>
+
+				{/* Bulk Enroll Dialog */}
+				<BulkEnrollStudentsDialog
+					open={isEnrollDialogOpen}
+					onOpenChange={setIsEnrollDialogOpen}
+					programme={selectedProgramme}
+					onSuccess={triggerRefresh}
+					api={hodApi}
+				/>
+
+				{/* Courses Dialog */}
+				<ProgrammeCoursesDialog
+					open={isCoursesDialogOpen}
+					onOpenChange={setIsCoursesDialogOpen}
+					programme={selectedProgramme}
+					onSuccess={triggerRefresh}
+					api={hodApi}
+				/>
 			</div>
 		</div>
 	);

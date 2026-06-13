@@ -188,6 +188,7 @@ export interface MarksRecord {
 	student_name?: string;
 	programme_id?: number;
 	programme_name?: string;
+	is_repeater?: boolean;
 	test_id: number;
 	CO1: number;
 	CO2: number;
@@ -273,6 +274,7 @@ export interface Enrollment {
 	student_rollno: string;
 	student_name: string;
 	enrolled_at: string;
+	is_repeater?: boolean;
 }
 
 export interface CourseEnrollmentsResponse {

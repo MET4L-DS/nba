@@ -127,6 +127,8 @@ export function MatrixView({
 	const [editableSemester, setEditableSemester] = useState(semester);
 	const [editableSession, setEditableSession] = useState(String(year)); // default session = year
 
+	const repeaterCount = studentsData.filter((s) => s.is_repeater).length;
+
 	const handleProgrammeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setEditableProgramme(e.target.value);
 	};
@@ -330,6 +332,15 @@ export function MatrixView({
 				coThreshold={coThreshold}
 				passingThreshold={passingThreshold}
 			/>
+
+			{repeaterCount > 0 && (
+				<div className="p-4 mb-2 text-sm rounded-xl bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20 shadow-sm flex items-center gap-2">
+					<span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+					<span>
+						<strong>Note:</strong> {repeaterCount} repeater {repeaterCount === 1 ? "student is" : "students are"} excluded from the final Batch PO attainment calculation.
+					</span>
+				</div>
+			)}
 
 		{/* Student Marks Table */}
 		<StudentMarksTable

@@ -4,6 +4,7 @@ import { StudentMarksCardHeader } from "./StudentMarksCardHeader";
 import { StudentMarksTableHeaderRows } from "./StudentMarksTableHeaderRows";
 import type { StudentMarks } from "./types";
 import React from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface StudentMarksTableProps {
 	studentsData: StudentMarks[];
@@ -95,8 +96,15 @@ export const StudentMarksTable = React.memo(function StudentMarksTable({
 										<TableCell className="text-center border border-gray-300 dark:border-gray-700 font-medium">
 											{student.rollNo}
 										</TableCell>
-										<TableCell className="border border-gray-300 dark:border-gray-700 px-2 text-left font-medium max-w-[180px] truncate">
-											{student.name}
+										<TableCell className="border border-gray-300 dark:border-gray-700 px-2 text-left font-medium max-w-[220px]">
+											<div className="flex items-center gap-1.5 flex-wrap">
+												<span className="truncate max-w-[140px]" title={student.name}>{student.name}</span>
+												{student.is_repeater && (
+													<Badge variant="secondary" className="text-[9px] bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-200 dark:border-red-900 py-0 px-1 font-semibold uppercase tracking-wider">
+														Repeater
+													</Badge>
+												)}
+											</div>
 										</TableCell>
 										<TableCell className="text-center border border-gray-300 dark:border-gray-700">
 											{student.absentee}

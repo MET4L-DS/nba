@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import type { CoursePOAttainmentRow } from "@/services/api";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 interface ArticulationMatrixProps {
 	data: {
@@ -183,7 +185,19 @@ export function ArticulationMatrix({ data, poList }: ArticulationMatrixProps) {
 									colSpan={3}
 									className="px-4 py-3 text-foreground/80 text-right pr-6 font-semibold"
 								>
-									Direct Attainment (Average)
+									<TooltipProvider delayDuration={100}>
+										<div className="flex items-center justify-end gap-1.5">
+											<span>Direct Attainment (Average)</span>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<HelpCircle className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+												</TooltipTrigger>
+												<TooltipContent side="top" className="max-w-xs font-normal text-xs leading-relaxed text-foreground bg-popover border border-muted/50 p-2 rounded-lg shadow-md">
+													Calculated using a Weighted Average based on CO-PO correlation levels (1, 2, or 3), rather than a simple arithmetic mean.
+												</TooltipContent>
+											</Tooltip>
+										</div>
+									</TooltipProvider>
 								</td>
 								{poList.map((po) => {
 									const isColHovered = hoveredCell.po === po;
@@ -228,7 +242,19 @@ export function ArticulationMatrix({ data, poList }: ArticulationMatrixProps) {
 									colSpan={3}
 									className="px-4 py-3 text-primary font-bold text-right pr-6"
 								>
-									Final Attainment (Blended)
+									<TooltipProvider delayDuration={100}>
+										<div className="flex items-center justify-end gap-1.5">
+											<span>Final Attainment (Blended)</span>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<HelpCircle className="h-4 w-4 text-primary/75 cursor-pointer hover:text-primary transition-colors" />
+												</TooltipTrigger>
+												<TooltipContent side="top" className="max-w-xs font-normal text-xs leading-relaxed text-foreground bg-popover border border-muted/50 p-2 rounded-lg shadow-md">
+													Calculated as a blended combination of Direct Attainment (80%) and Indirect Attainment (20%) from stakeholder exit surveys.
+												</TooltipContent>
+											</Tooltip>
+										</div>
+									</TooltipProvider>
 								</td>
 								{poList.map((po) => {
 									const isColHovered = hoveredCell.po === po;

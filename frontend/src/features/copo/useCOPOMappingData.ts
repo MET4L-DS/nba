@@ -305,6 +305,7 @@ export function useCOPOMappingData({
 							name: studentName,
 							programmeId: markRecord.programme_id,
 							programmeName: markRecord.programme_name,
+							is_repeater: markRecord.is_repeater,
 							absentee: "",
 							tests: {},
 							total: 0,

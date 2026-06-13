@@ -5,6 +5,7 @@ export interface StudentMarks {
 	name: string;
 	programmeId?: number;
 	programmeName?: string;
+	is_repeater?: boolean;
 	absentee: string; // "AB" or "UR" or empty
 	tests: { [testName: string]: { [co: string]: number } };
 	total: number;

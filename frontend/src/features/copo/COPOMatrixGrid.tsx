@@ -61,12 +61,14 @@ const COPOMatrixCellInput = memo(function COPOMatrixCellInput({
 			onMouseEnter={() => setHoveredCell({ co, col: po })}
 			onMouseLeave={() => setHoveredCell(null)}
 			className={`w-16 h-8 text-center transition-all duration-150 font-medium ${
+				Number(value) === 0 ? "opacity-30 border-dashed bg-muted/20" : ""
+			} ${
 				isIntersection
 					? "ring-2 ring-primary border-primary font-bold shadow-lg"
 					: isRowActive || isColActive
 						? "border-primary/30"
 						: ""
-			}`}
+			} hover:opacity-100 focus:opacity-100`}
 		/>
 	);
 });

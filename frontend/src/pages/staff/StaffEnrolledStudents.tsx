@@ -265,7 +265,14 @@ export function StaffEnrolledStudents() {
 				accessorKey: "student_name",
 				header: "Name",
 				cell: ({ row }) => (
-					<span className="font-semibold text-foreground">{row.original.student_name}</span>
+					<div className="flex items-center gap-1.5 flex-wrap">
+						<span className="font-semibold text-foreground">{row.original.student_name}</span>
+						{row.original.is_repeater && (
+							<Badge variant="secondary" className="text-[9px] bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-200 dark:border-red-900 py-0 px-1 font-semibold uppercase tracking-wider">
+								Repeater
+							</Badge>
+						)}
+					</div>
 				),
 			},
 			{

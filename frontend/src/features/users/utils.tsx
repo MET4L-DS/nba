@@ -164,34 +164,43 @@ export function createStudentColumns(
 						<div className="flex flex-col items-start">
 							<AnimatePresence initial={false}>
 								{visibleCourses.length > 0 ? (
-									visibleCourses.map((course, idx) => (
-										<motion.div
-											key={`${course}-${idx}`}
-											initial={{
-												opacity: 0,
-												height: 0,
-												overflow: "hidden",
-											}}
-											animate={{
-												opacity: 1,
-												height: "auto",
-											}}
-											exit={{ opacity: 0, height: 0 }}
-											transition={{
-												duration: 0.2,
-												ease: "easeInOut",
-											}}
-										>
-											<div className="pb-1">
-												<Badge
-													variant="outline"
-													className="px-1.5 py-0 font-normal"
-												>
-													{course}
-												</Badge>
-											</div>
-										</motion.div>
-									))
+									visibleCourses.map((course, idx) => {
+										const isRepeater = course.endsWith(" [Repeater]");
+										const cleanCourse = isRepeater ? course.slice(0, -11) : course;
+										return (
+											<motion.div
+												key={`${course}-${idx}`}
+												initial={{
+													opacity: 0,
+													height: 0,
+													overflow: "hidden",
+												}}
+												animate={{
+													opacity: 1,
+													height: "auto",
+												}}
+												exit={{ opacity: 0, height: 0 }}
+												transition={{
+													duration: 0.2,
+													ease: "easeInOut",
+												}}
+											>
+												<div className="pb-1 flex items-center gap-1.5 flex-wrap">
+													<Badge
+														variant="outline"
+														className="px-1.5 py-0 font-normal"
+													>
+														{cleanCourse}
+													</Badge>
+													{isRepeater && (
+														<Badge variant="secondary" className="text-[9px] bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-200 dark:border-red-900 py-0 px-1 font-semibold uppercase tracking-wider">
+															Repeater
+														</Badge>
+													)}
+												</div>
+											</motion.div>
+										);
+									})
 								) : (
 									<span className="text-xs text-muted-foreground pb-1">
 										—

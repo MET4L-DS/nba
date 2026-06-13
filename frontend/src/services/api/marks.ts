@@ -62,6 +62,7 @@ export const marksApi = {
       student_name: string;
       programme_id?: number;
       programme_name?: string;
+      is_repeater?: boolean;
       CO1: string | number;
       CO2: string | number;
       CO3: string | number;

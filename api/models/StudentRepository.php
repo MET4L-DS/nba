@@ -209,7 +209,7 @@ class StudentRepository
                        p.programme_name, p.programme_code,
                        d.department_name, d.department_code, d.department_id AS dept_id,
                        (
-                           SELECT GROUP_CONCAT(DISTINCT CONCAT(c.course_code, ': ', c.course_name, ' (', co.year, '/', co.semester, ')') ORDER BY c.course_code SEPARATOR ', ')
+                           SELECT GROUP_CONCAT(DISTINCT CONCAT(c.course_code, ': ', c.course_name, ' (', co.year, '/', co.semester, ')', CASE WHEN e.is_repeater = 1 THEN ' [Repeater]' ELSE '' END) ORDER BY c.course_code SEPARATOR ', ')
                            FROM enrollments e
                            JOIN course_offerings co ON e.offering_id = co.offering_id
                            JOIN courses c ON co.course_id = c.course_id
@@ -423,7 +423,7 @@ class StudentRepository
                        p.programme_name, p.programme_code,
                        d.department_name, d.department_code,
                        (
-                           SELECT GROUP_CONCAT(DISTINCT CONCAT(c.course_code, ': ', c.course_name, ' (', co.year, '/', co.semester, ')') ORDER BY c.course_code SEPARATOR ', ')
+                           SELECT GROUP_CONCAT(DISTINCT CONCAT(c.course_code, ': ', c.course_name, ' (', co.year, '/', co.semester, ')', CASE WHEN e.is_repeater = 1 THEN ' [Repeater]' ELSE '' END) ORDER BY c.course_code SEPARATOR ', ')
                            FROM enrollments e
                            JOIN course_offerings co ON e.offering_id = co.offering_id
                            JOIN courses c ON co.course_id = c.course_id

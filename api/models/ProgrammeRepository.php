@@ -334,7 +334,7 @@ class ProgrammeRepository
 			SELECT
 				pb.*,
 				u.username AS coordinator_name,
-				(SELECT COUNT(*) FROM students s WHERE s.batch_id = pb.batch_id) AS student_count
+				(SELECT COUNT(*) FROM students s WHERE s.programme_id = pb.programme_id AND s.batch_year = pb.batch_year) AS student_count
 			FROM programme_batches pb
 			LEFT JOIN users u ON pb.coordinator_id = u.employee_id
 			WHERE pb.batch_id = ?
@@ -350,7 +350,7 @@ class ProgrammeRepository
 			SELECT
 				pb.*,
 				u.username AS coordinator_name,
-				(SELECT COUNT(*) FROM students s WHERE s.batch_id = pb.batch_id) AS student_count
+				(SELECT COUNT(*) FROM students s WHERE s.programme_id = pb.programme_id AND s.batch_year = pb.batch_year) AS student_count
 			FROM programme_batches pb
 			LEFT JOIN users u ON pb.coordinator_id = u.employee_id
 			WHERE pb.programme_id = ?

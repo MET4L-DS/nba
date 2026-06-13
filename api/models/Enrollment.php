@@ -7,6 +7,7 @@ class Enrollment
     private $rollNo;
     private $status;
     private $createdAt;
+    private $isRepeater;
     private $studentData = null;
 
     public function __construct(
@@ -14,13 +15,15 @@ class Enrollment
         $offeringId, 
         $rollNo, 
         $createdAt = null, 
-        $status = 'Enrolled'
+        $status = 'Enrolled',
+        $isRepeater = false
     ) {
         $this->id = $id;
         $this->offeringId = $offeringId;
         $this->rollNo = $rollNo;
         $this->createdAt = $createdAt;
         $this->status = $status;
+        $this->isRepeater = $isRepeater;
     }
 
     // Getters
@@ -55,6 +58,11 @@ class Enrollment
         return $this->status;
     }
 
+    public function getIsRepeater()
+    {
+        return $this->isRepeater;
+    }
+
     public function setStudentData($data)
     {
         $this->studentData = $data;
@@ -71,6 +79,7 @@ class Enrollment
             'student_rollno' => $this->rollNo,
             'status' => $this->status,
             'enrolled_at' => $this->createdAt,
+            'is_repeater' => (bool)$this->isRepeater,
             'student_name' => $this->studentData['name'] ?? null,
             'student' => $this->studentData
         ];

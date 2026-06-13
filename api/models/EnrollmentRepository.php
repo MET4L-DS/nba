@@ -17,9 +17,33 @@ class EnrollmentRepository
      */
     public function enrollStudent($offeringId, $rollNo)
     {
-        $sql = "INSERT INTO enrollments (offering_id, student_rollno) VALUES (?, ?)";
+        $isRepeater = 0;
+        $offeringStmt = $this->pdo->prepare("SELECT course_id, year, semester FROM course_offerings WHERE offering_id = ?");
+        $offeringStmt->execute([$offeringId]);
+        $offering = $offeringStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($offering) {
+            $courseId = $offering['course_id'];
+            $year = $offering['year'];
+            $semester = $offering['semester'];
+
+            $repeaterStmt = $this->pdo->prepare("
+                SELECT COUNT(*) 
+                FROM enrollments e
+                JOIN course_offerings co ON e.offering_id = co.offering_id
+                WHERE e.student_rollno = ?
+                  AND co.course_id = ?
+                  AND (co.year < ? OR (co.year = ? AND co.semester = 'Spring' AND ? = 'Autumn'))
+            ");
+            $repeaterStmt->execute([$rollNo, $courseId, $year, $year, $semester]);
+            if ($repeaterStmt->fetchColumn() > 0) {
+                $isRepeater = 1;
+            }
+        }
+
+        $sql = "INSERT INTO enrollments (offering_id, student_rollno, is_repeater) VALUES (?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$offeringId, $rollNo]);
+        $stmt->execute([$offeringId, $rollNo, $isRepeater]);
 
         $enrollmentId = $this->pdo->lastInsertId();
         return $this->findById($enrollmentId);
@@ -105,7 +129,8 @@ class EnrollmentRepository
             $row['offering_id'],
             $row['student_rollno'],
             $row['enrolled_at'],
-            $row['enrollment_status']
+            $row['enrollment_status'],
+            (bool)($row['is_repeater'] ?? false)
         );
     }
 
@@ -130,7 +155,8 @@ class EnrollmentRepository
                 $row['offering_id'],
                 $row['student_rollno'],
                 $row['enrolled_at'],
-                $row['enrollment_status']
+                $row['enrollment_status'],
+                (bool)($row['is_repeater'] ?? false)
             );
         }
 
@@ -157,7 +183,8 @@ class EnrollmentRepository
                 $row['offering_id'],
                 $row['student_rollno'],
                 $row['enrolled_at'],
-                $row['enrollment_status'] ?? 'Enrolled'
+                $row['enrollment_status'] ?? 'Enrolled',
+                (bool)($row['is_repeater'] ?? false)
             );
 
             // Add student name to the array representation
@@ -190,7 +217,8 @@ class EnrollmentRepository
                 $row['offering_id'],
                 $row['student_rollno'],
                 $row['enrolled_at'],
-                $row['enrollment_status'] ?? 'Enrolled'
+                $row['enrollment_status'] ?? 'Enrolled',
+                (bool)($row['is_repeater'] ?? false)
             );
 
             // Add course info to the array representation

@@ -141,6 +141,7 @@ class AttainmentSnapshotRepository
                  JOIN students s ON s.roll_no = e.student_rollno
                  WHERE e.offering_id = co.offering_id
                    AND e.enrollment_status != 'Dropped'
+                   AND e.is_repeater = FALSE
                    AND s.programme_id = ?
                    AND s.batch_year = ?
              )
@@ -175,6 +176,7 @@ class AttainmentSnapshotRepository
                  JOIN students s ON s.roll_no = e.student_rollno
                  WHERE e.offering_id = opa.offering_id
                    AND e.enrollment_status != 'Dropped'
+                   AND e.is_repeater = FALSE
                    AND s.programme_id = ?{$batchSql}
              )
              GROUP BY opa.po_name

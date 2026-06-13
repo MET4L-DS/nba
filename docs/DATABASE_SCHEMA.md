@@ -564,14 +564,13 @@ Student information with roll numbers.
 | roll_no        | VARCHAR(20)  | PRIMARY KEY                              | Student roll number              |
 | student_name   | VARCHAR(100) | NOT NULL                                 | Full name                        |
 | programme_id   | INT(11)      | FOREIGN KEY → programmes(programme_id)   | Programme                        |
-| batch_id       | INT(11)      | FOREIGN KEY → programme_batches(batch_id) NULL | Batch group             |
 | batch_year     | INT          | NULL                                     | Year of admission (e.g., 2024)   |
 | student_status | ENUM         | 'Active', 'Graduated', 'Dropped'         | Current status (default: Active) |
 | email          | VARCHAR(100) | NULL                                     | Student email                    |
 | phone          | VARCHAR(15)  | NULL                                     | Contact phone number             |
 
-**Indexes**: PRIMARY KEY (roll_no), INDEX (programme_id), INDEX (batch_id)
-**Foreign Keys**: programme_id REFERENCES programmes(programme_id) ON DELETE CASCADE, batch_id REFERENCES programme_batches(batch_id) ON DELETE SET NULL
+**Indexes**: PRIMARY KEY (roll_no), INDEX (programme_id)
+**Foreign Keys**: programme_id REFERENCES programmes(programme_id) ON DELETE CASCADE
 
 ---
 
@@ -605,7 +604,6 @@ Session-specific instances of a course (Year/Semester).
 | ------------------- | ------------ | ---------------------------------------- | ------------------------------------- |
 | offering_id         | BIGINT       | PRIMARY KEY, AUTO_INCREMENT              | Unique identifier                     |
 | course_id           | BIGINT       | FOREIGN KEY → courses(course_id)         | Parent course template                |
-| programme_batch_id  | INT(11)      | FOREIGN KEY → programme_batches(batch_id) NULL | Linked batch                  |
 | year                | INT          | NOT NULL, CHECK (1000-9999)              | Academic year                         |
 | semester            | ENUM         | 'Spring', 'Autumn'                       | Semester                              |
 | co_threshold        | DECIMAL(5,2) | DEFAULT 40.00, CHECK (0-100)             | CO passing percentage                 |
@@ -616,8 +614,8 @@ Session-specific instances of a course (Year/Semester).
 | created_at          | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                | Record creation timestamp             |
 | updated_at          | TIMESTAMP    | ON UPDATE CURRENT_TIMESTAMP              | Last update timestamp                 |
 
-**Indexes**: PRIMARY KEY (offering_id), UNIQUE KEY (course_id, year, semester), INDEX (year, semester), INDEX (course_id), INDEX (programme_batch_id)
-**Foreign Keys**: course_id REFERENCES courses(course_id) ON DELETE CASCADE, programme_batch_id REFERENCES programme_batches(batch_id) ON DELETE SET NULL
+**Indexes**: PRIMARY KEY (offering_id), UNIQUE KEY (course_id, year, semester), INDEX (year, semester), INDEX (course_id)
+**Foreign Keys**: course_id REFERENCES courses(course_id) ON DELETE CASCADE
 
 ---
 
@@ -728,6 +726,7 @@ Students enrolled in a specific course offering.
 | enrolled_date     | DATE         | DEFAULT (CURRENT_DATE)                   | Date of enrollment               |
 | student_rollno    | VARCHAR(20)  | FOREIGN KEY → students(roll_no)          | Student roll number              |
 | enrolled_at       | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP                | Record creation timestamp        |
+| is_repeater       | TINYINT(1)   | DEFAULT 0                                | Whether enrollment is a repeater |
 
 **Indexes**: PRIMARY KEY (enrollment_id), UNIQUE KEY (offering_id, student_rollno), INDEX (offering_id), INDEX (student_rollno)
 **Foreign Keys**: offering_id REFERENCES course_offerings(offering_id) ON DELETE CASCADE, student_rollno REFERENCES students(roll_no) ON DELETE CASCADE

@@ -193,7 +193,6 @@ DROP TABLE IF EXISTS `course_offerings`;
 CREATE TABLE `course_offerings` (
   `offering_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `course_id` bigint(20) NOT NULL,
-  `programme_batch_id` int(11) DEFAULT NULL,
   `year` int(11) NOT NULL CHECK (`year` between 1000 and 9999),
   `semester` enum('Spring','Autumn') NOT NULL,
   `co_threshold` decimal(5,2) DEFAULT 40.00 CHECK (`co_threshold` >= 0 and `co_threshold` <= 100),
@@ -207,9 +206,7 @@ CREATE TABLE `course_offerings` (
   UNIQUE KEY `uk_course_year_sem` (`course_id`,`year`,`semester`),
   KEY `year` (`year`,`semester`),
   KEY `course_id` (`course_id`),
-  KEY `idx_co_batch` (`programme_batch_id`),
-  CONSTRAINT `course_offerings_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE,
-  CONSTRAINT `course_offerings_ibfk_2` FOREIGN KEY (`programme_batch_id`) REFERENCES `programme_batches` (`batch_id`) ON DELETE SET NULL
+  CONSTRAINT `course_offerings_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -425,6 +422,7 @@ CREATE TABLE `enrollments` (
   `enrolled_date` date DEFAULT (curdate()),
   `student_rollno` varchar(20) NOT NULL,
   `enrolled_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_repeater` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`enrollment_id`),
   UNIQUE KEY `offering_id` (`offering_id`,`student_rollno`),
   KEY `offering_id_2` (`offering_id`),
@@ -897,16 +895,13 @@ CREATE TABLE `students` (
   `roll_no` varchar(20) NOT NULL,
   `student_name` varchar(100) NOT NULL,
   `programme_id` int(11) NOT NULL,
-  `batch_id` int(11) DEFAULT NULL,
   `batch_year` int(11) DEFAULT NULL,
   `student_status` enum('Active','Graduated','Dropped') DEFAULT 'Active',
   `email` varchar(100) DEFAULT NULL,
   `phone` varchar(15) DEFAULT NULL,
   PRIMARY KEY (`roll_no`),
   KEY `idx_students_programme` (`programme_id`),
-  KEY `idx_students_batch` (`batch_id`),
-  CONSTRAINT `students_ibfk_1` FOREIGN KEY (`programme_id`) REFERENCES `programmes` (`programme_id`) ON DELETE CASCADE,
-  CONSTRAINT `students_ibfk_2` FOREIGN KEY (`batch_id`) REFERENCES `programme_batches` (`batch_id`) ON DELETE SET NULL
+  CONSTRAINT `students_ibfk_1` FOREIGN KEY (`programme_id`) REFERENCES `programmes` (`programme_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

@@ -403,18 +403,25 @@ class AttainmentSnapshotService
         $directWeightage = $progRow ? (float)$progRow['direct_weightage'] : 80.0;
         $indirectWeightage = $progRow ? (float)$progRow['indirect_weightage'] : 20.0;
 
-        // 2. Get course-level direct PO attainment
+        // 2. Get course-level direct PO attainment (weighted average based on CO-PO mapping values)
         $courseStmt = $this->db->prepare(
             "SELECT
                 opa.po_name,
-                ROUND(AVG(opa.attainment_value), 2) AS direct_attainment
+                ROUND(SUM(opa.attainment_value * map.avg_val) / SUM(map.avg_val), 2) AS direct_attainment
              FROM offering_po_attainment opa
+             JOIN (
+                 SELECT offering_id, po_name, AVG(value) AS avg_val
+                 FROM co_po_mapping
+                 WHERE value > 0
+                 GROUP BY offering_id, po_name
+             ) map ON opa.offering_id = map.offering_id AND opa.po_name = map.po_name
              WHERE EXISTS (
                  SELECT 1
                  FROM enrollments e
                  JOIN students s ON s.roll_no = e.student_rollno
                  WHERE e.offering_id = opa.offering_id
                    AND e.enrollment_status != 'Dropped'
+                   AND e.is_repeater = FALSE
                    AND s.programme_id = ?
                    AND s.batch_year = ?
              )

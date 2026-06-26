@@ -63,3 +63,31 @@ CREATE TABLE IF NOT EXISTS attainment_jobs (
     error_message TEXT NULL,
     FOREIGN KEY (offering_id) REFERENCES course_offerings(offering_id) ON DELETE CASCADE
 );
+
+-- 7. Heuristically mark historical repeaters in enrollments
+-- For each course offering and programme, we find the most common batch_year (mode).
+-- Any student enrolled in that course offering with an admission batch_year strictly 
+-- less than that mode is identified and updated as a repeater (is_repeater = TRUE).
+UPDATE enrollments e
+JOIN students s ON e.student_rollno = s.roll_no
+JOIN (
+    SELECT offering_id, programme_id, batch_year as regular_batch_year
+    FROM (
+        SELECT 
+            e2.offering_id,
+            s2.programme_id,
+            s2.batch_year,
+            ROW_NUMBER() OVER (
+                PARTITION BY e2.offering_id, s2.programme_id 
+                ORDER BY COUNT(*) DESC, s2.batch_year DESC
+            ) as rn
+        FROM enrollments e2
+        JOIN students s2 ON e2.student_rollno = s2.roll_no
+        WHERE s2.batch_year IS NOT NULL
+        GROUP BY e2.offering_id, s2.programme_id, s2.batch_year
+    ) t
+    WHERE rn = 1
+) rc ON e.offering_id = rc.offering_id AND s.programme_id = rc.programme_id
+SET e.is_repeater = TRUE
+WHERE s.batch_year < rc.regular_batch_year;
+

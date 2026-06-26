@@ -67,6 +67,19 @@ export async function exportProgrammeAttainmentExcel(opts: ProgrammeAttainmentEx
 		pastBatchesAttainment = [],
 	} = opts;
 
+	if (!data) {
+		throw new Error("No data provided for export");
+	}
+
+	if (!data.averages) data.averages = {};
+	if (!data.finals) data.finals = {};
+	if (!data.indirect) data.indirect = {};
+	if (!data.targets) data.targets = {};
+
+	const plansList = actionPlans || [];
+	const mappingsObj = courseMappings || {};
+	const pastList = pastBatchesAttainment || [];
+
 	const poList = data.po_list || [];
 	const wb = new ExcelJS.Workbook();
 	wb.creator = "OBEMS Platform";
@@ -734,7 +747,7 @@ export async function exportProgrammeAttainmentExcel(opts: ProgrammeAttainmentEx
 	styleCell(ws4.getCell(r4, 8), { bold: true, align: "center", fillColor: "FFD3D3D3" });
 	r4++;
 
-	const filteredPlans = actionPlans.filter(p => p.po_name && poList.includes(p.po_name));
+	const filteredPlans = plansList.filter(p => p && p.po_name && poList.includes(p.po_name));
 
 	if (filteredPlans.length === 0) {
 		mergeAndStyle(ws4, r4, 1, r4, 8, {
@@ -902,7 +915,7 @@ export async function exportProgrammeAttainmentExcel(opts: ProgrammeAttainmentEx
 			ws5.getCell(r5, 3).value = course.course_name;
 			styleCell(ws5.getCell(r5, 3), { align: "left" });
 
-			const mappingList = courseMappings[course.offering_id] || [];
+			const mappingList = mappingsObj[course.offering_id] || [];
 			courseAverages[course.offering_id] = {};
 
 			poList.forEach((po, poIdx) => {
@@ -1033,7 +1046,7 @@ export async function exportProgrammeAttainmentExcel(opts: ProgrammeAttainmentEx
 	});
 
 	const comparisonList = [
-		...pastBatchesAttainment,
+		...pastList,
 		{ batchYear: batchYear, poAttainment: currentBatchAttainment }
 	].sort((a, b) => Number(a.batchYear) - Number(b.batchYear));
 
@@ -1043,7 +1056,7 @@ export async function exportProgrammeAttainmentExcel(opts: ProgrammeAttainmentEx
 
 		poList.forEach((po, poIdx) => {
 			const cell = ws6.getCell(r6, 2 + poIdx);
-			const val = batch.poAttainment[po];
+			const val = batch.poAttainment ? batch.poAttainment[po] : null;
 			if (val !== undefined && val !== null && val > 0) {
 				cell.value = Number(val);
 				cell.numFmt = "0.00";
@@ -1072,8 +1085,8 @@ export async function exportProgrammeAttainmentExcel(opts: ProgrammeAttainmentEx
 			const currentBatch = comparisonList[comparisonList.length - 1];
 			const prevBatch = comparisonList[comparisonList.length - 2];
 
-			const currVal = currentBatch.poAttainment[po];
-			const prevVal = prevBatch.poAttainment[po];
+			const currVal = currentBatch.poAttainment ? currentBatch.poAttainment[po] : undefined;
+			const prevVal = prevBatch.poAttainment ? prevBatch.poAttainment[po] : undefined;
 
 			if (currVal !== undefined && currVal !== null && prevVal !== undefined && prevVal !== null) {
 				const diff = currVal - prevVal;

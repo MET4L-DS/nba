@@ -21,7 +21,7 @@ export function fillStudentData(
 	const coHasQuestions: Record<string, boolean> = {};
 	coNames.forEach((coName) => {
 		coHasQuestions[coName] = assessments.some(
-			(assessment) => (assessment.coMaxMarks[coName] || 0) > 0
+			(assessment) => (assessment.coMaxMarks && assessment.coMaxMarks[coName] || 0) > 0
 		);
 	});
 	const activeCOCount = coNames.filter((coName) => coHasQuestions[coName]).length;
@@ -56,7 +56,7 @@ export function fillStudentData(
 			coNames.forEach((coName, i) => {
 				const markValue = marks[coName] || 0;
 				const cell = ws.getCell(currentRow, startCol + i);
-				cell.value = (assessment.coMaxMarks[coName] || 0) > 0 ? markValue : "";
+				cell.value = (assessment.coMaxMarks && assessment.coMaxMarks[coName] || 0) > 0 ? markValue : "";
 				styleCell(cell, { align: "center" });
 			});
 		});

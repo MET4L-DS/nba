@@ -65,6 +65,7 @@ export function calculateTotalCOMaxMarks(
 	assessments: AssessmentInfo[]
 ): COMarks {
 	const totals: COMarks = {};
+	if (!assessments) return totals;
 	assessments.forEach((assessment) => {
 		if (assessment.coMaxMarks) {
 			Object.entries(assessment.coMaxMarks).forEach(([co, marks]) => {

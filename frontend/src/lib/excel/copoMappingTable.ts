@@ -150,7 +150,7 @@ function calculatePOAttainment(
 	coNames?: string[]
 ): number {
 	const cos = coNames || [];
-	const attainmentPointsScale = attainmentThresholds.length;
+	const attainmentPointsScale = attainmentThresholds.length || 3;
 	let sum = 0;
 	let mappedCount = 0;
 
@@ -193,9 +193,11 @@ export function createCOPOMappingTable(
 	// Extract unique PO/PSO names from the matrix dynamically
 	const poSet = new Set<string>();
 	Object.values(copoMatrix).forEach((pos) => {
-		Object.keys(pos).forEach((po) => {
-			poSet.add(po.toUpperCase());
-		});
+		if (pos && typeof pos === "object") {
+			Object.keys(pos).forEach((po) => {
+				poSet.add(po.toUpperCase());
+			});
+		}
 	});
 
 	// If no PO/PSOs in matrix, fallback to standard PO1-12, PSO1-3

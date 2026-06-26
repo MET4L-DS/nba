@@ -206,7 +206,7 @@ export function createTableHeaders(
 		const assessment = assessments[idx];
 		coNames.forEach((coName, i) => {
 			const coCell = ws.getCell(headerRow4, startCol + i);
-			const maxMarkValue = assessment.coMaxMarks[coName] || 0;
+			const maxMarkValue = (assessment.coMaxMarks && assessment.coMaxMarks[coName]) || 0;
 			coCell.value = maxMarkValue > 0 ? maxMarkValue : "";
 			styleCell(coCell, {
 				bold: true,
@@ -219,7 +219,7 @@ export function createTableHeaders(
 	const totalCOMaxMarks = assessments.reduce(
 		(acc, a) => {
 			coNames.forEach((coName) => {
-				acc[coName] = (acc[coName] || 0) + (a.coMaxMarks[coName] || 0);
+				acc[coName] = (acc[coName] || 0) + ((a.coMaxMarks && a.coMaxMarks[coName]) || 0);
 			});
 			return acc;
 		},

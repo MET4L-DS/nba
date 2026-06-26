@@ -16,35 +16,39 @@ class AttainmentSnapshotRepository
 
     public function clearByOfferingId($offeringId): void
     {
-        $stmt = $this->db->prepare('DELETE FROM offering_co_attainment WHERE offering_id = ?');
+        $stmt = $this->db->prepare('DELETE FROM offering_co_attainment_snapshots WHERE offering_id = ?');
         $stmt->execute([(int)$offeringId]);
 
-        $stmt = $this->db->prepare('DELETE FROM offering_po_attainment WHERE offering_id = ?');
+        $stmt = $this->db->prepare('DELETE FROM offering_po_attainment_snapshots WHERE offering_id = ?');
         $stmt->execute([(int)$offeringId]);
     }
 
     public function saveCoAttainments($offeringId, array $rows): void
     {
+        // Insert into the new table
+        // Each row should have programme_id and is_repeater, and co_name
         $stmt = $this->db->prepare(
-            'INSERT INTO offering_co_attainment
-                (offering_id, co_number, attainment_percentage, attainment_level,
+            'INSERT INTO offering_co_attainment_snapshots
+                (offering_id, programme_id, is_repeater, co_number, co_name, attainment_percentage, attainment_level,
                  indirect_attainment_percentage, indirect_attainment_level,
                  final_attainment_percentage, final_attainment_level)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 attainment_percentage = VALUES(attainment_percentage),
                 attainment_level = VALUES(attainment_level),
                 indirect_attainment_percentage = VALUES(indirect_attainment_percentage),
                 indirect_attainment_level = VALUES(indirect_attainment_level),
                 final_attainment_percentage = VALUES(final_attainment_percentage),
-                final_attainment_level = VALUES(final_attainment_level),
-                calculated_at = CURRENT_TIMESTAMP'
+                final_attainment_level = VALUES(final_attainment_level)'
         );
 
         foreach ($rows as $row) {
             $stmt->execute([
                 (int)$offeringId,
+                $row['programme_id'],
+                $row['is_repeater'],
                 (int)$row['co_number'],
+                $row['co_name'] ?? ('CO' . $row['co_number']),
                 (float)$row['attainment_percentage'],
                 (float)$row['attainment_level'],
                 $row['indirect_attainment_percentage'] !== null ? (float)$row['indirect_attainment_percentage'] : null,
@@ -58,61 +62,97 @@ class AttainmentSnapshotRepository
     public function savePoAttainments($offeringId, array $rows): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO offering_po_attainment
-                (offering_id, po_name, attainment_value,
+            'INSERT INTO offering_po_attainment_snapshots
+                (offering_id, programme_id, is_repeater, po_name, attainment_value, direct_attainment_value,
                  indirect_attainment_value, final_attainment_value)
-             VALUES (?, ?, ?, ?, ?)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 attainment_value = VALUES(attainment_value),
+                direct_attainment_value = VALUES(direct_attainment_value),
                 indirect_attainment_value = VALUES(indirect_attainment_value),
-                final_attainment_value = VALUES(final_attainment_value),
-                calculated_at = CURRENT_TIMESTAMP'
+                final_attainment_value = VALUES(final_attainment_value)'
         );
 
         foreach ($rows as $row) {
             $stmt->execute([
                 (int)$offeringId,
+                $row['programme_id'],
+                $row['is_repeater'],
                 $row['po_name'],
                 (float)$row['attainment_value'],
+                $row['direct_attainment_value'] !== null ? (float)$row['direct_attainment_value'] : null,
                 $row['indirect_attainment_value'] !== null ? (float)$row['indirect_attainment_value'] : null,
                 (float)$row['final_attainment_value'],
             ]);
         }
     }
 
-    public function getCoAttainmentsByOfferingId($offeringId): array
+    public function getCoAttainmentsByOfferingId($offeringId, $programmeId = null, $isRepeater = null): array
     {
-        $stmt = $this->db->prepare(
-            "SELECT offering_id, co_number, CONCAT('CO', co_number) AS co_name,
-                    attainment_percentage, attainment_level,
-                    indirect_attainment_percentage, indirect_attainment_level,
-                    final_attainment_percentage, final_attainment_level,
-                    calculated_at
-             FROM offering_co_attainment
-             WHERE offering_id = ?
-             ORDER BY co_number ASC"
-        );
-        $stmt->execute([(int)$offeringId]);
+        $query = "SELECT offering_id, programme_id, is_repeater, co_number, co_name,
+                         attainment_percentage, attainment_level,
+                         indirect_attainment_percentage, indirect_attainment_level,
+                         final_attainment_percentage, final_attainment_level
+                  FROM offering_co_attainment_snapshots
+                  WHERE offering_id = ?";
+        
+        $params = [(int)$offeringId];
+
+        if ($programmeId === null) {
+            $query .= " AND programme_id IS NULL";
+        } else {
+            $query .= " AND programme_id = ?";
+            $params[] = $programmeId;
+        }
+
+        if ($isRepeater === null) {
+            $query .= " AND is_repeater IS NULL";
+        } else {
+            $query .= " AND is_repeater = ?";
+            $params[] = $isRepeater ? 1 : 0;
+        }
+
+        $query .= " ORDER BY co_number ASC";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getPoAttainmentsByOfferingId($offeringId): array
+    public function getPoAttainmentsByOfferingId($offeringId, $programmeId = null, $isRepeater = null): array
     {
-        $stmt = $this->db->prepare(
-            'SELECT offering_id, po_name, attainment_value,
-                    indirect_attainment_value, final_attainment_value,
-                    calculated_at
-             FROM offering_po_attainment
-             WHERE offering_id = ?
-             ORDER BY po_name ASC'
-        );
-        $stmt->execute([(int)$offeringId]);
+        $query = "SELECT offering_id, programme_id, is_repeater, po_name, 
+                         attainment_value, direct_attainment_value,
+                         indirect_attainment_value, final_attainment_value
+                  FROM offering_po_attainment_snapshots
+                  WHERE offering_id = ?";
+
+        $params = [(int)$offeringId];
+
+        if ($programmeId === null) {
+            $query .= " AND programme_id IS NULL";
+        } else {
+            $query .= " AND programme_id = ?";
+            $params[] = $programmeId;
+        }
+
+        if ($isRepeater === null) {
+            $query .= " AND is_repeater IS NULL";
+        } else {
+            $query .= " AND is_repeater = ?";
+            $params[] = $isRepeater ? 1 : 0;
+        }
+
+        $query .= " ORDER BY po_name ASC";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function hasSnapshots($offeringId): bool
     {
-        $stmt = $this->db->prepare('SELECT COUNT(*) FROM offering_po_attainment WHERE offering_id = ?');
+        $stmt = $this->db->prepare('SELECT COUNT(*) FROM offering_po_attainment_snapshots WHERE offering_id = ?');
         $stmt->execute([(int)$offeringId]);
         return (int)$stmt->fetchColumn() > 0;
     }
@@ -123,6 +163,12 @@ class AttainmentSnapshotRepository
      */
     public function getCourseLevelPoAttainment(int $programmeId, int $batchYear): array
     {
+        // For course-level attainment mapping to programme articulation matrix,
+        // we should select the snapshot where programme_id matches the requested programme,
+        // and is_repeater = FALSE (or NULL if we want combined - but typically Regular only)
+        // For backward compatibility and to get the most relevant data, 
+        // we'll try to get the programme-specific snapshot first, and fall back to combined if not found.
+        
         $stmt = $this->db->prepare(
             "SELECT
                 co.offering_id,
@@ -134,26 +180,26 @@ class AttainmentSnapshotRepository
                 opa.final_attainment_value
              FROM course_offerings co
              JOIN courses c ON c.course_id = co.course_id
-             JOIN offering_po_attainment opa ON opa.offering_id = co.offering_id
-             WHERE EXISTS (
+             JOIN offering_po_attainment_snapshots opa ON opa.offering_id = co.offering_id
+             WHERE opa.programme_id = ? AND (opa.is_repeater IS NULL OR opa.is_repeater = FALSE)
+               AND EXISTS (
                  SELECT 1
                  FROM enrollments e
                  JOIN students s ON s.roll_no = e.student_rollno
                  WHERE e.offering_id = co.offering_id
                    AND e.enrollment_status != 'Dropped'
-                   AND e.is_repeater = FALSE
                    AND s.programme_id = ?
                    AND s.batch_year = ?
              )
              ORDER BY c.course_code, opa.po_name"
         );
-        $stmt->execute([$programmeId, $batchYear]);
+        $stmt->execute([$programmeId, $programmeId, $batchYear]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getProgrammePoAttainment($programmeId, ?int $batchYear = null): array
     {
-        $params = [(int)$programmeId];
+        $params = [(int)$programmeId, (int)$programmeId];
         $batchSql = '';
 
         if ($batchYear !== null) {
@@ -165,18 +211,18 @@ class AttainmentSnapshotRepository
             "SELECT
                 opa.po_name,
                 ROUND(AVG(opa.final_attainment_value), 2) AS attainment_value,
-                ROUND(AVG(opa.attainment_value), 2) AS direct_attainment_value,
+                ROUND(AVG(opa.direct_attainment_value), 2) AS direct_attainment_value,
                 ROUND(AVG(opa.indirect_attainment_value), 2) AS indirect_attainment_value,
                 ROUND(AVG(opa.final_attainment_value), 2) AS final_attainment_value,
                 COUNT(DISTINCT opa.offering_id) AS offering_count
-             FROM offering_po_attainment opa
-             WHERE EXISTS (
+             FROM offering_po_attainment_snapshots opa
+             WHERE opa.programme_id = ? AND (opa.is_repeater IS NULL OR opa.is_repeater = FALSE)
+               AND EXISTS (
                  SELECT 1
                  FROM enrollments e
                  JOIN students s ON s.roll_no = e.student_rollno
                  WHERE e.offering_id = opa.offering_id
                    AND e.enrollment_status != 'Dropped'
-                   AND e.is_repeater = FALSE
                    AND s.programme_id = ?{$batchSql}
              )
              GROUP BY opa.po_name

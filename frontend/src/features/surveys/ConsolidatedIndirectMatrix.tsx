@@ -34,52 +34,54 @@ const PO_LIST = [
 	"PSO1", "PSO2", "PSO3",
 ];
 
-function getAttainmentBadge(val: number | null | undefined) {
-	if (val == null || val <= 0) {
+function getAttainmentBadge(val: any) {
+	if (val == null || Number(val) <= 0) {
 		return <span className="text-muted-foreground/30">—</span>;
 	}
-	if (val >= 2.50) {
+	const numVal = Number(val);
+	if (numVal >= 2.50) {
 		return (
 			<span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.05)] transition-all hover:bg-emerald-500/25 hover:scale-105">
-				{val.toFixed(2)}
+				{numVal.toFixed(2)}
 			</span>
 		);
 	}
-	if (val >= 1.50) {
+	if (numVal >= 1.50) {
 		return (
 			<span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 dark:border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.05)] transition-all hover:bg-amber-500/25 hover:scale-105">
-				{val.toFixed(2)}
+				{numVal.toFixed(2)}
 			</span>
 		);
 	}
 	return (
 		<span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-xs bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.05)] transition-all hover:bg-rose-500/25 hover:scale-105">
-			{val.toFixed(2)}
+			{numVal.toFixed(2)}
 		</span>
 	);
 }
 
-function getAverageBadge(val: number | null | undefined) {
-	if (val == null || val <= 0) {
+function getAverageBadge(val: any) {
+	if (val == null || Number(val) <= 0) {
 		return <span className="text-muted-foreground/30">—</span>;
 	}
-	if (val >= 2.50) {
+	const numVal = Number(val);
+	if (numVal >= 2.50) {
 		return (
 			<span className="inline-block px-2.5 py-1 rounded-md font-bold text-xs bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-md">
-				{val.toFixed(2)}
+				{numVal.toFixed(2)}
 			</span>
 		);
 	}
-	if (val >= 1.50) {
+	if (numVal >= 1.50) {
 		return (
 			<span className="inline-block px-2.5 py-1 rounded-md font-bold text-xs bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-md">
-				{val.toFixed(2)}
+				{numVal.toFixed(2)}
 			</span>
 		);
 	}
 	return (
 		<span className="inline-block px-2.5 py-1 rounded-md font-bold text-xs bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 shadow-md">
-			{val.toFixed(2)}
+			{numVal.toFixed(2)}
 		</span>
 	);
 }

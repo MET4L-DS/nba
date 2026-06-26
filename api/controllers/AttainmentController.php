@@ -20,6 +20,7 @@ class AttainmentController
     private ?ProgrammeRepository $programmeRepo;
     private ?AttainmentSnapshotRepository $snapshotRepo;
     private ?AttainmentSnapshotService $snapshotService;
+    private ?AttainmentJobRepository $jobRepo;
 
     public function __construct(
         ?CourseRepository $courseRepo = null,
@@ -29,7 +30,8 @@ class AttainmentController
         ?ProgrammeRepository $programmeRepo = null,
         ?AttainmentSnapshotRepository $snapshotRepo = null,
         ?AttainmentSnapshotService $snapshotService = null,
-        ?AuditService $auditService = null
+        ?AuditService $auditService = null,
+        ?AttainmentJobRepository $jobRepo = null
     ) {
         $this->auditService = $auditService;
 
@@ -40,6 +42,7 @@ class AttainmentController
         $this->programmeRepo = $programmeRepo;
         $this->snapshotRepo = $snapshotRepo;
         $this->snapshotService = $snapshotService;
+        $this->jobRepo = $jobRepo;
     }
 
     /**
@@ -62,10 +65,28 @@ class AttainmentController
                 return;
             }
 
-            $snapshotExists = $this->snapshotRepo->hasSnapshots($offeringId);
+            $programmeId = isset($_GET['programme_id']) && $_GET['programme_id'] !== '' ? (int)$_GET['programme_id'] : null;
+            $isRepeater = isset($_GET['is_repeater']) && $_GET['is_repeater'] !== '' ? filter_var($_GET['is_repeater'], FILTER_VALIDATE_BOOLEAN) : null;
+
+            // Check if course offering has any active assignments (active/editable mode)
+            $db = $this->snapshotRepo->getDb();
+            $stmt = $db->prepare("SELECT COUNT(*) FROM course_faculty_assignments WHERE offering_id = ? AND is_active = 1");
+            $stmt->execute([$offeringId]);
+            $hasActiveAssignment = (int)$stmt->fetchColumn() > 0;
+
+            if ($hasActiveAssignment) {
+                // Clear any existing stale snapshots and force live calculations
+                $this->snapshotRepo->clearByOfferingId($offeringId);
+                $snapshotExists = false;
+            } else {
+                $snapshotExists = $this->snapshotRepo->hasSnapshots($offeringId);
+            }
+
             if ($snapshotExists) {
                 $payload = [
                     'offering_id' => $offeringId,
+                    'programme_id' => $programmeId,
+                    'is_repeater' => $isRepeater,
                     'co_threshold' => (float)$resolved['offering']->getCoThreshold(),
                     'passing_threshold' => (float)$resolved['offering']->getPassingThreshold(),
                     'attainment_thresholds' => array_map(function ($scale) {
@@ -75,11 +96,11 @@ class AttainmentController
                             'percentage' => (float)$scale->min_percentage,
                         ];
                     }, $this->scaleRepo->getByOfferingId($offeringId)),
-                    'co_attainment' => $this->snapshotRepo->getCoAttainmentsByOfferingId($offeringId),
-                    'po_attainment' => $this->snapshotRepo->getPoAttainmentsByOfferingId($offeringId),
+                    'co_attainment' => $this->snapshotRepo->getCoAttainmentsByOfferingId($offeringId, $programmeId, $isRepeater),
+                    'po_attainment' => $this->snapshotRepo->getPoAttainmentsByOfferingId($offeringId, $programmeId, $isRepeater),
                 ];
             } else {
-                $payload = $this->snapshotService->calculatePreview($offeringId);
+                $payload = $this->snapshotService->calculatePreview($offeringId, $programmeId, $isRepeater);
             }
 
             http_response_code(200);
@@ -645,6 +666,125 @@ class AttainmentController
             }
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Failed to delete configuration: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get the latest attainment calculation job status for an offering
+     * GET /api/attainment/offering/{id}/status
+     */
+    public function getJobStatus(int $offeringId): void
+    {
+        try {
+            if (!$this->jobRepo) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Service not initialized']);
+                return;
+            }
+
+            $job = $this->jobRepo->getLatestJobStatus($offeringId);
+            
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $job
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Process pending attainment jobs (intended to be called via cron or background worker)
+     * POST /api/jobs/process
+     */
+    public function processJobs(): void
+    {
+        try {
+            if (!$this->jobRepo || !$this->snapshotService) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Service not initialized']);
+                return;
+            }
+
+            // Get up to 5 pending jobs
+            $jobs = $this->jobRepo->getPendingJobs(5);
+            $processed = 0;
+            $failed = 0;
+
+            foreach ($jobs as $job) {
+                try {
+                    $this->jobRepo->updateStatus($job['job_id'], 'processing');
+                    
+                    // Call the snapshot service to do the heavy lifting
+                    $this->snapshotService->calculateAndPersist($job['offering_id']);
+                    
+                    $this->jobRepo->updateStatus($job['job_id'], 'completed');
+                    $processed++;
+                } catch (Exception $e) {
+                    $this->jobRepo->updateStatus($job['job_id'], 'failed', $e->getMessage());
+                    $failed++;
+                }
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'message' => "Job processing finished",
+                'data' => [
+                    'processed' => $processed,
+                    'failed' => $failed,
+                    'total_pending_found' => count($jobs)
+                ]
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get available cohorts (programme + repeater status) that have attainment snapshots
+     * GET /api/attainment/offering/{id}/cohorts
+     */
+    public function getCohorts(int $offeringId): void
+    {
+        try {
+            if (!$this->snapshotRepo || !$this->programmeRepo) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Service not initialized']);
+                return;
+            }
+
+            // Find unique programme_id and is_repeater combinations from enrollments along with programme name
+            $stmt = $this->snapshotRepo->getDb()->prepare(
+                "SELECT DISTINCT s.programme_id, e.is_repeater, p.programme_name 
+                 FROM enrollments e
+                 JOIN students s ON s.roll_no = e.student_rollno
+                 JOIN programmes p ON s.programme_id = p.programme_id
+                 WHERE e.offering_id = ? AND e.enrollment_status != 'Dropped' AND s.programme_id IS NOT NULL"
+            );
+            $stmt->execute([$offeringId]);
+            $cohorts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $enrichedCohorts = [];
+            foreach ($cohorts as $c) {
+                $enrichedCohorts[] = [
+                    'programme_id' => $c['programme_id'],
+                    'programme_name' => $c['programme_name'],
+                    'is_repeater' => (bool)$c['is_repeater']
+                ];
+            }
+
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'data' => $enrichedCohorts
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 }

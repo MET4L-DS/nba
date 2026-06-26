@@ -2,7 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Settings, Upload } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Settings, Upload, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { useState, lazy, Suspense } from "react";
 import { CSVUploader } from "@/features/shared/CSVUploader";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -81,6 +83,10 @@ export interface MatrixViewProps {
 		final_attainment_percentage?: number | null;
 		final_attainment_level?: number | null;
 	}>;
+	cohorts?: import('@/services/api/types').AttainmentCohort[];
+	selectedCohort?: { programmeId?: number; isRepeater?: boolean };
+	setSelectedCohort?: (c: { programmeId?: number; isRepeater?: boolean }) => void;
+	jobStatus?: import('@/services/api/types').AttainmentJobStatus | null;
 }
 
 export function MatrixView({
@@ -121,6 +127,10 @@ export function MatrixView({
 	saveMatrix,
 	handleExportAttainment,
 	snapshotIndirectData,
+	cohorts,
+	selectedCohort,
+	setSelectedCohort,
+	jobStatus,
 }: MatrixViewProps) {
 	const [editableProgramme, setEditableProgramme] = useState(programme);
 	const [editableYear, setEditableYear] = useState(String(year));
@@ -155,15 +165,55 @@ export function MatrixView({
 		downloadCSVTemplate("co_po_matrix_template.csv", headers, sampleRows);
 	};
 
+	const handleCohortChange = (value: string) => {
+		if (!setSelectedCohort) return;
+		if (value === "overall") {
+			setSelectedCohort({});
+		} else {
+			const [progId, rep] = value.split("-");
+			setSelectedCohort({
+				programmeId: parseInt(progId, 10),
+				isRepeater: rep === "1"
+			});
+		}
+	};
+
+	const currentCohortValue = selectedCohort?.programmeId 
+		? `${selectedCohort.programmeId}-${selectedCohort.isRepeater ? "1" : "0"}` 
+		: "overall";
+
 	return (
 		<div className="space-y-6 pb-8">
+			{/* Job Status Banner */}
+			{jobStatus && jobStatus.status !== "completed" && (
+				<Alert variant={jobStatus.status === "failed" ? "destructive" : "default"} className="mb-4 bg-background">
+					{jobStatus.status === "processing" ? <Loader2 className="h-4 w-4 animate-spin" /> : 
+					 jobStatus.status === "failed" ? <AlertCircle className="h-4 w-4" /> :
+					 <Loader2 className="h-4 w-4" />}
+					<AlertTitle>Attainment Calculation {jobStatus.status}</AlertTitle>
+					<AlertDescription>
+						{jobStatus.status === "failed" 
+							? `Failed: ${jobStatus.error_message || "Unknown error"}` 
+							: "The system is currently recalculating the attainment snapshots in the background. Results will be updated shortly."}
+					</AlertDescription>
+				</Alert>
+			)}
+
 			{/* Header Section with Card */}
 			<Card className="border-0 shadow-none bg-transparent">
 				<CardHeader className="px-0">
 					<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
 						<div>
-							<CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+							<CardTitle className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
 								CO-PO Mapping
+								{jobStatus?.status === "completed" && (
+									<Tooltip>
+										<TooltipTrigger>
+											<CheckCircle2 className="h-5 w-5 text-green-500" />
+										</TooltipTrigger>
+										<TooltipContent>Calculation completed successfully</TooltipContent>
+									</Tooltip>
+								)}
 							</CardTitle>
 							<p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
 								Course: {courseCode} - {courseName}
@@ -218,8 +268,32 @@ export function MatrixView({
 				</CardHeader>
 			</Card>
 
+			{/* Filter Section */}
 			<Card className="w-full border-0 shadow-none bg-transparent">
-				<CardContent className="w-full px-0 pt-4">
+				<CardContent className="w-full px-0 pt-0">
+					{cohorts && cohorts.length > 0 && (
+						<div className="flex items-center gap-4 mb-4 bg-muted/30 p-3 rounded-lg border border-border">
+							<Label className="text-sm font-medium">Viewing Cohort:</Label>
+							<div className="w-64">
+								<Select value={currentCohortValue} onValueChange={handleCohortChange}>
+									<SelectTrigger className="h-8">
+										<SelectValue placeholder="Select cohort" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="overall">Overall (All Students)</SelectItem>
+										{cohorts.map((c) => (
+											<SelectItem 
+												key={`${c.programme_id}-${c.is_repeater ? "1" : "0"}`} 
+												value={`${c.programme_id}-${c.is_repeater ? "1" : "0"}`}
+											>
+												{c.programme_name} ({c.is_repeater ? "Repeaters" : "Regulars"})
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+						</div>
+					)}
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
 						<div className="flex items-center gap-2 w-full">
 							<Label

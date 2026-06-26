@@ -35,6 +35,7 @@ require_once __DIR__ . '/../models/EnrollmentRepository.php';
 require_once __DIR__ . '/../models/AttainmentScale.php';
 require_once __DIR__ . '/../models/AttainmentScaleRepository.php';
 require_once __DIR__ . '/../models/AttainmentSnapshotRepository.php';
+require_once __DIR__ . '/../models/AttainmentJobRepository.php';
 require_once __DIR__ . '/../models/CoPoRepository.php';
 require_once __DIR__ . '/../models/CourseSurveyRepository.php';
 require_once __DIR__ . '/../models/StakeholderSurveyRepository.php';
@@ -122,6 +123,7 @@ class Router
         $deanAssignmentRepository = new DeanAssignmentRepository($db);
         $courseSurveyRepository = new CourseSurveyRepository($db);
         $stakeholderSurveyRepository = new StakeholderSurveyRepository($db);
+        $attainmentJobRepository = new AttainmentJobRepository($db);
         $attainmentSnapshotService = new AttainmentSnapshotService($db, $attainmentSnapshotRepository, $attainmentScaleRepository, $coPoRepository, $courseOfferingRepository, $courseSurveyRepository);
         $jwtService = new JWTService();
         $authService = new AuthService($userRepository, $jwtService, $departmentRepository, $hodAssignmentRepository, $deanAssignmentRepository);
@@ -143,7 +145,7 @@ class Router
         $this->assessmentController = new AssessmentController($courseRepository, $courseOfferingRepository, $testRepository, $questionRepository, $validationMiddleware, $db, $courseFacultyAssignmentRepository, $auditService);
         $this->marksController = new MarksController($studentRepository, $rawMarksRepository, $marksRepository, $questionRepository, $testRepository, $validationMiddleware, $courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $auditService);
         $this->enrollmentController = new EnrollmentController($db, $auditService);
-        $this->attainmentController = new AttainmentController($courseRepository, $courseOfferingRepository, $attainmentScaleRepository, $coPoRepository, $programmeRepository, $attainmentSnapshotRepository, $attainmentSnapshotService, $auditService);
+        $this->attainmentController = new AttainmentController($courseRepository, $courseOfferingRepository, $attainmentScaleRepository, $coPoRepository, $programmeRepository, $attainmentSnapshotRepository, $attainmentSnapshotService, $auditService, $attainmentJobRepository);
         $this->surveyController = new SurveyController($courseSurveyRepository, $courseOfferingRepository, $stakeholderSurveyRepository, $programmeRepository);
         $this->actionPlanController = new ActionPlanController(new ActionPlanRepository($db), $programmeRepository, $attainmentSnapshotRepository);
         $this->adminController = new AdminController($userRepository, $courseRepository, $studentRepository, $testRepository, $departmentRepository, $programmeRepository, $deanAssignmentRepository, $schoolRepository, $auditService, $programmeCourseRepository);
@@ -154,7 +156,7 @@ class Router
         $this->staffController = new StaffController($userRepository, $courseRepository, $departmentRepository, $enrollmentRepository, $studentRepository, $validationMiddleware, $db, $courseOfferingRepository, $courseFacultyAssignmentRepository, $auditService);
 
         // Initialize faculty controller
-        $this->facultyController = new FacultyController($courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $testRepository, $enrollmentRepository, $marksRepository, $db, $auditService, $auditLogRepository, $attainmentSnapshotService);
+        $this->facultyController = new FacultyController($courseRepository, $courseOfferingRepository, $courseFacultyAssignmentRepository, $testRepository, $enrollmentRepository, $marksRepository, $db, $auditService, $auditLogRepository, $attainmentSnapshotService, $attainmentJobRepository);
 
         // Initialize dean controller
         $this->deanController = new DeanController($userRepository, $courseRepository, $courseOfferingRepository, $studentRepository, $testRepository, $departmentRepository, $enrollmentRepository, $marksRepository, $hodAssignmentRepository, $courseFacultyAssignmentRepository, $auditService);
@@ -287,12 +289,54 @@ class Router
             }
         }
 
+        // GET /attainment/offering/{id}/status
+        if (preg_match('#^attainment/offering/(\d+)/status$#', $path, $matches)) {
+            $offeringId = $matches[1];
+            if ($method === 'GET') {
+                $user = $this->authMiddleware->requireAuth();
+                $_REQUEST['authenticated_user'] = $user;
+                $this->attainmentController->getJobStatus((int)$offeringId);
+                return;
+            } else {
+                $this->sendMethodNotAllowed();
+                return;
+            }
+        }
+
+        // GET /attainment/offering/{id}/cohorts
+        if (preg_match('#^attainment/offering/(\d+)/cohorts$#', $path, $matches)) {
+            $offeringId = $matches[1];
+            if ($method === 'GET') {
+                $user = $this->authMiddleware->requireAuth();
+                $_REQUEST['authenticated_user'] = $user;
+                $this->attainmentController->getCohorts((int)$offeringId);
+                return;
+            } else {
+                $this->sendMethodNotAllowed();
+                return;
+            }
+        }
+
         // Route requests
         switch ($path) {
             case '':
             case '/':
                 // Root endpoint - API info
                 $this->sendWelcome();
+                break;
+
+            case 'jobs/process':
+                if ($method === 'POST') {
+                    // Usually we'd want a cron secret or similar, but for now we'll just require admin
+                    // Or for the purpose of the OBE system, allow it if it's an internal call
+                    // We can also let it be public if we assume it's protected by network rules
+                    // To be safe, we'll require admin for now, or you can call it locally
+                    $user = $this->authMiddleware->requireAuth();
+                    $_REQUEST['authenticated_user'] = $user;
+                    $this->attainmentController->processJobs();
+                } else {
+                    $this->sendMethodNotAllowed();
+                }
                 break;
 
             case 'login':

@@ -67,6 +67,12 @@ export function useCOPOMappingData({
 			final_attainment_value?: number | null;
 		}>
 	>();
+	const [cohorts, setCohorts] = useState<import('@/services/api/types').AttainmentCohort[]>([]);
+	const [selectedCohort, setSelectedCohort] = useState<{
+		programmeId?: number;
+		isRepeater?: boolean;
+	}>({});
+	const [jobStatus, setJobStatus] = useState<import('@/services/api/types').AttainmentJobStatus | null>(null);
 	const [attainmentThresholds, setAttainmentThresholds] = useState<
 		AttainmentThreshold[]
 	>([
@@ -187,10 +193,32 @@ export function useCOPOMappingData({
 	const [saving, setSaving] = useState(false);
 
 	useEffect(() => {
+		loadCohortsAndJobStatus();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [courseId]);
+
+	useEffect(() => {
 		loadCOPOData();
 		loadAttainmentConfig();
 		loadMatrix();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [courseId, selectedCohort.programmeId, selectedCohort.isRepeater]);
+
+	const loadCohortsAndJobStatus = useCallback(async () => {
+		try {
+			const [fetchedCohorts, fetchedStatus] = await Promise.all([
+				attainmentApi.getCohorts(courseId).catch(() => []),
+				attainmentApi.getJobStatus(courseId).catch(() => null)
+			]);
+			if (fetchedCohorts && Array.isArray(fetchedCohorts)) {
+				setCohorts(fetchedCohorts);
+			}
+			if (fetchedStatus) {
+				setJobStatus(fetchedStatus);
+			}
+		} catch (e) {
+			console.error("Failed to load cohorts or job status", e);
+		}
 	}, [courseId]);
 
 	const loadMatrix = useCallback(async () => {
@@ -257,6 +285,8 @@ export function useCOPOMappingData({
 		try {
 			debugLogger.info("COPOMapping", "loadCOPOData called");
 			setLoading(true);
+			setSnapshotIndirectData(undefined);
+			setSnapshotPoData(undefined);
 			const testsData = await apiService.getCourseTests(courseId);
 
 			if (testsData.length === 0) {
@@ -415,12 +445,21 @@ export function useCOPOMappingData({
 			});
 
 			setMaxMarks(maxMarksMap);
-			setStudentsData(Array.from(studentMap.values()));
+
+			let finalStudents = Array.from(studentMap.values());
+			if (selectedCohort.programmeId !== undefined) {
+				finalStudents = finalStudents.filter((s) => s.programmeId !== undefined && Number(s.programmeId) === Number(selectedCohort.programmeId));
+			}
+			if (selectedCohort.isRepeater !== undefined) {
+				finalStudents = finalStudents.filter((s) => s.is_repeater !== undefined && Boolean(s.is_repeater) === Boolean(selectedCohort.isRepeater));
+			}
+
+			setStudentsData(finalStudents);
 			setLoading(false);
 
 			// Snapshot verification: attempt to fetch persisted attainment for comparison
 			try {
-				const snapshot = await attainmentApi.getOfferingAttainment(courseId);
+				const snapshot = await attainmentApi.getOfferingAttainment(courseId, selectedCohort.programmeId, selectedCohort.isRepeater);
 				const coData = snapshot.co_attainment?.map((c) => ({
 					co_name: c.co_name,
 					attainment_percentage: c.attainment_percentage,
@@ -469,7 +508,7 @@ export function useCOPOMappingData({
 			toast.error("Failed to load CO-PO data");
 			setLoading(false);
 		}
-	}, [courseId]);
+	}, [courseId, selectedCohort.programmeId, selectedCohort.isRepeater]);
 
 	const saveMatrix = useCallback(async () => {
 		setSaving(true);
@@ -887,5 +926,10 @@ export function useCOPOMappingData({
 		calculatePOAttainment,
 		snapshotIndirectData,
 		snapshotPoData,
+		cohorts,
+		selectedCohort,
+		setSelectedCohort,
+		jobStatus,
+		loadCohortsAndJobStatus
 	};
 }

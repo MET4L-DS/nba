@@ -32,8 +32,9 @@ erDiagram
     course_offerings ||--o{ tests : "assesses_via"
     course_offerings ||--o{ attainment_scale : "configures"
     course_offerings ||--o{ co_po_mapping : "defines_mapping"
-    course_offerings ||--o{ offering_co_attainment : "snapshots_co"
-    course_offerings ||--o{ offering_po_attainment : "snapshots_po"
+    course_offerings ||--o{ offering_co_attainment_snapshots : "snapshots_co"
+    course_offerings ||--o{ offering_po_attainment_snapshots : "snapshots_po"
+    course_offerings ||--o{ attainment_jobs : "queued_for"
     course_offerings ||--o{ course_surveys : "has_survey"
     course_offerings ||--o{ action_plans : "improvement_actions"
     course_surveys ||--o{ course_survey_questions : "contains"
@@ -249,25 +250,38 @@ erDiagram
         decimal marks_obtained
     }
 
-    offering_co_attainment {
+    offering_co_attainment_snapshots {
         bigint offering_id PK, FK
-        tinyint co_number PK "1-6"
+        int programme_id PK, FK "nullable"
+        boolean is_repeater PK "nullable"
+        int co_number PK
+        string co_name
         decimal attainment_percentage
         decimal attainment_level
         decimal indirect_attainment_percentage
         decimal indirect_attainment_level
         decimal final_attainment_percentage
         decimal final_attainment_level
-        timestamp calculated_at
     }
 
-    offering_po_attainment {
+    offering_po_attainment_snapshots {
         bigint offering_id PK, FK
+        int programme_id PK, FK "nullable"
+        boolean is_repeater PK "nullable"
         string po_name PK
         decimal attainment_value
+        decimal direct_attainment_value
         decimal indirect_attainment_value
         decimal final_attainment_value
-        timestamp calculated_at
+    }
+
+    attainment_jobs {
+        bigint job_id PK
+        bigint offering_id FK
+        enum status "pending, processing, completed, failed"
+        timestamp created_at
+        timestamp updated_at
+        text error_message
     }
 
     course_surveys {
@@ -766,41 +780,63 @@ Aggregated marks per CO for a student in a test. Uses tall format (co_number + m
 
 ---
 
-### 21. offering_co_attainment
+### 21. offering_co_attainment_snapshots
 
-Materialised CO attainment snapshot computed when a course offering is concluded/locked. Includes direct, indirect (from course exit surveys), and blended final attainment values.
+Materialised CO attainment snapshot computed when a course offering is concluded/locked. Includes direct, indirect (from course exit surveys), and blended final attainment values. Now supports cohort isolation.
 
 | Column                        | Type         | Constraints                     | Description                                    |
 | ----------------------------- | ------------ | ------------------------------- | ---------------------------------------------- |
 | offering_id                   | BIGINT       | PRIMARY KEY, FOREIGN KEY        | Course offering ID                             |
-| co_number                     | TINYINT      | PRIMARY KEY, CHECK (1-6)        | CO number (1-6)                                |
-| attainment_percentage         | DECIMAL(5,2) | NOT NULL DEFAULT 0.00           | Direct: % of students above CO threshold       |
-| attainment_level              | DECIMAL(5,2) | NOT NULL DEFAULT 0.00           | Direct: computed attainment level (0-3 scale)  |
+| programme_id                  | INT          | PRIMARY KEY, FOREIGN KEY        | Programme ID (NULL = combined)                 |
+| is_repeater                   | BOOLEAN      | PRIMARY KEY                     | NULL = All, TRUE = Repeater, FALSE = Regular   |
+| co_number                     | INT          | PRIMARY KEY                     | CO number (1-6)                                |
+| co_name                       | VARCHAR(10)  | NOT NULL                        | CO name (e.g. CO1)                             |
+| attainment_percentage         | DECIMAL(5,2) | DEFAULT NULL                    | Direct: % of students above CO threshold       |
+| attainment_level              | DECIMAL(5,2) | DEFAULT NULL                    | Direct: computed attainment level (0-3 scale)  |
 | indirect_attainment_percentage| DECIMAL(5,2) | DEFAULT NULL                    | Indirect: % from course exit survey Likert→%   |
 | indirect_attainment_level     | DECIMAL(5,2) | DEFAULT NULL                    | Indirect: attainment level from survey data    |
 | final_attainment_percentage   | DECIMAL(5,2) | DEFAULT NULL                    | Blended: direct×weightage + indirect×weightage |
 | final_attainment_level        | DECIMAL(5,2) | DEFAULT NULL                    | Blended: attainment level of final %           |
-| calculated_at                 | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP       | When this snapshot was computed                |
 
-**Indexes**: PRIMARY KEY (offering_id, co_number), INDEX (offering_id)
-**Foreign Keys**: offering_id REFERENCES course_offerings(offering_id) ON DELETE CASCADE
+**Indexes**: PRIMARY KEY (offering_id, programme_id, is_repeater, co_number)
+**Foreign Keys**: offering_id REFERENCES course_offerings(offering_id) ON DELETE CASCADE, programme_id REFERENCES programmes(programme_id) ON DELETE CASCADE
 
 ---
 
-### 22. offering_po_attainment
+### 22. offering_po_attainment_snapshots
 
-Materialised PO attainment snapshot derived from CO attainment × CO-PO mapping values.
+Materialised PO attainment snapshot derived from CO attainment × CO-PO mapping values. Supports cohort isolation.
 
 | Column                    | Type         | Constraints                     | Description                                  |
 | ------------------------- | ------------ | ------------------------------- | -------------------------------------------- |
 | offering_id               | BIGINT       | PRIMARY KEY, FOREIGN KEY        | Course offering ID                           |
-| po_name                   | VARCHAR(5)   | PRIMARY KEY                     | PO identifier (PO1-PO12, PSO1-PSO3)         |
-| attainment_value          | DECIMAL(5,2) | NOT NULL DEFAULT 0.00           | PO value from direct CO attainment           |
+| programme_id              | INT          | PRIMARY KEY, FOREIGN KEY        | Programme ID (NULL = combined)               |
+| is_repeater               | BOOLEAN      | PRIMARY KEY                     | NULL = All, TRUE = Repeater, FALSE = Regular |
+| po_name                   | VARCHAR(10)  | PRIMARY KEY                     | PO identifier (PO1-PO12, PSO1-PSO3)          |
+| attainment_value          | DECIMAL(5,2) | DEFAULT NULL                    | PO value                                     |
+| direct_attainment_value   | DECIMAL(5,2) | DEFAULT NULL                    | PO value from direct CO attainment           |
 | indirect_attainment_value | DECIMAL(5,2) | DEFAULT NULL                    | PO value from indirect CO attainment only    |
 | final_attainment_value    | DECIMAL(5,2) | DEFAULT NULL                    | PO value from blended (final) CO attainment  |
-| calculated_at             | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP       | When this snapshot was computed              |
 
-**Indexes**: PRIMARY KEY (offering_id, po_name), INDEX (offering_id), INDEX (po_name)
+**Indexes**: PRIMARY KEY (offering_id, programme_id, is_repeater, po_name)
+**Foreign Keys**: offering_id REFERENCES course_offerings(offering_id) ON DELETE CASCADE, programme_id REFERENCES programmes(programme_id) ON DELETE CASCADE
+
+---
+
+### 22a. attainment_jobs
+
+Queue for asynchronous attainment processing.
+
+| Column          | Type         | Constraints                     | Description                                  |
+| --------------- | ------------ | ------------------------------- | -------------------------------------------- |
+| job_id          | BIGINT       | PRIMARY KEY, AUTO_INCREMENT     | Job ID                                       |
+| offering_id     | BIGINT       | FOREIGN KEY                     | Course offering ID                           |
+| status          | ENUM         | DEFAULT 'pending'               | pending, processing, completed, failed       |
+| created_at      | TIMESTAMP    | DEFAULT CURRENT_TIMESTAMP       | Creation time                                |
+| updated_at      | TIMESTAMP    | ON UPDATE CURRENT_TIMESTAMP     | Last update time                             |
+| error_message   | TEXT         | DEFAULT NULL                    | Error message if failed                      |
+
+**Indexes**: PRIMARY KEY (job_id)
 **Foreign Keys**: offering_id REFERENCES course_offerings(offering_id) ON DELETE CASCADE
 
 ---

@@ -17,6 +17,7 @@ class FacultyController
     private $marksRepository;
     private $db;
     private $attainmentSnapshotService;
+    private $attainmentJobRepository;
 
     public function __construct(
         CourseRepository $courseRepository,
@@ -26,7 +27,7 @@ class FacultyController
         EnrollmentRepository $enrollmentRepository,
         MarksRepository $marksRepository,
         $db
-    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null, ?AttainmentSnapshotService $attainmentSnapshotService = null) {
+    , ?AuditService $auditService = null, ?AuditLogRepository $auditLogRepository = null, ?AttainmentSnapshotService $attainmentSnapshotService = null, ?AttainmentJobRepository $attainmentJobRepository = null) {
         $this->auditService = $auditService;
         $this->auditLogRepository = $auditLogRepository;
 
@@ -38,6 +39,7 @@ class FacultyController
         $this->marksRepository = $marksRepository;
         $this->db = $db;
         $this->attainmentSnapshotService = $attainmentSnapshotService;
+        $this->attainmentJobRepository = $attainmentJobRepository;
     }
 
     /**
@@ -773,7 +775,11 @@ class FacultyController
             // ");
             // $stmt->execute([$offeringId]);
 
-            if ($this->attainmentSnapshotService) {
+            if ($this->attainmentJobRepository) {
+                // Queue attainment calculation asynchronously
+                $this->attainmentJobRepository->createJob($offeringId);
+            } elseif ($this->attainmentSnapshotService) {
+                // Fallback to sync calculation
                 $this->attainmentSnapshotService->calculateAndPersist($offeringId);
             }
 

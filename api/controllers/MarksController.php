@@ -478,6 +478,7 @@ class MarksController
                         return [
                             'student_id' => $item['marks']->getStudentRollNo(),
                             'student_name' => $item['student_name'],
+                            'programme_id' => isset($item['programme_id']) ? (int)$item['programme_id'] : null,
                             'programme_name' => $item['programme_name'] ?? null,
                             'is_repeater' => (bool)($item['is_repeater'] ?? false),
                             'CO1' => $item['marks']->getCO1(),

@@ -73,11 +73,11 @@ export function BlendedAttainmentTable({
 							);
 							if (!coData) return null;
 							const directVal =
-								coData.attainment_level ?? 0;
+								Number(coData.attainment_level ?? 0);
 							const indirectVal =
-								coData.indirect_attainment_level ?? 0;
+								Number(coData.indirect_attainment_level ?? 0);
 							const finalVal =
-								coData.final_attainment_level ?? directVal;
+								Number(coData.final_attainment_level ?? directVal);
 							return (
 								<motion.tr
 									key={coNum}

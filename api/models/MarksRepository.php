@@ -67,6 +67,7 @@ class MarksRepository
                 MAX(CASE WHEN m.co_number = 5 THEN m.marks_obtained ELSE 0 END) AS CO5,
                 MAX(CASE WHEN m.co_number = 6 THEN m.marks_obtained ELSE 0 END) AS CO6,
                 p.programme_name,
+                s.programme_id,
                 e.is_repeater
             FROM marks m
             JOIN students s ON m.student_roll_no = s.roll_no
@@ -74,7 +75,7 @@ class MarksRepository
             JOIN tests t ON m.test_id = t.test_id
             LEFT JOIN enrollments e ON e.student_rollno = m.student_roll_no AND e.offering_id = t.offering_id
             WHERE m.test_id = ?
-            GROUP BY m.student_roll_no, m.test_id, s.student_name, p.programme_name, e.is_repeater
+            GROUP BY m.student_roll_no, m.test_id, s.student_name, p.programme_name, s.programme_id, e.is_repeater
             ORDER BY m.student_roll_no
         ");
         $stmt->execute([$testId]);
@@ -94,6 +95,7 @@ class MarksRepository
             $marksList[] = [
                 'marks' => $marks,
                 'student_name' => $row['student_name'],
+                'programme_id' => $row['programme_id'] ? (int)$row['programme_id'] : null,
                 'programme_name' => $row['programme_name'] ?? null,
                 'is_repeater' => (bool)($row['is_repeater'] ?? false)
             ];

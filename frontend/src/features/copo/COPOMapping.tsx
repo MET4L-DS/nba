@@ -53,6 +53,10 @@ export function COPOMapping({
 		poComputations,
 		calculatePOAttainment,
 		snapshotIndirectData,
+		cohorts,
+		selectedCohort,
+		setSelectedCohort,
+		jobStatus
 	} = useCOPOMappingData({
 		courseId,
 		courseCode,
@@ -108,6 +112,10 @@ export function COPOMapping({
 			saveMatrix={saveMatrix}
 			handleExportAttainment={handleExportAttainment}
 			snapshotIndirectData={snapshotIndirectData}
+			cohorts={cohorts}
+			selectedCohort={selectedCohort}
+			setSelectedCohort={setSelectedCohort}
+			jobStatus={jobStatus}
 		/>
 	);
 }

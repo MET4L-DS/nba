@@ -4,16 +4,27 @@ import type {
 	CourseLevelProgrammeAttainmentResponse,
 	OfferingAttainmentSnapshotInfo,
 	ProgrammeAttainmentResponse,
+    AttainmentCohort,
+    AttainmentJobStatus
 } from "./types";
 
 async function getOfferingAttainment(
 	offeringId: number,
+    programmeId?: number,
+    isRepeater?: boolean
 ): Promise<OfferingAttainmentSnapshotInfo> {
 	debugLogger.info("attainmentApi", "getOfferingAttainment called", {
 		offeringId,
+        programmeId,
+        isRepeater
 	});
+    const params = new URLSearchParams();
+    if (programmeId !== undefined) params.append("programme_id", String(programmeId));
+    if (isRepeater !== undefined) params.append("is_repeater", String(isRepeater));
+    
+    const queryString = params.toString() ? `?${params.toString()}` : "";
 	const response = await apiGet<OfferingAttainmentSnapshotInfo>(
-		`/offerings/${offeringId}/attainment`,
+		`/offerings/${offeringId}/attainment${queryString}`,
 	);
 	debugLogger.info("attainmentApi", "getOfferingAttainment response", {
 		offeringId,
@@ -114,9 +125,23 @@ async function getProgrammeAttainment(
 	return response;
 }
 
+async function getCohorts(offeringId: number): Promise<AttainmentCohort[]> {
+    debugLogger.info("attainmentApi", "getCohorts called", { offeringId });
+    const response = await apiGet<AttainmentCohort[]>(`/attainment/offering/${offeringId}/cohorts`);
+    return response;
+}
+
+async function getJobStatus(offeringId: number): Promise<AttainmentJobStatus | null> {
+    debugLogger.info("attainmentApi", "getJobStatus called", { offeringId });
+    const response = await apiGet<AttainmentJobStatus | null>(`/attainment/offering/${offeringId}/status`);
+    return response;
+}
+
 export const attainmentApi = {
 	getOfferingAttainment,
 	getProgrammeAttainment,
 	calculateProgrammeAttainment,
 	getCourseLevelProgrammeAttainment,
+    getCohorts,
+    getJobStatus
 };

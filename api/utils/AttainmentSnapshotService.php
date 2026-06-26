@@ -32,20 +32,47 @@ class AttainmentSnapshotService
         $this->surveyRepository = $surveyRepository;
     }
 
-    public function calculatePreview($offeringId): array
+    public function calculatePreview($offeringId, ?int $programmeId = null, ?bool $isRepeater = null): array
     {
-        return $this->buildSnapshotPayload((int)$offeringId);
+        return $this->buildSnapshotPayload((int)$offeringId, $programmeId, $isRepeater);
     }
 
     public function calculateAndPersist($offeringId): array
     {
-        $payload = $this->buildSnapshotPayload((int)$offeringId);
-
+        // First, clear existing snapshots
         $this->snapshotRepository->clearByOfferingId($offeringId);
-        $this->snapshotRepository->saveCoAttainments($offeringId, $payload['co_attainment']);
-        $this->snapshotRepository->savePoAttainments($offeringId, $payload['po_attainment']);
 
-        return $payload;
+        $allPayloads = [];
+
+        // 1. Calculate overall (programme_id = null, is_repeater = null)
+        $overallPayload = $this->buildSnapshotPayload((int)$offeringId, null, null);
+        $this->snapshotRepository->saveCoAttainments($offeringId, $overallPayload['co_attainment']);
+        $this->snapshotRepository->savePoAttainments($offeringId, $overallPayload['po_attainment']);
+        $allPayloads[] = $overallPayload;
+
+        // 2. Fetch all unique combinations of programme_id and is_repeater
+        $stmt = $this->db->prepare(
+            "SELECT DISTINCT s.programme_id, e.is_repeater
+             FROM enrollments e
+             JOIN students s ON s.roll_no = e.student_rollno
+             WHERE e.offering_id = ? AND e.enrollment_status != 'Dropped'"
+        );
+        $stmt->execute([$offeringId]);
+        $cohorts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Calculate and save for each combination
+        foreach ($cohorts as $cohort) {
+            $progId = (int)$cohort['programme_id'];
+            $isRepeater = (bool)$cohort['is_repeater'];
+            
+            $payload = $this->buildSnapshotPayload((int)$offeringId, $progId, $isRepeater);
+            $this->snapshotRepository->saveCoAttainments($offeringId, $payload['co_attainment']);
+            $this->snapshotRepository->savePoAttainments($offeringId, $payload['po_attainment']);
+            $allPayloads[] = $payload;
+        }
+
+        // Return overall payload as primary response for backward compatibility
+        return $overallPayload;
     }
 
     public function clearSnapshots($offeringId): void
@@ -53,7 +80,7 @@ class AttainmentSnapshotService
         $this->snapshotRepository->clearByOfferingId((int)$offeringId);
     }
 
-    private function buildSnapshotPayload(int $offeringId): array
+    private function buildSnapshotPayload(int $offeringId, ?int $programmeId = null, ?bool $isRepeater = null): array
     {
         $offering = $this->offeringRepository->findById($offeringId);
         if (!$offering) {
@@ -76,7 +103,7 @@ class AttainmentSnapshotService
         }
 
         $coMaxMarks = $this->getCoMaxMarks($offeringId);
-        $studentPercentages = $this->getStudentPercentages($offeringId, $coMaxMarks);
+        $studentPercentages = $this->getStudentPercentages($offeringId, $coMaxMarks, $programmeId, $isRepeater);
         $presentStudents = count($studentPercentages);
 
         // --- DIRECT CO ATTAINMENT (existing logic) ---
@@ -103,6 +130,8 @@ class AttainmentSnapshotService
             $directCoAttainment[] = [
                 'co_number' => $coNumber,
                 'co_name' => 'CO' . $coNumber,
+                'programme_id' => $programmeId,
+                'is_repeater' => $isRepeater === null ? null : ($isRepeater ? 1 : 0),
                 'attainment_percentage' => $attainmentPercentage,
                 'attainment_level' => $attainmentLevel,
             ];
@@ -131,6 +160,8 @@ class AttainmentSnapshotService
                 $indirectCoAttainment[] = [
                     'co_number' => $coNumber,
                     'co_name' => 'CO' . $coNumber,
+                    'programme_id' => $programmeId,
+                    'is_repeater' => $isRepeater === null ? null : ($isRepeater ? 1 : 0),
                     'indirect_attainment_percentage' => $indirectPct,
                     'indirect_attainment_level' => $indirectLevel,
                 ];
@@ -161,6 +192,8 @@ class AttainmentSnapshotService
                 $finalCoAttainment[] = [
                     'co_number' => $coNumber,
                     'co_name' => 'CO' . $coNumber,
+                    'programme_id' => $programmeId,
+                    'is_repeater' => $isRepeater === null ? null : ($isRepeater ? 1 : 0),
                     'attainment_percentage' => $directPct,
                     'attainment_level' => $directLevel,
                     'indirect_attainment_percentage' => $indirectPct,
@@ -173,6 +206,8 @@ class AttainmentSnapshotService
                 $finalCoAttainment[] = [
                     'co_number' => $coNumber,
                     'co_name' => 'CO' . $coNumber,
+                    'programme_id' => $programmeId,
+                    'is_repeater' => $isRepeater === null ? null : ($isRepeater ? 1 : 0),
                     'attainment_percentage' => $directPct,
                     'attainment_level' => $directLevel,
                     'indirect_attainment_percentage' => null,
@@ -219,6 +254,8 @@ class AttainmentSnapshotService
 
             $mergedPo[] = [
                 'po_name' => $poName,
+                'programme_id' => $programmeId,
+                'is_repeater' => $isRepeater === null ? null : ($isRepeater ? 1 : 0),
                 'attainment_value' => $finalVal ?? $directVal,
                 'direct_attainment_value' => $directVal,
                 'indirect_attainment_value' => $indirectVal,
@@ -314,14 +351,27 @@ class AttainmentSnapshotService
         return $result;
     }
 
-    private function getStudentPercentages(int $offeringId, array $coMaxMarks): array
+    private function getStudentPercentages(int $offeringId, array $coMaxMarks, ?int $programmeId = null, ?bool $isRepeater = null): array
     {
-        $studentsStmt = $this->db->prepare(
-            "SELECT student_rollno
-             FROM enrollments
-             WHERE offering_id = ? AND enrollment_status != 'Dropped'"
-        );
-        $studentsStmt->execute([$offeringId]);
+        $query = "SELECT e.student_rollno
+                  FROM enrollments e
+                  JOIN students s ON s.roll_no = e.student_rollno
+                  WHERE e.offering_id = ? AND e.enrollment_status != 'Dropped'";
+        
+        $params = [$offeringId];
+
+        if ($programmeId !== null) {
+            $query .= " AND s.programme_id = ?";
+            $params[] = $programmeId;
+        }
+
+        if ($isRepeater !== null) {
+            $query .= " AND e.is_repeater = ?";
+            $params[] = $isRepeater ? 1 : 0;
+        }
+
+        $studentsStmt = $this->db->prepare($query);
+        $studentsStmt->execute($params);
         $students = $studentsStmt->fetchAll(PDO::FETCH_COLUMN);
 
         $percentages = [];
@@ -333,14 +383,20 @@ class AttainmentSnapshotService
             return $percentages;
         }
 
+        // Create placeholders for student rollnos
+        $inQuery = implode(',', array_fill(0, count($students), '?'));
+        
+        // Use IN clause to get marks only for the students in this cohort
         $marksStmt = $this->db->prepare(
-            'SELECT m.student_roll_no, m.co_number, SUM(m.marks_obtained) AS total_marks
+            "SELECT m.student_roll_no, m.co_number, SUM(m.marks_obtained) AS total_marks
              FROM marks m
              JOIN tests t ON t.test_id = m.test_id
-             WHERE t.offering_id = ?
-             GROUP BY m.student_roll_no, m.co_number'
+             WHERE t.offering_id = ? AND m.student_roll_no IN ($inQuery)
+             GROUP BY m.student_roll_no, m.co_number"
         );
-        $marksStmt->execute([$offeringId]);
+        
+        $marksParams = array_merge([$offeringId], $students);
+        $marksStmt->execute($marksParams);
 
         foreach ($marksStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $rollNo = $row['student_roll_no'];
@@ -407,15 +463,17 @@ class AttainmentSnapshotService
         $courseStmt = $this->db->prepare(
             "SELECT
                 opa.po_name,
-                ROUND(SUM(opa.attainment_value * map.avg_val) / SUM(map.avg_val), 2) AS direct_attainment
-             FROM offering_po_attainment opa
+                ROUND(SUM(COALESCE(opa.direct_attainment_value, opa.attainment_value) * map.avg_val) / SUM(map.avg_val), 2) AS direct_attainment
+             FROM offering_po_attainment_snapshots opa
              JOIN (
                  SELECT offering_id, po_name, AVG(value) AS avg_val
                  FROM co_po_mapping
                  WHERE value > 0
                  GROUP BY offering_id, po_name
              ) map ON opa.offering_id = map.offering_id AND opa.po_name = map.po_name
-             WHERE EXISTS (
+             WHERE opa.programme_id = ?
+               AND (opa.is_repeater IS NULL OR opa.is_repeater = FALSE)
+               AND EXISTS (
                  SELECT 1
                  FROM enrollments e
                  JOIN students s ON s.roll_no = e.student_rollno
@@ -428,7 +486,7 @@ class AttainmentSnapshotService
              GROUP BY opa.po_name
              ORDER BY opa.po_name ASC"
         );
-        $courseStmt->execute([$programmeId, $batchYear]);
+        $courseStmt->execute([$programmeId, $programmeId, $batchYear]);
         $courseRows = $courseStmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Direct lookup: po_name => direct_attainment

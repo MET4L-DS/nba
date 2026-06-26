@@ -460,6 +460,8 @@ export interface CoPoMappingRow {
 
 export interface OfferingAttainmentCO {
 	co_name: string;
+	programme_id?: number | null;
+	is_repeater?: boolean | null;
 	attainment_percentage: number;           // Direct (backward-compatible)
 	attainment_level: number;                 // Direct
 	indirect_attainment_percentage?: number | null;
@@ -470,6 +472,8 @@ export interface OfferingAttainmentCO {
 
 export interface OfferingAttainmentPO {
 	po_name: string;
+	programme_id?: number | null;
+	is_repeater?: boolean | null;
 	attainment_value: number;                // Final (backward-compatible)
 	direct_attainment_value?: number | null;
 	indirect_attainment_value?: number | null;
@@ -478,11 +482,28 @@ export interface OfferingAttainmentPO {
 
 export interface OfferingAttainmentSnapshotInfo {
 	offering_id: number;
+	programme_id?: number | null;
+	is_repeater?: boolean | null;
 	co_threshold: number;
 	passing_threshold: number;
 	attainment_thresholds: Array<{ id: number; level: number; percentage: number }>;
 	co_attainment: OfferingAttainmentCO[];
 	po_attainment: OfferingAttainmentPO[];
+}
+
+export interface AttainmentCohort {
+    programme_id: number;
+    programme_name: string;
+    is_repeater: boolean;
+}
+
+export interface AttainmentJobStatus {
+    job_id: number;
+    offering_id: number;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    error_message: string | null;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface OfferingAttainmentResponse extends OfferingAttainmentSnapshotInfo {

@@ -258,6 +258,7 @@ export interface Student {
 
 export interface EnrolledStudent extends Student {
 	enrolled_courses: string; // comma-separated "code: name (year/sem)" entries
+	enrollment_details?: string; // comma-separated "offering_id:code:is_repeater" entries
 }
 
 export interface UpdateStudentRequest {

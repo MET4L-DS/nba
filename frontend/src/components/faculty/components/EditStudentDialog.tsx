@@ -36,6 +36,41 @@ export function EditStudentDialog({
 	const [editForm, setEditForm] = useState<UpdateStudentRequest>({});
 	const [editSaving, setEditSaving] = useState(false);
 
+	interface ParsedEnrollment {
+		offeringId: number;
+		courseCode: string;
+		isRepeater: boolean;
+	}
+
+	const [enrollments, setEnrollments] = useState<ParsedEnrollment[]>([]);
+	const [initialEnrollments, setInitialEnrollments] = useState<ParsedEnrollment[]>([]);
+
+	useEffect(() => {
+		if (student?.enrollment_details) {
+			const parsed = student.enrollment_details.split(", ").map((item) => {
+				const [offeringIdStr, courseCode, isRepeaterStr] = item.split(":");
+				return {
+					offeringId: parseInt(offeringIdStr, 10),
+					courseCode,
+					isRepeater: isRepeaterStr === "1",
+				};
+			});
+			setEnrollments(parsed);
+			setInitialEnrollments(parsed);
+		} else {
+			setEnrollments([]);
+			setInitialEnrollments([]);
+		}
+	}, [student]);
+
+	const handleRepeaterToggle = (offeringId: number, nextIsRepeater: boolean) => {
+		setEnrollments((prev) =>
+			prev.map((e) =>
+				e.offeringId === offeringId ? { ...e, isRepeater: nextIsRepeater } : e
+			)
+		);
+	};
+
 	useEffect(() => {
 		if (student) {
 			setEditForm({
@@ -64,14 +99,50 @@ export function EditStudentDialog({
 			return;
 		}
 
+		// Identify modified enrollments
+		const modifiedEnrollments = enrollments.filter((e) => {
+			const init = initialEnrollments.find((i) => i.offeringId === e.offeringId);
+			return init ? init.isRepeater !== e.isRepeater : false;
+		});
+
 		setEditSaving(true);
 		try {
+			// 1. Update Student Profile Info
 			const dataToSave = {
 				...editForm,
 				phones: validPhones,
 				phone: validPhones.length > 0 ? validPhones[0] : null,
 			};
 			await facultyApi.updateStudent(student.roll_no, dataToSave);
+
+			// 2. Update Cohorts/Repeaters (only if changed)
+			if (modifiedEnrollments.length > 0) {
+				await Promise.all(
+					modifiedEnrollments.map((e) =>
+						facultyApi.updateEnrollment(e.offeringId, student.roll_no, e.isRepeater)
+					)
+				);
+			}
+
+			// 3. Prepare updated client side representation
+			const newDetails = enrollments
+				.map((e) => `${e.offeringId}:${e.courseCode}:${e.isRepeater ? 1 : 0}`)
+				.join(", ");
+			
+			const courses = student.enrolled_courses.split(", ").map((courseStr) => {
+				const currentEnr = enrollments.find((e) =>
+					courseStr.startsWith(e.courseCode + ":")
+				);
+				if (currentEnr) {
+					const clean = courseStr.endsWith(" [Repeater]")
+						? courseStr.slice(0, -11)
+						: courseStr;
+					return currentEnr.isRepeater ? `${clean} [Repeater]` : clean;
+				}
+				return courseStr;
+			});
+			const newCoursesStr = courses.join(", ");
+
 			toast.success("Student updated successfully");
 			onSuccess({
 				roll_no: student.roll_no,
@@ -85,9 +156,11 @@ export function EditStudentDialog({
 				student_status:
 					editForm.student_status ?? student.student_status,
 				batch_year: editForm.batch_year ?? student.batch_year,
+				enrollment_details: newDetails,
+				enrolled_courses: newCoursesStr,
 			});
 			onClose();
-		} catch {
+		} catch (error) {
 			toast.error("Failed to update student");
 		} finally {
 			setEditSaving(false);
@@ -99,7 +172,7 @@ export function EditStudentDialog({
 			open={!!student}
 			onOpenChange={(open: boolean) => !open && onClose()}
 		>
-			<DialogContent className="max-w-md bg-background/95 backdrop-blur-md border border-muted/50 shadow-2xl rounded-2xl p-6 relative overflow-hidden max-h-[90vh] flex flex-col">
+			<DialogContent className="max-w-md bg-background/95 backdrop-blur-md border border-muted/50 shadow-2xl rounded-2xl p-6 overflow-hidden max-h-[90vh] flex flex-col">
 				<div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent" />
 				<DialogHeader className="shrink-0">
 					<DialogTitle className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
@@ -245,6 +318,30 @@ export function EditStudentDialog({
 							</Select>
 						</div>
 					</div>
+					{enrollments.length > 0 && (
+						<div className="space-y-2 pt-2 border-t border-muted/40">
+							<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Course Cohorts (Mark Repeaters)</Label>
+							<div className="space-y-2 bg-muted/20 p-3 rounded-xl border border-muted/50 max-h-[160px] overflow-y-auto">
+								{enrollments.map((enr) => (
+									<div key={enr.offeringId} className="flex items-center justify-between py-0.5">
+										<span className="text-xs font-semibold text-foreground/80 font-mono bg-violet-500/5 px-2 py-0.5 rounded border border-violet-500/10">{enr.courseCode}</span>
+										<Select
+											value={enr.isRepeater ? "repeater" : "regular"}
+											onValueChange={(val) => handleRepeaterToggle(enr.offeringId, val === "repeater")}
+										>
+											<SelectTrigger className="w-[110px] h-8 text-xs rounded-lg bg-background/50 border-muted/60">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent className="rounded-lg">
+												<SelectItem value="regular" className="text-xs">Regular</SelectItem>
+												<SelectItem value="repeater" className="text-xs text-rose-500 font-medium">Repeater</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
 				</div>
 
 				<DialogFooter className="mt-4 gap-2 shrink-0">

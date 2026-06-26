@@ -1069,6 +1069,16 @@ class Router
                     } else {
                         $this->sendMethodNotAllowed();
                     }
+                } elseif (preg_match('#^offerings/(\d+)/enrollments/([A-Za-z0-9_-]+)$#', $path, $matches)) {
+                    $offeringId = $matches[1];
+                    $rollno = $matches[2];
+                    if ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->enrollmentController->updateEnrollment($offeringId, $rollno, $user['employee_id']);
+                    } else {
+                        $this->sendMethodNotAllowed();
+                    }
                 } elseif (preg_match('#^offerings/(\d+)/attainment-config$#', $path, $matches)) {
                     $offeringId = (int)$matches[1];
                     if ($method === 'GET') {
@@ -1622,6 +1632,10 @@ class Router
                         $user = $this->authMiddleware->requireAuth();
                         $_REQUEST['authenticated_user'] = $user;
                         $this->staffController->removeEnrollment($courseId, $rollNo);
+                    } elseif ($method === 'PUT') {
+                        $user = $this->authMiddleware->requireAuth();
+                        $_REQUEST['authenticated_user'] = $user;
+                        $this->staffController->updateEnrollment($courseId, $rollNo);
                     } else {
                         $this->sendMethodNotAllowed();
                     }

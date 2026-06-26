@@ -59,6 +59,7 @@ export function CourseFormDialog({
 	};
 
 	const [formData, setFormData] = useState(defaultFormData);
+	const [isCustomCredit, setIsCustomCredit] = useState(false);
 	const [faculties, setFaculties] = useState<any[]>([]);
 	const [isFetchingFaculties, setIsFetchingFaculties] = useState(false);
 	const [baseCourses, setBaseCourses] = useState<BaseCourse[]>([]);
@@ -74,11 +75,12 @@ export function CourseFormDialog({
 	useEffect(() => {
 		if (open) {
 			if (initialData && mode === "edit") {
+				const cred = (initialData.credit || 3).toString();
 				setFormData({
 					course_code: initialData.course_code || "",
 					course_name:
 						initialData.course_name || initialData.name || "",
-					credit: (initialData.credit || 3).toString(),
+					credit: cred,
 					course_type: initialData.course_type || "Theory",
 					course_level: initialData.course_level || "Undergraduate",
 					is_active:
@@ -95,6 +97,7 @@ export function CourseFormDialog({
 						initialData.passing_threshold || 60
 					).toString(),
 				});
+				setIsCustomCredit(!["1", "2", "3", "4", "5", "6"].includes(cred));
 				if (initialData.base_course_id) {
 					setSelectedBaseCourseid(initialData.base_course_id);
 				}
@@ -103,21 +106,24 @@ export function CourseFormDialog({
 				mode === "create" &&
 				courseType === "offering"
 			) {
+				const cred = (initialData.credit || 3).toString();
 				// prefill from base course when offering
 				setFormData({
 					...defaultFormData,
 					course_code: initialData.course_code || "",
 					course_name:
 						initialData.course_name || initialData.name || "",
-					credit: (initialData.credit || 3).toString(),
+					credit: cred,
 					course_type: initialData.course_type || "Theory",
 					course_level: initialData.course_level || "Undergraduate",
 				});
+				setIsCustomCredit(!["1", "2", "3", "4", "5", "6"].includes(cred));
 				if (initialData.course_id) {
 					setSelectedBaseCourseid(initialData.course_id);
 				}
 			} else {
 				setFormData(defaultFormData);
+				setIsCustomCredit(false);
 				setSelectedBaseCourseid(null);
 			}
 
@@ -263,6 +269,7 @@ export function CourseFormDialog({
 															course_name: "",
 															credit: "3",
 														}));
+														setIsCustomCredit(false);
 													}}
 													disabled={isLoading}
 													className="text-xs text-primary hover:bg-primary/10 active:scale-95 duration-100"
@@ -285,12 +292,14 @@ export function CourseFormDialog({
 													setSelectedBaseCourseid(
 														selected.course_id,
 													);
+													const cred = selected.credit.toString();
 													setFormData((f) => ({
 														...f,
 														course_code: selected.course_code,
 														course_name: selected.course_name,
-														credit: selected.credit.toString(),
+														credit: cred,
 													}));
+													setIsCustomCredit(!["1", "2", "3", "4", "5", "6"].includes(cred));
 												}
 											}}
 											disabled={isLoading || isFetchingCourses}
@@ -342,35 +351,93 @@ export function CourseFormDialog({
 									</div>
 									<div className="space-y-1.5">
 										<Label className="text-sm font-semibold">Credit</Label>
-										<Select
-											value={formData.credit}
-											onValueChange={(value) =>
-												setFormData((f) => ({
-													...f,
-													credit: value,
-												}))
-											}
-											disabled={
-												isLoading ||
-												(mode === "create" &&
-													courseType === "offering" &&
-													selectedBaseCourseid !== null)
-											}
-										>
-											<SelectTrigger className="bg-white/50 dark:bg-zinc-900/50">
-												<SelectValue />
-											</SelectTrigger>
-											<SelectContent>
-												{[1, 2, 3, 4, 5, 6].map((c) => (
-													<SelectItem
-														key={c}
-														value={c.toString()}
-													>
-														{c}
+										{isCustomCredit ? (
+											<div className="flex gap-2 items-center">
+												<Input
+													type="number"
+													min={1}
+													max={30}
+													value={formData.credit === "custom" ? "" : formData.credit}
+													onChange={(e) => {
+														const val = e.target.value;
+														setFormData((f) => ({
+															...f,
+															credit: val,
+														}));
+													}}
+													disabled={
+														isLoading ||
+														(mode === "create" &&
+															courseType === "offering" &&
+															selectedBaseCourseid !== null)
+													}
+													placeholder="Credits"
+													className="bg-white/50 dark:bg-zinc-900/50 flex-1 h-9 rounded-xl focus:scale-[1.01] transition-transform duration-100"
+												/>
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													onClick={() => {
+														setIsCustomCredit(false);
+														setFormData((f) => ({
+															...f,
+															credit: "3",
+														}));
+													}}
+													disabled={
+														isLoading ||
+														(mode === "create" &&
+															courseType === "offering" &&
+															selectedBaseCourseid !== null)
+													}
+													className="shrink-0 h-9 rounded-xl active:scale-95 duration-200 transition-all font-semibold text-xs py-2 px-3 border border-muted/60"
+												>
+													Presets
+												</Button>
+											</div>
+										) : (
+											<Select
+												value={formData.credit}
+												onValueChange={(value) => {
+													if (value === "custom") {
+														setIsCustomCredit(true);
+														setFormData((f) => ({
+															...f,
+															credit: "",
+														}));
+													} else {
+														setFormData((f) => ({
+															...f,
+															credit: value,
+														}));
+													}
+												}}
+												disabled={
+													isLoading ||
+													(mode === "create" &&
+														courseType === "offering" &&
+														selectedBaseCourseid !== null)
+												}
+											>
+												<SelectTrigger className="bg-white/50 dark:bg-zinc-900/50 rounded-xl h-9">
+													<SelectValue />
+												</SelectTrigger>
+												<SelectContent className="rounded-xl">
+													{[1, 2, 3, 4, 5, 6].map((c) => (
+														<SelectItem
+															key={c}
+															value={c.toString()}
+														>
+															{c}
+														</SelectItem>
+													))}
+													<SelectItem value="custom" className="text-violet-500 font-semibold">
+														Custom...
 													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
+												</SelectContent>
+											</Select>
+										)}
 									</div>
 								</div>
 

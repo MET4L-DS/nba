@@ -273,7 +273,8 @@ class FacultyController
                 SELECT s.roll_no, s.student_name, s.programme_id, s.batch_year, s.student_status,
                        s.email, s.phone, p.department_id AS dept_id, d.department_name, d.department_code,
                        p.programme_name, p.programme_code,
-                       GROUP_CONCAT(DISTINCT CONCAT(c.course_code, ': ', c.course_name, ' (', co.year, '/', co.semester, ')', CASE WHEN e.is_repeater = 1 THEN ' [Repeater]' ELSE '' END) ORDER BY c.course_code SEPARATOR ', ') AS enrolled_courses
+                       GROUP_CONCAT(DISTINCT CONCAT(c.course_code, ': ', c.course_name, ' (', co.year, '/', co.semester, ')', CASE WHEN e.is_repeater = 1 THEN ' [Repeater]' ELSE '' END) ORDER BY c.course_code SEPARATOR ', ') AS enrolled_courses,
+                       GROUP_CONCAT(DISTINCT CONCAT(e.offering_id, ':', c.course_code, ':', e.is_repeater) ORDER BY c.course_code SEPARATOR ', ') AS enrollment_details
                 FROM enrollments e
                 JOIN students s ON e.student_rollno = s.roll_no
                 JOIN course_offerings co ON e.offering_id = co.offering_id

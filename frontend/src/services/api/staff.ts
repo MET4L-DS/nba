@@ -97,6 +97,17 @@ export const staffApi = {
 	},
 
 	/**
+	 * Update a student's enrollment properties (specifically is_repeater status)
+	 */
+	async updateCourseEnrollment(offeringId: number, rollno: string, isRepeater: boolean): Promise<void> {
+		debugLogger.info("staffApi", "updateCourseEnrollment called");
+		return apiPut<{ is_repeater: boolean }, void>(
+			`/staff/courses/${offeringId}/enrollments/${rollno}`,
+			{ is_repeater: isRepeater }
+		);
+	},
+
+	/**
 	 * Get department faculty list — paginated
 	 */
 	async getDepartmentFaculty(params?: PaginationParams): Promise<

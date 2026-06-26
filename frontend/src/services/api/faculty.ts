@@ -40,6 +40,17 @@ async function removeStudentEnrollment(rollNo: string): Promise<void> {
 	return apiDelete(`/faculty/students/${encodeURIComponent(rollNo)}`);
 }
 
+async function updateEnrollment(
+	offeringId: number,
+	rollNo: string,
+	isRepeater: boolean,
+): Promise<void> {
+	return apiPut<{ is_repeater: boolean }, void>(
+		`/offerings/${offeringId}/enrollments/${encodeURIComponent(rollNo)}`,
+		{ is_repeater: isRepeater },
+	);
+}
+
 async function getOfferingTestAverages(offeringId: number): Promise<any[]> {
 	return apiGet<any[]>(`/faculty/courses/${offeringId}/test-averages`);
 }
@@ -70,6 +81,7 @@ export const facultyApi = {
 	getEnrolledStudents,
 	updateStudent,
 	removeStudentEnrollment,
+	updateEnrollment,
 	getCourseStats,
 	concludeCourse,
 	checkCourseCompletionStatus,

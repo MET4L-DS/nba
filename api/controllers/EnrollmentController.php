@@ -384,4 +384,75 @@ class EnrollmentController
             ]);
         }
     }
+
+    /**
+     * PUT /offerings/{offeringId}/enrollments/{rollno}
+     * Update enrollment properties (specifically is_repeater status)
+     */
+    public function updateEnrollment($offeringId, $rollno, $userId)
+    {
+        try {
+            // Verify offering exists
+            $offering = $this->offeringRepo->findById($offeringId);
+            if (!$offering) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Course offering not found'
+                ]);
+                return;
+            }
+
+            // Check authorization
+            if (!$this->isOfferingAccessAllowed($offeringId, $userId)) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You are not authorized to manage enrollments for this offering'
+                ]);
+                return;
+            }
+
+            // Verify student is enrolled
+            if (!$this->enrollmentRepo->isEnrolled($offeringId, $rollno)) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student is not enrolled in this offering'
+                ]);
+                return;
+            }
+
+            // Get input body
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!isset($input['is_repeater'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Missing parameter: is_repeater'
+                ]);
+                return;
+            }
+
+            $isRepeater = (bool)$input['is_repeater'];
+
+            // Update in DB
+            $this->enrollmentRepo->updateRepeaterStatus($offeringId, $rollno, $isRepeater);
+
+            http_response_code(200);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'updateEnrollment', null, null, $input);
+            }
+            echo json_encode([
+                'success' => true,
+                'message' => 'Enrollment status updated successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

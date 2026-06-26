@@ -72,6 +72,11 @@ export interface StudentListProps {
 
 	// Import any custom deps for dialog handlers
 	department_id?: number | null;
+	renderEditDialog?: (
+		student: any | null,
+		onClose: () => void,
+		onSuccess: (updatedStudent: any) => void,
+	) => React.ReactNode;
 }
 
 export function StudentList({
@@ -92,6 +97,7 @@ export function StudentList({
 	onStudentUpdate,
 	onRefresh,
 	department_id,
+	renderEditDialog,
 }: StudentListProps) {
 	// Dialog state
 	const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
@@ -155,6 +161,7 @@ export function StudentList({
 		sortDir,
 		setSort,
 		setLimit,
+		refresh,
 	} = usePaginatedData<Student>({
 		fetchFn:
 			fetchFn ||
@@ -482,15 +489,27 @@ export function StudentList({
 				isLoading={deleteSaving}
 			/>
 
-			<EditStudentDialog
-				open={!!editTarget}
-				student={editTarget}
-				onOpenChange={(open) => !open && setEditTarget(null)}
-				onSave={async (data) => {
-					if (!editTarget || !onStudentUpdate) return;
-					await onStudentUpdate(editTarget.roll_no, data);
-				}}
-			/>
+			{renderEditDialog ? (
+				renderEditDialog(
+					editTarget,
+					() => setEditTarget(null),
+					() => {
+						refresh({ bypassCache: true });
+						setEditTarget(null);
+					}
+				)
+			) : (
+				<EditStudentDialog
+					open={!!editTarget}
+					student={editTarget}
+					onOpenChange={(open) => !open && setEditTarget(null)}
+					onSave={async (data) => {
+						if (!editTarget || !onStudentUpdate) return;
+						await onStudentUpdate(editTarget.roll_no, data);
+						refresh({ bypassCache: true });
+					}}
+				/>
+			)}
 		</div>
 	);
 }

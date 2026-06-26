@@ -1,6 +1,7 @@
 import { facultyApi } from "@/services/api/faculty";
 import type { UpdateStudentRequest } from "@/services/api";
 import { StudentList } from "@/features/users";
+import { EditStudentDialog } from "@/components/faculty/components/EditStudentDialog";
 
 export function FacultyStudentsPage() {
 	const handleStudentUpdate = async (
@@ -38,6 +39,13 @@ export function FacultyStudentsPage() {
 			availableFilters={["batch", "status", "course"]}
 			onStudentUpdate={handleStudentUpdate}
 			onStudentDelete={handleStudentDelete}
+			renderEditDialog={(student, onClose, onSuccess) => (
+				<EditStudentDialog
+					student={student}
+					onClose={onClose}
+					onSuccess={onSuccess}
+				/>
+			)}
 		/>
 	);
 }

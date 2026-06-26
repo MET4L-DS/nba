@@ -759,6 +759,82 @@ class StaffController
         }
     }
 
+    /**
+     * Update a student's enrollment details (like is_repeater status)
+     */
+    public function updateEnrollment($offeringId, $rollno)
+    {
+        try {
+            if (!$this->requireStaff()) return;
+
+            $userData = $_REQUEST['authenticated_user'];
+            $departmentId = $userData['department_id'];
+
+            // Verify offering exists
+            $offering = $this->courseOfferingRepository->findById($offeringId);
+            if (!$offering) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Course offering not found'
+                ]);
+                return;
+            }
+
+            // Check if the course belongs to the staff's department
+            $course = $this->courseRepository->findById($offering->getCourseId());
+            if (!$course || $course->getDepartmentId() != $departmentId) {
+                http_response_code(403);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'You are not authorized to edit enrollments for this offering'
+                ]);
+                return;
+            }
+
+            // Check if student is enrolled
+            if (!$this->enrollmentRepository->isEnrolled($offeringId, $rollno)) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Student is not enrolled in this offering'
+                ]);
+                return;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!isset($input['is_repeater'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Missing parameter: is_repeater'
+                ]);
+                return;
+            }
+
+            $isRepeater = (bool)$input['is_repeater'];
+
+            // Update enrollment status
+            $this->enrollmentRepository->updateRepeaterStatus($offeringId, $rollno, $isRepeater);
+
+            http_response_code(200);
+            if (isset($this->auditService)) {
+                $this->auditService->log('UPDATE', 'updateEnrollment', null, null, $input);
+            }
+            echo json_encode([
+                'success' => true,
+                'message' => 'Enrollment status updated successfully'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+
 
     /**
      * Get students in the staff's department — paginated

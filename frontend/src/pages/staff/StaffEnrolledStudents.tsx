@@ -276,6 +276,39 @@ export function StaffEnrolledStudents() {
 				),
 			},
 			{
+				accessorKey: "is_repeater",
+				header: "Cohort Type",
+				cell: ({ row }) => {
+					const enrollment = row.original;
+					return (
+						<Select
+							value={enrollment.is_repeater ? "repeater" : "regular"}
+							onValueChange={async (val) => {
+								try {
+									await staffApi.updateCourseEnrollment(
+										offeringId!,
+										enrollment.student_rollno,
+										val === "repeater"
+									);
+									toast.success("Cohort type updated successfully");
+									loadEnrollments(offeringId!);
+								} catch (error) {
+									toast.error("Failed to update cohort type");
+								}
+							}}
+						>
+							<SelectTrigger className="w-[110px] h-8 text-xs font-semibold rounded-xl">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent className="rounded-xl">
+								<SelectItem value="regular" className="text-xs">Regular</SelectItem>
+								<SelectItem value="repeater" className="text-xs text-rose-500 font-medium">Repeater</SelectItem>
+							</SelectContent>
+						</Select>
+					);
+				}
+			},
+			{
 				accessorKey: "enrolled_at",
 				header: "Enrolled At",
 				cell: ({ row }) => (

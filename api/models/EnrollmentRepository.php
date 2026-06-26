@@ -309,4 +309,15 @@ class EnrollmentRepository
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$offeringId]);
     }
+
+    /**
+     * Update is_repeater status for a student in a course offering
+     */
+    public function updateRepeaterStatus($offeringId, $rollNo, $isRepeater)
+    {
+        $sql = "UPDATE enrollments SET is_repeater = ? WHERE offering_id = ? AND student_rollno = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$isRepeater ? 1 : 0, $offeringId, $rollNo]);
+    }
 }
+

@@ -905,9 +905,9 @@ class UserController
             // Determine frontend URL
             $origin = $_SERVER['HTTP_ORIGIN'] ?? (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
             
-            $frontendUrl = getenv('FRONTEND_URL');
+            $frontendUrl = EnvLoader::get('FRONTEND_URL');
             if (!$frontendUrl) {
-                $basePath = getenv('FRONTEND_BASE_PATH') ?: '';
+                $basePath = EnvLoader::get('FRONTEND_BASE_PATH', '');
                 $frontendUrl = rtrim($origin, '/') . '/' . ltrim($basePath, '/');
             }
             $resetLink = rtrim($frontendUrl, '/') . '/reset-password?token=' . $token;

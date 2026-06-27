@@ -29,7 +29,7 @@ class AuditService {
             $token = str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']);
             try {
                 if (class_exists('JWTService')) {
-                    $jwtService = new JWTService();
+                    $jwtService = new JWTService(EnvLoader::get('JWT_SECRET'));
                     $userData = $jwtService->getUserFromToken($token);
                     if ($userData) {
                         $userId = $userData['employee_id'];

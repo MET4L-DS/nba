@@ -15,10 +15,10 @@ class DatabaseConfig
     public function __construct()
     {
         // Try to get config from environment variables (Production/AWS), fallback to local XAMPP defaults
-        $this->host = getenv('DB_HOST') ?: 'localhost';
-        $this->username = getenv('DB_USER') ?: 'root';
-        $this->password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
-        $this->database = getenv('DB_NAME') ?: 'nba_db';
+        $this->host = EnvLoader::get('DB_HOST', 'localhost');
+        $this->username = EnvLoader::get('DB_USER', 'root');
+        $this->password = EnvLoader::get('DB_PASS', '');
+        $this->database = EnvLoader::get('DB_NAME', 'nba_db');
         $this->charset = 'utf8mb4';
     }
 

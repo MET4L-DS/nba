@@ -30,16 +30,16 @@ class EmailService
         try {
             // SMTP configurations
             $mail->isSMTP();
-            $mail->Host       = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
+            $mail->Host       = EnvLoader::get('SMTP_HOST', 'smtp.gmail.com');
             $mail->SMTPAuth   = true;
-            $mail->Username   = getenv('SMTP_USER') ?: 'ayan14.ds@gmail.com';
-            $mail->Password   = getenv('SMTP_PASS') ?: 'bgqmolrrigmbdbli';
+            $mail->Username   = EnvLoader::get('SMTP_USER', 'ayan14.ds@gmail.com');
+            $mail->Password   = EnvLoader::get('SMTP_PASS', 'bgqmolrrigmbdbli');
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = getenv('SMTP_PORT') ?: 587;
+            $mail->Port       = EnvLoader::get('SMTP_PORT', 587);
 
             // Sender and Recipient
-            $fromEmail = getenv('SMTP_FROM_EMAIL') ?: 'ayan14.ds@gmail.com';
-            $fromName  = getenv('SMTP_FROM_NAME') ?: 'OBEMS Platform';
+            $fromEmail = EnvLoader::get('SMTP_FROM_EMAIL', 'ayan14.ds@gmail.com');
+            $fromName  = EnvLoader::get('SMTP_FROM_NAME', 'OBEMS Platform');
             $mail->setFrom($fromEmail, $fromName);
             $mail->addAddress($toEmail);
 

@@ -51,4 +51,22 @@ class EnvLoader
         }
         return true;
     }
+
+    /**
+     * Get environment variable safely, checking $_ENV, $_SERVER, and getenv()
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function get($key, $default = null)
+    {
+        if (isset($_ENV[$key])) {
+            return $_ENV[$key];
+        }
+        if (isset($_SERVER[$key])) {
+            return $_SERVER[$key];
+        }
+        $val = getenv($key);
+        return $val !== false ? $val : $default;
+    }
 }

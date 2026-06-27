@@ -125,7 +125,7 @@ class Router
         $stakeholderSurveyRepository = new StakeholderSurveyRepository($db);
         $attainmentJobRepository = new AttainmentJobRepository($db);
         $attainmentSnapshotService = new AttainmentSnapshotService($db, $attainmentSnapshotRepository, $attainmentScaleRepository, $coPoRepository, $courseOfferingRepository, $courseSurveyRepository);
-        $jwtService = new JWTService();
+        $jwtService = new JWTService(EnvLoader::get('JWT_SECRET'));
         $authService = new AuthService($userRepository, $jwtService, $departmentRepository, $hodAssignmentRepository, $deanAssignmentRepository);
 
         // Initialize middleware

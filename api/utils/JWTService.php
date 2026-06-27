@@ -13,7 +13,10 @@ class JWTService
 
     public function __construct($secretKey = null, $tokenExpiry = 3600)
     {
-        $this->secretKey = $secretKey ?: 'your-secret-key-change-this-in-production';
+        if (empty($secretKey)) {
+            throw new Exception("JWT Secret Key is not configured in the environment.");
+        }
+        $this->secretKey = $secretKey;
         $this->algorithm = 'HS256';
         $this->tokenExpiry = $tokenExpiry; // 1 hour default
     }
